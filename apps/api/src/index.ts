@@ -39,10 +39,17 @@ app.use("/uploads/*", async (c, next) => {
 });
 app.use("/uploads/*", serveStatic({ root: "./" }));
 // Không có file local + đang dùng R2 -> chuyển hướng sang CDN (DB luôn lưu "/uploads/<tên>")
-app.get("/uploads/:name", (c) => {
+app.get("/uploads/:name", async (c) => {
   const name = c.req.param("name");
   const url = /^[\w.-]+$/.test(name) ? remoteUploadUrl(name) : null;
-  return url ? c.redirect(url, 301) : c.json({ error: "Không tìm thấy file" }, 404);
+  if (!url) return c.json({ error: "Không tìm thấy file" }, 404);
+  // ?raw=1: trả thẳng nội dung (cùng domain) cho canvas của editor/CMS – chuyển hướng sang CDN khác domain làm canvas không xuất được file
+  if (c.req.query("raw") !== "1") return c.redirect(url, 301);
+  const r = await fetch(url).catch(() => null);
+  if (!r?.ok || !r.body) return c.json({ error: "Không tải được file" }, 502);
+  const type = r.headers.get("content-type") ?? "application/octet-stream";
+  if (!/^image\/(png|jpeg|webp)$/.test(type)) return c.json({ error: "Định dạng không hỗ trợ" }, 415);
+  return new Response(r.body, { headers: { "Content-Type": type, "Cache-Control": "public, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" } });
 });
 app.use("/mock/*", serveStatic({ root: "./public" }));
 

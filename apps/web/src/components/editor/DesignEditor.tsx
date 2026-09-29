@@ -4,27 +4,35 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   areaExtraPrice,
+  DESIGN_FIELDS,
   DESIGN_FONTS,
   DESIGN_LIMITS,
-  dpiLevel,
-  effectiveDpi,
+  designFields,
+  designReport,
   emptyDesign,
   formatVND,
+  layerBounds,
   UPLOAD_MAX_BYTES,
   usedAreas,
   type AreaDesign,
+  type DesignAssetView,
+  type DesignField,
+  type DesignIssue,
   type DesignJson,
   type DesignLayer,
+  type DesignTemplateData,
   type ImageLayer,
   type TextLayer,
 } from "@pod/shared";
 import type { PrintArea, ProductDetail } from "@/lib/types";
-import { IconClose, IconCopy, IconImage, IconLayers, IconPalette, IconRedo, IconSave, IconText, IconTrash, IconUndo, IconUpload } from "../ui/icons";
+import { IconClose, IconCopy, IconEye, IconGrid, IconLayers, IconLock, IconPalette, IconRedo, IconSave, IconText, IconTrash, IconUndo, IconUpload } from "../ui/icons";
 import { Stage } from "./Stage";
 import { imgSize, loadImage, measureText, type ImageCache, type MockupAssets } from "./render";
 import { ensureFonts, GOOGLE_FONTS_HREF } from "./fonts";
 import { exportDesign, loadAreaAssets, renderPreview, uploadBlob } from "./export";
 import { attachDesign, clearDraft, loadDraft, saveDraft, stashSellerDesign } from "./storage";
+import { LibraryPanel, templateLayers } from "./LibraryPanel";
+import { OverviewModal } from "./OverviewModal";
 
 type Props = {
   product: ProductDetail;
@@ -33,14 +41,17 @@ type Props = {
   savedId?: string | null;
   savedName?: string;
   templateId?: string | null;
+  /** màu phân loại đang chọn ở trang sản phẩm (tên màu) */
+  initialColor?: string | null;
   returnTo: string;
 };
 
-type Tool = "upload" | "text" | "bg" | "layers";
+type Tool = "upload" | "library" | "text" | "bg" | "layers";
 type Upload = { src: string; natW: number; natH: number; name: string };
 
 const SWATCHES = ["#1d1d1f", "#ffffff", "#e11d48", "#f97316", "#facc15", "#16a34a", "#0ea5e9", "#1c4d99", "#7c3aed", "#ec4899", "#a16207", "#6b7280"];
 const uid = () => `l${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+const FIELD_SAMPLE: Record<DesignField, string> = { name: "TÊN", number: "10" };
 
 /** Bổ sung mặt in còn thiếu (sản phẩm có thêm mặt sau khi lưu thiết kế) và bỏ mặt không còn */
 function normalize(design: DesignJson | null | undefined, product: ProductDetail): DesignJson {
@@ -50,9 +61,18 @@ function normalize(design: DesignJson | null | undefined, product: ProductDetail
   return base;
 }
 
-export function DesignEditor({ product, mode, initial, savedId, savedName, templateId, returnTo }: Props) {
+/** Màu vải có mã hex (từ phân loại) */
+function garmentColors(product: ProductDetail) {
+  const seen = new Map<string, string>();
+  for (const v of product.variants) if (v.color && /^#[0-9a-f]{6}$/i.test(v.colorHex) && !seen.has(v.color)) seen.set(v.color, v.colorHex);
+  return [...seen].map(([name, hex]) => ({ name, hex }));
+}
+
+export function DesignEditor({ product, mode, initial, savedId, savedName, templateId, initialColor, returnTo }: Props) {
   const router = useRouter();
   const areas = product.printAreas;
+  const colors = garmentColors(product);
+  const [color, setColor] = useState(() => colors.find((c) => c.name === initialColor) ?? colors[0] ?? null);
   const [design, setDesign] = useState<DesignJson>(() => normalize(initial, product));
   const [past, setPast] = useState<DesignJson[]>([]);
   const [future, setFuture] = useState<DesignJson[]>([]);
@@ -64,8 +84,9 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [lowDpi, setLowDpi] = useState<string[] | null>(null);
+  const [issues, setIssues] = useState<DesignIssue[] | null>(null);
   const [saveDlg, setSaveDlg] = useState<{ name: string; needLogin?: boolean } | null>(null);
+  const [overview, setOverview] = useState(false);
   const images = useRef<ImageCache>(new Map()).current;
   const [assets, setAssets] = useState<Record<string, MockupAssets>>({});
   const [version, setVersion] = useState(0);
@@ -74,6 +95,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const area = areas.find((a) => a.key === areaKey) ?? areas[0]!;
   const ad: AreaDesign = design.areas[area.key] ?? { bg: null, layers: [] };
   const selected = ad.layers.find((l) => l.id === selectedId) ?? null;
+  const fields = designFields(design);
 
   /* ---------- khôi phục bản nháp ---------- */
   useEffect(() => {
@@ -105,6 +127,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     loadAreaAssets(area).then((a) => setAssets((p) => ({ ...p, [area.key]: a })));
   }, [area, assets]);
 
+  // font tải xong -> đo lại khung chữ (bản nháp/mẫu có thể được đo bằng font dự phòng)
   useEffect(() => {
     const layers = Object.values(design.areas).flatMap((a) => a.layers);
     ensureFonts(layers).then(() => setVersion((v) => v + 1));
@@ -127,13 +150,14 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     }
   }, []);
 
-  const updateArea = useCallback(
-    (fn: (a: AreaDesign) => AreaDesign) => {
+  const updateAreaOf = useCallback(
+    (key: string, fn: (a: AreaDesign) => AreaDesign) => {
       const cur = designRef.current;
-      apply({ ...cur, areas: { ...cur.areas, [area.key]: fn(cur.areas[area.key] ?? { bg: null, layers: [] }) } }, true);
+      apply({ ...cur, areas: { ...cur.areas, [key]: fn(cur.areas[key] ?? { bg: null, layers: [] }) } }, true);
     },
-    [apply, area.key],
+    [apply],
   );
+  const updateArea = useCallback((fn: (a: AreaDesign) => AreaDesign) => updateAreaOf(area.key, fn), [updateAreaOf, area.key]);
 
   const patchLayer = useCallback(
     (id: string, patch: Partial<DesignLayer>, isCommit: boolean) => {
@@ -172,11 +196,13 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   };
 
   /* ---------- thao tác lớp ---------- */
-  function addLayer(l: DesignLayer) {
-    if ((designRef.current.areas[area.key]?.layers.length ?? 0) >= DESIGN_LIMITS.layersPerArea) return setError(`Tối đa ${DESIGN_LIMITS.layersPerArea} lớp mỗi mặt`);
-    updateArea((a) => ({ ...a, layers: [...a.layers, l] }));
-    setSelectedId(l.id);
+  function addLayers(ls: DesignLayer[], key = area.key) {
+    if (!ls.length) return;
+    if ((designRef.current.areas[key]?.layers.length ?? 0) + ls.length > DESIGN_LIMITS.layersPerArea) return setError(`Tối đa ${DESIGN_LIMITS.layersPerArea} lớp mỗi mặt`);
+    updateAreaOf(key, (a) => ({ ...a, layers: [...a.layers, ...ls] }));
+    if (key === area.key) setSelectedId(ls[ls.length - 1]!.id);
   }
+  const addLayer = (l: DesignLayer) => addLayers([l]);
 
   function imageLayer(u: Upload, a: PrintArea = area): ImageLayer {
     const s = Math.min((a.widthMm * 0.8) / u.natW, (a.heightMm * 0.8) / u.natH);
@@ -214,17 +240,53 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  function addText() {
+  function textLayer(p: Partial<TextLayer> = {}): TextLayer {
     const fontSize = Math.max(6, Math.min(40, Math.round(area.heightMm * 0.1)));
-    const base: TextLayer = { id: uid(), type: "text", text: "Nội dung của bạn", font: "Be Vietnam Pro", fontSize, color: ad.bg === "#1d1d1f" ? "#ffffff" : "#1d1d1f", bold: true, italic: false, align: "center", lineHeight: 1.15, x: area.widthMm / 2, y: area.heightMm / 2, w: 10, h: 10, rotation: 0, opacity: 1 };
-    addLayer({ ...base, ...measureText(base) });
+    const base: TextLayer = { id: uid(), type: "text", text: "Nội dung của bạn", font: "Be Vietnam Pro", fontSize, color: ad.bg === "#1d1d1f" ? "#ffffff" : "#1d1d1f", bold: true, italic: false, align: "center", lineHeight: 1.15, x: area.widthMm / 2, y: area.heightMm / 2, w: 10, h: 10, rotation: 0, opacity: 1, ...p };
+    return { ...base, ...measureText(base) };
+  }
+
+  function addText() {
+    addLayer(textLayer());
     setTool("text");
+  }
+
+  /** Ô tên / số đồng phục: chữ mẫu, khi in thay theo danh sách thành viên */
+  function addField(field: DesignField) {
+    const big = field === "number";
+    const fontSize = Math.max(8, Math.min(big ? 220 : 60, Math.round(area.heightMm * (big ? 0.32 : 0.1))));
+    const y = big ? area.heightMm * 0.55 : area.heightMm * 0.2;
+    addLayer(textLayer({ text: FIELD_SAMPLE[field], field, font: big ? "Anton" : "Oswald", bold: !big, fontSize, y, letterSpacing: big ? 0 : 0.06 }));
+    setTool("text");
+  }
+
+  function addTemplate(data: DesignTemplateData, name: string) {
+    setError("");
+    const ls = templateLayers(data, area, uid);
+    addLayers(ls);
+    if (data.bg && !ad.bg) updateArea((a) => ({ ...a, bg: data.bg }));
+    setNotice(`Đã thêm mẫu "${name}" – bấm vào chữ để sửa nội dung.`);
+    // font của mẫu tải xong -> đo lại khung chữ cho chính xác
+    void ensureFonts(ls).then(() => {
+      const ids = new Set(ls.map((l) => l.id));
+      const cur = designRef.current;
+      const a = cur.areas[area.key];
+      if (!a) return;
+      apply({ ...cur, areas: { ...cur.areas, [area.key]: { ...a, layers: a.layers.map((l) => (ids.has(l.id) && l.type === "text" ? { ...l, ...measureText(l) } : l)) } } }, false);
+    });
+  }
+
+  function addClipart(a: DesignAssetView) {
+    const u = { src: a.imageUrl, natW: a.natW, natH: a.natH, name: a.name };
+    const l = imageLayer(u);
+    const s = Math.min((area.widthMm * 0.45) / u.natW, (area.heightMm * 0.45) / u.natH);
+    addLayer({ ...l, w: u.natW * s, h: u.natH * s });
   }
 
   const patchSelected = (patch: Partial<DesignLayer>) => {
     if (!selected) return;
     let p = patch;
-    if (selected.type === "text" && ("text" in patch || "font" in patch || "fontSize" in patch || "bold" in patch || "italic" in patch || "lineHeight" in patch || "stroke" in patch)) {
+    if (selected.type === "text" && ["text", "font", "fontSize", "bold", "italic", "lineHeight", "stroke", "letterSpacing", "curve"].some((k) => k in patch)) {
       p = { ...patch, ...measureText({ ...selected, ...(patch as Partial<TextLayer>) }) };
     }
     patchLayer(selected.id, p, true);
@@ -238,7 +300,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
   function duplicateSelected() {
     if (!selected) return;
-    addLayer({ ...selected, id: uid(), x: selected.x + 5, y: selected.y + 5 });
+    addLayer({ ...selected, id: uid(), x: selected.x + 5, y: selected.y + 5, locked: false });
   }
 
   function moveOrder(dir: -1 | 1) {
@@ -251,6 +313,25 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       [layers[i], layers[j]] = [layers[j]!, layers[i]!];
       return { ...a, layers };
     });
+  }
+
+  /** Căn lớp trong vùng in theo khung bao (tính cả khi đã xoay) */
+  function align(h: "left" | "center" | "right" | null, v: "top" | "middle" | "bottom" | null) {
+    if (!selected) return;
+    const b = layerBounds({ ...selected, x: 0, y: 0 });
+    const x = h === "left" ? b.right : h === "right" ? area.widthMm - b.right : h === "center" ? area.widthMm / 2 : selected.x;
+    const y = v === "top" ? b.bottom : v === "bottom" ? area.heightMm - b.bottom : v === "middle" ? area.heightMm / 2 : selected.y;
+    patchSelected({ x, y });
+  }
+
+  /** Chép lớp sang mặt khác (co giãn theo tỉ lệ vùng in) */
+  function copyTo(key: string) {
+    const target = areas.find((a) => a.key === key);
+    if (!selected || !target) return;
+    const [l] = templateLayers({ srcW: area.widthMm, srcH: area.heightMm, bg: null, layers: [selected] }, target, uid);
+    if (!l) return;
+    addLayers([{ ...l, locked: false }], key);
+    setNotice(`Đã chép sang "${target.name}".`);
   }
 
   function fitImage(kind: "fill" | "fit") {
@@ -282,13 +363,14 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         return redo();
       }
       if (!selected) return;
+      if (e.key === "Escape") return setSelectedId(null);
       if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
         removeSelected();
       } else if (mod && e.key.toLowerCase() === "d") {
         e.preventDefault();
         duplicateSelected();
-      } else if (e.key.startsWith("Arrow")) {
+      } else if (e.key.startsWith("Arrow") && !selected.locked) {
         e.preventDefault();
         const step = e.shiftKey ? 10 : 1;
         const dx = e.key === "ArrowLeft" ? -step : e.key === "ArrowRight" ? step : 0;
@@ -304,32 +386,23 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const used = usedAreas(design);
   const extras = areaExtraPrice(areas, used);
 
-  /* ---------- hoàn tất: xuất file in ---------- */
-  function lowDpiLayers(): string[] {
-    const out: string[] = [];
-    for (const a of areas) {
-      for (const l of design.areas[a.key]?.layers ?? []) {
-        if (l.type !== "image" || l.tile) continue;
-        const d = effectiveDpi(l);
-        if (dpiLevel(d, a.dpi) === "low") out.push(`${a.name}: ảnh chỉ đạt ${d} DPI (khuyến nghị ${a.dpi})`);
-      }
-    }
-    return out;
-  }
-
+  /* ---------- hoàn tất: kiểm tra + xuất file in ---------- */
   async function finish(force = false) {
     setError("");
     if (!used.length) return setError("Thiết kế đang trống – thêm ảnh hoặc chữ trước khi hoàn tất");
-    const low = force ? [] : lowDpiLayers();
-    if (low.length) return setLowDpi(low);
-    setLowDpi(null);
+    if (!force) {
+      const rep = designReport(design, areas);
+      // chỉ dừng lại khi có lỗi thật sự hoặc lớp bị cắt/nằm ngoài; cảnh báo DPI "tạm được" hiện kèm
+      if (rep.some((i) => i.level === "error" || !i.message.includes("DPI"))) return setIssues(rep);
+    }
+    setIssues(null);
     try {
-      const out = await exportDesign(areas, design, images, setBusy);
+      const out = await exportDesign(areas, design, images, setBusy, { garmentColor: color?.hex });
       if (mode === "seller") {
         stashSellerDesign(product.id, out);
         router.push(`/seller/mau/moi?product=${product.id}${templateId ? `&id=${templateId}` : ""}`);
       } else {
-        attachDesign(product.id, out);
+        attachDesign(product.id, out, color?.name);
         clearDraft(product.id);
         router.push(returnTo);
       }
@@ -354,7 +427,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       const a = areas.find((x) => x.key === first);
       if (a) {
         await ensureFonts(design.areas[a.key]!.layers);
-        const blob = await renderPreview(a, design.areas[a.key]!, images, assets[a.key] ?? (await loadAreaAssets(a)), 600);
+        const blob = await renderPreview(a, design.areas[a.key]!, images, assets[a.key] ?? (await loadAreaAssets(a)), 600, { garmentColor: color?.hex });
         previewUrl = await uploadBlob(blob, "saved-preview.jpg", "design");
       }
       const body = JSON.stringify({ productId: product.id, name, json: design, previewUrl });
@@ -371,27 +444,35 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     }
   }
 
-  const layerLabel = (l: DesignLayer) => (l.type === "text" ? `Chữ: ${l.text.slice(0, 18)}` : l.tile ? "Ảnh lặp họa tiết" : "Ảnh");
+  const layerLabel = (l: DesignLayer) =>
+    l.type === "text" ? (l.field ? `Ô ${DESIGN_FIELDS[l.field].toLowerCase()} (theo danh sách)` : `Chữ: ${l.text.slice(0, 18)}`) : l.tile ? "Ảnh lặp họa tiết" : "Ảnh";
 
   /* ---------- giao diện ---------- */
   const toolBtn = (t: Tool, label: string, Icon: typeof IconText, onClick?: () => void) => (
     <button
       type="button"
       onClick={onClick ?? (() => setTool(t))}
-      className={`flex min-w-[64px] flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-[11px] font-bold lg:flex-none ${tool === t ? "bg-brand text-ink" : "text-ink/70 hover:bg-cream"}`}
+      className={`flex min-w-[58px] flex-1 flex-col items-center gap-1 rounded-lg px-1.5 py-2 text-[11px] font-bold lg:flex-none ${tool === t ? "bg-brand text-ink" : "text-ink/70 hover:bg-cream"}`}
       aria-pressed={tool === t}
     >
       <Icon className="h-5 w-5" />
       {label}
     </button>
   );
+  const slider = (label: string, value: number, min: number, max: number, step: number, onChange: (v: number) => void, fmt?: (v: number) => string) => (
+    <label className="block text-xs font-semibold">
+      {label}: {fmt ? fmt(value) : value}
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} onPointerUp={endDrag} onKeyUp={endDrag} className="w-full accent-[#F08A00]" />
+    </label>
+  );
+  const otherAreas = areas.filter((a) => a.key !== area.key);
 
   return (
     <div className="min-h-screen bg-[#fafafa] pb-24 lg:pb-8">
       <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />
       {/* Thanh trên */}
       <div className="sticky top-0 z-30 border-b border-ink/10 bg-white">
-        <div className="mx-auto flex h-14 max-w-[1320px] items-center gap-2 px-3 md:px-5">
+        <div className="mx-auto flex h-14 max-w-[1320px] items-center gap-1.5 px-3 md:px-5">
           <Link href={returnTo} className="rounded-md p-1.5 hover:bg-cream" aria-label="Quay lại">
             <IconClose className="h-5 w-5" />
           </Link>
@@ -404,6 +485,9 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           </button>
           <button type="button" onClick={redo} disabled={!future.length} className="rounded-md p-2 disabled:opacity-30 hover:bg-cream" aria-label="Làm lại">
             <IconRedo className="h-5 w-5" />
+          </button>
+          <button type="button" onClick={() => setOverview(true)} className="flex items-center gap-1 rounded-md p-2 text-sm font-bold hover:bg-cream md:border-2 md:border-ink/15 md:px-3 md:py-1.5" aria-label="Xem tổng thể">
+            <IconEye className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Xem</span>
           </button>
           {mode === "customer" && (
             <button type="button" onClick={() => setSaveDlg({ name: savedName || product.name })} className="hidden items-center gap-1 rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-bold hover:border-ink sm:flex">
@@ -439,36 +523,46 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         )}
       </div>
 
-      {notice && (
-        <div className="mx-auto mt-3 flex max-w-[1320px] items-center justify-between gap-2 px-3 text-sm md:px-5">
-          <p className="flex-1 rounded-lg bg-green-50 px-3 py-2 text-green-800">
-            {notice}{" "}
-            {notice.startsWith("Đã mở lại") && (
-              <button
-                type="button"
-                className="ml-1 font-bold underline"
-                onClick={() => {
-                  apply(normalize(null, product), true);
-                  clearDraft(product.id);
-                  setNotice("");
-                }}
-              >
-                Bắt đầu lại
+      {(notice || fields.length > 0) && (
+        <div className="mx-auto mt-3 max-w-[1320px] space-y-2 px-3 text-sm md:px-5">
+          {notice && (
+            <div className="flex items-center justify-between gap-2">
+              <p className="flex-1 rounded-lg bg-green-50 px-3 py-2 text-green-800">
+                {notice}{" "}
+                {notice.startsWith("Đã mở lại") && (
+                  <button
+                    type="button"
+                    className="ml-1 font-bold underline"
+                    onClick={() => {
+                      apply(normalize(null, product), true);
+                      clearDraft(product.id);
+                      setNotice("");
+                    }}
+                  >
+                    Bắt đầu lại
+                  </button>
+                )}
+              </p>
+              <button type="button" onClick={() => setNotice("")} aria-label="Đóng" className="p-1">
+                <IconClose className="h-4 w-4" />
               </button>
-            )}
-          </p>
-          <button type="button" onClick={() => setNotice("")} aria-label="Đóng" className="p-1">
-            <IconClose className="h-4 w-4" />
-          </button>
+            </div>
+          )}
+          {fields.length > 0 && (
+            <p className="rounded-lg bg-navy-light px-3 py-2 text-navy-dark">
+              👕 Thiết kế có ô <b>{fields.map((f) => DESIGN_FIELDS[f]).join(" + ")}</b>: khi đặt hàng chọn <b>Đồng phục nhóm</b> và tải danh sách – mỗi áo in đúng tên/số của từng người.
+            </p>
+          )}
         </div>
       )}
 
-      <div className="mx-auto grid max-w-[1320px] gap-4 px-3 pt-3 md:px-5 lg:grid-cols-[88px_minmax(0,1fr)_340px] lg:pt-5">
+      <div className="mx-auto grid max-w-[1320px] grid-cols-[minmax(0,1fr)] gap-4 px-3 pt-3 md:px-5 lg:grid-cols-[88px_minmax(0,1fr)_340px] lg:pt-5">
         {/* Công cụ (desktop: cột trái, mobile: dưới khung) */}
         <nav className="order-2 flex gap-1 rounded-xl border border-ink/10 bg-white p-1 lg:order-1 lg:h-fit lg:flex-col" aria-label="Công cụ">
           {toolBtn("upload", "Tải ảnh", IconUpload)}
+          {toolBtn("library", "Mẫu", IconGrid)}
           {toolBtn("text", "Chữ", IconText, () => (selected?.type === "text" ? setTool("text") : addText()))}
-          {toolBtn("bg", "Màu nền", IconPalette)}
+          {toolBtn("bg", colors.length > 1 ? "Màu" : "Màu nền", IconPalette)}
           {toolBtn("layers", `Lớp (${ad.layers.length})`, IconLayers)}
         </nav>
 
@@ -480,15 +574,16 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             images={images}
             version={version}
             selectedId={selectedId}
+            garmentColor={color?.hex}
             onSelect={(id) => {
               setSelectedId(id);
               const l = ad.layers.find((x) => x.id === id);
-              if (l) setTool(l.type === "text" ? "text" : "upload");
+              if (l && tool !== "layers") setTool(l.type === "text" ? "text" : "upload");
             }}
             onChangeLayer={patchLayer}
             onCommit={endDrag}
           />
-          <p className="mt-2 text-center text-[11px] text-ink/55">Kéo để di chuyển · kéo ô vuông ở góc để đổi cỡ · kéo nút tròn để xoay · phím Delete để xoá</p>
+          <p className="mt-2 text-center text-[11px] text-ink/55">Kéo để di chuyển · kéo ô vuông ở góc để đổi cỡ · nút tròn để xoay · điện thoại: 2 ngón để phóng to/xoay</p>
         </div>
 
         {/* Bảng thuộc tính */}
@@ -527,48 +622,27 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                     <button type="button" className="btn-sm" onClick={() => fitImage("fit")}>
                       Vừa khít
                     </button>
-                    <button type="button" className="btn-sm" onClick={() => patchSelected({ x: area.widthMm / 2, y: area.heightMm / 2 })}>
-                      Căn giữa
-                    </button>
                     <button type="button" className={`btn-sm ${selected.tile ? "!border-ink !bg-brand" : ""}`} onClick={toggleTile}>
                       {selected.tile ? "✓ Lặp họa tiết" : "Lặp họa tiết"}
-                    </button>
-                    <button type="button" className="btn-sm" onClick={() => patchSelected({ flipX: !selected.flipX })}>
-                      Lật ngang
                     </button>
                     <button type="button" className="btn-sm" onClick={() => patchSelected({ rotation: 0 })}>
                       Bỏ xoay
                     </button>
                   </div>
-                  {selected.tile && (
-                    <label className="block text-xs font-semibold">
-                      Cỡ ô lặp: {Math.round(Math.max(selected.w, selected.h))} mm
-                      <input
-                        type="range"
-                        min={10}
-                        max={Math.round(Math.min(area.widthMm, area.heightMm))}
-                        value={Math.round(Math.max(selected.w, selected.h))}
-                        onChange={(e) => {
-                          const f = Number(e.target.value) / Math.max(selected.w, selected.h);
-                          patchLayer(selected.id, { w: selected.w * f, h: selected.h * f }, false);
-                        }}
-                        onPointerUp={endDrag}
-                        className="w-full accent-[#F08A00]"
-                      />
-                    </label>
-                  )}
-                  <label className="block text-xs font-semibold">
-                    Độ đậm: {Math.round((selected.opacity ?? 1) * 100)}%
-                    <input
-                      type="range"
-                      min={10}
-                      max={100}
-                      value={Math.round((selected.opacity ?? 1) * 100)}
-                      onChange={(e) => patchLayer(selected.id, { opacity: Number(e.target.value) / 100 }, false)}
-                      onPointerUp={endDrag}
-                      className="w-full accent-[#F08A00]"
-                    />
-                  </label>
+                  {selected.tile &&
+                    slider(
+                      "Cỡ ô lặp",
+                      Math.round(Math.max(selected.w, selected.h)),
+                      10,
+                      Math.round(Math.min(area.widthMm, area.heightMm)),
+                      1,
+                      (v) => {
+                        const f = v / Math.max(selected.w, selected.h);
+                        patchLayer(selected.id, { w: selected.w * f, h: selected.h * f }, false);
+                      },
+                      (v) => `${v} mm`,
+                    )}
+                  {slider("Độ đậm", Math.round((selected.opacity ?? 1) * 100), 10, 100, 1, (v) => patchLayer(selected.id, { opacity: v / 100 }, false), (v) => `${v}%`)}
                   <p className="text-[11px] text-ink/60">
                     Kích thước in: {(selected.w / 10).toFixed(1)} × {(selected.h / 10).toFixed(1)} cm
                   </p>
@@ -577,21 +651,52 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             </section>
           )}
 
+          {tool === "library" && <LibraryPanel onTemplate={addTemplate} onClipart={addClipart} />}
+
           {tool === "text" && (
             <section className="space-y-3">
               <button type="button" onClick={addText} className="btn w-full border-ink bg-cream py-2.5 text-sm">
                 <IconText className="h-5 w-5" /> Thêm chữ mới
               </button>
+              <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
+                <button type="button" className="btn-sm" onClick={() => addField("name")}>
+                  + Ô tên thành viên
+                </button>
+                <button type="button" className="btn-sm" onClick={() => addField("number")}>
+                  + Ô số áo
+                </button>
+              </div>
               {selected?.type === "text" ? (
                 <div className="space-y-2.5">
+                  <div className="flex flex-wrap gap-1 text-[11px] font-bold" role="radiogroup" aria-label="Loại nội dung">
+                    {(
+                      [
+                        [undefined, "Chữ cố định"],
+                        ["name", "Tên thành viên"],
+                        ["number", "Số áo"],
+                      ] as const
+                    ).map(([f, label]) => (
+                      <button
+                        key={label}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected.field === f}
+                        onClick={() => patchSelected({ field: f, ...(f && selected.field !== f ? { text: FIELD_SAMPLE[f] } : {}) })}
+                        className={`rounded-full border-2 px-2 py-0.5 ${selected.field === f ? "border-ink bg-brand" : "border-ink/15"}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                   <textarea
                     value={selected.text}
                     maxLength={DESIGN_LIMITS.textLength}
-                    rows={3}
+                    rows={selected.field ? 1 : 3}
                     onChange={(e) => e.target.value && patchSelected({ text: e.target.value })}
                     className="w-full rounded-md border-2 border-ink/15 px-3 py-2 text-sm focus:border-ink focus:outline-none"
                     aria-label="Nội dung chữ"
                   />
+                  {selected.field && <p className="-mt-1.5 text-[11px] text-ink/60">Chữ mẫu để canh vị trí – khi in thay bằng {DESIGN_FIELDS[selected.field].toLowerCase()} từng người trong danh sách.</p>}
                   <select
                     value={selected.font}
                     onChange={(e) => patchSelected({ font: e.target.value as TextLayer["font"] })}
@@ -605,22 +710,15 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                       </option>
                     ))}
                   </select>
-                  <label className="block text-xs font-semibold">
-                    Cỡ chữ: {selected.fontSize} mm
-                    <input
-                      type="range"
-                      min={3}
-                      max={Math.max(20, Math.round(area.heightMm * 0.6))}
-                      step={0.5}
-                      value={selected.fontSize}
-                      onChange={(e) => {
-                        const fontSize = Number(e.target.value);
-                        patchLayer(selected.id, { fontSize, ...measureText({ ...selected, fontSize }) } as Partial<DesignLayer>, false);
-                      }}
-                      onPointerUp={endDrag}
-                      className="w-full accent-[#F08A00]"
-                    />
-                  </label>
+                  {slider(
+                    "Cỡ chữ",
+                    selected.fontSize,
+                    3,
+                    Math.max(20, Math.round(area.heightMm * 0.6)),
+                    0.5,
+                    (fontSize) => patchLayer(selected.id, { fontSize, ...measureText({ ...selected, fontSize }) } as Partial<DesignLayer>, false),
+                    (v) => `${v} mm`,
+                  )}
                   <div className="flex flex-wrap gap-1.5" role="group" aria-label="Màu chữ">
                     {SWATCHES.map((c) => (
                       <button
@@ -641,12 +739,31 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                     <button type="button" className={`btn-sm italic ${selected.italic ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ italic: !selected.italic })}>
                       Nghiêng
                     </button>
-                    {(["left", "center", "right"] as const).map((a) => (
-                      <button key={a} type="button" className={`btn-sm ${selected.align === a ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ align: a })}>
-                        {a === "left" ? "Trái" : a === "center" ? "Giữa" : "Phải"}
-                      </button>
-                    ))}
+                    {!selected.curve &&
+                      (["left", "center", "right"] as const).map((a) => (
+                        <button key={a} type="button" className={`btn-sm ${selected.align === a ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ align: a })}>
+                          {a === "left" ? "Trái" : a === "center" ? "Giữa" : "Phải"}
+                        </button>
+                      ))}
                   </div>
+                  {slider(
+                    "Uốn cong",
+                    selected.curve ?? 0,
+                    -100,
+                    100,
+                    1,
+                    (curve) => patchLayer(selected.id, { curve: curve || undefined, ...measureText({ ...selected, curve }) } as Partial<DesignLayer>, false),
+                    (v) => (v === 0 ? "thẳng" : v > 0 ? `vòng cung lên ${v}` : `cong xuống ${-v}`),
+                  )}
+                  {slider(
+                    "Giãn chữ",
+                    Math.round((selected.letterSpacing ?? 0) * 100),
+                    -10,
+                    100,
+                    1,
+                    (v) => patchLayer(selected.id, { letterSpacing: v / 100 || undefined, ...measureText({ ...selected, letterSpacing: v / 100 }) } as Partial<DesignLayer>, false),
+                    (v) => `${v}%`,
+                  )}
                   <div className="flex items-center gap-2 text-xs font-semibold">
                     <span className="shrink-0">Viền chữ</span>
                     <input
@@ -670,34 +787,56 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                       aria-label="Màu viền"
                     />
                   </div>
-                  <button type="button" className="btn-sm w-full text-xs" onClick={() => patchSelected({ x: area.widthMm / 2, y: area.heightMm / 2 })}>
-                    Căn giữa vùng in
-                  </button>
                 </div>
               ) : (
-                <p className="text-xs text-ink/60">Bấm vào chữ trên khung để sửa, hoặc thêm chữ mới. Font hỗ trợ đầy đủ dấu tiếng Việt.</p>
+                <p className="text-xs text-ink/60">Bấm vào chữ trên khung để sửa, hoặc thêm chữ mới / chọn mẫu chữ ở mục Mẫu. Font hỗ trợ đầy đủ dấu tiếng Việt.</p>
               )}
             </section>
           )}
 
           {tool === "bg" && (
-            <section className="space-y-2">
-              <p className="text-xs font-bold text-ink/70">Màu nền cả mặt in {area.maskImage ? "(phủ toàn thân áo)" : ""}</p>
-              <div className="flex flex-wrap gap-1.5">
-                <button type="button" onClick={() => updateArea((a) => ({ ...a, bg: null }))} className={`h-8 rounded-full border-2 px-3 text-xs font-bold ${!ad.bg ? "border-ink bg-brand" : "border-ink/20"}`}>
-                  Không màu
-                </button>
-                {SWATCHES.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => updateArea((a) => ({ ...a, bg: c }))}
-                    className={`h-8 w-8 rounded-full border-2 ${ad.bg === c ? "border-ink ring-2 ring-brand" : "border-ink/20"}`}
-                    style={{ background: c }}
-                    aria-label={`Nền ${c}`}
-                  />
-                ))}
-                <input type="color" value={ad.bg ?? "#ffffff"} onChange={(e) => updateArea((a) => ({ ...a, bg: e.target.value }))} className="h-8 w-10 cursor-pointer rounded border border-ink/20" aria-label="Màu nền khác" />
+            <section className="space-y-3">
+              {colors.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-ink/70">
+                    Màu áo: <span className="font-normal">{color?.name}</span>
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Màu áo">
+                    {colors.map((c) => (
+                      <button
+                        key={c.name}
+                        type="button"
+                        role="radio"
+                        aria-checked={color?.name === c.name}
+                        title={c.name}
+                        onClick={() => setColor(c)}
+                        className={`h-8 w-8 rounded-full border-2 ${color?.name === c.name ? "border-ink ring-2 ring-brand" : "border-ink/20"}`}
+                        style={{ background: c.hex }}
+                        aria-label={c.name}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-1 text-[11px] text-ink/55">Màu xem trước gần đúng, màu vải thật có thể chênh nhẹ.</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs font-bold text-ink/70">Màu nền in cả mặt {area.maskImage ? "(phủ toàn thân áo)" : ""}</p>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  <button type="button" onClick={() => updateArea((a) => ({ ...a, bg: null }))} className={`h-8 rounded-full border-2 px-3 text-xs font-bold ${!ad.bg ? "border-ink bg-brand" : "border-ink/20"}`}>
+                    Không in nền
+                  </button>
+                  {SWATCHES.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => updateArea((a) => ({ ...a, bg: c }))}
+                      className={`h-8 w-8 rounded-full border-2 ${ad.bg === c ? "border-ink ring-2 ring-brand" : "border-ink/20"}`}
+                      style={{ background: c }}
+                      aria-label={`Nền ${c}`}
+                    />
+                  ))}
+                  <input type="color" value={ad.bg ?? "#ffffff"} onChange={(e) => updateArea((a) => ({ ...a, bg: e.target.value }))} className="h-8 w-10 cursor-pointer rounded border border-ink/20" aria-label="Màu nền khác" />
+                </div>
               </div>
             </section>
           )}
@@ -709,14 +848,26 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               ) : (
                 <ul className="space-y-1">
                   {[...ad.layers].reverse().map((l) => (
-                    <li key={l.id}>
+                    <li key={l.id} className="flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => setSelectedId(l.id)}
-                        className={`flex w-full items-center gap-2 rounded-md border-2 px-2 py-1.5 text-left text-xs font-semibold ${l.id === selectedId ? "border-ink bg-cream" : "border-transparent hover:bg-cream"}`}
+                        className={`flex min-w-0 flex-1 items-center gap-2 rounded-md border-2 px-2 py-1.5 text-left text-xs font-semibold ${l.id === selectedId ? "border-ink bg-cream" : "border-transparent hover:bg-cream"}`}
                       >
-                        {l.type === "image" ? <img src={l.src} alt="" className="h-7 w-7 rounded bg-[#f4f4f5] object-contain" /> : <IconText className="h-5 w-5" />}
+                        {l.type === "image" ? <img src={l.src} alt="" className="h-7 w-7 rounded bg-[#f4f4f5] object-contain" /> : <IconText className="h-5 w-5 shrink-0" />}
                         <span className="truncate">{layerLabel(l)}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedId(l.id);
+                          updateArea((a) => ({ ...a, layers: a.layers.map((x) => (x.id === l.id ? { ...x, locked: !x.locked } : x)) }));
+                        }}
+                        className={`rounded p-1.5 ${l.locked ? "bg-ink text-white" : "text-ink/40 hover:bg-cream"}`}
+                        aria-label={l.locked ? "Mở khoá lớp" : "Khoá lớp"}
+                        aria-pressed={!!l.locked}
+                      >
+                        <IconLock className="h-4 w-4" />
                       </button>
                     </li>
                   ))}
@@ -726,19 +877,68 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           )}
 
           {selected && (
-            <div className="grid grid-cols-4 gap-1.5 border-t border-ink/10 pt-3 text-[11px] font-bold">
-              <button type="button" className="btn-sm flex-col" onClick={() => moveOrder(1)} title="Đưa lên trên">
-                ↑ Lên
-              </button>
-              <button type="button" className="btn-sm flex-col" onClick={() => moveOrder(-1)} title="Đưa xuống dưới">
-                ↓ Xuống
-              </button>
-              <button type="button" className="btn-sm flex-col" onClick={duplicateSelected}>
-                <IconCopy className="h-4 w-4" /> Nhân đôi
-              </button>
-              <button type="button" className="btn-sm flex-col !text-red-600" onClick={removeSelected}>
-                <IconTrash className="h-4 w-4" /> Xoá
-              </button>
+            <div className="space-y-2 border-t border-ink/10 pt-3">
+              <p className="text-xs font-bold text-ink/70">Vị trí trong vùng in</p>
+              <div className="grid grid-cols-3 gap-1 text-[11px] font-bold" role="group" aria-label="Căn chỉnh">
+                <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => align("left", null)}>
+                  ⇤ Trái
+                </button>
+                <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => align("center", null)}>
+                  ↔ Giữa
+                </button>
+                <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => align("right", null)}>
+                  Phải ⇥
+                </button>
+                <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => align(null, "top")}>
+                  ⤒ Trên
+                </button>
+                <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => align("center", "middle")}>
+                  ✛ Tâm
+                </button>
+                <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => align(null, "bottom")}>
+                  ⤓ Dưới
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-1 text-[11px] font-bold">
+                <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => patchSelected({ flipX: !selected.flipX })}>
+                  ⇋ Lật ngang
+                </button>
+                <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => patchSelected({ flipY: !selected.flipY })}>
+                  ⇵ Lật dọc
+                </button>
+                <button type="button" className={`btn-sm ${selected.locked ? "!border-ink !bg-ink !text-white" : ""}`} onClick={() => patchSelected({ locked: !selected.locked })}>
+                  <IconLock className="h-3.5 w-3.5" /> {selected.locked ? "Mở khoá" : "Khoá"}
+                </button>
+              </div>
+              {otherAreas.length > 0 && (
+                <select
+                  value=""
+                  onChange={(e) => e.target.value && copyTo(e.target.value)}
+                  className="w-full rounded-md border-2 border-ink/15 px-2 py-1.5 text-xs font-bold"
+                  aria-label="Chép lớp sang mặt khác"
+                >
+                  <option value="">Chép lớp này sang mặt…</option>
+                  {otherAreas.map((a) => (
+                    <option key={a.key} value={a.key}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <div className="grid grid-cols-4 gap-1.5 text-[11px] font-bold">
+                <button type="button" className="btn-sm flex-col" onClick={() => moveOrder(1)} title="Đưa lên trên">
+                  ↑ Lên
+                </button>
+                <button type="button" className="btn-sm flex-col" onClick={() => moveOrder(-1)} title="Đưa xuống dưới">
+                  ↓ Xuống
+                </button>
+                <button type="button" className="btn-sm flex-col" onClick={duplicateSelected}>
+                  <IconCopy className="h-4 w-4" /> Nhân đôi
+                </button>
+                <button type="button" className="btn-sm flex-col !text-red-600" onClick={removeSelected}>
+                  <IconTrash className="h-4 w-4" /> Xoá
+                </button>
+              </div>
             </div>
           )}
 
@@ -753,14 +953,19 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       </div>
 
       {/* Nút hoàn tất cố định trên mobile */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-ink/10 bg-white p-3 lg:hidden">
-        <button type="button" onClick={() => finish()} disabled={!!busy} className="btn w-full border-ink bg-brand py-3 text-ink disabled:opacity-60">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-ink/10 bg-white p-3 lg:hidden">
+        {mode === "customer" && (
+          <button type="button" onClick={() => setSaveDlg({ name: savedName || product.name })} className="btn border-ink/20 bg-white px-3 py-3 sm:hidden" aria-label="Lưu thiết kế">
+            <IconSave className="h-5 w-5" />
+          </button>
+        )}
+        <button type="button" onClick={() => finish()} disabled={!!busy} className="btn flex-1 border-ink bg-brand py-3 text-ink disabled:opacity-60">
           Hoàn tất thiết kế{used.length ? ` (${used.length} mặt)` : ""}
         </button>
       </div>
 
       {busy && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="status" aria-live="polite">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4" role="status" aria-live="polite">
           <div className="flex items-center gap-3 rounded-xl bg-white px-5 py-4 text-sm font-semibold shadow-xl">
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-ink border-t-transparent" />
             {busy}
@@ -768,20 +973,38 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         </div>
       )}
 
-      {lowDpi && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="lowdpi-title">
+      {overview && (
+        <OverviewModal
+          productName={product.name}
+          areas={areas}
+          design={design}
+          images={images}
+          garmentColor={color?.hex}
+          colorName={color?.name}
+          sample={fields.length ? { name: "NGUYỄN AN", number: "10" } : undefined}
+          onClose={() => setOverview(false)}
+        />
+      )}
+
+      {issues && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="issues-title">
           <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
-            <h2 id="lowdpi-title" className="text-lg font-black">
-              Ảnh có thể in bị vỡ
+            <h2 id="issues-title" className="text-lg font-black">
+              Kiểm tra trước khi in
             </h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink/80">
-              {lowDpi.map((x) => (
-                <li key={x}>{x}</li>
+            <ul className="mt-2 max-h-[40vh] space-y-1.5 overflow-y-auto text-sm">
+              {issues.map((x, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${x.level === "error" ? "bg-red-600" : "bg-amber-500"}`} />
+                  <span>
+                    <b>{x.areaName}:</b> {x.message}
+                  </span>
+                </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-ink/60">Thu nhỏ ảnh trên sản phẩm hoặc dùng ảnh gốc độ phân giải cao hơn.</p>
+            <p className="mt-2 text-xs text-ink/60">Ảnh vỡ: thu nhỏ ảnh hoặc dùng ảnh gốc độ phân giải cao hơn. Phần nằm ngoài khung nét đứt sẽ không được in.</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button type="button" className="btn border-ink/20 bg-white" onClick={() => setLowDpi(null)}>
+              <button type="button" className="btn border-ink/20 bg-white" onClick={() => setIssues(null)}>
                 Quay lại sửa
               </button>
               <button type="button" className="btn border-ink bg-brand" onClick={() => void finish(true)}>

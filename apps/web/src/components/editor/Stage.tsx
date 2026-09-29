@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from "react";
-import { DPI_LEVEL_LABEL, dpiLevel, effectiveDpi, type AreaDesign, type DesignLayer } from "@pod/shared";
+import { DPI_LEVEL_LABEL, dpiLevel, effectiveDpi, layerBounds, type AreaDesign, type DesignLayer } from "@pod/shared";
 import type { PrintArea } from "@/lib/types";
 import { drawMockup, measureText, type ImageCache, type MockupAssets } from "./render";
 
@@ -9,6 +9,7 @@ type Drag =
   | { kind: "move"; id: string; startX: number; startY: number; ox: number; oy: number }
   | { kind: "scale"; id: string; startDist: number; ow: number; oh: number; ofs?: number }
   | { kind: "rotate"; id: string; startAngle: number; orot: number }
+  | { kind: "pinch"; id: string; startDist: number; startAngle: number; ow: number; oh: number; ofs?: number; orot: number }
   | null;
 
 type Props = {
@@ -19,13 +20,14 @@ type Props = {
   /** tăng khi ảnh/font vừa tải xong -> vẽ lại */
   version: number;
   selectedId: string | null;
+  garmentColor?: string | null;
   onSelect: (id: string | null) => void;
   /** commit=false khi đang kéo (không ghi lịch sử), true khi thả tay */
   onChangeLayer: (id: string, patch: Partial<DesignLayer>, commit: boolean) => void;
   onCommit: () => void;
 };
 
-const SNAP_MM_PX = 6; // ngưỡng bắt tâm tính theo pixel màn hình
+const SNAP_PX = 6; // ngưỡng hút (pixel màn hình)
 const HANDLE = 22;
 
 /** Chuyển điểm (mm) sang hệ toạ độ cục bộ của lớp (đã xoay) */
@@ -36,13 +38,26 @@ function toLocal(l: DesignLayer, x: number, y: number) {
   return { x: dx * Math.cos(r) - dy * Math.sin(r), y: dx * Math.sin(r) + dy * Math.cos(r) };
 }
 
-export function Stage({ area, design, assets, images, version, selectedId, onSelect, onChangeLayer, onCommit }: Props) {
+/** Hút về giữa / mép vùng in: trả về toạ độ tâm mới + vị trí đường gióng (mm) */
+function snapAxis(center: number, halfExtent: number, size: number, tol: number): { v: number; guide: number | null } {
+  const cands: { c: number; g: number }[] = [
+    { c: size / 2, g: size / 2 },
+    { c: halfExtent, g: 0 },
+    { c: size - halfExtent, g: size },
+  ];
+  let best: { c: number; g: number } | null = null;
+  for (const x of cands) if (Math.abs(center - x.c) < tol && (!best || Math.abs(center - x.c) < Math.abs(center - best.c))) best = x;
+  return best ? { v: best.c, guide: best.g } : { v: center, guide: null };
+}
+
+export function Stage({ area, design, assets, images, version, selectedId, garmentColor, onSelect, onChangeLayer, onCommit }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState(0);
   const [pr, setPr] = useState<Rect | null>(null);
-  const [guides, setGuides] = useState<{ v: boolean; h: boolean }>({ v: false, h: false });
+  const [guides, setGuides] = useState<{ v: number | null; h: number | null }>({ v: null, h: null });
   const drag = useRef<Drag>(null);
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
 
   // khung vuông theo bề ngang container
   useEffect(() => {
@@ -63,7 +78,7 @@ export function Stage({ area, design, assets, images, version, selectedId, onSel
     const ctx = c.getContext("2d")!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, size, size);
-    const r = drawMockup(ctx, size, size, area, design, assets, images, { background: "#f4f4f5", padding: size * 0.03 });
+    const r = drawMockup(ctx, size, size, area, design, assets, images, { background: "#f4f4f5", padding: size * 0.03, garmentColor, shading: 0.45 });
     // viền vùng in
     ctx.save();
     ctx.setLineDash([6, 4]);
@@ -72,7 +87,7 @@ export function Stage({ area, design, assets, images, version, selectedId, onSel
     ctx.strokeRect(r.printRect.x + 0.5, r.printRect.y + 0.5, r.printRect.w - 1, r.printRect.h - 1);
     ctx.restore();
     setPr(r.printRect);
-  }, [size, area, design, assets, images, version]);
+  }, [size, area, design, assets, images, version, garmentColor]);
 
   const pointMm = useCallback(
     (e: { clientX: number; clientY: number }) => {
@@ -85,9 +100,11 @@ export function Stage({ area, design, assets, images, version, selectedId, onSel
 
   const selected = design.layers.find((l) => l.id === selectedId) ?? null;
 
+  /** Lớp trên cùng tại điểm bấm; lớp đã khoá được bỏ qua (bấm xuyên xuống lớp dưới) */
   function hitTest(x: number, y: number): DesignLayer | null {
     for (let i = design.layers.length - 1; i >= 0; i--) {
       const l = design.layers[i]!;
+      if (l.locked) continue;
       const p = toLocal(l, x, y);
       const pad = 2 / (pr?.k ?? 1); // nới 2px cho dễ bấm
       if (Math.abs(p.x) <= l.w / 2 + pad && Math.abs(p.y) <= l.h / 2 + pad) return l;
@@ -95,14 +112,37 @@ export function Stage({ area, design, assets, images, version, selectedId, onSel
     return null;
   }
 
+  function startPinch(l: DesignLayer) {
+    const [a, b] = [...pointers.current.values()];
+    if (!a || !b) return;
+    drag.current = {
+      kind: "pinch",
+      id: l.id,
+      startDist: Math.max(10, Math.hypot(b.x - a.x, b.y - a.y)),
+      startAngle: Math.atan2(b.y - a.y, b.x - a.x),
+      ow: l.w,
+      oh: l.h,
+      ofs: l.type === "text" ? l.fontSize : undefined,
+      orot: l.rotation ?? 0,
+    };
+  }
+
   function onDown(e: RPointerEvent<HTMLDivElement>) {
     if (!pr) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    e.preventDefault();
+    // 2 ngón: co giãn + xoay lớp đang chọn
+    if (pointers.current.size === 2) {
+      if (selected && !selected.locked) startPinch(selected);
+      return;
+    }
     const m = pointMm(e);
     const handle = (e.target as HTMLElement).dataset.handle;
-    if (selected && handle === "scale") {
+    if (selected && !selected.locked && handle === "scale") {
       const p = toLocal(selected, m.x, m.y);
       drag.current = { kind: "scale", id: selected.id, startDist: Math.max(1, Math.hypot(p.x, p.y)), ow: selected.w, oh: selected.h, ofs: selected.type === "text" ? selected.fontSize : undefined };
-    } else if (selected && handle === "rotate") {
+    } else if (selected && !selected.locked && handle === "rotate") {
       drag.current = { kind: "rotate", id: selected.id, startAngle: Math.atan2(m.y - selected.y, m.x - selected.x), orot: selected.rotation ?? 0 };
     } else {
       const hit = hitTest(m.x, m.y);
@@ -110,35 +150,43 @@ export function Stage({ area, design, assets, images, version, selectedId, onSel
       if (!hit) return;
       drag.current = { kind: "move", id: hit.id, startX: m.x, startY: m.y, ox: hit.x, oy: hit.y };
     }
-    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-    e.preventDefault();
+  }
+
+  function scalePatch(l: DesignLayer, f: number, d: { ow: number; oh: number; ofs?: number }): Partial<DesignLayer> {
+    if (l.type === "text" && d.ofs) {
+      const fontSize = Math.max(1, Math.round(d.ofs * f * 10) / 10);
+      return { fontSize, ...measureText({ ...l, fontSize }) } as Partial<DesignLayer>;
+    }
+    return { w: Math.max(2, d.ow * f), h: Math.max(2, d.oh * f) };
   }
 
   function onMove(e: RPointerEvent<HTMLDivElement>) {
+    if (pointers.current.has(e.pointerId)) pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const d = drag.current;
     if (!d || !pr) return;
-    const m = pointMm(e);
     const l = design.layers.find((x) => x.id === d.id);
     if (!l) return;
+    if (d.kind === "pinch") {
+      const [a, b] = [...pointers.current.values()];
+      if (!a || !b) return;
+      const f = Math.max(0.05, Math.hypot(b.x - a.x, b.y - a.y) / d.startDist);
+      let deg = d.orot + ((Math.atan2(b.y - a.y, b.x - a.x) - d.startAngle) * 180) / Math.PI;
+      deg = ((deg % 360) + 540) % 360 - 180;
+      for (const t of [-180, -90, 0, 90, 180]) if (Math.abs(deg - t) < 4) deg = t;
+      onChangeLayer(d.id, { ...scalePatch(l, f, d), rotation: Math.round(deg * 10) / 10 }, false);
+      return;
+    }
+    const m = pointMm(e);
     if (d.kind === "move") {
-      let x = d.ox + (m.x - d.startX);
-      let y = d.oy + (m.y - d.startY);
-      const snap = SNAP_MM_PX / pr.k;
-      const v = Math.abs(x - area.widthMm / 2) < snap;
-      const h = Math.abs(y - area.heightMm / 2) < snap;
-      if (v) x = area.widthMm / 2;
-      if (h) y = area.heightMm / 2;
-      setGuides({ v, h });
-      onChangeLayer(d.id, { x, y }, false);
+      const tol = SNAP_PX / pr.k;
+      const b = layerBounds({ ...l, x: 0, y: 0 });
+      const sx = snapAxis(d.ox + (m.x - d.startX), b.right, area.widthMm, tol);
+      const sy = snapAxis(d.oy + (m.y - d.startY), b.bottom, area.heightMm, tol);
+      setGuides({ v: sx.guide, h: sy.guide });
+      onChangeLayer(d.id, { x: sx.v, y: sy.v }, false);
     } else if (d.kind === "scale") {
       const p = toLocal(l, m.x, m.y);
-      const f = Math.max(0.05, Math.hypot(p.x, p.y) / d.startDist);
-      if (l.type === "text" && d.ofs) {
-        const fontSize = Math.max(1, Math.round(d.ofs * f * 10) / 10);
-        onChangeLayer(d.id, { fontSize, ...measureText({ ...l, fontSize }) } as Partial<DesignLayer>, false);
-      } else {
-        onChangeLayer(d.id, { w: Math.max(2, d.ow * f), h: Math.max(2, d.oh * f) }, false);
-      }
+      onChangeLayer(d.id, scalePatch(l, Math.max(0.05, Math.hypot(p.x, p.y) / d.startDist), d), false);
     } else if (d.kind === "rotate") {
       let deg = d.orot + ((Math.atan2(m.y - l.y, m.x - l.x) - d.startAngle) * 180) / Math.PI;
       deg = ((deg % 360) + 540) % 360 - 180;
@@ -149,16 +197,25 @@ export function Stage({ area, design, assets, images, version, selectedId, onSel
     }
   }
 
-  function onUp() {
+  function onUp(e: RPointerEvent<HTMLDivElement>) {
+    pointers.current.delete(e.pointerId);
+    if (drag.current?.kind === "pinch" && pointers.current.size === 1) {
+      // nhấc 1 ngón: kết thúc co giãn, không chuyển sang kéo để tránh nhảy lớp
+      onCommit();
+      drag.current = null;
+      return;
+    }
+    if (pointers.current.size > 0) return;
     if (drag.current) onCommit();
     drag.current = null;
-    setGuides({ v: false, h: false });
+    setGuides({ v: null, h: null });
   }
 
   // khung chọn (px màn hình)
   let box: { cx: number; cy: number; w: number; h: number; rot: number } | null = null;
   if (selected && pr) box = { cx: pr.x + selected.x * pr.k, cy: pr.y + selected.y * pr.k, w: selected.w * pr.k, h: selected.h * pr.k, rot: selected.rotation ?? 0 };
   const dpi = selected?.type === "image" && !selected.tile ? effectiveDpi(selected) : null;
+  const locked = !!selected?.locked;
 
   return (
     <div ref={wrapRef} className="relative aspect-square w-full select-none overflow-hidden rounded-lg border-2 border-ink bg-[#f4f4f5]">
@@ -170,37 +227,43 @@ export function Stage({ area, design, assets, images, version, selectedId, onSel
         onPointerUp={onUp}
         onPointerCancel={onUp}
         role="application"
-        aria-label="Kéo để di chuyển, kéo góc để đổi cỡ, kéo nút tròn để xoay"
+        aria-label="Kéo để di chuyển, kéo góc để đổi cỡ, kéo nút tròn để xoay, 2 ngón để phóng to và xoay"
       >
-        {pr && guides.v && <div className="pointer-events-none absolute w-px bg-[#e11d48]" style={{ left: pr.x + pr.w / 2, top: pr.y, height: pr.h }} />}
-        {pr && guides.h && <div className="pointer-events-none absolute h-px bg-[#e11d48]" style={{ top: pr.y + pr.h / 2, left: pr.x, width: pr.w }} />}
+        {pr && guides.v !== null && <div className="pointer-events-none absolute w-px bg-[#e11d48]" style={{ left: pr.x + guides.v * pr.k, top: pr.y, height: pr.h }} />}
+        {pr && guides.h !== null && <div className="pointer-events-none absolute h-px bg-[#e11d48]" style={{ top: pr.y + guides.h * pr.k, left: pr.x, width: pr.w }} />}
         {box && (
           <div
-            className="pointer-events-none absolute border-2 border-[#2563eb]"
+            className={`pointer-events-none absolute border-2 ${locked ? "border-dashed border-ink/50" : "border-[#2563eb]"}`}
             style={{ left: box.cx - box.w / 2, top: box.cy - box.h / 2, width: box.w, height: box.h, transform: `rotate(${box.rot}deg)` }}
           >
-            {/* nút xoay */}
-            <span
-              data-handle="rotate"
-              className="pointer-events-auto absolute left-1/2 -translate-x-1/2 cursor-grab rounded-full border-2 border-[#2563eb] bg-white"
-              style={{ top: -HANDLE - 14, width: HANDLE, height: HANDLE }}
-              title="Xoay"
-            />
-            <span className="absolute left-1/2 w-px bg-[#2563eb]" style={{ top: -14, height: 14 }} />
-            {/* nút co giãn 4 góc */}
-            {[
-              ["-left-3 -top-3", "nwse-resize"],
-              ["-right-3 -top-3", "nesw-resize"],
-              ["-left-3 -bottom-3", "nesw-resize"],
-              ["-right-3 -bottom-3", "nwse-resize"],
-            ].map(([pos, cur]) => (
-              <span
-                key={pos}
-                data-handle="scale"
-                className={`pointer-events-auto absolute ${pos} rounded-sm border-2 border-[#2563eb] bg-white`}
-                style={{ width: HANDLE - 4, height: HANDLE - 4, cursor: cur }}
-              />
-            ))}
+            {locked ? (
+              <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">🔒 Đã khoá</span>
+            ) : (
+              <>
+                {/* nút xoay */}
+                <span
+                  data-handle="rotate"
+                  className="pointer-events-auto absolute left-1/2 -translate-x-1/2 cursor-grab rounded-full border-2 border-[#2563eb] bg-white"
+                  style={{ top: -HANDLE - 14, width: HANDLE, height: HANDLE }}
+                  title="Xoay"
+                />
+                <span className="absolute left-1/2 w-px bg-[#2563eb]" style={{ top: -14, height: 14 }} />
+                {/* nút co giãn 4 góc */}
+                {[
+                  ["-left-3 -top-3", "nwse-resize"],
+                  ["-right-3 -top-3", "nesw-resize"],
+                  ["-left-3 -bottom-3", "nesw-resize"],
+                  ["-right-3 -bottom-3", "nwse-resize"],
+                ].map(([pos, cur]) => (
+                  <span
+                    key={pos}
+                    data-handle="scale"
+                    className={`pointer-events-auto absolute ${pos} rounded-sm border-2 border-[#2563eb] bg-white`}
+                    style={{ width: HANDLE - 4, height: HANDLE - 4, cursor: cur }}
+                  />
+                ))}
+              </>
+            )}
           </div>
         )}
       </div>

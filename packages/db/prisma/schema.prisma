@@ -475,3 +475,25 @@ model WebhookDelivery {
 
   @@index([sellerId, createdAt])
 }
+
+/// Thư viện thiết kế cho editor: clipart (ảnh PNG) và mẫu dựng sẵn (bộ lớp thiết kế)
+model DesignAsset {
+  id        String   @id @default(cuid())
+  /// CLIPART | TEMPLATE
+  kind      String
+  name      String
+  category  String   @default("")
+  tags      String   @default("")
+  /// Clipart: ảnh /uploads/...; Mẫu: ảnh xem trước
+  imageUrl  String   @default("")
+  natW      Int      @default(0)
+  natH      Int      @default(0)
+  /// Mẫu: { srcW, srcH, bg, layers } (designTemplateSchema)
+  data      Json?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, isActive, sortOrder])
+}

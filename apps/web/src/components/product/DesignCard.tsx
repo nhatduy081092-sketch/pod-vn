@@ -31,10 +31,12 @@ type Props = {
   design: AttachedDesign | null;
   step?: string;
   tone?: "brand" | "navy";
+  /** màu đang chọn -> mở công cụ thiết kế với đúng màu áo */
+  color?: string;
 };
 
-export function DesignCard({ slug, productId, areas, design, step = "Thiết kế", tone = "brand" }: Props) {
-  const editHref = `/thiet-ke/${slug}`;
+export function DesignCard({ slug, productId, areas, design, step = "Thiết kế", tone = "brand", color }: Props) {
+  const editHref = `/thiet-ke/${slug}${color ? `?mau=${encodeURIComponent(color)}` : ""}`;
   const extras = design ? areas.filter((a) => design.files.some((f) => f.area === a.key)).reduce((s, a) => s + a.extraPrice, 0) : 0;
   const ring = tone === "navy" ? "border-navy" : "border-ink";
   return (

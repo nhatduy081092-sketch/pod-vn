@@ -158,3 +158,23 @@ export const IconSave = (p: P) => (
     <path d="M8 3v5h7M8 21v-7h8v7" />
   </svg>
 );
+export const IconEye = (p: P) => (
+  <svg viewBox="0 0 24 24" {...base} {...p}>
+    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+export const IconLock = (p: P) => (
+  <svg viewBox="0 0 24 24" {...base} {...p}>
+    <rect x="5" y="11" width="14" height="10" rx="2" />
+    <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+  </svg>
+);
+export const IconGrid = (p: P) => (
+  <svg viewBox="0 0 24 24" {...base} {...p}>
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+  </svg>
+);

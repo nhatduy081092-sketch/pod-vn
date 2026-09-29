@@ -8,6 +8,7 @@ export * from "./pages";
 export * from "./roster";
 export * from "./sizechart";
 export * from "./design";
+export * from "./design-presets";
 export * from "./shipping";
 export * from "./variants";
 export * from "./accounts";

@@ -219,3 +219,23 @@ export async function markBatchPaidAction(id: string) {
 export async function cancelBatchAction(id: string) {
   return run(() => adminFetch(`/batches/${id}/cancel`, { method: "POST" }).then(() => undefined), ["/batches"], false);
 }
+
+/* ---------- Thư viện thiết kế (clipart + mẫu) ---------- */
+export async function saveDesignAssetAction(id: string | null, data: import("@pod/shared").DesignAssetInput) {
+  return run(async () => {
+    const r = await adminFetch<{ id: string }>(id ? `/design-assets/${id}` : "/design-assets", { method: id ? "PUT" : "POST", body: JSON.stringify(data) });
+    return { id: r.id };
+  }, ["/design-library"], false);
+}
+export async function patchDesignAssetAction(id: string, data: { isActive?: boolean; sortOrder?: number; name?: string; category?: string }) {
+  return run(() => adminFetch(`/design-assets/${id}`, { method: "PATCH", body: JSON.stringify(data) }).then(() => undefined), ["/design-library"], false);
+}
+export async function deleteDesignAssetAction(id: string) {
+  return run(() => adminFetch(`/design-assets/${id}`, { method: "DELETE" }).then(() => undefined), ["/design-library"], false);
+}
+export async function templateFromDesignAction(input: { savedDesignId: string; area: string; name: string; category: string }) {
+  return run(async () => {
+    const r = await adminFetch<{ id: string }>("/design-assets/from-design", { method: "POST", body: JSON.stringify(input) });
+    return { id: r.id };
+  }, ["/design-library"], false);
+}

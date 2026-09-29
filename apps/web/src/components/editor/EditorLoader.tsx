@@ -5,10 +5,10 @@ import type { ProductDetail } from "@/lib/types";
 import { DesignEditor } from "./DesignEditor";
 import { readAttached } from "./storage";
 
-type Props = { product: ProductDetail; mode: "customer" | "seller"; savedId: string | null; templateId: string | null; returnTo: string };
+type Props = { product: ProductDetail; mode: "customer" | "seller"; savedId: string | null; templateId: string | null; initialColor?: string | null; returnTo: string };
 
 /** Nạp thiết kế ban đầu: thiết kế đã lưu (tài khoản) / mẫu seller / thiết kế đang gắn ở trang sản phẩm */
-export function EditorLoader({ product, mode, savedId, templateId, returnTo }: Props) {
+export function EditorLoader({ product, mode, savedId, templateId, initialColor, returnTo }: Props) {
   const [state, setState] = useState<{ ready: boolean; initial: DesignJson | null; name?: string; error?: string }>({ ready: false, initial: null });
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export function EditorLoader({ product, mode, savedId, templateId, returnTo }: P
       ) : (
         <>
           {state.error && <p className="mx-auto mt-3 max-w-xl rounded-lg bg-amber-50 px-3 py-2 text-center text-sm text-amber-800">{state.error} – đang mở thiết kế mới.</p>}
-          <DesignEditor product={product} mode={mode} initial={state.initial} savedId={state.error ? null : savedId} savedName={state.name} templateId={templateId} returnTo={returnTo} />
+          <DesignEditor product={product} mode={mode} initial={state.initial} savedId={state.error ? null : savedId} savedName={state.name} templateId={templateId} initialColor={initialColor ?? readAttached(product.id)?.color} returnTo={returnTo} />
         </>
       )}
     </div>

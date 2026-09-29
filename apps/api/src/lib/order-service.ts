@@ -1,6 +1,8 @@
 import { prisma, type Prisma } from "@pod/db";
 import {
   areaExtraPrice,
+  DESIGN_FIELDS,
+  designFields,
   linePrice,
   parseTiers,
   pickShipping,
@@ -99,6 +101,9 @@ export async function priceLines(lines: LineInput[], opts: { discountPercent?: n
     const unitOf = (delta: number) => linePrice({ product: priceSrc, totalQty, variantDelta: delta, areaExtras, discountPercent: opts.discountPercent, now });
 
     const roster = l.roster?.length ? l.roster : null;
+    const fields = l.design ? designFields(l.design.json) : [];
+    if (fields.length && !roster)
+      throw badRequest(`Thiết kế "${p.name}" có ô ${fields.map((f) => DESIGN_FIELDS[f]).join(" / ")} – đặt theo Đồng phục nhóm để nhập tên/số từng áo`);
     let unitPrice: number;
     let lineTotal: number;
     let weightGram: number;

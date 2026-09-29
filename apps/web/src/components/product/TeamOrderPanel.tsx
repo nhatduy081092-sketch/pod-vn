@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import {
+  rosterRowSchema,
   parseDelimited,
   rosterTemplateCsv,
   rowsToRoster,
@@ -29,6 +30,19 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
   const [showPaste, setShowPaste] = useState(false);
   const [busy, setBusy] = useState(false);
   const [fileName, setFileName] = useState("");
+  const [one, setOne] = useState({ name: "", number: "", size: sizes[0] ?? "" });
+  const [oneErr, setOneErr] = useState("");
+
+  /** Thêm tay từng người (nhóm nhỏ, hoặc 1 áo in tên riêng) */
+  function addOne(e: React.FormEvent) {
+    e.preventDefault();
+    const r = rosterRowSchema.safeParse({ ...one, size: one.size || sizes[0] || "FREE SIZE", note: "" });
+    if (!r.success) return setOneErr(r.error.issues[0]?.message ?? "Kiểm tra lại");
+    if (!r.data.name && !r.data.number) return setOneErr("Nhập tên hoặc số áo");
+    setOneErr("");
+    onChange([...rows, r.data]);
+    setOne({ name: "", number: "", size: one.size });
+  }
 
   function apply(table: string[][]) {
     const res = rowsToRoster(table, sizes);
@@ -78,8 +92,19 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
         </button>
         <input ref={fileRef} type="file" accept=".xlsx,.csv,.tsv,.txt" className="hidden" onChange={(e) => void onFile(e.target.files?.[0])} />
       </div>
+      <form onSubmit={addOne} className="grid grid-cols-[1fr_64px_84px_auto] gap-1.5">
+        <input className="input h-9 px-2 text-sm" value={one.name} maxLength={30} onChange={(e) => setOne({ ...one, name: e.target.value })} placeholder="Tên in" aria-label="Tên in" />
+        <input className="input h-9 px-2 text-sm" value={one.number} inputMode="numeric" maxLength={3} onChange={(e) => setOne({ ...one, number: e.target.value.replace(/\D/g, "") })} placeholder="Số" aria-label="Số áo" />
+        <select className="input h-9 px-1 text-sm" value={one.size} onChange={(e) => setOne({ ...one, size: e.target.value })} aria-label="Size">
+          {(sizes.length ? sizes : ["FREE SIZE"]).map((z) => (
+            <option key={z}>{z}</option>
+          ))}
+        </select>
+        <button className="btn-outline h-9 px-3 text-[13px]">+ Thêm</button>
+      </form>
+      {oneErr && <p className="-mt-1 text-xs text-red-700">{oneErr}</p>}
       <p className="text-xs text-ink/60">
-        Cột: <b>Tên in</b> · <b>Số áo</b> · <b>Size</b> ({sizes.join(", ")}) · Ghi chú. Dòng đầu là tiêu đề. Mỗi dòng = 1 áo.
+        Nhập tay từng người ở trên, hoặc tải file. Cột: <b>Tên in</b> · <b>Số áo</b> · <b>Size</b> ({sizes.join(", ")}) · Ghi chú. Dòng đầu là tiêu đề. Mỗi dòng = 1 áo.
         {fileName && <> Đã đọc: <b>{fileName}</b></>}
       </p>
 
@@ -131,6 +156,7 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
                   <th className="px-3 py-1.5">Số</th>
                   <th className="px-3 py-1.5">Size</th>
                   <th className="px-3 py-1.5">Ghi chú</th>
+                  <th className="px-1 py-1.5" />
                 </tr>
               </thead>
               <tbody>
@@ -141,6 +167,11 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
                     <td className="px-3 py-1">{r.number}</td>
                     <td className="px-3 py-1 font-bold">{r.size}</td>
                     <td className="px-3 py-1 text-xs text-ink/60">{r.note}</td>
+                    <td className="px-1 py-1 text-right">
+                      <button type="button" onClick={() => onChange(rows.filter((_, k) => k !== i))} className="px-1.5 text-ink/40 hover:text-red-600" aria-label={`Xoá dòng ${i + 1}`}>
+                        ×
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

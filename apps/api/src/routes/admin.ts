@@ -23,6 +23,10 @@ import {
   LEAD_STATUSES,
   toSearchText,
   type OrderStatus,
+  DESIGN_ASSET_KINDS,
+  designAssetUpsertSchema,
+  designJsonSchema,
+  designTemplateSchema,
 } from "@pod/shared";
 import { z } from "zod";
 import { hashPassword } from "@pod/db/password";
@@ -409,6 +413,70 @@ adminRoutes.put("/help/:id", async (c) => {
 adminRoutes.delete("/help/:id", async (c) => {
   await prisma.helpArticle.delete({ where: { id: c.req.param("id") } });
   return c.json({ ok: true });
+});
+
+/* ================== Thư viện thiết kế (clipart + mẫu) ================== */
+adminRoutes.get("/design-assets", async (c) => {
+  const kind = c.req.query("kind");
+  return c.json(
+    await prisma.designAsset.findMany({
+      where: kind && (DESIGN_ASSET_KINDS as readonly string[]).includes(kind) ? { kind } : {},
+      orderBy: [{ kind: "asc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
+      take: 1000,
+    }),
+  );
+});
+const assetData = (raw: unknown) => {
+  const a = designAssetUpsertSchema.parse(raw);
+  return { ...a, data: (a.data ?? undefined) as Prisma.InputJsonValue | undefined };
+};
+adminRoutes.post("/design-assets", async (c) => c.json(await prisma.designAsset.create({ data: assetData(await c.req.json()) }), 201));
+adminRoutes.put("/design-assets/:id", async (c) => c.json(await prisma.designAsset.update({ where: { id: c.req.param("id") }, data: assetData(await c.req.json()) })));
+adminRoutes.patch("/design-assets/:id", async (c) => {
+  const p = z.object({ isActive: z.boolean().optional(), sortOrder: z.number().int().min(-9999).max(9999).optional(), name: z.string().trim().min(1).max(80).optional(), category: z.string().trim().max(40).optional() }).parse(await c.req.json());
+  return c.json(await prisma.designAsset.update({ where: { id: c.req.param("id") }, data: p }));
+});
+adminRoutes.delete("/design-assets/:id", async (c) => {
+  await prisma.designAsset.delete({ where: { id: c.req.param("id") } });
+  return c.json({ ok: true });
+});
+
+/** Thiết kế khách/admin đã lưu – nguồn để tạo mẫu thư viện */
+adminRoutes.get("/saved-designs", async (c) => {
+  const q = c.req.query("q")?.trim();
+  return c.json(
+    await prisma.savedDesign.findMany({
+      where: q ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { customer: { phone: { contains: q } } }, { product: { name: { contains: q, mode: "insensitive" } } }] } : {},
+      orderBy: { updatedAt: "desc" },
+      take: 60,
+      select: {
+        id: true,
+        name: true,
+        previewUrl: true,
+        updatedAt: true,
+        json: true,
+        customer: { select: { name: true, phone: true } },
+        product: { select: { id: true, name: true, printAreas: { orderBy: { sortOrder: "asc" }, select: { key: true, name: true, widthMm: true, heightMm: true } } } },
+      },
+    }),
+  );
+});
+
+adminRoutes.post("/design-assets/from-design", async (c) => {
+  const input = z.object({ savedDesignId: z.string().min(1).max(40), area: z.string().min(1).max(30), name: z.string().trim().min(1).max(80), category: z.string().trim().max(40).default("") }).parse(await c.req.json());
+  const d = await prisma.savedDesign.findUnique({ where: { id: input.savedDesignId }, select: { json: true, previewUrl: true, productId: true } });
+  if (!d) throw notFound("Không tìm thấy thiết kế");
+  const json = designJsonSchema.safeParse(d.json);
+  if (!json.success) throw new HTTPException(400, { message: "Dữ liệu thiết kế lỗi" });
+  const ad = json.data.areas[input.area];
+  if (!ad?.layers.length) throw new HTTPException(400, { message: "Mặt in này chưa có lớp nào" });
+  const area = await prisma.printArea.findFirst({ where: { productId: d.productId, key: input.area }, select: { widthMm: true, heightMm: true } });
+  if (!area) throw notFound("Sản phẩm không còn mặt in này");
+  const data = designTemplateSchema.parse({ srcW: area.widthMm, srcH: area.heightMm, bg: ad.bg, layers: ad.layers });
+  const row = await prisma.designAsset.create({
+    data: { kind: "TEMPLATE", name: input.name, category: input.category, imageUrl: d.previewUrl, data: data as unknown as Prisma.InputJsonValue },
+  });
+  return c.json(row, 201);
 });
 
 /* ================== D. Lead ================== */

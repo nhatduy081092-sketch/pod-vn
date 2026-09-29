@@ -45,6 +45,9 @@ const baseLayer = {
   rotation: z.number().finite().min(-360).max(360).default(0),
   opacity: z.number().min(0.05).max(1).default(1),
   flipX: z.boolean().optional(),
+  flipY: z.boolean().optional(),
+  /** Khoá: không kéo/xoay/co giãn trên khung (vẫn chọn được trong danh sách lớp) */
+  locked: z.boolean().optional(),
 };
 
 export const imageLayerSchema = z.object({
@@ -70,7 +73,15 @@ export const textLayerSchema = z.object({
   align: z.enum(["left", "center", "right"]).default("center"),
   stroke: z.object({ color: hex, width: z.number().min(0).max(50) }).optional(),
   lineHeight: z.number().min(0.6).max(3).default(1.15),
+  /** Giãn chữ, tính theo cỡ chữ (0,1 = 10% cỡ chữ) */
+  letterSpacing: z.number().min(-0.2).max(2).optional(),
+  /** Uốn cong: -100…100 (100 = tròn trọn vòng, dương = vòng cung lên, âm = cong xuống) */
+  curve: z.number().min(-100).max(100).optional(),
+  /** Ô đồng phục: chữ được thay bằng tên / số của từng thành viên khi in */
+  field: z.enum(["name", "number"]).optional(),
 });
+export const DESIGN_FIELDS = { name: "Tên", number: "Số áo" } as const;
+export type DesignField = keyof typeof DESIGN_FIELDS;
 
 export const designLayerSchema = z.discriminatedUnion("type", [imageLayerSchema, textLayerSchema]);
 export type ImageLayer = z.infer<typeof imageLayerSchema>;
@@ -155,3 +166,125 @@ export function dpiLevel(dpi: number, target: number): DpiLevel {
   return "low";
 }
 export const DPI_LEVEL_LABEL: Record<DpiLevel, string> = { good: "nét", ok: "tạm được", low: "dễ vỡ" };
+
+/* ---------- Đồng phục: ô tên / số ---------- */
+
+/** Các ô tên/số có trong thiết kế (toàn bộ mặt hoặc 1 mặt) */
+export function designFields(json: Pick<DesignJson, "areas">, areaKey?: string): DesignField[] {
+  const set = new Set<DesignField>();
+  for (const [k, a] of Object.entries(json.areas)) {
+    if (areaKey && k !== areaKey) continue;
+    for (const l of a.layers) if (l.type === "text" && l.field) set.add(l.field);
+  }
+  return [...set];
+}
+
+/**
+ * Thay ô tên/số bằng dữ liệu 1 thành viên. Ô không có dữ liệu -> bỏ lớp đó (không in chữ mẫu).
+ * Không truyền person -> bỏ hết ô (file nền chung cho cả đội).
+ */
+export function personalizeArea(ad: AreaDesign, person?: { name?: string; number?: string } | null): AreaDesign {
+  if (!ad.layers.some((l) => l.type === "text" && l.field)) return ad;
+  const layers: DesignLayer[] = [];
+  for (const l of ad.layers) {
+    if (l.type !== "text" || !l.field) {
+      layers.push(l);
+      continue;
+    }
+    const v = (person?.[l.field] ?? "").trim();
+    if (v) layers.push({ ...l, text: v.slice(0, DESIGN_LIMITS.textLength) });
+  }
+  return { ...ad, layers };
+}
+
+/* ---------- Kiểm tra thiết kế trước khi in ---------- */
+
+export type DesignIssue = { area: string; areaName: string; level: "error" | "warn"; message: string };
+
+/** Khung bao (mm) của lớp đã xoay */
+export function layerBounds(l: Pick<DesignLayer, "x" | "y" | "w" | "h" | "rotation">) {
+  const r = ((l.rotation ?? 0) * Math.PI) / 180;
+  const c = Math.abs(Math.cos(r));
+  const s = Math.abs(Math.sin(r));
+  const bw = l.w * c + l.h * s;
+  const bh = l.w * s + l.h * c;
+  return { left: l.x - bw / 2, top: l.y - bh / 2, right: l.x + bw / 2, bottom: l.y + bh / 2 };
+}
+
+/**
+ * Báo cáo chất lượng: ảnh thiếu DPI, lớp nằm ngoài vùng in, lớp bị cắt.
+ * Dùng chung: editor (trước khi hoàn tất), API (khi đặt đơn), CMS (trước khi in).
+ */
+export function designReport(json: Pick<DesignJson, "areas">, areas: { key: string; name: string; widthMm: number; heightMm: number; dpi: number }[]): DesignIssue[] {
+  const out: DesignIssue[] = [];
+  for (const a of areas) {
+    const ad = json.areas[a.key];
+    if (!ad) continue;
+    for (const l of ad.layers) {
+      const label = l.type === "text" ? `chữ "${l.text.slice(0, 20)}"` : "ảnh";
+      if (l.type === "image" && l.tile) continue;
+      const b = layerBounds(l);
+      if (b.right <= 0 || b.bottom <= 0 || b.left >= a.widthMm || b.top >= a.heightMm) {
+        out.push({ area: a.key, areaName: a.name, level: "warn", message: `Lớp ${label} nằm ngoài vùng in – sẽ không được in` });
+        continue;
+      }
+      const cut = b.left < -1 || b.top < -1 || b.right > a.widthMm + 1 || b.bottom > a.heightMm + 1;
+      if (l.type === "image") {
+        const d = effectiveDpi(l);
+        const lv = dpiLevel(d, a.dpi);
+        if (lv === "low") out.push({ area: a.key, areaName: a.name, level: "error", message: `Ảnh chỉ đạt ${d} DPI (khuyến nghị ${a.dpi}) – in dễ vỡ` });
+        else if (lv === "ok") out.push({ area: a.key, areaName: a.name, level: "warn", message: `Ảnh đạt ${d} DPI – in được nhưng chưa nét tối đa` });
+        // ảnh lớn hơn vùng in (phủ kín) là chủ ý, chỉ cảnh báo chữ bị cắt
+      } else if (cut) {
+        out.push({ area: a.key, areaName: a.name, level: "warn", message: `Lớp ${label} tràn ra ngoài vùng in – phần tràn sẽ bị cắt` });
+      }
+    }
+  }
+  return out;
+}
+
+/* ---------- Mẫu thiết kế (thư viện) ---------- */
+
+export const designTemplateSchema = z.object({
+  /** Kích thước vùng in gốc (mm) – khi áp vào mặt khác sẽ co giãn giữ tỉ lệ, căn giữa */
+  srcW: size,
+  srcH: size,
+  bg: hex.nullable().default(null),
+  layers: z.array(designLayerSchema).min(1).max(DESIGN_LIMITS.layersPerArea),
+});
+export type DesignTemplateData = z.infer<typeof designTemplateSchema>;
+
+/** Áp mẫu vào vùng in: co giãn đều theo cạnh nhỏ, căn giữa; sinh id lớp mới */
+export function applyTemplate(t: Pick<DesignTemplateData, "srcW" | "srcH" | "layers">, area: { widthMm: number; heightMm: number }, newId: () => string): DesignLayer[] {
+  const s = Math.min(area.widthMm / t.srcW, area.heightMm / t.srcH);
+  const ox = (area.widthMm - t.srcW * s) / 2;
+  const oy = (area.heightMm - t.srcH * s) / 2;
+  return t.layers.map((l) => {
+    const base = { ...l, id: newId(), x: l.x * s + ox, y: l.y * s + oy, w: l.w * s, h: l.h * s };
+    if (l.type === "text") return { ...base, type: "text", fontSize: Math.round(l.fontSize * s * 10) / 10, stroke: l.stroke ? { ...l.stroke, width: l.stroke.width * s } : undefined } as DesignLayer;
+    return base as DesignLayer;
+  });
+}
+
+export const DESIGN_ASSET_KINDS = ["CLIPART", "TEMPLATE"] as const;
+export type DesignAssetKind = (typeof DESIGN_ASSET_KINDS)[number];
+export const DESIGN_ASSET_KIND_LABEL: Record<DesignAssetKind, string> = { CLIPART: "Hình minh hoạ", TEMPLATE: "Mẫu thiết kế" };
+
+export const designAssetUpsertSchema = z
+  .object({
+    kind: z.enum(DESIGN_ASSET_KINDS),
+    name: z.string().trim().min(1, "Nhập tên").max(80),
+    category: z.string().trim().max(40).default(""),
+    tags: z.string().trim().max(200).default(""),
+    imageUrl: uploadUrl.or(z.literal("")).default(""),
+    natW: z.number().int().min(0).max(100000).default(0),
+    natH: z.number().int().min(0).max(100000).default(0),
+    data: designTemplateSchema.nullable().default(null),
+    isActive: z.boolean().default(true),
+    sortOrder: z.number().int().min(-9999).max(9999).default(0),
+  })
+  .refine((a) => (a.kind === "CLIPART" ? !!a.imageUrl && a.natW > 0 && a.natH > 0 : !!a.data), { message: "Hình minh hoạ cần ảnh; mẫu thiết kế cần dữ liệu lớp" });
+export type DesignAssetInput = z.infer<typeof designAssetUpsertSchema>;
+
+/** Dữ liệu hiển thị trong editor */
+export type DesignAssetView = { id: string; kind: DesignAssetKind; name: string; category: string; tags?: string; imageUrl: string; natW: number; natH: number; data: DesignTemplateData | null };

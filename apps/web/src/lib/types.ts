@@ -57,7 +57,8 @@ export type ProductDetail = ProductCardData & {
 export type Notice = { id: string; title: string; content: string; level: "info" | "warning"; showBanner: boolean; showOnProduct: boolean; startsAt: string; endsAt: string | null };
 
 /** Thiết kế đã xong trong editor, gắn vào trang sản phẩm / giỏ hàng */
-export type AttachedDesign = OrderDesign & { updatedAt: number };
+/** color = màu áo khách chọn trong công cụ thiết kế (tên phân loại màu) */
+export type AttachedDesign = OrderDesign & { updatedAt: number; color?: string };
 export type { DesignJson };
 
 export type Testimonial = {

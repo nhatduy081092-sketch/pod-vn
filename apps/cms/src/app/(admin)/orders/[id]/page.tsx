@@ -6,6 +6,7 @@ import type { AdminOrder } from "@/lib/types";
 import { PageHeader, StatusBadge } from "@/components/ui";
 import { OrderEditor } from "@/components/OrderEditor";
 import { RosterTable } from "@/components/RosterTable";
+import { ProductionFiles } from "@/components/ProductionFiles";
 
 export default async function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -115,7 +116,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
                               {f.widthPx}×{f.heightPx}px · {f.dpi} DPI
                             </p>
                             <a href={assetUrl(f.printUrl)} target="_blank" rel="noreferrer" download className="font-bold text-brand-dark underline">
-                              Tải file in (PNG) ↓
+                              File khách xuất ↓
                             </a>
                           </li>
                         ))}
@@ -160,6 +161,11 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
               </div>
             </dl>
           </section>
+
+          <ProductionFiles
+            orderCode={o.code}
+            items={(o.items ?? []).map((it) => ({ id: it.id, productName: it.productName, color: it.color, size: it.size, quantity: it.quantity, sku: it.sku ?? null, design: it.design, roster: it.roster ?? null }))}
+          />
 
           {o.utm && (
             <section className="card text-sm">

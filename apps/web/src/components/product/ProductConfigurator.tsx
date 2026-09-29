@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { areaExtraPrice, displayCompareAt, formatVND, linePrice, saleActive, TEAM_SIZE_LABEL, type RosterRow } from "@pod/shared";
+import { areaExtraPrice, designFields, displayCompareAt, formatVND, linePrice, saleActive, TEAM_SIZE_LABEL, type RosterRow } from "@pod/shared";
 import { useCart } from "@/lib/cart";
 import { assetUrl } from "@/lib/config";
 import { track } from "@/lib/track";
@@ -11,6 +11,7 @@ import { Thumbs } from "./ProductGallery";
 import { VariantPicker, defaultVariant } from "./VariantPicker";
 import { DesignCard, useAttachedDesign } from "./DesignCard";
 import { SaleCountdown } from "./SaleCountdown";
+import { TeamPreview } from "./TeamPreview";
 
 export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { product: ProductDetail; zalo: string; hasSizeGuide?: boolean }) {
   const router = useRouter();
@@ -28,6 +29,8 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
   const variant = product.variants.find((v) => v.color === sel.color && v.size === sel.size) ?? null;
   const colorVariants = product.variants.filter((v) => v.color === sel.color);
   const teamSizes = (colorVariants.length ? colorVariants : product.variants).map((v) => v.size).filter(Boolean);
+  const teamFields = design ? designFields(design.json) : [];
+  const garmentHex = product.variants.find((v) => v.color === sel.color && /^#[0-9a-f]{6}$/i.test(v.colorHex))?.colorHex ?? null;
   const areaExtras = design ? areaExtraPrice(product.printAreas, design.files.map((f) => f.area)) : 0;
   const effQty = mode === "team" ? roster.length : qty;
   const priceSrc = { basePrice: product.basePrice, salePrice: product.salePrice, saleEndsAt: product.saleEndsAt, priceTiers: product.priceTiers };
@@ -41,6 +44,19 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
   // Ảnh bên trái: ảnh xem trước thiết kế (nếu có) rồi đến ảnh sản phẩm
   const gallery = useMemo(() => [...(design?.files.map((f) => f.previewUrl) ?? []), ...product.images].slice(0, 10), [design, product.images]);
   useEffect(() => setImgIdx(0), [design?.updatedAt]);
+  // màu áo đã chọn trong công cụ thiết kế -> chọn sẵn phân loại màu đó
+  useEffect(() => {
+    const c = design?.color;
+    if (!c || c === sel.color) return;
+    const v = product.variants.find((x) => x.color === c && x.size === sel.size) ?? product.variants.find((x) => x.color === c);
+    if (v) setSel({ color: v.color, size: v.size });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [design?.updatedAt]);
+  // thiết kế có ô tên/số -> chuyển sang đặt đồng phục (nhập tên/số từng áo)
+  useEffect(() => {
+    if (teamFields.length) setMode("team");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [design?.updatedAt]);
 
   useEffect(() => {
     track.viewItem({ id: product.id, name: product.name, price: product.basePrice, quantity: 1 });
@@ -52,6 +68,7 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
       if (!roster.length) return setError("Tải file hoặc dán danh sách thành viên trước");
       if (roster.length < product.minQty) return setError(`Đặt tối thiểu ${product.minQty} sản phẩm`);
     } else {
+      if (teamFields.length) return setError("Thiết kế có ô tên/số áo – chọn Đồng phục nhóm và nhập tên/số (1 áo cũng được)");
       if (product.variants.length && !variant) return setError("Vui lòng chọn phân loại (màu / size)");
       if (qty < product.minQty) return setError(`Đặt tối thiểu ${product.minQty} sản phẩm`);
     }
@@ -129,7 +146,7 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
         )}
 
         <div className="mt-5">
-          <DesignCard slug={product.slug} productId={product.id} areas={product.printAreas} design={design} step="1. Thiết kế" />
+          <DesignCard slug={product.slug} productId={product.id} areas={product.printAreas} design={design} step="1. Thiết kế" color={sel.color} />
           {!design && (
             <p className="mt-2 text-xs text-ink/70">
               Chưa có ý tưởng?{" "}
@@ -167,7 +184,13 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
           <VariantPicker variants={product.variants} color={sel.color} size={sel.size} onChange={setSel} hideSize={mode === "team"} sizeGuide={hasSizeGuide} step={{ color: "2. Màu", size: "2. Size" }} />
         </div>
 
+        {mode === "single" && teamFields.length > 0 && (
+          <p className="mt-4 rounded-lg bg-navy-light px-3 py-2 text-sm text-navy-dark">
+            Thiết kế có ô <b>tên/số áo</b> – chọn <b>Đồng phục nhóm</b> để nhập tên, số từng người (đặt 1 áo cũng được).
+          </p>
+        )}
         {mode === "team" && <TeamOrderPanel sizes={teamSizes} productSlug={product.slug} rows={roster} onChange={setRoster} />}
+        {mode === "team" && design && teamFields.length > 0 && <TeamPreview areas={product.printAreas} design={design} rows={roster} garmentColor={garmentHex} />}
 
         {/* Số lượng */}
         <section className="mt-5">

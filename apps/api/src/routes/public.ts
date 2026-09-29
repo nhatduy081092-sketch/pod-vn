@@ -261,6 +261,19 @@ publicRoutes.get("/notices", async (c) => {
   return c.json(items);
 });
 
+/* ---------- Thư viện thiết kế cho editor ---------- */
+publicRoutes.get("/design-assets", async (c) => {
+  const kind = c.req.query("kind") === "TEMPLATE" ? "TEMPLATE" : "CLIPART";
+  const items = await prisma.designAsset.findMany({
+    where: { kind, isActive: true },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    take: 500,
+    select: { id: true, kind: true, name: true, category: true, tags: true, imageUrl: true, natW: true, natH: true, data: true },
+  });
+  c.header("Cache-Control", "public, max-age=60");
+  return c.json(items);
+});
+
 /* ---------- Help Center ---------- */
 publicRoutes.get("/help", async (c) => {
   const q = c.req.query("q")?.trim() ?? "";

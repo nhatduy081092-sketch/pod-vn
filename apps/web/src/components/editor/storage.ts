@@ -34,8 +34,8 @@ export function clearDraft(productId: string) {
   safe(() => localStorage.removeItem(DRAFT(productId)), undefined);
 }
 
-export function attachDesign(productId: string, d: OrderDesign) {
-  const v: AttachedDesign = { ...d, updatedAt: Date.now() };
+export function attachDesign(productId: string, d: OrderDesign, color?: string) {
+  const v: AttachedDesign = { ...d, color, updatedAt: Date.now() };
   safe(() => sessionStorage.setItem(ATTACH(productId), JSON.stringify(v)), undefined);
   window.dispatchEvent(new CustomEvent("pod:design", { detail: { productId } }));
 }
