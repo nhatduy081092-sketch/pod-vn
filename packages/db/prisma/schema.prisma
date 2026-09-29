@@ -1,0 +1,477 @@
+// Prisma schema – POD Việt Nam
+// Tiền tệ lưu dạng Int (VND, không có phần thập phân)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Audience {
+  UNISEX
+  MEN
+  WOMEN
+  KIDS
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DESIGN_APPROVED
+  PRINTING
+  SHIPPING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
+enum PrintMode {
+  FILL
+  PATTERN
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// Danh mục = loại sản phẩm (Áo thun, Hoodie, Pijama...) – mỗi danh mục là 1 section trên landing
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String    @default("")
+  imageUrl    String    @default("")
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  showOnHome  Boolean   @default(true)
+  /// Bảng size mặc định cho cả danh mục (mỗi dòng 1 hàng, cột cách nhau bằng | hoặc Tab)
+  sizeChart   String    @default("")
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model Product {
+  id             String      @id @default(cuid())
+  name           String
+  slug           String      @unique
+  description    String      @default("")
+  category       Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId     String
+  audience       Audience    @default(UNISEX)
+  material       String      @default("")
+  printMethod    String      @default("In chuyển nhiệt toàn thân")
+  basePrice      Int
+  compareAtPrice Int?
+  /// Giá tham khảo "Từ …đ" cho sản phẩm báo giá (basePrice = 0)
+  priceFrom      Int?
+  /// Giá dùng để sắp xếp = basePrice > 0 ? basePrice : priceFrom (null = chưa có giá, xếp cuối)
+  sortPrice      Int?
+  /// Bảng size riêng (để trống = dùng bảng size của danh mục)
+  sizeChart      String      @default("")
+  /// Thời gian sản xuất hiển thị, VD "2–4 ngày" (trống = dùng mặc định trong cài đặt)
+  productionDays String      @default("")
+  /// Cân nặng 1 sản phẩm đã đóng gói (gram) – dùng tính phí ship khi biến thể không khai báo
+  weightGram     Int         @default(300)
+  /// Khuyến mãi có thời hạn: giá KM áp dụng đến saleEndsAt (null = không hết hạn)
+  salePrice      Int?
+  saleEndsAt     DateTime?
+  /// Hiện nhãn NEW + vào bộ sưu tập "Hàng mới" đến ngày này
+  newUntil       DateTime?
+  images         String[]
+  /// Dáng sản phẩm cho trình xem trước thiết kế (tshirt, hoodie, ...) – xem apps/web/public/shapes
+  mockShape      String      @default("")
+  colors         String[]
+  sizes          String[]
+  minQty         Int         @default(1)
+  /// [{ minQty: number, price: number }] – giá sỉ theo số lượng
+  priceTiers     Json        @default("[]")
+  isBestSeller   Boolean     @default(false)
+  isHotSale      Boolean     @default(true)
+  isActive       Boolean     @default(true)
+  sortOrder      Int         @default(0)
+  /// Nhóm con trong danh mục (VD: Balo laptop) – dùng để lọc
+  subcategory     String   @default("")
+  subcategorySlug String   @default("")
+  /// Tên + nhóm không dấu, chữ thường – tìm kiếm tiếng Việt không cần gõ dấu
+  searchText      String   @default("")
+  /// Nguồn nhập tự động, ví dụ "oem:36063" (đồng bộ từ oemgroup.vn)
+  externalId     String?     @unique
+  sourceUrl      String      @default("")
+  orderItems     OrderItem[]
+  variants       ProductVariant[]
+  printAreas     PrintArea[]
+  savedDesigns   SavedDesign[]
+  sellerProducts SellerProduct[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([categoryId, isActive, sortOrder])
+  @@index([categoryId, subcategorySlug])
+  @@index([audience, isActive])
+  @@index([isBestSeller])
+  @@index([sortPrice])
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  code          String        @unique
+  customerName  String
+  phone         String
+  email         String        @default("")
+  province      String
+  ward          String
+  addressLine   String
+  note          String        @default("")
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(UNPAID)
+  status        OrderStatus   @default(PENDING)
+  subtotal      Int
+  shippingFee   Int
+  total         Int
+  trackingCode  String        @default("")
+  adminNote     String        @default("")
+  /// true = yêu cầu báo giá / cá nhân hoá (chưa có giá)
+  isQuote       Boolean       @default(false)
+  company       String        @default("")
+  /// Phương thức giao: STANDARD | EXPRESS
+  shippingMethod String       @default("STANDARD")
+  /// Tổng cân nặng (gram) dùng tính phí ship
+  weightGram    Int           @default(0)
+  /// Khách có tài khoản đặt
+  customer      Customer?     @relation("CustomerOrders", fields: [customerId], references: [id], onDelete: SetNull)
+  customerId    String?
+  /// Đơn dropship của seller: giao thẳng cho khách của seller
+  seller        Customer?     @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: SetNull)
+  sellerId      String?
+  /// Mã đơn bên hệ thống của seller (Shopee/TikTok/website riêng) – chống tạo trùng
+  externalId    String?
+  /// Tiền thu hộ từ khách cuối (dropship COD) – shop đối soát trả lại seller
+  codAmount     Int           @default(0)
+  /// Đóng gói theo thương hiệu seller (không kèm hoá đơn giá gốc)
+  whiteLabel    Boolean       @default(false)
+  batch         PaymentBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  batchId       String?
+  /// utm_source, utm_campaign, fbclid, gclid... để đo attribution
+  utm           Json?
+  ip            String        @default("")
+  items         OrderItem[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([sellerId, externalId])
+  @@index([phone])
+  @@index([status, createdAt])
+  @@index([customerId])
+  @@index([sellerId, createdAt])
+}
+
+model OrderItem {
+  id          String    @id @default(cuid())
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  product     Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId   String?
+  /// snapshot tại thời điểm đặt
+  productName String
+  productImg  String    @default("")
+  size        String
+  color       String    @default("")
+  quantity    Int
+  unitPrice   Int
+  lineTotal   Int
+  designUrl   String    @default("")
+  printMode   PrintMode @default(FILL)
+  designNote  String    @default("")
+  /// Đồng phục nhóm: [{ name, number, size, note }] – mỗi phần tử = 1 áo
+  roster      Json?
+  /// Biến thể đã chọn (snapshot SKU để xưởng soạn hàng)
+  variant     ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  variantId   String?
+  sku         String    @default("")
+  /// Thiết kế từ editor: { json, files: [{ area, name, printUrl, previewUrl, dpi }] }
+  design      Json?
+
+  @@index([orderId])
+}
+
+model Testimonial {
+  id           String   @id @default(cuid())
+  name         String
+  content      String
+  rating       Int      @default(5)
+  productName  String   @default("")
+  productPrice Int?
+  imageUrl     String   @default("")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+/// Key-value cấu hình (key "landing" = nội dung landing page)
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+/// ================== A. Biến thể & vùng in ==================
+
+/// Biến thể = màu × size. Mỗi biến thể có SKU riêng để xưởng soạn hàng và tính cân nặng.
+model ProductVariant {
+  id         String      @id @default(cuid())
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  /// "" = sản phẩm không phân màu
+  color      String      @default("")
+  /// Mã màu hiển thị ô màu, VD #1C4D99
+  colorHex   String      @default("")
+  /// "" = không phân size
+  size       String      @default("")
+  sku        String      @unique
+  /// null = dùng cân nặng của sản phẩm
+  weightGram Int?
+  /// Cộng thêm vào giá (VD size 3XL +20.000đ)
+  priceDelta Int         @default(0)
+  isActive   Boolean     @default(true)
+  sortOrder  Int         @default(0)
+  orderItems OrderItem[]
+
+  @@unique([productId, color, size])
+  @@index([productId, isActive])
+}
+
+/// Vùng in theo từng mặt (trước, sau, tay...). Editor dùng để giới hạn thiết kế và xuất file in đúng kích thước.
+model PrintArea {
+  id           String  @id @default(cuid())
+  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId    String
+  /// front | back | sleeve-left | logo ...
+  key          String
+  name         String
+  /// Kích thước thật của vùng in (mm) – file in xuất ra đúng tỉ lệ này
+  widthMm      Int
+  heightMm     Int
+  /// Độ phân giải file in (DPI). Ảnh khách thấp hơn mức này sẽ bị cảnh báo
+  dpi          Int     @default(150)
+  /// Ảnh sản phẩm của mặt này (trống = ảnh đại diện sản phẩm)
+  mockupImage  String  @default("")
+  /// Mask hình dáng (in toàn thân) – thiết kế chỉ hiện trong vùng trắng của mask
+  maskImage    String  @default("")
+  /// Lớp viền/bóng đè lên thiết kế cho mockup thật hơn
+  overlayImage String  @default("")
+  /// Vị trí vùng in trên ảnh mockup, tỉ lệ 0–1
+  zoneX        Float   @default(0.3)
+  zoneY        Float   @default(0.25)
+  zoneW        Float   @default(0.4)
+  zoneH        Float   @default(0.4)
+  /// Phụ phí khi mặt này có thiết kế (mặt chính = 0)
+  extraPrice   Int     @default(0)
+  sortOrder    Int     @default(0)
+
+  @@unique([productId, key])
+}
+
+/// ================== C. Thông báo ==================
+
+model Notice {
+  id            String    @id @default(cuid())
+  title         String
+  content       String    @default("")
+  /// info | warning
+  level         String    @default("info")
+  /// Hiện dải thông báo trên cùng website
+  showBanner    Boolean   @default(false)
+  /// Hiện trên trang sản phẩm (VD lịch nghỉ lễ, tạm ngưng sản xuất)
+  showOnProduct Boolean   @default(false)
+  startsAt      DateTime  @default(now())
+  endsAt        DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([isActive, startsAt])
+}
+
+/// ================== D. Khách hàng, thiết kế đã lưu, hỗ trợ ==================
+
+model Customer {
+  id           String         @id @default(cuid())
+  phone        String         @unique
+  name         String
+  email        String         @default("")
+  passwordHash String
+  /// [{ label, name, phone, province, ward, addressLine, isDefault }]
+  addresses    Json           @default("[]")
+  isActive     Boolean        @default(true)
+  orders       Order[]        @relation("CustomerOrders")
+  sellerOrders Order[]        @relation("SellerOrders")
+  designs      SavedDesign[]
+  seller       SellerProfile?
+  apiKeys      ApiKey[]
+  templates    SellerProduct[]
+  batches      PaymentBatch[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model SavedDesign {
+  id         String   @id @default(cuid())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId  String
+  name       String
+  /// DesignJson (xem packages/shared/src/design.ts)
+  json       Json
+  previewUrl String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([customerId, updatedAt])
+}
+
+model HelpArticle {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  /// bat-dau | thiet-ke | dat-hang | van-chuyen | doi-tra | doanh-nghiep
+  category    String
+  title       String
+  content     String
+  searchText  String   @default("")
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category, sortOrder])
+}
+
+/// Khách để lại thông tin từ widget chat / form tư vấn
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  topic     String
+  message   String   @default("")
+  pageUrl   String   @default("")
+  /// NEW | CONTACTED | DONE
+  status    String   @default("NEW")
+  adminNote String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
+/// ================== E. Seller (dropship) ==================
+
+model SellerProfile {
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId      String   @id
+  /// PENDING | APPROVED | REJECTED | SUSPENDED
+  status          String   @default("PENDING")
+  companyName     String   @default("")
+  taxCode         String   @default("")
+  /// Link gian hàng (Shopee, TikTok Shop, website...)
+  storeUrl        String   @default("")
+  /// Kênh bán, VD "shopee,tiktok"
+  channels        String   @default("")
+  /// % chiết khấu trên giá bán lẻ (duyệt trong CMS)
+  discountPercent Int      @default(0)
+  brandName       String   @default("")
+  /// Tem/nhãn thương hiệu seller (in kèm khi đóng gói white-label)
+  labelImage      String   @default("")
+  webhookUrl      String   @default("")
+  webhookSecret   String   @default("")
+  adminNote       String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String
+  name       String
+  /// 12 ký tự đầu để nhận diện (VD "pk_live_ab12")
+  prefix     String
+  /// sha256 của key – key gốc chỉ hiện 1 lần lúc tạo
+  hash       String    @unique
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId])
+}
+
+/// Mẫu sản phẩm của seller = sản phẩm + thiết kế đã chốt, có mã riêng để đặt đơn/nhập CSV/API
+model SellerProduct {
+  id          String   @id @default(cuid())
+  seller      Customer @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId    String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+  /// Mã mẫu do seller đặt (duy nhất trong tài khoản seller)
+  code        String
+  title       String
+  /// { json, files: [...] } – giống OrderItem.design
+  design      Json
+  previewUrl  String   @default("")
+  retailPrice Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([sellerId, code])
+  @@index([sellerId, createdAt])
+}
+
+/// Thanh toán gộp nhiều đơn dropship bằng 1 lần chuyển khoản
+model PaymentBatch {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  seller    Customer  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sellerId  String
+  total     Int
+  /// UNPAID | PAID | CANCELLED
+  status    String    @default("UNPAID")
+  orders    Order[]
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([sellerId, createdAt])
+}
+
+model WebhookDelivery {
+  id         String   @id @default(cuid())
+  sellerId   String
+  event      String
+  orderCode  String
+  url        String
+  status     Int      @default(0)
+  ok         Boolean  @default(false)
+  attempts   Int      @default(0)
+  error      String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([sellerId, createdAt])
+}

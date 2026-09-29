@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<defs><clipPath id="g"><path d="M152 48 L132 48 Q134 118 104 150 L108 352 L292 352 L296 150 Q266 118 268 48 L248 48 Q200 112 152 48 Z"/></clipPath>
+<linearGradient id="shade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".2"/><stop offset=".3" stop-color="#fff" stop-opacity=".15"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient></defs>
+<g clip-path="url(#g)"><rect width="400" height="400" fill="url(#shade)"/></g>
+<g fill="none" stroke="#1d1d1f" stroke-opacity=".45" stroke-width="2" stroke-linejoin="round"><path d="M152 48 L132 48 Q134 118 104 150 L108 352 L292 352 L296 150 Q266 118 268 48 L248 48 Q200 112 152 48 Z"/><path d="M152 48 Q200 112 248 48"/><path d="M108 340 L292 340"/></g></svg>

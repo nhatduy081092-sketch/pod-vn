@@ -1,0 +1,37 @@
+{
+  "name": "pod-vn",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=20.12.0"
+  },
+  "scripts": {
+    "init-env": "node scripts/setup-env.mjs",
+    "dev": "turbo run dev",
+    "dev:web": "pnpm --filter @pod/web dev",
+    "dev:cms": "pnpm --filter @pod/cms dev",
+    "dev:api": "pnpm --filter @pod/api dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @pod/db generate",
+    "db:migrate": "pnpm --filter @pod/db migrate",
+    "db:push": "pnpm --filter @pod/db push",
+    "db:seed": "pnpm --filter @pod/db seed",
+    "db:studio": "pnpm --filter @pod/db studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}

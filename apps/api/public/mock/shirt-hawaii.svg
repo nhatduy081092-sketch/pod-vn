@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="800" height="800">
+<defs><pattern id="p" width="150" height="150" patternUnits="userSpaceOnUse"><rect width="150" height="150" fill="#0F766E"/><g fill="#FDE047"><ellipse cx="40" cy="40" rx="34" ry="12" transform="rotate(-35 40 40)"/><ellipse cx="110" cy="100" rx="36" ry="13" transform="rotate(40 110 100)"/></g><g fill="#F97316"><ellipse cx="100" cy="30" rx="26" ry="10" transform="rotate(20 100 30)"/><ellipse cx="40" cy="115" rx="28" ry="10" transform="rotate(-60 40 115)"/></g><g fill="#FFFFFF"><circle cx="75" cy="70" r="9"/><circle cx="140" cy="140" r="7"/><circle cx="10" cy="80" r="6"/></g></pattern>
+<clipPath id="g"><path d="M150 58 L108 70 L42 118 L74 178 L112 155 L112 352 L288 352 L288 155 L326 178 L358 118 L292 70 L250 58 Q200 92 150 58 Z"/></clipPath>
+<linearGradient id="shade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".16"/><stop offset=".3" stop-color="#fff" stop-opacity=".12"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>
+</defs>
+<ellipse cx="200" cy="374" rx="140" ry="9" fill="#000" opacity=".07"/>
+<g clip-path="url(#g)"><rect width="400" height="400" fill="url(#p)"/><rect width="400" height="400" fill="url(#shade)"/></g>
+<g fill="none" stroke="#1d1d1f" stroke-opacity=".35" stroke-width="2" stroke-linejoin="round"><path d="M150 58 L108 70 L42 118 L74 178 L112 155 L112 352 L288 352 L288 155 L326 178 L358 118 L292 70 L250 58 Q200 92 150 58 Z"/><path d="M150 58 L178 98 L200 72 L222 98 L250 58"/><path d="M200 72 L200 352"/></g>
+<circle cx="206" cy="110" r="3.5" fill="#fff" stroke="#1d1d1f" stroke-opacity=".4"/><circle cx="206" cy="160" r="3.5" fill="#fff" stroke="#1d1d1f" stroke-opacity=".4"/><circle cx="206" cy="210" r="3.5" fill="#fff" stroke="#1d1d1f" stroke-opacity=".4"/><circle cx="206" cy="260" r="3.5" fill="#fff" stroke="#1d1d1f" stroke-opacity=".4"/><circle cx="206" cy="310" r="3.5" fill="#fff" stroke="#1d1d1f" stroke-opacity=".4"/>
+</svg>

@@ -1,0 +1,15 @@
+# PostgreSQL cho môi trường dev. Chạy: docker compose up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pod
+      POSTGRES_PASSWORD: pod
+      POSTGRES_DB: pod_vn
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

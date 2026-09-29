@@ -1,0 +1,13 @@
+"use client";
+
+export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  return (
+    <div className="container-site py-20 text-center">
+      <h1 className="text-xl font-black">Có lỗi xảy ra</h1>
+      <p className="mt-1 text-ink/60">Máy chủ đang bận hoặc mất kết nối. Vui lòng thử lại.</p>
+      <button onClick={reset} className="btn-primary mt-6">
+        Thử lại
+      </button>
+    </div>
+  );
+}
