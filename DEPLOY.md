@@ -19,7 +19,21 @@ web / cms ──(mạng Docker nội bộ)──► api:4000 (Hono + Prisma) ─
 
 Ubuntu 22.04/24.04, ≥ 2 vCPU, ≥ 2 GB RAM (script tự tạo 2 GB swap để build Next.js), ≥ 25 GB ổ đĩa.
 
-## Lần đầu (≈ 20 phút)
+## Lần đầu – cách nhanh (1 lệnh)
+
+```bash
+# Trên VPS (root). Repo private -> tạo deploy key chỉ đọc
+apt-get update && apt-get install -y git
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/yala_deploy -C yala-vps && cat ~/.ssh/yala_deploy.pub
+#   -> GitHub: repo pod-vn > Settings > Deploy keys > Add deploy key (dán, KHÔNG tick write)
+printf 'Host github.com\n  IdentityFile ~/.ssh/yala_deploy\n  StrictHostKeyChecking accept-new\n' >> ~/.ssh/config
+git clone git@github.com:nhatduy081092-sketch/pod-vn.git /opt/yala
+cd /opt/yala && bash deploy/bootstrap.sh
+```
+
+`bootstrap.sh` hỏi 3 thứ (database – Enter để dùng Postgres trên VPS, email + mật khẩu admin), tự sinh mọi secret, rồi chạy lần lượt các bước bên dưới. `admin.yala.vn` chưa có DNS thì CMS tạm chưa mở ra Internet – thêm bản ghi A rồi chạy lại `sudo bash deploy/ssl-init.sh`.
+
+## Lần đầu – từng bước (≈ 20 phút)
 
 ```bash
 # 1. Trên VPS (root)
