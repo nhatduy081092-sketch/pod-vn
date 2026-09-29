@@ -15,16 +15,16 @@ EMAIL="$(env_get CERTBOT_EMAIL)"
 [ -n "$EMAIL" ] && [[ "$EMAIL" != *"<"* ]] || die "Điền CERTBOT_EMAIL trong .env.production"
 
 # 1) Kiểm tra DNS trỏ đúng IP VPS
-IP="$(curl -4 -fsS --max-time 10 https://api.ipify.org || curl -4 -fsS --max-time 10 https://ifconfig.me)"
+IP="$(curl -4 -fsS --max-time 10 https://api.ipify.org || curl -4 -fsS --max-time 10 https://ifconfig.me || true)"
 [ -n "$IP" ] || die "Không xác định được IP công khai của VPS"
 bad=0
 for d in "${DOMAINS[@]}"; do
-  got="$(getent ahostsv4 "$d" | awk 'NR==1{print $1}')"
+  got="$(getent ahostsv4 "$d" 2>/dev/null | awk 'NR==1{print $1}' || true)"
   if [ "$got" = "$IP" ]; then log "✓ DNS $d -> $got"; else log "✗ DNS $d -> ${got:-(chưa có)} (cần $IP)"; bad=1; fi
 done
 [ "$bad" = 0 ] || die "DNS chưa trỏ về VPS – tạo bản ghi A cho các tên miền trên rồi chạy lại (có thể mất 5–30 phút)"
 # CMS (admin.yala.vn): có DNS thì cấp SSL luôn; chưa có thì bỏ qua, thêm sau bằng cách chạy lại script này
-got="$(getent ahostsv4 "$ADMIN_DOMAIN" | awk 'NR==1{print $1}')"
+got="$(getent ahostsv4 "$ADMIN_DOMAIN" 2>/dev/null | awk 'NR==1{print $1}' || true)"
 if [ "$got" = "$IP" ]; then
   DOMAINS+=("$ADMIN_DOMAIN"); WITH_ADMIN=1; log "✓ DNS $ADMIN_DOMAIN -> $got"
 else

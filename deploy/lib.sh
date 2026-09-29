@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Hàm dùng chung cho các script deploy YALA (source file này, không chạy trực tiếp)
 set -Eeuo pipefail
+trap 'echo "✗ Lỗi ở dòng $LINENO: $BASH_COMMAND (script: ${BASH_SOURCE[0]})" >&2' ERR
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -14,7 +15,7 @@ die() { log "✗ $*"; exit 1; }
 # Đọc 1 biến trong .env.production (bỏ dấu ngoặc kép), không in ra màn hình
 env_get() {
   [ -f "$ENV_FILE" ] || return 0
-  grep -E "^$1=" "$ENV_FILE" | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//"
+  { grep -E "^$1=" "$ENV_FILE" || true; } | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//"
 }
 
 require_env() {

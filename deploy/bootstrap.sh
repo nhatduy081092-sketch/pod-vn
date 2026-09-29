@@ -7,6 +7,7 @@
 # Chạy lại an toàn: bước nào đã xong sẽ được bỏ qua / làm lại không mất dữ liệu.
 # ============================================================
 set -Eeuo pipefail
+trap 'echo "✗ Lỗi ở dòng $LINENO: $BASH_COMMAND" >&2' ERR
 [ "$(id -u)" = 0 ] || { echo "Chạy bằng root"; exit 1; }
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
