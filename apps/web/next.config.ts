@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 /** Host ảnh ngoài được tối ưu qua next/image (resize + WebP/AVIF theo thiết bị) */
@@ -8,6 +9,9 @@ const uploadsBase = process.env.NEXT_PUBLIC_UPLOADS_BASE ? new URL(process.env.N
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@pod/shared"],
+  // Docker: NEXT_OUTPUT=standalone -> server tự chứa, image nhỏ (tắt khi dev/Windows)
+  ...(process.env.NEXT_OUTPUT === "standalone" ? { output: "standalone" as const, outputFileTracingRoot: path.join(process.cwd(), "../..") } : {}),
+  compress: process.env.NEXT_COMPRESS !== "0",
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],

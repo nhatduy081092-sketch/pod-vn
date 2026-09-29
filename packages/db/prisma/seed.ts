@@ -103,6 +103,10 @@ async function main() {
   // 1. Admin
   const email = (process.env.ADMIN_EMAIL ?? "admin@podviet.vn").toLowerCase();
   const password = process.env.ADMIN_PASSWORD ?? "Admin@123456";
+  // Production: không cho tạo admin bằng mật khẩu mặc định/yếu
+  if (process.env.NODE_ENV === "production" && (password.length < 12 || password === "Admin@123456" || !process.env.ADMIN_EMAIL)) {
+    throw new Error("Production cần ADMIN_EMAIL và ADMIN_PASSWORD mạnh (≥ 12 ký tự, khác mật khẩu mẫu)");
+  }
   await prisma.adminUser.upsert({
     where: { email },
     update: {},

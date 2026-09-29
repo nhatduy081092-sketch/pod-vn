@@ -1,0 +1,130 @@
+# ============================================================
+# YALA – production trên 1 VPS (xem DEPLOY.md)
+#   docker compose --env-file .env.production -f docker-compose.production.yml up -d
+# - Nginx chạy trên VPS (ngoài Docker) giữ SSL, proxy vào 127.0.0.1:3000 / 3001
+# - API KHÔNG mở cổng ra ngoài: web/cms gọi nội bộ http://api:4000
+# - Database: dùng DATABASE_URL (Neon/Supabase) HOẶC bật Postgres nội bộ: --profile localdb
+# ============================================================
+name: yala
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-next-build-args: &next-build-args
+  NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://yala.vn}
+  NEXT_PUBLIC_API_URL: http://api:4000
+  API_URL: http://api:4000
+  NEXT_PUBLIC_UPLOADS_BASE: ${NEXT_PUBLIC_UPLOADS_BASE:-}
+  NEXT_PUBLIC_GA4_ID: ${NEXT_PUBLIC_GA4_ID:-}
+  NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID:-}
+
+services:
+  api:
+    image: yala-api:${TAG:-latest}
+    build:
+      context: .
+      target: api
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      API_PORT: "4000"
+      UPLOAD_DIR: uploads
+    volumes:
+      - uploads:/app/apps/api/uploads
+    restart: unless-stopped
+    stop_grace_period: 15s
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  web:
+    image: yala-web:${TAG:-latest}
+    build:
+      context: .
+      target: web
+      args: *next-build-args
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      API_URL: http://api:4000
+      PORT: "3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    logging: *logging
+
+  cms:
+    image: yala-cms:${TAG:-latest}
+    build:
+      context: .
+      target: cms
+      args: *next-build-args
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      API_URL: http://api:4000
+      WEB_INTERNAL_URL: http://web:3000
+      PORT: "3001"
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3001:3001"
+    restart: unless-stopped
+    logging: *logging
+
+  # Chạy 1 lần mỗi lần deploy (deploy.sh gọi): áp migration an toàn, KHÔNG reset dữ liệu
+  migrate:
+    image: yala-api:${TAG:-latest}
+    profiles: ["tools"]
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+    working_dir: /app/packages/db
+    command: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/schema.prisma"]
+    restart: "no"
+    logging: *logging
+
+  # Dữ liệu mẫu + tài khoản admin lần đầu (idempotent). Chạy tay: docker compose ... run --rm seed
+  seed:
+    image: yala-api:${TAG:-latest}
+    profiles: ["tools"]
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+    working_dir: /app/packages/db
+    command: ["node", "--import", "tsx", "prisma/seed.ts"]
+    restart: "no"
+
+  # Tuỳ chọn: Postgres chạy ngay trên VPS (không mở cổng ra Internet)
+  #   bật: --profile localdb ; DATABASE_URL=postgresql://yala:<POSTGRES_PASSWORD>@db:5432/yala?schema=public
+  db:
+    image: postgres:16-alpine
+    profiles: ["localdb"]
+    environment:
+      POSTGRES_USER: yala
+      POSTGRES_DB: yala
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-} # bắt buộc đặt trong .env.production khi dùng localdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yala -d yala"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  uploads:
+  pgdata:

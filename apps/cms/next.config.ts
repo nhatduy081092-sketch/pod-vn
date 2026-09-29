@@ -1,7 +1,11 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@pod/shared"],
+  // Docker: NEXT_OUTPUT=standalone -> server tự chứa, image nhỏ (tắt khi dev/Windows)
+  ...(process.env.NEXT_OUTPUT === "standalone" ? { output: "standalone" as const, outputFileTracingRoot: path.join(process.cwd(), "../..") } : {}),
+  compress: process.env.NEXT_COMPRESS !== "0",
   poweredByHeader: false,
   async rewrites() {
     const api = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:4000").replace(/\/$/, "");

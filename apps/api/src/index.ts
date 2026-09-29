@@ -1,7 +1,7 @@
 import { env } from "./env"; // nạp .env trước tiên
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
@@ -53,10 +53,20 @@ app.get("/uploads/:name", async (c) => {
 });
 app.use("/mock/*", serveStatic({ root: "./public" }));
 
-app.get("/health", async (c) => {
-  await prisma.$queryRaw`SELECT 1`;
-  return c.json({ ok: true, time: new Date().toISOString() });
-});
+/** Health check (Docker, Nginx, deploy script) – không trả thông tin nhạy cảm */
+const startedAt = Date.now();
+async function health(c: Context) {
+  let db = "up";
+  try {
+    await Promise.race([prisma.$queryRaw`SELECT 1`, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 3000))]);
+  } catch {
+    db = "down";
+  }
+  c.header("Cache-Control", "no-store");
+  return c.json({ ok: db === "up", service: "api", db, uptimeSec: Math.round((Date.now() - startedAt) / 1000), time: new Date().toISOString() }, db === "up" ? 200 : 503);
+}
+app.get("/health", health);
+app.get("/api/health", health);
 
 app.route("/api", publicRoutes);
 app.route("/api", checkoutRoutes);
@@ -81,8 +91,23 @@ app.onError((err, c) => {
   return c.json({ error: "Lỗi hệ thống, vui lòng thử lại" }, 500);
 });
 
-serve({ fetch: app.fetch, port: env.port }, (info) => {
+const server = serve({ fetch: app.fetch, port: env.port, hostname: process.env.API_HOST ?? "0.0.0.0" }, (info) => {
   console.log(`🚀 API chạy tại http://localhost:${info.port}`);
   console.log(`[upload] lưu ảnh: ${storageInfo.driver === "r2" ? `Cloudflare R2 → ${storageInfo.publicUrl}` : "ổ đĩa local (chỉ dùng khi dev)"}`);
   backfillSearchText().catch((e) => console.warn("[search] backfill lỗi:", (e as Error).message));
 });
+
+// Tắt êm khi Docker/PM2 dừng container: ngừng nhận request, đóng kết nối DB
+let closing = false;
+for (const sig of ["SIGTERM", "SIGINT"] as const) {
+  process.on(sig, () => {
+    if (closing) return;
+    closing = true;
+    console.log(`[api] nhận ${sig}, đang tắt…`);
+    server.close(() => {
+      void prisma.$disconnect().finally(() => process.exit(0));
+    });
+    setTimeout(() => process.exit(0), 10_000).unref();
+  });
+}
+process.on("unhandledRejection", (e) => console.error("[api] unhandledRejection:", e));

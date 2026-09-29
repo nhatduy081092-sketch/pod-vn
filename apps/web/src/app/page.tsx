@@ -1,4 +1,6 @@
+import { connection } from "next/server";
 import { getHome } from "@/lib/api";
+import type { HomeData } from "@/lib/types";
 import { TopBanner } from "@/components/landing/TopBanner";
 import { Hero } from "@/components/landing/Hero";
 import { BestSellers } from "@/components/landing/BestSellers";
@@ -16,7 +18,16 @@ export const revalidate = 60;
 
 /** Landing "In toàn thân" – bám bố cục trang mẫu 1:1 */
 export default async function HomePage() {
-  const { settings, bestSellers, categories, testimonials, b2bProducts = [], catalog = [] } = await getHome();
+  let home: HomeData | null = null;
+  try {
+    home = await getHome();
+  } catch (e) {
+    // Lúc build Docker chưa có API: chuyển trang sang render khi có request thay vì làm hỏng build.
+    // Lúc chạy thật mà API lỗi: Next giữ bản trang cũ (ISR) / hiện trang lỗi.
+    await connection();
+    throw e;
+  }
+  const { settings, bestSellers, categories, testimonials, b2bProducts = [], catalog = [] } = home;
   return (
     <>
       <TopBanner data={settings.topBanner} />

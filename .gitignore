@@ -3,7 +3,9 @@ node_modules
 dist
 .turbo
 .env
-.env.local
+.env.*
+!.env.example
+!.env.production.example
 *.log
 apps/api/uploads/*
 !apps/api/uploads/.gitkeep
@@ -13,3 +15,13 @@ logs
 # local tooling
 *.tgz
 .claude/
+
+# production: dữ liệu sao lưu, chứng chỉ, file deploy cục bộ
+backups/
+*.sql
+*.sql.gz
+*.pem
+*.key
+
+# deploy trên VPS
+.deploy/

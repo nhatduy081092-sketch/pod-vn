@@ -21,7 +21,8 @@ import type { ActionResult } from "./types";
 /** Báo web xoá cache để nội dung mới hiện ngay (bỏ qua nếu chưa cấu hình) */
 async function revalidateWeb() {
   const secret = process.env.REVALIDATE_SECRET;
-  const web = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+  // Docker: gọi thẳng web trong mạng nội bộ (Nginx chặn /revalidate từ Internet)
+  const web = (process.env.WEB_INTERNAL_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
   if (!secret) return;
   try {
     await fetch(`${web}/revalidate`, { method: "POST", headers: { "x-revalidate-secret": secret }, cache: "no-store" });

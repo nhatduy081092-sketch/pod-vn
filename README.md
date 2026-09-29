@@ -111,6 +111,9 @@ Màu lấy mẫu trực tiếp từ ảnh: cam card `#FFA415`, nền kem `#FFF6C
 
 ## 5. Deploy đề xuất
 
+> **Production yala.vn: xem [DEPLOY.md](DEPLOY.md)** (Docker + Nginx + Let's Encrypt trên VPS, script deploy/backup/rollback). Bảng dưới là phương án thay thế (Vercel/Railway).
+
+
 | Thành phần | Nơi chạy | Ghi chú |
 |---|---|---|
 | `apps/web`, `apps/cms` | Vercel (2 project, Root Directory = `apps/web`, `apps/cms`) | Env: `NEXT_PUBLIC_API_URL`, `API_URL`, `NEXT_PUBLIC_SITE_URL` |
