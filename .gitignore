@@ -19,6 +19,7 @@ logs
 # production: dữ liệu sao lưu, chứng chỉ, file deploy cục bộ
 backups/
 *.sql
+!packages/db/prisma/migrations/*/migration.sql
 *.sql.gz
 *.pem
 *.key
