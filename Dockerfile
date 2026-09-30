@@ -7,18 +7,24 @@
 # Build qua docker-compose.production.yml (xem DEPLOY.md).
 # ============================================================
 ARG NODE_VERSION=22
+ARG PNPM_VERSION=10.28.0
 
 # ---------- nền chung ----------
 FROM node:${NODE_VERSION}-bookworm-slim AS base
+ARG PNPM_VERSION
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
     NEXT_TELEMETRY_DISABLED=1 \
-    CI=1
+    CI=1 \
+    COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 # openssl: Prisma engine; ca-certificates: gọi HTTPS (R2, Telegram, webhook)
+# Tải sẵn pnpm (thử lại tới 5 lần – mạng VPS hay bị ngắt giữa chừng khi tải từ registry npm)
 RUN apt-get update \
  && apt-get install -y --no-install-recommends openssl ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
- && corepack enable
+ && corepack enable \
+ && for i in 1 2 3 4 5; do corepack prepare "pnpm@${PNPM_VERSION}" --activate && pnpm --version && break; echo "Tải pnpm lỗi, thử lại lần $i…"; sleep $((i * 5)); done \
+ && pnpm --version
 WORKDIR /app
 
 # ---------- cài dependency (cache theo lockfile) ----------
@@ -30,7 +36,11 @@ COPY apps/api/package.json apps/api/
 COPY packages/db/package.json packages/db/
 COPY packages/shared/package.json packages/shared/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm config set fetch-retries 6 \
+ && pnpm config set fetch-retry-mintimeout 10000 \
+ && pnpm config set fetch-retry-maxtimeout 90000 \
+ && pnpm config set network-concurrency 8 \
+ && for i in 1 2 3; do pnpm install --frozen-lockfile && exit 0; echo "pnpm install lỗi, thử lại lần $i…"; sleep $((i * 10)); done; exit 1
 
 # ---------- mã nguồn + Prisma Client ----------
 FROM deps AS source
