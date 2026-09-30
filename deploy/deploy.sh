@@ -47,14 +47,18 @@ fi
 # 4) Build image mới – container đang chạy không bị ảnh hưởng
 # Ổ đĩa: build Next.js cần ~4GB trống; thiếu thì dọn cache build + image thừa (không đụng container đang chạy)
 free_gb() { df -P -BG "$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || echo /)" | awk 'NR==2{gsub("G","",$4); print $4}'; }
-if [ "$(free_gb)" -lt 6 ]; then
-  log "Ổ đĩa còn $(free_gb)GB – dọn cache build Docker + image thừa"
+# (build web + cms thực tế dùng ~5GB tạm – 4GB từng hết chỗ giữa chừng)
+if [ "$(free_gb)" -lt 8 ]; then
+  log "Ổ đĩa còn $(free_gb)GB – dọn cache build Docker + image YALA cũ (giữ bản đang chạy ${PREV_TAG:-?})"
+  for s in api web cms; do
+    docker images "yala-$s" --format '{{.Tag}}' | grep -vxF "${PREV_TAG:-__none__}" | xargs -r -I{} docker rmi "yala-$s:{}" >/dev/null 2>&1 || true
+  done
   docker builder prune -af >/dev/null 2>&1 || true
   docker image prune -f >/dev/null 2>&1 || true
   journalctl --vacuum-size=200M >/dev/null 2>&1 || true
   log "Sau khi dọn: còn $(free_gb)GB"
 fi
-[ "$(free_gb)" -ge 4 ] || die "Ổ đĩa chỉ còn $(free_gb)GB (cần ≥ 4GB để build) – xoá bớt file/log/web cũ trên VPS rồi chạy lại. Xem: df -h ; docker system df"
+[ "$(free_gb)" -ge 6 ] || die "Ổ đĩa chỉ còn $(free_gb)GB (cần ≥ 6GB để build) – xoá bớt file trên VPS rồi chạy lại. Xem: df -h ; du -xh / --max-depth=2 | sort -rh | head -20"
 log "Build image $NEW_TAG (lần đầu có thể mất 5–10 phút)"
 TAG="$NEW_TAG" compose build api web cms 2>&1 | tee -a "$ROOT/logs/build-$NEW_TAG.log" >/dev/null \
   || die "Build lỗi – xem logs/build-$NEW_TAG.log (bản cũ vẫn chạy)"
@@ -91,9 +95,9 @@ echo "$NEW_TAG" >> .deploy/history
 # 8) Làm mới nội dung (trang build sẵn lúc chưa có API)
 curl -fsS -X POST -H "x-revalidate-secret: $(env_get REVALIDATE_SECRET)" http://127.0.0.1:3180/revalidate >/dev/null 2>&1 || true
 
-# 9) Dọn image cũ: giữ 3 bản gần nhất để rollback
+# 9) Dọn image cũ: giữ bản mới + bản liền trước để rollback (mỗi bộ ~1–1.5GB, ổ VPS nhỏ)
 for s in api web cms; do
-  docker images "yala-$s" --format '{{.Tag}}' | grep -vE "^(latest|$NEW_TAG)$" | grep -vxF -f <(tail -3 .deploy/history) | xargs -r -I{} docker rmi "yala-$s:{}" >/dev/null 2>&1 || true
+  docker images "yala-$s" --format '{{.Tag}}' | grep -vE "^(latest|$NEW_TAG)$" | grep -vxF -f <(tail -2 .deploy/history) | xargs -r -I{} docker rmi "yala-$s:{}" >/dev/null 2>&1 || true
 done
 docker image prune -f >/dev/null 2>&1 || true
 # cache build cũ hơn 3 ngày (giữ cache mới để lần sau build nhanh)
