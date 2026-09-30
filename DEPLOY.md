@@ -67,7 +67,24 @@ Sau đó: đăng nhập `https://admin.yala.vn` bằng `ADMIN_EMAIL` / `ADMIN_PA
 cd /opt/yala && bash deploy/deploy.sh
 ```
 
-Quy trình tự động: `git pull` → **sao lưu DB + ảnh** → build image mới (bản cũ vẫn chạy) → `prisma migrate deploy` → khởi động bản mới → **health check** → lỗi thì **tự quay về bản cũ** → làm mới cache nội dung → dọn image cũ (giữ 3 bản).
+### Build trên GitHub, VPS chỉ tải image (khuyên dùng)
+
+Mỗi lần push lên `main`, GitHub Actions (`.github/workflows/images.yml`) build 3 image và đẩy lên GHCR:
+`ghcr.io/nhatduy081092-sketch/yala-{api,web,cms}:<commit>`. VPS không phải build → deploy ~1–2 phút, không cần nhiều ổ đĩa.
+
+Cài 1 lần:
+1. Push code → đợi job **Build images** xanh (tab *Actions* trên GitHub, lần đầu ~10–15 phút).
+2. GitHub → hồ sơ → **Packages** → lần lượt `yala-api`, `yala-web`, `yala-cms` → *Package settings* → *Change visibility* → **Public**
+   (repo đã public, image không chứa bí mật – `.env.production` chỉ nạp lúc chạy trên VPS).
+   Muốn để Private: trên VPS chạy `docker login ghcr.io -u <user>` với token classic quyền `read:packages`.
+3. Trên VPS thêm vào `.env.production`: `IMAGE_REGISTRY="ghcr.io/nhatduy081092-sketch"`.
+4. Nếu dùng GA4 / Meta Pixel / CDN ảnh: GitHub → repo → *Settings → Secrets and variables → Actions → Variables* thêm
+   `NEXT_PUBLIC_GA4_ID`, `NEXT_PUBLIC_META_PIXEL_ID`, `NEXT_PUBLIC_UPLOADS_BASE` (cùng giá trị như `.env.production`).
+
+Từ đó: `cd /opt/yala && bash deploy/deploy.sh` – script tự chờ nếu GitHub chưa build xong (tối đa 15 phút).
+Cần build ngay trên VPS (GitHub lỗi): `bash deploy/deploy.sh --build`.
+
+Quy trình tự động: `git pull` → **sao lưu DB + ảnh** → tải image từ GHCR (hoặc build – bản cũ vẫn chạy) → `prisma migrate deploy` → khởi động bản mới → **health check** → lỗi thì **tự quay về bản cũ** → làm mới cache nội dung → dọn image cũ (giữ 2 bản).
 
 ## Vận hành
 
