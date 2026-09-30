@@ -22,10 +22,10 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const cat = await getCategory(slug);
   if (!cat) notFound();
-  const query: ListingParams = { q: sp.q?.slice(0, 80), sub: sp.sub, gia: sp.gia, sort: sp.sort, page: sp.page, "doi-tuong": sp["doi-tuong"], "bo-suu-tap": sp["bo-suu-tap"] };
+  const query: ListingParams = { q: sp.q?.slice(0, 80), sub: sp.sub, gia: sp.gia, sort: sp.sort, page: sp.page, "doi-tuong": sp["doi-tuong"], "bo-suu-tap": sp["bo-suu-tap"], mau: sp.mau?.slice(0, 40) };
   const [data, facets] = await Promise.all([
     getProducts({ ...query, category: slug }),
-    getFacets({ category: slug, q: query.q, gia: query.gia, sub: query.sub, "doi-tuong": query["doi-tuong"], "bo-suu-tap": query["bo-suu-tap"] }),
+    getFacets({ category: slug, q: query.q, gia: query.gia, sub: query.sub, "doi-tuong": query["doi-tuong"], "bo-suu-tap": query["bo-suu-tap"], mau: query.mau }),
   ]);
   const activeSub = facets.subcategories.find((s) => s.slug === query.sub);
   return (
@@ -49,6 +49,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
       <h1 className="mt-1 text-2xl font-black md:text-3xl">
         {activeSub?.name ?? cat.name}
         {query.q && <span className="text-ink/50"> · “{query.q}”</span>}
+        {query.mau && <span className="text-ink/50"> · màu {query.mau}</span>}
       </h1>
       {cat.description && !activeSub && <p className="mt-1 max-w-3xl text-sm text-ink/70 md:text-base">{cat.description}</p>}
       <div className="mt-4">

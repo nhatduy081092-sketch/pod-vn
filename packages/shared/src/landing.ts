@@ -55,6 +55,15 @@ export type LandingSettings = {
     reviews: string;
   };
   steps: { title: string; color: string }[];
+  /** Khối "Dòng sản phẩm" (ảnh người mẫu + dải màu) – ngay dưới hero */
+  showcase: {
+    enabled: boolean;
+    eyebrow: string;
+    title: string;
+    /** Lấy dải màu từ phân loại thật của danh mục (đủ ≥ 2 màu), không thì dùng màu khai báo */
+    autoColors: boolean;
+    tiles: ShowcaseTile[];
+  };
   intro: {
     text: string;
     subtext: string;
@@ -80,6 +89,27 @@ export type LandingSettings = {
     description: string;
   };
 };
+
+export type ShowcaseTile = {
+  title: string;
+  subtitle: string;
+  /** Dòng chữ nhỏ dưới dải màu */
+  tagline: string;
+  image: string;
+  /** Màu nền hiện trong lúc ảnh đang tải (lấy từ nền ảnh) */
+  bg: string;
+  /** Tâm ảnh khi cắt khung (object-position), VD "70% 30%" – giữ người mẫu trong khung ở mọi màn hình */
+  focus: string;
+  categorySlug: string;
+  /** Link riêng (để trống = trang danh mục) */
+  href: string;
+  ctaLabel: string;
+  /** Dáng áo vẽ ô màu: tshirt, hoodie, pajama, shirt, polo, jersey… (xem MOCK_SHAPES) */
+  shape: string;
+  colors: { name: string; hex: string }[];
+};
+
+const C = (name: string, hex: string) => ({ name, hex });
 
 export const DEFAULT_LANDING: LandingSettings = {
   brand: {
@@ -140,6 +170,79 @@ export const DEFAULT_LANDING: LandingSettings = {
     { title: "Xưởng in đúng file thiết kế & kiểm tra chất lượng", color: "#D6A9F2" },
     { title: "Đóng gói & giao hàng toàn quốc", color: "#8BE3D3" },
   ],
+  showcase: {
+    enabled: true,
+    eyebrow: "YALA · Thời trang tuỳ chỉnh cho phong cách của bạn",
+    title: "Chọn dòng sản phẩm",
+    autoColors: true,
+    tiles: [
+      {
+        title: "Áo thun",
+        subtitle: "Đơn giản nhưng luôn chất",
+        tagline: "Đủ màu · Đủ size · In theo yêu cầu",
+        image: "/showcase/ao-thun.webp",
+        bg: "#e5e5e9",
+        focus: "68% 30%",
+        categorySlug: "ao-thun",
+        href: "",
+        ctaLabel: "Xem ngay",
+        shape: "tshirt",
+        colors: [C("Trắng", "#ffffff"), C("Đen", "#1d1d1f"), C("Xám", "#a3a6ab"), C("Hồng", "#f4b9c6"), C("Đỏ", "#d62828"), C("Vàng", "#f5c518"), C("Xanh lá", "#0b6b3a"), C("Xanh ngọc", "#a8cdef"), C("Xanh navy", "#1e2f5a")],
+      },
+      {
+        title: "Hoodie & Sweater",
+        subtitle: "Ấm áp, phong cách, dễ phối đồ",
+        tagline: "Nhiều màu sắc · Chất vải dày dặn · In thêu theo yêu cầu",
+        image: "/showcase/hoodie.webp",
+        bg: "#bca796",
+        focus: "72% 30%",
+        categorySlug: "hoodie-sweater",
+        href: "",
+        ctaLabel: "Xem ngay",
+        shape: "hoodie",
+        colors: [C("Đen", "#1d1d1f"), C("Xám", "#a3a3a3"), C("Xanh navy", "#1e2a4a"), C("Kem", "#efe3cf"), C("Hồng", "#f2b8c6"), C("Đỏ", "#c1121f"), C("Xanh rêu", "#0f5132"), C("Nâu", "#5c3d2e")],
+      },
+      {
+        title: "Pijama",
+        subtitle: "Thoải mái mỗi ngày",
+        tagline: "Nhiều hoạ tiết · Nhiều màu · Chất vải mềm mại",
+        image: "/showcase/pijama.webp",
+        bg: "#f3c9d0",
+        focus: "62% 35%",
+        categorySlug: "pijama",
+        href: "",
+        ctaLabel: "Xem ngay",
+        shape: "pajama",
+        colors: [C("Hồng", "#f6c1cc"), C("Xanh", "#a9d2f0"), C("Vàng kem", "#f6dfb0"), C("Tím", "#c9b3e6"), C("Xanh navy", "#1f2a44")],
+      },
+      {
+        title: "Sơ mi & Polo",
+        subtitle: "Lịch lãm, trẻ trung, đa phong cách",
+        tagline: "Đa dạng màu sắc · Chất liệu cao cấp · In/thêu logo theo yêu cầu",
+        image: "/showcase/so-mi-polo.webp",
+        bg: "#e6e8ea",
+        focus: "60% 40%",
+        categorySlug: "so-mi-polo",
+        href: "",
+        ctaLabel: "Xem ngay",
+        shape: "polo",
+        colors: [C("Trắng", "#ffffff"), C("Xanh", "#a9c7ea"), C("Hồng", "#f2b8c6"), C("Đen", "#1d1d1f"), C("Xanh navy", "#1e2a4a"), C("Xám", "#9ca3af")],
+      },
+      {
+        title: "Đồ thể thao",
+        subtitle: "Năng động, thoải mái, bứt phá",
+        tagline: "Đa dạng sản phẩm · Nhiều màu sắc · Chất vải thoáng mát",
+        image: "/showcase/the-thao.webp",
+        bg: "#e2e1df",
+        focus: "62% 40%",
+        categorySlug: "do-the-thao",
+        href: "",
+        ctaLabel: "Xem ngay",
+        shape: "jersey",
+        colors: [C("Đen", "#1d1d1f"), C("Xám", "#9ca3af"), C("Xanh", "#a9d2f0"), C("Xanh navy", "#1e2a4a"), C("Đỏ", "#d62828"), C("Hồng", "#e29aa8")],
+      },
+    ],
+  },
   intro: {
     text: "In toàn thân (AOP) phá vỡ giới hạn của in truyền thống: hình in tràn viền trên nhiều chất liệu như cotton, polyester, spandex – màu bền, không bong tróc.",
     subtext: "Mở ra hướng đi mới cho sản phẩm cá nhân hoá của bạn.",
@@ -198,6 +301,7 @@ export function mergeLanding(value: unknown): LandingSettings {
     hero: { ...d.hero, ...v.hero },
     sectionTitles: { ...d.sectionTitles, ...v.sectionTitles },
     steps: v.steps?.length ? v.steps : d.steps,
+    showcase: { ...d.showcase, ...v.showcase, tiles: v.showcase?.tiles?.length ? v.showcase.tiles : d.showcase.tiles },
     intro: { ...d.intro, ...v.intro },
     fabrics: v.fabrics?.length ? v.fabrics : d.fabrics,
     audienceTiles: v.audienceTiles?.length ? v.audienceTiles : d.audienceTiles,

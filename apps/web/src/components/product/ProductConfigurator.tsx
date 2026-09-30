@@ -44,6 +44,14 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
   // Ảnh bên trái: ảnh xem trước thiết kế (nếu có) rồi đến ảnh sản phẩm
   const gallery = useMemo(() => [...(design?.files.map((f) => f.previewUrl) ?? []), ...product.images].slice(0, 10), [design, product.images]);
   useEffect(() => setImgIdx(0), [design?.updatedAt]);
+  // ?mau=Đen (từ khối "Dòng sản phẩm" / trang danh mục) -> chọn sẵn màu đó. Đọc ở client để trang vẫn tĩnh (ISR).
+  useEffect(() => {
+    const want = new URLSearchParams(window.location.search).get("mau")?.trim().toLowerCase();
+    if (!want) return;
+    const v = product.variants.find((x) => x.color.toLowerCase() === want && x.size === sel.size) ?? product.variants.find((x) => x.color.toLowerCase() === want);
+    if (v) setSel({ color: v.color, size: v.size });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
   // màu áo đã chọn trong công cụ thiết kế -> chọn sẵn phân loại màu đó
   useEffect(() => {
     const c = design?.color;

@@ -6,7 +6,7 @@ import { ProductGrid } from "./ProductCard";
 import { SortSelect } from "./SortSelect";
 import { FilterSheet } from "./FilterSheet";
 
-export type ListingParams = { q?: string; sub?: string; gia?: string; sort?: string; page?: string; category?: string; "doi-tuong"?: string; "bo-suu-tap"?: string };
+export type ListingParams = { q?: string; sub?: string; gia?: string; sort?: string; page?: string; category?: string; "doi-tuong"?: string; "bo-suu-tap"?: string; mau?: string };
 
 const COLLECTIONS = [
   { v: "moi", label: "Hàng mới", dot: "bg-[#16a34a]" },
@@ -50,7 +50,7 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
           active: false,
         }));
   const allHref = hrefWith(basePath, params, { sub: undefined, page: undefined });
-  const activeFilters = (params.sub ? 1 : 0) + (params.gia ? 1 : 0) + (params["bo-suu-tap"] ? 1 : 0);
+  const activeFilters = (params.sub ? 1 : 0) + (params.gia ? 1 : 0) + (params["bo-suu-tap"] ? 1 : 0) + (params.mau ? 1 : 0);
 
   const col = params["bo-suu-tap"];
   const panel = (
@@ -161,9 +161,21 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
           </div>
         </div>
 
+        {params.mau && (
+          <p className="mt-3">
+            <Link
+              href={hrefWith(basePath, params, { mau: undefined, page: undefined })}
+              className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink bg-white px-3 py-1 text-xs font-bold hover:bg-navy-light"
+              aria-label={`Bỏ lọc màu ${params.mau}`}
+            >
+              Màu: {params.mau} <span aria-hidden>✕</span>
+            </Link>
+          </p>
+        )}
+
         <div className="mt-4">
           {data.items.length ? (
-            <ProductGrid items={data.items} dense />
+            <ProductGrid items={data.items} dense color={params.mau} />
           ) : (
             <div className="rounded-lg border-2 border-dashed border-ink/20 px-4 py-16 text-center text-ink/60">
               <p>Chưa có sản phẩm phù hợp.</p>

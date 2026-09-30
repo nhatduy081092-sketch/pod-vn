@@ -6,6 +6,7 @@ import {
   HELP_CATEGORIES,
   leadCreateSchema,
   parseTiers,
+  rankColors,
   searchTokens,
   type Audience,
 } from "@pod/shared";
@@ -88,8 +89,36 @@ publicRoutes.get("/home", async (c) => {
   const catalog = catalogRaw
     .filter((x) => x._count.products > 0)
     .map((x) => ({ id: x.id, name: x.name, slug: x.slug, count: x._count.products, image: x.imageUrl || x.products[0]?.images[0] || "" }));
-  return c.json({ settings, bestSellers, categories: categories.filter((x) => x.products.length), testimonials, b2bProducts, catalog });
+  const showcase = await showcaseData(settings, catalog);
+  return c.json({ settings, bestSellers, categories: categories.filter((x) => x.products.length), testimonials, b2bProducts, catalog, ...showcase });
 });
+
+/**
+ * Khối "Dòng sản phẩm": danh mục nào thật sự có hàng (để link không 404) + dải màu thật theo danh mục.
+ * 1 truy vấn cho mọi ô: mỗi (sản phẩm, màu) 1 dòng -> gom & xếp hạng ở rankColors.
+ */
+async function showcaseData(settings: Awaited<ReturnType<typeof getLanding>>, catalog: { slug: string; count: number }[]) {
+  const sc = settings.showcase;
+  if (!sc.enabled || !sc.tiles.length) return { showcaseCounts: {}, showcaseColors: {} };
+  const slugs = [...new Set(sc.tiles.map((t) => t.categorySlug).filter(Boolean))];
+  const showcaseCounts = Object.fromEntries(catalog.filter((x) => slugs.includes(x.slug)).map((x) => [x.slug, x.count]));
+  if (!sc.autoColors || !slugs.length) return { showcaseCounts, showcaseColors: {} };
+  const rows = await prisma.productVariant.findMany({
+    where: { isActive: true, color: { not: "" }, colorHex: { not: "" }, product: { isActive: true, category: { isActive: true, slug: { in: slugs } } } },
+    distinct: ["productId", "color"],
+    orderBy: [{ product: { sortOrder: "asc" } }, { sortOrder: "asc" }],
+    select: { productId: true, color: true, colorHex: true, product: { select: { category: { select: { slug: true } } } } },
+    take: 5000,
+  });
+  const bySlug = new Map<string, typeof rows>();
+  for (const r of rows) {
+    const k = r.product.category.slug;
+    const list = bySlug.get(k);
+    if (list) list.push(r);
+    else bySlug.set(k, [r]);
+  }
+  return { showcaseCounts, showcaseColors: Object.fromEntries([...bySlug].map(([k, v]) => [k, rankColors(v, 10)])) };
+}
 
 publicRoutes.get("/settings", async (c) => c.json(await getLanding()));
 
@@ -161,6 +190,8 @@ async function listingWhere(query: Record<string, string>, omit: "sub" | "catego
     ...collectionWhere(query["bo-suu-tap"]),
     // thiet-ke=1: chỉ sản phẩm khách tự thiết kế được (có vùng in)
     ...(query["thiet-ke"] === "1" ? { printAreas: { some: {} } } : {}),
+    // mau=Đen: sản phẩm có phân loại màu đó (không phân biệt hoa thường)
+    ...(query.mau ? { variants: { some: { isActive: true, color: { equals: query.mau.trim().slice(0, 40), mode: "insensitive" as const } } } } : {}),
     ...(await resolveSearch(query.q)),
   };
 }

@@ -199,6 +199,29 @@ export const landingSettingsSchema = z.object({
   hero: z.object({ tag: nonEmpty, title: nonEmpty, badge: nonEmpty, imageUrl: nonEmpty, ctaHref: nonEmpty }),
   sectionTitles: z.object({ bestSellers: nonEmpty, hotSale: nonEmpty, reviews: nonEmpty }),
   steps: z.array(z.object({ title: nonEmpty, color: nonEmpty })).min(1).max(8),
+  showcase: z.object({
+    enabled: z.boolean(),
+    eyebrow: nonEmpty,
+    title: nonEmpty,
+    autoColors: z.boolean(),
+    tiles: z
+      .array(
+        z.object({
+          title: z.string().trim().min(1, "Nhập tên dòng sản phẩm").max(60),
+          subtitle: z.string().max(120),
+          tagline: z.string().max(160),
+          image: nonEmpty,
+          bg: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Màu nền dạng #RRGGBB"),
+          focus: z.string().max(20),
+          categorySlug: z.string().max(120),
+          href: z.string().max(300),
+          ctaLabel: z.string().max(30),
+          shape: z.string().max(30),
+          colors: z.array(z.object({ name: z.string().trim().min(1).max(40), hex: z.string().regex(/^#[0-9a-fA-F]{6}$/) })).max(16),
+        }),
+      )
+      .max(9),
+  }),
   intro: z.object({ text: z.string().max(2000), subtext: nonEmpty, ctaLabel: nonEmpty, ctaHref: nonEmpty, imageUrl: nonEmpty }),
   fabrics: z.array(z.object({ name: nonEmpty, color: nonEmpty, imageUrl: nonEmpty })).max(6),
   audienceTiles: z.array(z.object({ label: nonEmpty, audience: z.enum(AUDIENCES), imageUrl: nonEmpty })).max(6),

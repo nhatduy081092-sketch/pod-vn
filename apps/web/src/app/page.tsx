@@ -3,6 +3,7 @@ import { getHome } from "@/lib/api";
 import type { HomeData } from "@/lib/types";
 import { TopBanner } from "@/components/landing/TopBanner";
 import { Hero } from "@/components/landing/Hero";
+import { CategoryShowcase } from "@/components/landing/CategoryShowcase";
 import { BestSellers } from "@/components/landing/BestSellers";
 import { Steps } from "@/components/landing/Steps";
 import { FabricIntro } from "@/components/landing/FabricIntro";
@@ -27,11 +28,12 @@ export default async function HomePage() {
     await connection();
     throw e;
   }
-  const { settings, bestSellers, categories, testimonials, b2bProducts = [], catalog = [] } = home;
+  const { settings, bestSellers, categories, testimonials, b2bProducts = [], catalog = [], showcaseCounts, showcaseColors } = home;
   return (
     <>
       <TopBanner data={settings.topBanner} />
       <Hero data={settings.hero} />
+      <CategoryShowcase data={settings.showcase} counts={showcaseCounts} colors={showcaseColors} />
       <BestSellers title={settings.sectionTitles.bestSellers} items={bestSellers} />
       <Steps steps={settings.steps} />
       <FabricIntro intro={settings.intro} fabrics={settings.fabrics} />

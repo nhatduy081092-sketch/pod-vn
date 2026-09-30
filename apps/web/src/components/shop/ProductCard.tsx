@@ -4,7 +4,7 @@ import type { ProductCardData } from "@/lib/types";
 import { Img } from "../ui/Img";
 
 /** Card sản phẩm kiểu "cửa sổ": thanh 3 chấm + nhãn, khung cam, badge -% đen, nhãn MỚI / SALE */
-export function ProductCard({ p, priority = false }: { p: ProductCardData; priority?: boolean }) {
+export function ProductCard({ p, priority = false, color }: { p: ProductCardData; priority?: boolean; /** màu khách đã chọn -> chọn sẵn ở trang sản phẩm */ color?: string }) {
   const sale = saleActive(p);
   const price = p.basePrice > 0 ? effectiveBasePrice(p) : 0;
   const compare = p.basePrice > 0 ? displayCompareAt(p) : null;
@@ -12,7 +12,7 @@ export function ProductCard({ p, priority = false }: { p: ProductCardData; prior
   const isNew = !!p.newUntil && new Date(p.newUntil).getTime() > Date.now();
   return (
     <Link
-      href={`/san-pham/${p.slug}`}
+      href={color ? `/san-pham/${p.slug}?mau=${encodeURIComponent(color)}` : `/san-pham/${p.slug}`}
       className="group block overflow-hidden rounded-[6px] border-2 border-ink bg-brand transition hover:-translate-y-0.5 hover:shadow-hard"
     >
       <div className="flex h-[22px] items-center justify-between border-b-2 border-ink bg-white px-1.5 md:h-7" aria-hidden>
@@ -68,12 +68,12 @@ export function ProductCard({ p, priority = false }: { p: ProductCardData; prior
   );
 }
 
-export function ProductGrid({ items, dense = false }: { items: ProductCardData[]; dense?: boolean }) {
+export function ProductGrid({ items, dense = false, color }: { items: ProductCardData[]; dense?: boolean; color?: string }) {
   return (
     <ul className={`grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:gap-4 ${dense ? "xl:grid-cols-4" : "lg:grid-cols-4"}`}>
       {items.map((p, i) => (
         <li key={p.id}>
-          <ProductCard p={p} priority={i < 2} />
+          <ProductCard p={p} priority={i < 2} color={color} />
         </li>
       ))}
     </ul>

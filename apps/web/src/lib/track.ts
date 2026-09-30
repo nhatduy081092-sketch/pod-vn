@@ -41,6 +41,14 @@ export const track = {
     ga("generate_lead", { topic });
     fb("Lead", { content_category: topic });
   },
+  /** Khối quảng bá trên trang chủ (ô "Dòng sản phẩm"): đo CTR từng ô bằng view_promotion / select_promotion */
+  viewPromotion(promos: { id: string; name: string; slot: string }[]) {
+    if (!promos.length) return;
+    ga("view_promotion", { items: promos.map((p) => ({ promotion_id: p.id, promotion_name: p.name, creative_slot: p.slot })) });
+  },
+  selectPromotion(p: { id: string; name: string; slot: string; color?: string }) {
+    ga("select_promotion", { promotion_id: p.id, promotion_name: p.name, creative_slot: p.slot, creative_name: p.color || "default" });
+  },
   contact(channel: "zalo" | "phone" | "messenger") {
     ga("contact", { channel });
     fb("Contact", { channel });

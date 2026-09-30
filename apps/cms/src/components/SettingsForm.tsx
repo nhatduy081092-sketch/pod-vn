@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { AUDIENCE_LABEL, AUDIENCES, landingSettingsSchema, type LandingSettings } from "@pod/shared";
+import { AUDIENCE_LABEL, AUDIENCES, DEFAULT_LANDING, landingSettingsSchema, MOCK_SHAPES, type LandingSettings, type ShowcaseTile } from "@pod/shared";
 import { saveLandingAction } from "@/lib/actions";
 import { WEB_URL } from "@/lib/config";
 import { ImageInput } from "./ImageInput";
@@ -188,6 +188,8 @@ export function SettingsForm({ initial }: { initial: LandingSettings }) {
 
       <ShippingSettings value={s.shipping} onChange={(v) => setS((p) => ({ ...p, shipping: v }))} />
 
+      <ShowcaseSettings value={s.showcase} onChange={(v) => setS((p) => ({ ...p, showcase: v }))} />
+
       {/* Các bước */}
       <section className="card">
         <h2 className="font-bold">Quy trình (các bước)</h2>
@@ -329,5 +331,137 @@ function LinesField({ label, initial, onChange }: { label: string; initial: stri
         }}
       />
     </label>
+  );
+}
+
+/** Khối "Dòng sản phẩm" dưới hero: ô ảnh người mẫu + dải màu */
+function ShowcaseSettings({ value: v, onChange }: { value: LandingSettings["showcase"]; onChange: (v: LandingSettings["showcase"]) => void }) {
+  const setTile = (i: number, patch: Partial<ShowcaseTile>) => onChange({ ...v, tiles: v.tiles.map((t, k) => (k === i ? { ...t, ...patch } : t)) });
+  const move = (i: number, d: -1 | 1) => {
+    const j = i + d;
+    if (j < 0 || j >= v.tiles.length) return;
+    const tiles = [...v.tiles];
+    [tiles[i], tiles[j]] = [tiles[j]!, tiles[i]!];
+    onChange({ ...v, tiles });
+  };
+  return (
+    <section className="card">
+      <h2 className="font-bold">Khối “Dòng sản phẩm” (dưới hero)</h2>
+      <p className="mt-0.5 text-xs text-neutral-500">
+        Bố cục tự chia: 5 ô = 2 ô rộng + 3 ô vuông; 4 ô = 2×2; 3/6/9 ô = hàng 3. Ảnh nên ≥ 1400px chiều ngang, người mẫu lệch phải, bên trái trống cho chữ. “Tâm ảnh” giữ người mẫu trong khung khi cắt (VD 70% 30%).
+      </p>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={v.enabled} onChange={(e) => onChange({ ...v, enabled: e.target.checked })} /> Hiển thị
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={v.autoColors} onChange={(e) => onChange({ ...v, autoColors: e.target.checked })} /> Lấy dải màu từ phân loại thật của danh mục (≥ 2 màu có mã hex)
+        </label>
+        <label className="block">
+          <span className="label">Nhãn nhỏ</span>
+          <input className="input" value={v.eyebrow} onChange={(e) => onChange({ ...v, eyebrow: e.target.value })} />
+        </label>
+        <label className="block">
+          <span className="label">Tiêu đề</span>
+          <input className="input" value={v.title} onChange={(e) => onChange({ ...v, title: e.target.value })} />
+        </label>
+      </div>
+      <ol className="mt-4 space-y-4">
+        {v.tiles.map((t, i) => (
+          <li key={i} className="rounded-lg border p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-5 w-5 rounded border" style={{ background: t.bg }} aria-hidden />
+              <b className="text-sm">
+                Ô {i + 1}: {t.title || "(chưa đặt tên)"}
+              </b>
+              <span className="ml-auto flex gap-1">
+                <button type="button" className="btn-ghost px-2 py-1" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Lên">
+                  ↑
+                </button>
+                <button type="button" className="btn-ghost px-2 py-1" onClick={() => move(i, 1)} disabled={i === v.tiles.length - 1} aria-label="Xuống">
+                  ↓
+                </button>
+                <button type="button" className="btn-danger px-2 py-1" onClick={() => onChange({ ...v, tiles: v.tiles.filter((_, k) => k !== i) })}>
+                  ✕
+                </button>
+              </span>
+            </div>
+            <div className="grid gap-2 md:grid-cols-3">
+              <label className="block">
+                <span className="label">Tên dòng</span>
+                <input className="input" value={t.title} onChange={(e) => setTile(i, { title: e.target.value })} />
+              </label>
+              <label className="block md:col-span-2">
+                <span className="label">Câu phụ</span>
+                <input className="input" value={t.subtitle} onChange={(e) => setTile(i, { subtitle: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="label">Slug danh mục</span>
+                <input className="input" value={t.categorySlug} onChange={(e) => setTile(i, { categorySlug: e.target.value.trim() })} placeholder="ao-thun" />
+              </label>
+              <label className="block">
+                <span className="label">Link riêng (để trống = danh mục)</span>
+                <input className="input" value={t.href} onChange={(e) => setTile(i, { href: e.target.value.trim() })} />
+              </label>
+              <label className="block">
+                <span className="label">Chữ nút</span>
+                <input className="input" value={t.ctaLabel} onChange={(e) => setTile(i, { ctaLabel: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="label">Dáng áo ô màu</span>
+                <select className="input" value={t.shape} onChange={(e) => setTile(i, { shape: e.target.value })}>
+                  {Object.entries(MOCK_SHAPES).map(([k, l]) => (
+                    <option key={k} value={k}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="label">Màu nền (lúc ảnh đang tải + nền chữ)</span>
+                <input type="color" value={t.bg} onChange={(e) => setTile(i, { bg: e.target.value })} className="h-9 w-full rounded border" />
+              </label>
+              <label className="block">
+                <span className="label">Tâm ảnh (ngang dọc)</span>
+                <input className="input" value={t.focus} onChange={(e) => setTile(i, { focus: e.target.value })} placeholder="70% 30%" />
+              </label>
+              <label className="block md:col-span-3">
+                <span className="label">Dòng chữ dưới dải màu</span>
+                <input className="input" value={t.tagline} onChange={(e) => setTile(i, { tagline: e.target.value })} />
+              </label>
+              <div className="md:col-span-3">
+                <ImageInput label="Ảnh người mẫu" value={t.image} onChange={(img) => setTile(i, { image: img })} />
+              </div>
+              <div className="md:col-span-3">
+                <LinesField
+                  key={`${i}:${t.title}`}
+                  label="Màu dự phòng (mỗi dòng: Tên | #RRGGBB) – dùng khi danh mục chưa có phân loại màu"
+                  initial={t.colors.map((c) => `${c.name} | ${c.hex}`).join("\n")}
+                  onChange={(txt) =>
+                    setTile(i, {
+                      colors: txt
+                        .split("\n")
+                        .map((l) => l.split("|").map((x) => x.trim()))
+                        .filter(([n, h]) => n && /^#[0-9a-f]{6}$/i.test(h ?? ""))
+                        .map(([n, h]) => ({ name: n!, hex: h!.toLowerCase() }))
+                        .slice(0, 16),
+                    })
+                  }
+                />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ol>
+      {v.tiles.length < 9 && (
+        <button
+          type="button"
+          className="btn-ghost mt-2"
+          onClick={() => onChange({ ...v, tiles: [...v.tiles, { ...DEFAULT_LANDING.showcase.tiles[0]!, title: "", subtitle: "", categorySlug: "", colors: [] }] })}
+        >
+          + Thêm ô
+        </button>
+      )}
+    </section>
   );
 }

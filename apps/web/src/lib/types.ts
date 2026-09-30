@@ -84,6 +84,10 @@ export type HomeData = {
   testimonials: Testimonial[];
   b2bProducts: ProductCardData[];
   catalog?: { id: string; name: string; slug: string; count: number; image: string }[];
+  /** Khối "Dòng sản phẩm": số sản phẩm theo slug danh mục (danh mục không có = không tồn tại/hết hàng) */
+  showcaseCounts?: Record<string, number>;
+  /** Dải màu thật theo slug danh mục, phổ biến trước */
+  showcaseColors?: Record<string, { name: string; hex: string; count?: number }[]>;
 };
 
 export type Category = { id: string; name: string; slug: string; description: string; imageUrl: string };
