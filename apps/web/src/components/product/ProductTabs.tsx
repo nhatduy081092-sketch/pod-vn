@@ -55,7 +55,7 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
   if (!tabs.length) return null;
   return (
     <section ref={rootRef} className="mt-10 scroll-mt-28 md:mt-14" aria-label="Thông tin sản phẩm">
-      <div className="no-scrollbar -mx-4 overflow-x-auto border-b-2 border-ink px-4 md:mx-0 md:px-0" role="tablist" aria-label="Thông tin sản phẩm">
+      <div className="no-scrollbar -mx-4 overflow-x-auto border-b border-line px-4 md:mx-0 md:px-0" role="tablist" aria-label="Thông tin sản phẩm">
         <div className="flex w-max gap-1 md:gap-2">
           {tabs.map((t, i) => {
             const on = t.id === active;

@@ -148,7 +148,7 @@ export function SellerOrders() {
       {batch && <BatchQr batch={batch} onClose={() => setBatch(null)} />}
 
       {sel.size > 0 && (
-        <div className="sticky top-2 z-10 flex flex-wrap items-center gap-3 rounded-xl border-2 border-ink bg-brand p-3 shadow-hard">
+        <div className="sticky top-2 z-10 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-brand p-3 shadow-hard">
           <p className="flex-1 text-sm">
             Đã chọn <b>{sel.size} đơn</b> · <b>{formatVND(selTotal)}</b>
           </p>
@@ -259,7 +259,7 @@ export function SellerOrders() {
 export function BatchQr({ batch, onClose }: { batch: NewBatch; onClose?: () => void }) {
   const qr = vietQrUrl(batch.bank, batch.total, batch.code);
   return (
-    <div className="rounded-xl border-2 border-ink bg-white p-4 shadow-hard md:flex md:gap-5">
+    <div className="rounded-xl border border-line bg-white p-4 shadow-hard md:flex md:gap-5">
       {qr && <img src={qr} alt={`VietQR thanh toán ${batch.code}`} className="mx-auto w-[220px] shrink-0" />}
       <div className="mt-3 text-sm md:mt-0">
         <p className="text-lg font-black">Thanh toán {batch.code}</p>

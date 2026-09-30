@@ -13,7 +13,7 @@ import { NoticeBanner } from "@/components/layout/NoticeBanner";
 
 const font = Be_Vietnam_Pro({
   subsets: ["vietnamese", "latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });

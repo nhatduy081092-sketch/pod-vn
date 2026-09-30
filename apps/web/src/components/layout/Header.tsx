@@ -51,8 +51,8 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
           </button>
           <Link
             href="/thiet-ke"
-            className={`flex h-9 shrink-0 items-center gap-1 rounded-md border-2 border-ink px-2 text-[13px] font-extrabold shadow-hard transition hover:-translate-y-px md:h-10 md:px-3 md:text-sm ${
-              pathname.startsWith("/thiet-ke") ? "bg-ink text-brand-badge" : "bg-brand-badge text-ink"
+            className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition md:h-10 md:px-4 md:text-sm ${
+              pathname.startsWith("/thiet-ke") ? "bg-brand text-white" : "bg-ink text-white hover:bg-black"
             }`}
           >
             <IconSparkle className="h-4 w-4" aria-hidden />
@@ -70,13 +70,13 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
           </Link>
           <Link
             href="/gio-hang"
-            className="relative flex h-9 w-11 shrink-0 items-center justify-center rounded-md bg-brand text-white md:h-10 lg:w-auto lg:gap-2 lg:px-4"
+            className="relative flex h-9 w-10 shrink-0 items-center justify-center rounded-full text-ink/85 hover:text-ink md:h-10 lg:w-auto lg:gap-1.5 lg:px-1"
             aria-label={`Giỏ hàng (${count} sản phẩm)`}
           >
             <IconCart className="h-6 w-6" />
-            <span className="hidden whitespace-nowrap text-sm font-extrabold lg:inline">Giỏ hàng</span>
+            <span className="hidden whitespace-nowrap text-sm font-semibold xl:inline">Giỏ hàng</span>
             {ready && count > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 min-w-[20px] rounded-full border-2 border-white bg-ink px-1 text-center text-[11px] font-bold leading-4 text-white">
+              <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-brand px-1 text-center text-[11px] font-semibold leading-[18px] text-white">
                 {count > 99 ? "99+" : count}
               </span>
             )}
@@ -93,21 +93,18 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
 
       {/* Thanh danh mục (desktop) */}
       <nav className="hidden border-t border-ink/10 lg:block" aria-label="Danh mục">
-        <div className="container-site no-scrollbar flex h-10 items-center gap-6 overflow-x-auto text-[13px] font-semibold">
-          <Link href="/#danh-muc" className="shrink-0 font-extrabold text-navy hover:text-accent">
-            ☰ Tất cả danh mục
+        <div className="container-site no-scrollbar flex h-11 items-center gap-7 overflow-x-auto text-sm font-medium">
+          <Link href="/bo-suu-tap" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/bo-suu-tap") ? "text-brand" : "text-ink"}`}>
+            Mẫu có sẵn
           </Link>
-          <Link
-            href="/thiet-ke"
-            className={`shrink-0 whitespace-nowrap font-extrabold hover:text-accent ${pathname === "/thiet-ke" ? "text-accent" : "text-ink"}`}
-          >
-            ✦ YALA Studio
+          <Link href="/thiet-ke" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === "/thiet-ke" ? "text-brand" : "text-ink"}`}>
+            Tự thiết kế
           </Link>
           {categories.map((c) => (
             <Link
               key={c.slug}
               href={`/danh-muc/${c.slug}`}
-              className={`shrink-0 whitespace-nowrap hover:text-accent ${pathname === `/danh-muc/${c.slug}` ? "text-accent" : "text-ink/80"}`}
+              className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === `/danh-muc/${c.slug}` ? "text-brand" : "text-ink/75"}`}
             >
               {c.name}
             </Link>
@@ -131,7 +128,10 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
             <Link href="/" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Trang chủ
             </Link>
-            <Link href="/thiet-ke" className="my-1 flex items-center gap-2 rounded-md border-2 border-ink bg-brand-badge px-3 py-2.5 font-extrabold shadow-hard">
+            <Link href="/bo-suu-tap" className="block rounded-md px-3 py-2.5 hover:bg-cream">
+              Mẫu có sẵn theo chủ đề
+            </Link>
+            <Link href="/thiet-ke" className="my-1 flex items-center gap-2 rounded-lg bg-ink px-3 py-2.5 text-white">
               <IconSparkle className="h-4 w-4" aria-hidden /> Tự thiết kế – YALA Studio
             </Link>
             <Link href="/san-pham" className="block rounded-md px-3 py-2.5 hover:bg-cream">
@@ -140,13 +140,13 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
             <Link href="/#doanh-nghiep" className="block rounded-md px-3 py-2.5 font-bold text-navy hover:bg-cream">
               Giải pháp doanh nghiệp
             </Link>
-            <p className="px-3 pb-1 pt-3 text-xs font-bold uppercase tracking-wider text-ink/50">Danh mục</p>
+            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Danh mục</p>
             {categories.map((c) => (
               <Link key={c.slug} href={`/danh-muc/${c.slug}`} className="block rounded-md px-3 py-2.5 hover:bg-cream">
                 {c.name}
               </Link>
             ))}
-            <p className="px-3 pb-1 pt-3 text-xs font-bold uppercase tracking-wider text-ink/50">Hỗ trợ</p>
+            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Hỗ trợ</p>
             <Link href="/tra-cuu" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Tra cứu đơn hàng
             </Link>

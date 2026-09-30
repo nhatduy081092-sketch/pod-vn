@@ -101,7 +101,7 @@ export function CropModal({ src, natW, natH, initial, onApply, onClose }: { src:
               onPointerDown={(e) => start(e, "move")}
             >
               <span
-                className="absolute -bottom-2.5 -right-2.5 h-5 w-5 cursor-nwse-resize rounded-sm border-2 border-ink bg-white"
+                className="absolute -bottom-2.5 -right-2.5 h-5 w-5 cursor-nwse-resize rounded-sm border border-line bg-white"
                 onPointerDown={(e) => start(e, "resize")}
                 aria-label="Đổi cỡ vùng cắt"
               />

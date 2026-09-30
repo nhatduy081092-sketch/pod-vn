@@ -14,7 +14,7 @@ export function FloatingContact({ zalo, hotline, messengerUrl }: { zalo: string;
       <button
         type="button"
         onClick={() => setLead(true)}
-        className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-ink bg-white text-[10px] font-black leading-tight shadow-lg"
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-line bg-white text-[10px] font-black leading-tight shadow-lg"
         aria-label="Để lại số điện thoại để được gọi lại"
         title="Gọi lại cho tôi"
       >

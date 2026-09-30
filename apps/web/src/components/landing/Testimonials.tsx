@@ -7,15 +7,15 @@ import { IconStar } from "../ui/icons";
 export function Testimonials({ title, items }: { title: string; items: Testimonial[] }) {
   if (!items.length) return null;
   return (
-    <section className="bg-cream py-10 md:py-14">
+    <section className="bg-surface py-12 md:py-16">
       <SectionTitle>{title}</SectionTitle>
       <div className="no-scrollbar mt-6 overflow-x-auto">
         <ul className="mx-auto flex w-max snap-x gap-4 px-4 pb-3 md:px-6">
           {items.map((t) => (
             <li key={t.id} className="w-[78vw] max-w-[320px] snap-start">
-              <article className="flex h-full flex-col rounded-lg border-2 border-ink bg-white p-4 shadow-stack">
+              <article className="flex h-full flex-col rounded-lg border border-line bg-white p-4 shadow-stack">
                 <header className="flex items-center justify-between">
-                  <p className="font-extrabold">{t.name}</p>
+                  <p className="font-semibold">{t.name}</p>
                   <time className="text-xs text-ink/60">{formatDateVN(t.createdAt)}</time>
                 </header>
                 <div className="mt-1 flex text-brand" aria-label={`${t.rating}/5 sao`}>
@@ -29,7 +29,7 @@ export function Testimonials({ title, items }: { title: string; items: Testimoni
                     {t.imageUrl && <img src={assetUrl(t.imageUrl)} alt="" className="h-10 w-10 rounded object-cover" />}
                     <div className="min-w-0">
                       <p className="line-clamp-1 text-xs font-semibold">{t.productName}</p>
-                      {t.productPrice != null && <p className="text-sm font-black text-brand-dark">{formatVND(t.productPrice)}</p>}
+                      {t.productPrice != null && <p className="text-sm font-semibold text-ink">{formatVND(t.productPrice)}</p>}
                     </div>
                   </footer>
                 )}

@@ -1,31 +1,19 @@
 import type { LandingSettings } from "@pod/shared";
+import { SectionTitle } from "./SectionTitle";
 
-/** Quy trình 5 bước – bố cục zig-zag trái/phải như mẫu */
+/** Quy trình đặt in: dãy bước đánh số (cuộn ngang trên mobile) */
 export function Steps({ steps }: { steps: LandingSettings["steps"] }) {
+  if (!steps.length) return null;
   return (
-    <section className="bg-white py-8 md:py-14" aria-labelledby="steps-title">
-      <h2 id="steps-title" className="sr-only">
-        Quy trình đặt in
-      </h2>
-      <ol className="container-site max-w-[860px]">
-        {steps.map((s, i) => {
-          const right = i % 2 === 1;
-          return (
-            <li key={i} className={`relative flex ${right ? "justify-end" : "justify-start"} ${i ? "-mt-3 md:-mt-4" : ""}`}>
-              <div className="relative w-[clamp(150px,34vw,300px)] pt-3">
-                <span className="absolute -left-2 top-0 z-10 rounded-[4px] bg-ink px-2 py-0.5 text-[clamp(10px,2.4vw,15px)] font-extrabold text-brand-badge">
-                  Bước {i + 1}
-                </span>
-                <div
-                  className="halftone relative flex min-h-[clamp(46px,9.5vw,80px)] items-center justify-center rounded-lg border-2 border-ink px-3 py-2 text-center shadow-stack"
-                  style={{ backgroundColor: s.color }}
-                >
-                  <p className="text-[clamp(10px,2.5vw,16px)] font-extrabold leading-snug text-ink">{s.title}</p>
-                </div>
-              </div>
-            </li>
-          );
-        })}
+    <section className="bg-surface py-12 md:py-16" aria-label="Quy trình đặt in">
+      <SectionTitle eyebrow="Đơn giản, minh bạch">Đặt in trong {steps.length} bước</SectionTitle>
+      <ol className="no-scrollbar container-site mt-7 flex snap-x scroll-px-4 gap-3 overflow-x-auto pb-1 md:grid md:overflow-visible md:gap-5" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
+        {steps.map((s, i) => (
+          <li key={i} className="w-[72%] shrink-0 snap-start rounded-2xl bg-white p-5 sm:w-[44%] md:w-auto">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-ink text-sm font-semibold text-white">{i + 1}</span>
+            <p className="mt-4 text-[15px] font-medium leading-snug">{s.title}</p>
+          </li>
+        ))}
       </ol>
     </section>
   );

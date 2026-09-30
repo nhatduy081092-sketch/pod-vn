@@ -1,14 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
-import type { DesignJson } from "@pod/shared";
+import { DESIGN_VERSION, findReadyDesign, type DesignJson } from "@pod/shared";
 import type { ProductDetail } from "@/lib/types";
 import { DesignEditor } from "./DesignEditor";
 import { readAttached } from "./storage";
+import { templateLayers } from "./LibraryPanel";
+import { ensureFonts } from "./fonts";
 
-type Props = { product: ProductDetail; mode: "customer" | "seller"; savedId: string | null; templateId: string | null; initialColor?: string | null; returnTo: string };
+type Props = { product: ProductDetail; mode: "customer" | "seller"; savedId: string | null; templateId: string | null; presetSlug?: string | null; initialColor?: string | null; returnTo: string };
 
 /** Nạp thiết kế ban đầu: thiết kế đã lưu (tài khoản) / mẫu seller / thiết kế đang gắn ở trang sản phẩm */
-export function EditorLoader({ product, mode, savedId, templateId, initialColor, returnTo }: Props) {
+export function EditorLoader({ product, mode, savedId, templateId, presetSlug, initialColor, returnTo }: Props) {
   const [state, setState] = useState<{ ready: boolean; initial: DesignJson | null; name?: string; error?: string }>({ ready: false, initial: null });
 
   useEffect(() => {
@@ -30,6 +32,20 @@ export function EditorLoader({ product, mode, savedId, templateId, initialColor,
           if (alive) setState({ ready: true, initial: t.design.json, name: t.title });
           return;
         }
+        // mẫu có sẵn (/bo-suu-tap): đặt mẫu vào mặt trước, chữ đo lại theo font thật
+        const preset = mode === "customer" && presetSlug ? findReadyDesign(presetSlug) : undefined;
+        if (preset) {
+          const area = product.printAreas.find((a) => a.key === "front") ?? product.printAreas[0];
+          if (area) {
+            let n = 0;
+            const newId = () => `p${Date.now().toString(36)}${n++}`;
+            await ensureFonts(preset.template.layers);
+            const layers = templateLayers(preset.template, { widthMm: area.widthMm, heightMm: area.heightMm }, newId);
+            const json: DesignJson = { v: DESIGN_VERSION, productId: product.id, areas: { [area.key]: { bg: null, layers } } };
+            if (alive) setState({ ready: true, initial: json, name: preset.title });
+            return;
+          }
+        }
         // sửa lại thiết kế đang gắn ở trang sản phẩm
         const att = mode === "customer" ? readAttached(product.id) : null;
         if (alive) setState({ ready: true, initial: att?.json ?? null });
@@ -40,7 +56,7 @@ export function EditorLoader({ product, mode, savedId, templateId, initialColor,
     return () => {
       alive = false;
     };
-  }, [product.id, savedId, templateId, mode]);
+  }, [product.id, savedId, templateId, presetSlug, mode]);
 
   return (
     // phủ toàn màn hình, che header/footer của website để có chỗ thiết kế

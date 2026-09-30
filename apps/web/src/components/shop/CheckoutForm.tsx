@@ -173,7 +173,7 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
   return (
     <form onSubmit={submit} noValidate className="mt-5 grid gap-6 md:grid-cols-[1fr_380px]">
       <div className="space-y-4">
-        <fieldset className="rounded-lg border-2 border-ink bg-white p-4">
+        <fieldset className="rounded-lg border border-line bg-white p-4">
           <legend className="px-1 font-extrabold">Người nhận</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Họ và tên *" error={errors.customerName}>
@@ -188,7 +188,7 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
           </div>
         </fieldset>
 
-        <fieldset className="rounded-lg border-2 border-ink bg-white p-4">
+        <fieldset className="rounded-lg border border-line bg-white p-4">
           <legend className="px-1 font-extrabold">Địa chỉ giao hàng</legend>
           {addresses.length > 0 && (
             <label className="mb-3 block">
@@ -235,7 +235,7 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
           <p className="mt-2 text-xs text-ink/60">Địa chỉ theo đơn vị hành chính mới (Tỉnh/Thành → Phường/Xã).</p>
         </fieldset>
 
-        <fieldset className="rounded-lg border-2 border-ink bg-white p-4">
+        <fieldset className="rounded-lg border border-line bg-white p-4">
           <legend className="px-1 font-extrabold">Giao hàng</legend>
           {!opts ? (
             <p className="text-sm text-ink/60">Chọn tỉnh/thành để xem phí và thời gian giao.</p>
@@ -258,7 +258,7 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
           )}
         </fieldset>
 
-        <fieldset className="rounded-lg border-2 border-ink bg-white p-4">
+        <fieldset className="rounded-lg border border-line bg-white p-4">
           <legend className="px-1 font-extrabold">Thanh toán</legend>
           <div className="space-y-2">
             {PAYMENT_METHODS.map((m) => (
@@ -276,7 +276,7 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
         </fieldset>
       </div>
 
-      <aside className="h-fit rounded-lg border-2 border-ink bg-cream p-4 md:sticky md:top-20">
+      <aside className="h-fit rounded-lg border border-line bg-cream p-4 md:sticky md:top-20">
         <h2 className="font-extrabold">Đơn hàng ({cart.count} sản phẩm)</h2>
         <ul className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
           {cart.items.map((i) => (

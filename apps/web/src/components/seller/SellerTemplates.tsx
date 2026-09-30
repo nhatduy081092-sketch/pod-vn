@@ -195,7 +195,7 @@ function ProductPicker({ onClose }: { onClose: () => void }) {
   }, [q]);
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Chọn phôi" className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-t-2xl border-2 border-ink bg-white sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label="Chọn phôi" className="flex max-h-[85vh] w-full max-w-3xl flex-col rounded-t-2xl border border-line bg-white sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 border-b border-ink/10 p-4">
           <h2 className="mr-auto font-black">Chọn phôi để thiết kế</h2>
           <input autoFocus className="input h-9 w-44" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm sản phẩm" aria-label="Tìm sản phẩm" />

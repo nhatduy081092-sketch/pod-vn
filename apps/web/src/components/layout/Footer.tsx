@@ -13,14 +13,14 @@ type Props = {
 
 export function Footer({ brand, categories, pages }: Props) {
   return (
-    <footer className="border-t-4 border-accent bg-navy-dark pb-24 pt-10 text-white/80 md:pb-10">
+    <footer className="bg-ink pb-24 pt-12 text-white/75 md:pb-12 md:pt-16">
       <div className="container-site grid gap-8 md:grid-cols-4">
         <div className="md:col-span-1">
           <Logo name={brand.name} logoUrl={brand.logoUrl} dark />
           <p className="mt-3 text-sm leading-relaxed">{brand.tagline}</p>
         </div>
         <div>
-          <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-white">Sản phẩm</h3>
+          <h3 className="mb-3 text-sm font-semibold text-white">Sản phẩm</h3>
           <ul className="space-y-2 text-sm">
             <li>
               <Link href="/thiet-ke" className="font-bold text-brand hover:underline">
@@ -37,7 +37,7 @@ export function Footer({ brand, categories, pages }: Props) {
           </ul>
         </div>
         <div>
-          <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-white">Hỗ trợ</h3>
+          <h3 className="mb-3 text-sm font-semibold text-white">Hỗ trợ</h3>
           <ul className="space-y-2 text-sm">
             <li>
               <Link href="/tra-cuu" className="hover:text-brand">
@@ -81,7 +81,7 @@ export function Footer({ brand, categories, pages }: Props) {
           </ul>
         </div>
         <div>
-          <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-white">Liên hệ</h3>
+          <h3 className="mb-3 text-sm font-semibold text-white">Liên hệ</h3>
           <ul className="space-y-2 text-sm">
             <li>
               Hotline/Zalo:{" "}
@@ -110,7 +110,7 @@ export function Footer({ brand, categories, pages }: Props) {
       </div>
       <div className="container-site mt-8 grid gap-4 border-t border-white/10 pt-6 md:grid-cols-2">
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-white/60">Vận chuyển</p>
+          <p className="mb-2 text-xs font-medium text-white/60">Vận chuyển</p>
           <ul className="flex flex-wrap gap-2">
             {CARRIERS.map((c) => (
               <li key={c} className="rounded border border-white/20 px-2 py-1 text-xs font-semibold">
@@ -120,7 +120,7 @@ export function Footer({ brand, categories, pages }: Props) {
           </ul>
         </div>
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-white/60">Thanh toán</p>
+          <p className="mb-2 text-xs font-medium text-white/60">Thanh toán</p>
           <ul className="flex flex-wrap gap-2">
             {PAYMENTS.map((c) => (
               <li key={c} className="rounded border border-white/20 px-2 py-1 text-xs font-semibold">

@@ -85,7 +85,7 @@ export function QuoteForm({ productId, productName, slug, sizes, areas, variants
 
   if (done)
     return (
-      <div className="rounded-xl border-2 border-navy bg-navy-light p-5 text-center">
+      <div className="rounded-xl border border-line bg-navy-light p-5 text-center">
         <IconCheck className="mx-auto h-10 w-10 text-navy" />
         <p className="mt-2 text-lg font-black">Đã gửi yêu cầu báo giá!</p>
         <p className="mt-1 text-sm">
@@ -98,7 +98,7 @@ export function QuoteForm({ productId, productName, slug, sizes, areas, variants
     );
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-3 rounded-xl border-2 border-navy bg-white p-4">
+    <form onSubmit={submit} noValidate className="space-y-3 rounded-xl border border-line bg-white p-4">
       <p className="font-extrabold text-navy">Cá nhân hoá & nhận báo giá</p>
 
       <DesignCard slug={slug} productId={productId} areas={areas} design={design} step="Logo / thiết kế (không bắt buộc)" tone="navy" />

@@ -118,7 +118,7 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
     <div className="grid gap-6 md:grid-cols-2 md:gap-10">
       {/* Cột trái: ảnh */}
       <div className="md:sticky md:top-20 md:self-start">
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg border-2 border-ink bg-white">
+        <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-line bg-white">
           <img src={assetUrl(gallery[imgIdx] ?? gallery[0])} alt={product.name} className="h-full w-full object-contain" />
           {design && imgIdx < design.files.length && (
             <span className="absolute left-2 top-2 rounded bg-ink px-2 py-0.5 text-[11px] font-bold text-brand-badge">Thiết kế của bạn · {design.files[imgIdx]?.name}</span>
@@ -144,7 +144,7 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
         {product.productionDays && <p className="mt-1 text-sm text-ink/70">⏱ Thời gian sản xuất: {product.productionDays}</p>}
 
         {product.priceTiers.length > 0 && (
-          <div className="mt-3 overflow-hidden rounded-lg border-2 border-ink">
+          <div className="mt-3 overflow-hidden rounded-lg border border-line">
             <p className="bg-brand px-3 py-1.5 text-xs font-extrabold uppercase">Giá sỉ theo số lượng (đồng phục, nhóm)</p>
             <ul className="grid grid-cols-2 divide-x divide-y divide-ink/10 text-sm sm:grid-cols-4">
               <TierCell label={`1–${product.priceTiers[0]!.minQty - 1} cái`} price={product.basePrice} active={effQty < product.priceTiers[0]!.minQty} />
@@ -209,7 +209,7 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
             <>
               <h2 className="label">3. Số lượng</h2>
               <div className="flex items-center gap-3">
-                <div className="flex items-center overflow-hidden rounded-md border-2 border-ink">
+                <div className="flex items-center overflow-hidden rounded-md border border-line">
                   <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Giảm">
                     −
                   </button>
@@ -220,7 +220,7 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
                     max={1000}
                     value={qty}
                     onChange={(e) => setQty(Math.max(1, Math.min(1000, Number(e.target.value) || 1)))}
-                    className="h-10 w-16 border-x-2 border-ink text-center font-bold outline-none"
+                    className="h-10 w-16 border-x border-line text-center font-bold outline-none"
                     aria-label="Số lượng"
                   />
                   <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => setQty((q) => Math.min(1000, q + 1))} aria-label="Tăng">

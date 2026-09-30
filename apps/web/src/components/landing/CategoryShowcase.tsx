@@ -61,13 +61,13 @@ export function CategoryShowcase({ data, counts = {}, colors = {} }: Props) {
 
   if (!data.enabled || !tiles.length) return null;
   return (
-    <section ref={ref} className="bg-cream pb-8 md:pb-12" aria-labelledby="showcase-title">
+    <section ref={ref} className="py-10 md:py-14" aria-labelledby="showcase-title">
       <div className="container-site">
-        <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-ink/55 md:text-sm">{data.eyebrow}</p>
-        <h2 id="showcase-title" className="mt-1 text-center text-[clamp(22px,5.5vw,36px)] font-black leading-tight tracking-tight">
+        <p className="eyebrow">{data.eyebrow}</p>
+        <h2 id="showcase-title" className="h-section mt-1.5">
           {data.title}
         </h2>
-        <ul className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:items-stretch md:mt-6 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-6 lg:gap-5">
+        <ul className="no-scrollbar -mx-4 mt-4 flex snap-x snap-mandatory scroll-px-4 items-start gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:items-stretch md:mt-6 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-6 lg:gap-5">
           {tiles.map((t, i) => (
             <li key={`${t.title}-${i}`} className={`w-[84%] shrink-0 snap-start sm:w-[62%] md:w-auto ${MD_SPAN[mdSpans[i]!]} ${LG_SPAN[spans[i]!]}`}>
               <Tile
@@ -137,9 +137,9 @@ function Tile({ tile: t, index, lgSpan, mdSpan, count, colors, filterable, eager
   }
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-[14px] border-2 border-ink bg-white shadow-[4px_4px_0_#1d1d1f]">
+    <article className="flex h-full flex-col overflow-hidden rounded-2xl bg-surface">
       {/* Ảnh + chữ: cả vùng ảnh bấm được (::after của nút CTA phủ khung – khung "isolate" để ảnh/nền nằm dưới chữ) */}
-      <div className="group relative isolate aspect-[var(--a-sm)] overflow-hidden border-b-2 border-ink [container-type:inline-size] md:aspect-[var(--a-md)] lg:aspect-[var(--a-lg)]" style={box}>
+      <div className="group relative isolate aspect-[var(--a-sm)] overflow-hidden border-b border-line [container-type:inline-size] md:aspect-[var(--a-md)] lg:aspect-[var(--a-lg)]" style={box}>
         <img
           src={assetUrl(t.image)}
           alt=""
@@ -154,8 +154,8 @@ function Tile({ tile: t, index, lgSpan, mdSpan, count, colors, filterable, eager
           className="flex h-full max-w-[var(--mw-sm)] flex-col [justify-content:var(--jc-sm)] gap-[2cqw] p-[5cqw] md:max-w-[var(--mw-md)] md:[justify-content:var(--jc-md)] lg:max-w-[var(--mw-lg)] lg:[justify-content:var(--jc-lg)]"
           style={{ color: ink }}
         >
-          {exists && <p className="text-[clamp(10px,2.6cqw,13px)] font-bold uppercase tracking-wider opacity-70">{count} mẫu</p>}
-          <h3 className="text-[clamp(20px,7.2cqw,40px)] font-black leading-[1.05] tracking-tight">{t.title}</h3>
+          {exists && <p className="text-[clamp(10px,2.6cqw,13px)] font-semibold opacity-70">{count} mẫu</p>}
+          <h3 className="text-[clamp(20px,7.2cqw,40px)] font-bold leading-[1.05] tracking-[-0.02em]">{t.title}</h3>
           {t.subtitle && <p className="text-[clamp(12px,3.4cqw,17px)] font-medium leading-snug opacity-85">{t.subtitle}</p>}
           <Link
             href={href}
@@ -202,7 +202,7 @@ function Tile({ tile: t, index, lgSpan, mdSpan, count, colors, filterable, eager
                 tabIndex={sel === k || (sel < 0 && k === 0) ? 0 : -1}
                 onClick={() => setSel(sel === k ? -1 : k)}
                 className={`relative aspect-square min-w-0 flex-[0_1_44px] rounded-lg border-2 bg-[#f6f6f7] transition ${
-                  sel === k ? "border-ink shadow-[2px_2px_0_#1d1d1f]" : "border-transparent hover:border-ink/30"
+                  sel === k ? "border-ink shadow-soft" : "border-transparent hover:border-ink/30"
                 }`}
               >
                 <SwatchShape shape={shape} hex={c.hex} />

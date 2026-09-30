@@ -81,7 +81,7 @@ export function SellerShell({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={{ ov, reload }}>
-      <div className="border-b-2 border-ink bg-violet-700 text-white">
+      <div className="border-b border-line bg-violet-700 text-white">
         <div className="container-site flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
           <p className="font-black">Seller · {ov.profile.brandName || ov.profile.companyName || "Cửa hàng của bạn"}</p>
           <p className="text-sm text-white/80">Chiết khấu {ov.profile.discountPercent}%</p>

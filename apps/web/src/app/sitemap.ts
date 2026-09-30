@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getCategories, getHelp, getPages, getProducts } from "@/lib/api";
+import { DESIGN_COLLECTIONS } from "@pod/shared";
 import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 3600;
@@ -10,6 +11,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: SITE_URL, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/san-pham`, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/thiet-ke`, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/bo-suu-tap`, changeFrequency: "weekly", priority: 0.8 },
+    ...DESIGN_COLLECTIONS.map((c) => ({ url: `${SITE_URL}/bo-suu-tap/${c.slug}`, changeFrequency: "weekly" as const, priority: 0.6 })),
     ...cats.map((c) => ({ url: `${SITE_URL}/danh-muc/${c.slug}`, changeFrequency: "weekly" as const, priority: 0.7 })),
     ...pages.map((p) => ({ url: `${SITE_URL}/trang/${p.slug}`, changeFrequency: "monthly" as const, priority: 0.3 })),
     { url: `${SITE_URL}/ho-tro`, changeFrequency: "weekly", priority: 0.4 },

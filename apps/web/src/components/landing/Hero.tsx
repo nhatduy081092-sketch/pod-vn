@@ -10,12 +10,12 @@ export function Hero({ data }: { data: LandingSettings["hero"] }) {
       <div className="container-site">
         <div className="relative mx-auto max-w-[980px] pt-[clamp(26px,5vw,44px)]">
           {/* Tab vàng góc phải */}
-          <div className="absolute right-0 top-0 z-10 min-w-[50%] max-w-[64%] rounded-t-[14px] border-2 border-b-0 border-ink bg-brand-yellow px-3 pb-[clamp(10px,2vw,18px)] pt-1.5 text-right md:pt-2">
+          <div className="absolute right-0 top-0 z-10 min-w-[50%] max-w-[64%] rounded-t-[14px] border border-b-0 border-line bg-brand-yellow px-3 pb-[clamp(10px,2vw,18px)] pt-1.5 text-right md:pt-2">
             <p className="truncate text-[clamp(11px,3vw,22px)] font-extrabold leading-tight text-ink">{data.tag}</p>
           </div>
 
           {/* Khung cửa sổ */}
-          <div className="relative z-20 rounded-[14px] border-2 border-ink bg-white px-2 pb-2 pt-[clamp(24px,4.5vw,40px)] shadow-[4px_4px_0_#1d1d1f] md:px-3 md:pb-3">
+          <div className="relative z-20 rounded-[14px] border border-line bg-white px-2 pb-2 pt-[clamp(24px,4.5vw,40px)] shadow-soft md:px-3 md:pb-3">
             {/* Thanh điều khiển */}
             <div className="absolute left-4 top-[clamp(6px,1.4vw,12px)] flex items-center gap-[clamp(6px,1.5vw,12px)]" aria-hidden>
               <span className="flex gap-[3px]">
@@ -29,7 +29,7 @@ export function Hero({ data }: { data: LandingSettings["hero"] }) {
             </div>
 
             {/* Panel cam */}
-            <div className="relative aspect-[16/10] overflow-hidden rounded-[12px] border-2 border-ink bg-[#FFB21A] md:aspect-[16/8.4]">
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[12px] border border-line bg-[#FFB21A] md:aspect-[16/8.4]">
               <div className="halftone-dark absolute inset-0" aria-hidden />
               {/* chữ ghost lặp */}
               <div className="pointer-events-none absolute bottom-[-4%] left-[18%] select-none leading-[0.82]" aria-hidden>
@@ -45,10 +45,10 @@ export function Hero({ data }: { data: LandingSettings["hero"] }) {
               <span className="absolute bottom-[30%] left-[40%] h-3 w-3 rounded-full bg-[#7C8CFF] md:h-5 md:w-5" aria-hidden />
 
               {/* Tiêu đề lớn */}
-              <h1 className="text-stroke-ink absolute left-[4%] top-[3%] z-20 whitespace-nowrap text-[clamp(28px,9.6vw,100px)] font-black leading-none tracking-tight text-white drop-shadow-[3px_3px_0_#1d1d1f]">
+              <h1 className="text-stroke-ink absolute left-[4%] top-[3%] z-20 whitespace-nowrap text-[clamp(28px,9.6vw,100px)] font-black leading-none tracking-tight text-white drop-shadow-soft">
                 {data.title}
               </h1>
-              <IconSparkle className="absolute left-[46%] top-[8%] z-30 h-5 w-5 text-[#FFE44D] drop-shadow-[1px_1px_0_#1d1d1f] md:h-9 md:w-9" aria-hidden />
+              <IconSparkle className="absolute left-[46%] top-[8%] z-30 h-5 w-5 text-[#FFE44D] drop-shadow-soft md:h-9 md:w-9" aria-hidden />
 
               {/* Ảnh / collage */}
               {data.imageUrl ? (
@@ -65,7 +65,7 @@ export function Hero({ data }: { data: LandingSettings["hero"] }) {
                       key={m.src}
                       src={assetUrl(m.src)}
                       alt=""
-                      className={`absolute aspect-square h-auto object-contain drop-shadow-[3px_4px_0_rgba(29,29,31,.35)] ${m.cls}`}
+                      className={`absolute aspect-square h-auto object-contain drop-shadow-soft ${m.cls}`}
                     />
                   ))}
                 </div>
@@ -74,7 +74,7 @@ export function Hero({ data }: { data: LandingSettings["hero"] }) {
               {/* Badge vàng */}
               <Link
                 href={data.ctaHref || "#hot-sale"}
-                className="absolute left-[-1%] top-[50%] z-30 -rotate-[8deg] rounded-md border-2 border-ink bg-[#FFE44D] px-[clamp(8px,2vw,18px)] pb-1 pt-[clamp(8px,1.6vw,14px)] shadow-hard transition hover:rotate-[-6deg]"
+                className="absolute left-[-1%] top-[50%] z-30 -rotate-[8deg] rounded-md border border-line bg-[#FFE44D] px-[clamp(8px,2vw,18px)] pb-1 pt-[clamp(8px,1.6vw,14px)] shadow-hard transition hover:rotate-[-6deg]"
               >
                 <span className="absolute inset-x-0 top-0.5 text-center text-[5px] font-bold tracking-widest text-ink/40 md:text-[7px]">
                   YALA • YALA • YALA

@@ -59,7 +59,7 @@ export function AccountOverview() {
           ["/tai-khoan/thiet-ke", "Thiết kế của tôi", "Mở lại, chỉnh sửa"],
           ["/tai-khoan/dia-chi", "Sổ địa chỉ", `${me.addresses.length}/5 địa chỉ`],
         ].map(([href, t, sub]) => (
-          <Link key={href} href={href!} className="rounded-xl border-2 border-ink bg-brand p-4 shadow-hard transition hover:-translate-y-0.5">
+          <Link key={href} href={href!} className="rounded-xl border border-line bg-brand p-4 shadow-hard transition hover:-translate-y-0.5">
             <p className="font-black">{t} →</p>
             <p className="text-sm text-ink/70">{sub}</p>
           </Link>

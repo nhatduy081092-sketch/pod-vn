@@ -165,7 +165,7 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
           <p className="mt-3">
             <Link
               href={hrefWith(basePath, params, { mau: undefined, page: undefined })}
-              className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink bg-white px-3 py-1 text-xs font-bold hover:bg-navy-light"
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1 text-xs font-bold hover:bg-navy-light"
               aria-label={`Bỏ lọc màu ${params.mau}`}
             >
               Màu: {params.mau} <span aria-hidden>✕</span>

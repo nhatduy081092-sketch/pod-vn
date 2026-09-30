@@ -22,8 +22,8 @@ export function FabricIntro({ intro, fabrics }: { intro: LandingSettings["intro"
               <img src={assetUrl(intro.imageUrl)} alt="" className="absolute bottom-0 right-0 h-full w-full object-contain object-bottom" />
             ) : (
               <>
-                <img src={assetUrl("/mock/tee-ocean-gradient.svg")} alt="" className="absolute bottom-[10%] left-0 w-[66%] rotate-[-8deg] drop-shadow-[3px_4px_0_rgba(29,29,31,.3)]" />
-                <img src={assetUrl("/mock/tee-pink-waves.svg")} alt="" className="absolute bottom-0 right-0 w-[76%] rotate-[5deg] drop-shadow-[3px_4px_0_rgba(29,29,31,.3)]" />
+                <img src={assetUrl("/mock/tee-ocean-gradient.svg")} alt="" className="absolute bottom-[10%] left-0 w-[66%] rotate-[-8deg] drop-shadow-soft" />
+                <img src={assetUrl("/mock/tee-pink-waves.svg")} alt="" className="absolute bottom-0 right-0 w-[76%] rotate-[5deg] drop-shadow-soft" />
               </>
             )}
           </div>
@@ -33,7 +33,7 @@ export function FabricIntro({ intro, fabrics }: { intro: LandingSettings["intro"
             {fabrics.map((f, i) => (
               <li key={f.name} className="relative h-full flex-1">
                 <div
-                  className={`h-full w-full overflow-hidden rounded-[12px] border-2 border-ink ${f.imageUrl ? "" : FABRIC_TEXTURE[i % 3]}`}
+                  className={`h-full w-full overflow-hidden rounded-[12px] border border-line ${f.imageUrl ? "" : FABRIC_TEXTURE[i % 3]}`}
                   style={{ backgroundColor: f.color }}
                 >
                   {f.imageUrl && <img src={assetUrl(f.imageUrl)} alt={f.name} className="h-full w-full object-cover" />}
@@ -48,7 +48,7 @@ export function FabricIntro({ intro, fabrics }: { intro: LandingSettings["intro"
           {/* CTA */}
           <Link
             href={intro.ctaHref || "#hot-sale"}
-            className="absolute bottom-[-4%] right-0 z-10 inline-flex w-[40%] items-center justify-center gap-1.5 rounded-full border-2 border-ink bg-brand-gold py-[clamp(4px,1.2vw,10px)] text-[clamp(12px,3.2vw,22px)] font-black text-ink shadow-hard transition hover:bg-brand"
+            className="absolute bottom-[-4%] right-0 z-10 inline-flex w-[40%] items-center justify-center gap-1.5 rounded-full border border-line bg-brand-gold py-[clamp(4px,1.2vw,10px)] text-[clamp(12px,3.2vw,22px)] font-black text-ink shadow-hard transition hover:bg-brand"
           >
             {intro.ctaLabel}
             <svg viewBox="0 0 20 20" className="h-[1em] w-[1em]" aria-hidden>

@@ -135,7 +135,7 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
       )}
 
       {rows.length > 0 && (
-        <div className="overflow-hidden rounded-lg border-2 border-ink">
+        <div className="overflow-hidden rounded-lg border border-line">
           <div className="flex flex-wrap items-center gap-2 bg-brand px-3 py-2 text-sm">
             <b>{rows.length} áo</b>
             {summary.map((s) => (

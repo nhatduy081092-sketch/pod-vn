@@ -86,6 +86,12 @@ export type HomeData = {
   catalog?: { id: string; name: string; slug: string; count: number; image: string }[];
   /** Khối "Dòng sản phẩm": số sản phẩm theo slug danh mục (danh mục không có = không tồn tại/hết hàng) */
   showcaseCounts?: Record<string, number>;
+  /** Sản phẩm theo mùa (quy tắc theo tháng) */
+  seasonal?: { eyebrow: string; title: string; href: string; items: ProductCardData[] } | null;
+  /** Sản phẩm gắn chấm trong ảnh shop the look */
+  lookbookProducts?: ProductCardData[];
+  /** Dòng basic YALA Everyday */
+  everyday?: ProductCardData[];
   /** Dải màu thật theo slug danh mục, phổ biến trước */
   showcaseColors?: Record<string, { name: string; hex: string; count?: number }[]>;
 };

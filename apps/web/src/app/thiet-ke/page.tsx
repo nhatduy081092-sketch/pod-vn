@@ -63,7 +63,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
       <section className="overflow-hidden bg-cream">
         <div className="container-site grid items-center gap-8 py-8 md:grid-cols-[1.05fr_1fr] md:py-14">
           <div>
-            <p className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink bg-white px-3 py-1 text-xs font-extrabold tracking-wide shadow-hard">
+            <p className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1 text-xs font-extrabold tracking-wide shadow-hard">
               <IconSparkle className="h-3.5 w-3.5 text-accent" aria-hidden /> {brand.toUpperCase()} STUDIO
             </p>
             <h1 className="mt-4 text-[clamp(30px,6.2vw,56px)] font-black leading-[1.05] tracking-tight text-ink">
@@ -94,18 +94,18 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
 
           {/* Mô phỏng giao diện Studio */}
           <div className="relative mx-auto w-full max-w-[480px]" aria-hidden>
-            <div className="rounded-[14px] border-2 border-ink bg-white shadow-[5px_5px_0_#1d1d1f]">
-              <div className="flex h-9 items-center justify-between border-b-2 border-ink px-3">
+            <div className="rounded-[14px] border border-line bg-white shadow-soft">
+              <div className="flex h-9 items-center justify-between border-b border-line px-3">
                 <span className="flex gap-1.5">
-                  <span className="h-3 w-3 rounded-full border-[1.5px] border-ink bg-white" />
-                  <span className="h-3 w-3 rounded-full border-[1.5px] border-ink bg-brand-badge" />
-                  <span className="h-3 w-3 rounded-full border-[1.5px] border-ink bg-brand-dark" />
+                  <span className="h-3 w-3 rounded-full border border-line bg-white" />
+                  <span className="h-3 w-3 rounded-full border border-line bg-brand-badge" />
+                  <span className="h-3 w-3 rounded-full border border-line bg-brand-dark" />
                 </span>
                 <span className="text-[11px] font-extrabold">{brand} Studio · Mặt trước</span>
                 <span className="rounded bg-ink px-1.5 py-0.5 text-[10px] font-extrabold text-brand-badge">Đặt in</span>
               </div>
               <div className="grid grid-cols-[52px_1fr]">
-                <div className="flex flex-col items-center gap-2 border-r-2 border-ink py-3">
+                <div className="flex flex-col items-center gap-2 border-r border-line py-3">
                   {[IconImage, IconText, IconLayers, IconPalette, IconSave].map((I, i) => (
                     <span key={i} className={`flex h-9 w-9 items-center justify-center rounded-md border-2 ${i === 1 ? "border-ink bg-brand-badge" : "border-transparent"}`}>
                       <I className="h-5 w-5" />
@@ -124,20 +124,20 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 border-t-2 border-ink px-3 py-2">
+              <div className="flex items-center gap-2 border-t border-line px-3 py-2">
                 {["#ffffff", "#1d1d1f", "#1C4D99", "#e11d48", "#16a34a", "#FFA415"].map((c) => (
-                  <span key={c} className="h-5 w-5 rounded-full border-2 border-ink" style={{ backgroundColor: c }} />
+                  <span key={c} className="h-5 w-5 rounded-full border border-line" style={{ backgroundColor: c }} />
                 ))}
                 <span className="ml-auto text-[11px] font-bold text-ink/60">Màu áo</span>
               </div>
             </div>
-            <IconSparkle className="absolute -right-2 -top-4 h-9 w-9 text-brand-badge drop-shadow-[2px_2px_0_#1d1d1f]" />
+            <IconSparkle className="absolute -right-2 -top-4 h-9 w-9 text-brand-badge drop-shadow-soft" />
           </div>
         </div>
       </section>
 
       {/* ---------- Tính năng ---------- */}
-      <section className="border-y-2 border-ink bg-white py-10 md:py-14" aria-labelledby="studio-features">
+      <section className="border-y border-line bg-white py-10 md:py-14" aria-labelledby="studio-features">
         <div className="container-site">
           <h2 id="studio-features" className="text-center text-[clamp(22px,4vw,34px)] font-black tracking-tight">
             Mọi thứ để có chiếc áo “chỉ mình có”
@@ -145,7 +145,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
           <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
               <li key={f.title} className="flex gap-3 rounded-xl border-2 border-ink/10 p-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-2 border-ink bg-brand-badge">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-line bg-brand-badge">
                   <f.icon className="h-5 w-5" aria-hidden />
                 </span>
                 <div>
@@ -222,8 +222,8 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
           </h2>
           <ol className="mt-8 grid gap-4 md:grid-cols-3">
             {HOW.map((h, i) => (
-              <li key={h.title} className="relative rounded-xl border-2 border-ink bg-cream p-5 pt-7 shadow-hard">
-                <span className="absolute -top-4 left-4 flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-brand-badge text-sm font-black">
+              <li key={h.title} className="relative rounded-xl border border-line bg-cream p-5 pt-7 shadow-hard">
+                <span className="absolute -top-4 left-4 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-brand-badge text-sm font-black">
                   {i + 1}
                 </span>
                 <h3 className="font-extrabold">{h.title}</h3>
@@ -335,7 +335,7 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
 
 function StudioCard({ p, priority }: { p: ProductCardData; priority: boolean }) {
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-xl border-2 border-ink bg-white transition hover:-translate-y-0.5 hover:shadow-hard">
+    <div className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-white transition hover:-translate-y-0.5 hover:shadow-hard">
       <Link href={`/thiet-ke/${p.slug}`} className="relative block aspect-square bg-[#f6f6f7]">
         <Img src={p.images[0]} alt={p.name} priority={priority} sizes="(min-width:1024px) 280px, (min-width:640px) 30vw, 46vw" className="object-contain p-2 transition duration-300 group-hover:scale-105" />
         <span className="absolute left-2 top-2 rounded-full bg-ink px-2 py-0.5 text-[10px] font-extrabold text-brand-badge md:text-[11px]">{p.category.name}</span>
@@ -349,7 +349,7 @@ function StudioCard({ p, priority }: { p: ProductCardData; priority: boolean }) 
         <p className="mt-1 text-[15px] font-black md:text-base">{shortPriceLabel(p, formatVND)}</p>
         <Link
           href={`/thiet-ke/${p.slug}`}
-          className="mt-2 flex items-center justify-center gap-1.5 rounded-lg border-2 border-ink bg-brand-badge py-2 text-[13px] font-extrabold transition group-hover:bg-brand md:text-sm"
+          className="mt-2 flex items-center justify-center gap-1.5 rounded-lg border border-line bg-brand-badge py-2 text-[13px] font-extrabold transition group-hover:bg-brand md:text-sm"
         >
           <IconSparkle className="h-3.5 w-3.5" aria-hidden /> Thiết kế ngay
         </Link>

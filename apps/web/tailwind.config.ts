@@ -6,30 +6,42 @@ export default {
   theme: {
     extend: {
       colors: {
+        /* Hệ màu YALA 2026: nền trung tính, 1 màu nhấn cam cho hành động mua & giá sale.
+           Các tên cũ (cream, navy, brand-*) giữ lại nhưng trỏ về bảng màu mới để toàn site đổi đồng loạt. */
         ink: "#1d1d1f",
-        cream: "#FFF6C1",
-        banner: "#FDF3B0",
+        muted: "#6b6660",
+        line: "#e7e3dd",
+        surface: "#f6f4f1",
+        cream: "#f6f4f1",
+        banner: "#f6f4f1",
         brand: {
-          DEFAULT: "#FFA415", // khung card sản phẩm
-          dark: "#F08A00",
-          yellow: "#FEBB2E", // hero
-          gold: "#FFC21A", // nút CTA
-          band: "#FF9D21",
-          badge: "#FFE44D", // chữ vàng trên nền đen
+          DEFAULT: "#F2711C", // cam YALA – nút mua, giá sale, trạng thái chọn
+          dark: "#D65F10",
+          light: "#FFF1E7",
+          yellow: "#f6f4f1",
+          gold: "#F2711C",
+          band: "#F2711C",
+          badge: "#ffffff",
         },
         zalo: "#0068FF",
-        // nhận diện YALA: navy + cam nhấn (accent)
-        navy: { DEFAULT: "#1C4D99", dark: "#0F2F63", light: "#E8EFFA" },
-        accent: "#F88125",
+        navy: { DEFAULT: "#1d1d1f", dark: "#000000", light: "#f1eee9" },
+        accent: "#F2711C",
+        sale: "#D9480F",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "Be Vietnam Pro", "system-ui", "sans-serif"],
       },
+      // Chữ nhẹ hơn: font-black/extrabold cũ -> 700/600 (tiêu đề to nhưng không nặng)
+      fontWeight: {
+        extrabold: "650",
+        black: "700",
+      },
       boxShadow: {
-        // hiệu ứng "xấp giấy" viền đen lệch như mẫu
-        stack: "5px 5px 0 -2px #fff, 5px 5px 0 0 #1d1d1f",
-        "stack-sm": "3px 3px 0 -1px #fff, 3px 3px 0 0 #1d1d1f",
-        hard: "3px 3px 0 0 #1d1d1f",
+        // bỏ bóng cứng viền đen -> bóng mềm
+        stack: "0 1px 2px rgb(29 29 31 / .04), 0 10px 30px -12px rgb(29 29 31 / .14)",
+        "stack-sm": "0 1px 2px rgb(29 29 31 / .05), 0 6px 18px -10px rgb(29 29 31 / .14)",
+        hard: "0 1px 2px rgb(29 29 31 / .06), 0 4px 14px -6px rgb(29 29 31 / .16)",
+        soft: "0 1px 2px rgb(29 29 31 / .04), 0 10px 30px -12px rgb(29 29 31 / .14)",
       },
       maxWidth: {
         site: "1200px",

@@ -5,6 +5,7 @@ import { saveLandingAction } from "@/lib/actions";
 import { WEB_URL } from "@/lib/config";
 import { ImageInput } from "./ImageInput";
 import { ShippingSettings } from "./ShippingSettings";
+import { HomeBlocksSettings } from "./HomeBlocksSettings";
 
 type Section = keyof LandingSettings;
 type FieldDef = { key: string; label: string; type?: "text" | "textarea" | "number" | "image" | "bool" | "color" | "lines" | "stats" };
@@ -188,6 +189,7 @@ export function SettingsForm({ initial }: { initial: LandingSettings }) {
 
       <ShippingSettings value={s.shipping} onChange={(v) => setS((p) => ({ ...p, shipping: v }))} />
 
+      <HomeBlocksSettings value={s} onChange={setS} />
       <ShowcaseSettings value={s.showcase} onChange={(v) => setS((p) => ({ ...p, showcase: v }))} />
 
       {/* Các bước */}

@@ -62,7 +62,7 @@ export function OrderLookup({ initialCode = "", justPlaced = false }: { initialC
         e.preventDefault();
         void lookup(code, phone);
       }}
-      className="mx-auto mt-6 max-w-md rounded-lg border-2 border-ink bg-white p-5 shadow-stack"
+      className="mx-auto mt-6 max-w-md rounded-lg border border-line bg-white p-5 shadow-stack"
     >
       <label className="block">
         <span className="label">Mã đơn hàng</span>
@@ -90,7 +90,7 @@ function OrderDetails({ order, justPlaced }: { order: OrderView; justPlaced: boo
   return (
     <div className="mx-auto mt-6 max-w-3xl space-y-5">
       {justPlaced && (
-        <div className="rounded-lg border-2 border-ink bg-[#D9F99D] p-5 text-center shadow-stack">
+        <div className="rounded-lg border border-line bg-[#D9F99D] p-5 text-center shadow-stack">
           <IconCheck className="mx-auto h-10 w-10" />
           <h2 className="mt-1 text-xl font-black">Đặt hàng thành công!</h2>
           <p className="mt-1 text-sm">
@@ -100,7 +100,7 @@ function OrderDetails({ order, justPlaced }: { order: OrderView; justPlaced: boo
       )}
 
       {qr && (
-        <section className="grid items-center gap-4 rounded-lg border-2 border-ink bg-white p-4 sm:grid-cols-[220px_1fr]">
+        <section className="grid items-center gap-4 rounded-lg border border-line bg-white p-4 sm:grid-cols-[220px_1fr]">
           <img src={qr} alt={`Mã VietQR thanh toán đơn ${order.code}`} className="mx-auto w-[220px]" />
           <div className="text-sm">
             <h3 className="text-base font-black">Chuyển khoản để xác nhận đơn</h3>
@@ -116,7 +116,7 @@ function OrderDetails({ order, justPlaced }: { order: OrderView; justPlaced: boo
         </section>
       )}
 
-      <section className="rounded-lg border-2 border-ink bg-white p-4">
+      <section className="rounded-lg border border-line bg-white p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-black">Đơn {order.code}</h3>
           <span className="text-xs text-ink/60">{formatDateTimeVN(order.createdAt)}</span>

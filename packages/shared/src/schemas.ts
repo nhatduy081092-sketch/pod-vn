@@ -199,6 +199,65 @@ export const landingSettingsSchema = z.object({
   hero: z.object({ tag: nonEmpty, title: nonEmpty, badge: nonEmpty, imageUrl: nonEmpty, ctaHref: nonEmpty }),
   sectionTitles: z.object({ bestSellers: nonEmpty, hotSale: nonEmpty, reviews: nonEmpty }),
   steps: z.array(z.object({ title: nonEmpty, color: nonEmpty })).min(1).max(8),
+  slides: z.object({
+    enabled: z.boolean(),
+    intervalMs: z.number().int().min(2500).max(20000),
+    items: z
+      .array(
+        z.object({
+          eyebrow: z.string().max(60),
+          title: z.string().trim().min(1, "Nhập tiêu đề slide").max(80),
+          subtitle: z.string().max(200),
+          ctaLabel: z.string().max(40),
+          href: z.string().max(300),
+          image: z.string().max(500),
+          bg: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Màu nền dạng #RRGGBB"),
+          focus: z.string().max(20),
+          startsAt: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, "Ngày dạng YYYY-MM-DD"),
+          endsAt: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, "Ngày dạng YYYY-MM-DD"),
+        }),
+      )
+      .max(8),
+  }),
+  seasonal: z.object({
+    enabled: z.boolean(),
+    rules: z
+      .array(
+        z.object({
+          months: z.array(z.number().int().min(1).max(12)).min(1).max(12),
+          eyebrow: z.string().max(60),
+          title: z.string().trim().min(1).max(80),
+          href: z.string().max(300),
+          categorySlugs: z.array(z.string().max(120)).max(10),
+          productSlugs: z.array(z.string().max(160)).max(20),
+        }),
+      )
+      .max(12),
+  }),
+  collections: z.object({ enabled: z.boolean(), eyebrow: z.string().max(80), title: z.string().max(80) }),
+  beforeAfter: z.object({
+    enabled: z.boolean(),
+    eyebrow: z.string().max(60),
+    title: z.string().max(100),
+    subtitle: z.string().max(300),
+    before: z.string().max(500),
+    after: z.string().max(500),
+    beforeLabel: z.string().max(30),
+    afterLabel: z.string().max(30),
+    ctaLabel: z.string().max(40),
+    href: z.string().max(300),
+    points: z.array(z.string().max(80)).max(5),
+  }),
+  lookbook: z.object({
+    enabled: z.boolean(),
+    eyebrow: z.string().max(60),
+    title: z.string().max(80),
+    image: z.string().max(500),
+    bg: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+    focus: z.string().max(20),
+    hotspots: z.array(z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), productSlug: z.string().max(160), color: z.string().max(40), label: z.string().max(40) })).max(8),
+  }),
+  everyday: z.object({ enabled: z.boolean(), eyebrow: z.string().max(60), title: z.string().max(80), subtitle: z.string().max(300), categorySlug: z.string().max(120) }),
   showcase: z.object({
     enabled: z.boolean(),
     eyebrow: nonEmpty,

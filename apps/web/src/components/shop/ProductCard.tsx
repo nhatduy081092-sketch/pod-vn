@@ -3,77 +3,71 @@ import { discountPercent, displayCompareAt, effectiveBasePrice, formatVND, isAiI
 import type { ProductCardData } from "@/lib/types";
 import { Img } from "../ui/Img";
 
-/** Card sản phẩm kiểu "cửa sổ": thanh 3 chấm + nhãn, khung cam, badge -% đen, nhãn MỚI / SALE */
+const isVector = (u?: string) => !!u && /\.svg(\?|$)/i.test(u);
+
+/**
+ * Card sản phẩm: ảnh nền trung tính, rê chuột đổi sang ảnh thứ 2 (nếu có), giá sale màu nhấn.
+ * Ảnh vẽ (SVG) giữ nguyên tỉ lệ; ảnh chụp phủ kín khung.
+ */
 export function ProductCard({ p, priority = false, color }: { p: ProductCardData; priority?: boolean; /** màu khách đã chọn -> chọn sẵn ở trang sản phẩm */ color?: string }) {
   const sale = saleActive(p);
   const price = p.basePrice > 0 ? effectiveBasePrice(p) : 0;
   const compare = p.basePrice > 0 ? displayCompareAt(p) : null;
   const off = compare ? discountPercent(price, compare) : 0;
   const isNew = !!p.newUntil && new Date(p.newUntil).getTime() > Date.now();
+  const [first, second] = p.images;
+  const hasSecond = !!second && second !== first;
+  const fit = (u?: string) => (isVector(u) ? "object-contain p-[6%]" : "object-cover");
   return (
-    <Link
-      href={color ? `/san-pham/${p.slug}?mau=${encodeURIComponent(color)}` : `/san-pham/${p.slug}`}
-      className="group block overflow-hidden rounded-[6px] border-2 border-ink bg-brand transition hover:-translate-y-0.5 hover:shadow-hard"
-    >
-      <div className="flex h-[22px] items-center justify-between border-b-2 border-ink bg-white px-1.5 md:h-7" aria-hidden>
-        <span className="flex gap-[3px]">
-          <span className="h-2.5 w-2.5 rounded-full border-[1.5px] border-ink bg-white md:h-3 md:w-3" />
-          <span className="h-2.5 w-2.5 rounded-full border-[1.5px] border-ink bg-[#FFD84D] md:h-3 md:w-3" />
-          <span className="h-2.5 w-2.5 rounded-full border-[1.5px] border-ink bg-brand-dark md:h-3 md:w-3" />
-        </span>
-        <span className="text-[9px] font-extrabold tracking-tight md:text-[11px]">
-          {sale ? "KHUYẾN MÃI • CÓ HẠN" : p.basePrice > 0 ? "IN TOÀN THÂN • HOT" : "CÁ NHÂN HOÁ • LOGO"}
-        </span>
+    <Link href={color ? `/san-pham/${p.slug}?mau=${encodeURIComponent(color)}` : `/san-pham/${p.slug}`} className="group block">
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-surface">
+        <Img
+          src={first}
+          alt={p.name}
+          priority={priority}
+          sizes="(min-width:1280px) 280px, (min-width:768px) 30vw, 46vw"
+          className={`${fit(first)} transition duration-500 ${hasSecond ? "[@media(hover:hover)]:group-hover:opacity-0" : "[@media(hover:hover)]:group-hover:scale-[1.03]"}`}
+        />
+        {hasSecond && (
+          <Img
+            src={second}
+            alt=""
+            sizes="(min-width:1280px) 280px, (min-width:768px) 30vw, 46vw"
+            className={`${fit(second)} opacity-0 transition duration-500 [@media(hover:hover)]:group-hover:opacity-100`}
+          />
+        )}
+        {(isNew || off > 0) && (
+          <span className="absolute left-2 top-2 flex gap-1">
+            {off > 0 && <span className="rounded-full bg-sale px-2 py-0.5 text-[11px] font-semibold text-white md:text-xs">-{off}%</span>}
+            {isNew && <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-ink md:text-xs">Mới</span>}
+          </span>
+        )}
+        {isAiImage(first) && <span className="absolute bottom-1.5 right-1.5 rounded bg-white/85 px-1 py-px text-[9px] font-medium text-ink/65 md:text-[10px]">Ảnh minh hoạ</span>}
       </div>
-      <div className="p-[7px] pb-2 md:p-2.5">
-        <div className="relative">
-          <div className="relative aspect-square overflow-hidden rounded-[6px] border-[1.5px] border-ink bg-white">
-            <Img
-              src={p.images[0]}
-              alt={p.name}
-              priority={priority}
-              sizes="(min-width:1280px) 280px, (min-width:768px) 30vw, 46vw"
-              className="object-contain transition duration-300 group-hover:scale-105"
-            />
-          </div>
-          {isAiImage(p.images[0]) && (
-            <span className="absolute bottom-1 right-1 rounded bg-white/85 px-1 py-px text-[9px] font-semibold text-ink/70 md:text-[10px]">Ảnh minh hoạ</span>
-          )}
-          {(isNew || sale) && (
-            <span className="absolute left-1 top-1 flex gap-1">
-              {isNew && <span className="rounded bg-[#16a34a] px-1.5 py-0.5 text-[10px] font-black text-white md:text-[11px]">MỚI</span>}
-              {sale && <span className="rounded bg-[#e11d48] px-1.5 py-0.5 text-[10px] font-black text-white md:text-[11px]">SALE</span>}
-            </span>
-          )}
-          {off > 0 && (
-            <span className="absolute -bottom-[2px] -left-[9px] rounded-r-[4px] bg-ink py-0.5 pl-2.5 pr-2 text-[12px] font-extrabold text-brand-badge md:-left-[12px] md:text-sm">
-              -{off}%
-            </span>
-          )}
-        </div>
-        <h3 className="mt-1.5 line-clamp-2 min-h-[2.6em] text-[11.5px] font-bold leading-[1.3] text-ink md:text-[13px]">{p.name}</h3>
-        <p className="mt-1 flex items-baseline gap-1.5">
-          {p.basePrice > 0 ? (
-            <span className="text-[16px] font-black text-ink md:text-[19px]">{formatVND(price)}</span>
-          ) : p.priceFrom ? (
-            <span className="whitespace-nowrap text-ink">
-              <span className="text-[11px] font-bold md:text-xs">Từ </span>
-              <span className="text-[16px] font-black md:text-[19px]">{formatVND(p.priceFrom)}</span>
-            </span>
-          ) : (
-            <span className="text-[13px] font-extrabold text-navy md:text-[15px]">Liên hệ báo giá →</span>
-          )}
-          {compare && compare > price && <span className="text-[10px] font-semibold text-ink/70 line-through md:text-xs">{formatVND(compare)}</span>}
-        </p>
-        {p.productionDays && <p className="mt-0.5 text-[10px] font-semibold text-ink/70 md:text-[11px]">⏱ Sản xuất {p.productionDays}</p>}
-      </div>
+      <h3 className="mt-2.5 line-clamp-2 min-h-[2.6em] text-[13px] font-medium leading-[1.3] text-ink md:text-[15px]">{p.name}</h3>
+      <p className="mt-1 flex flex-wrap items-baseline gap-x-2">
+        {p.basePrice > 0 ? (
+          <span className={`text-[15px] font-semibold md:text-base ${sale || off > 0 ? "text-sale" : "text-ink"}`}>{formatVND(price)}</span>
+        ) : p.priceFrom ? (
+          <span className="text-[15px] font-semibold text-ink md:text-base">
+            <span className="text-xs font-normal text-muted">Từ </span>
+            {formatVND(p.priceFrom)}
+          </span>
+        ) : (
+          <span className="text-sm font-semibold text-ink underline decoration-line underline-offset-4">Liên hệ báo giá</span>
+        )}
+        {compare && compare > price && <span className="text-xs text-muted line-through md:text-[13px]">{formatVND(compare)}</span>}
+      </p>
+      {p.productionDays && <p className="mt-0.5 text-[11px] text-muted md:text-xs">Sản xuất {p.productionDays}</p>}
     </Link>
   );
 }
 
-export function ProductGrid({ items, dense = false, color }: { items: ProductCardData[]; dense?: boolean; color?: string }) {
+/** Lưới sản phẩm; even = làm tròn về 4/8 ô để không lẻ hàng cuối (khối trang chủ) */
+export function ProductGrid({ items: all, dense = false, color, even = false }: { items: ProductCardData[]; dense?: boolean; color?: string; even?: boolean }) {
+  const items = even && all.length > 4 ? all.slice(0, all.length >= 8 ? 8 : 4) : all;
   return (
-    <ul className={`grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:gap-4 ${dense ? "xl:grid-cols-4" : "lg:grid-cols-4"}`}>
+    <ul className={`grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:gap-x-5 md:gap-y-8 ${dense ? "xl:grid-cols-4" : "lg:grid-cols-4"}`}>
       {items.map((p, i) => (
         <li key={p.id}>
           <ProductCard p={p} priority={i < 2} color={color} />

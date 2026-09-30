@@ -55,6 +55,18 @@ export type LandingSettings = {
     reviews: string;
   };
   steps: { title: string; color: string }[];
+  /** Banner slider đầu trang theo chiến dịch (thay hero cũ khi bật) */
+  slides: { enabled: boolean; intervalMs: number; items: HeroSlide[] };
+  /** Sản phẩm theo mùa: chọn quy tắc theo tháng hiện tại (giờ Việt Nam) */
+  seasonal: { enabled: boolean; rules: SeasonRule[] };
+  /** Lưới bộ sưu tập "Mẫu có sẵn" */
+  collections: { enabled: boolean; eyebrow: string; title: string };
+  /** Trước / sau: ảnh gốc của khách -> áo in xong (để trống ảnh "sau" = tự ghép ảnh gốc lên áo) */
+  beforeAfter: { enabled: boolean; eyebrow: string; title: string; subtitle: string; before: string; after: string; beforeLabel: string; afterLabel: string; ctaLabel: string; href: string; points: string[] };
+  /** Shop the look: ảnh lifestyle + chấm bấm vào từng món để mua */
+  lookbook: { enabled: boolean; eyebrow: string; title: string; image: string; bg: string; focus: string; hotspots: LookHotspot[] };
+  /** Dòng basic (sản phẩm trơn) */
+  everyday: { enabled: boolean; eyebrow: string; title: string; subtitle: string; categorySlug: string };
   /** Khối "Dòng sản phẩm" (ảnh người mẫu + dải màu) – ngay dưới hero */
   showcase: {
     enabled: boolean;
@@ -89,6 +101,23 @@ export type LandingSettings = {
     description: string;
   };
 };
+
+export type HeroSlide = {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctaLabel: string;
+  href: string;
+  image: string;
+  /** Màu nền (lấy từ nền ảnh) – chữ tự đổi đen/trắng theo độ tương phản */
+  bg: string;
+  focus: string;
+  /** Lịch chạy (YYYY-MM-DD, trống = luôn hiện) */
+  startsAt: string;
+  endsAt: string;
+};
+export type SeasonRule = { months: number[]; eyebrow: string; title: string; href: string; categorySlugs: string[]; productSlugs: string[] };
+export type LookHotspot = { x: number; y: number; productSlug: string; color: string; label: string };
 
 export type ShowcaseTile = {
   title: string;
@@ -170,6 +199,51 @@ export const DEFAULT_LANDING: LandingSettings = {
     { title: "Xưởng in đúng file thiết kế & kiểm tra chất lượng", color: "#D6A9F2" },
     { title: "Đóng gói & giao hàng toàn quốc", color: "#8BE3D3" },
   ],
+  slides: {
+    enabled: true,
+    intervalMs: 6000,
+    items: [
+      { eyebrow: "Mùa lạnh 2026", title: "Hoodie & sweater nỉ bông", subtitle: "Ấm áp, dễ phối, in chữ – in logo theo ý bạn từ 1 chiếc.", ctaLabel: "Xem mẫu mùa lạnh", href: "/bo-suu-tap/mua-thu-ha-noi", image: "/showcase/hoodie.webp", bg: "#bca796", focus: "70% 35%", startsAt: "", endsAt: "" },
+      { eyebrow: "Bộ sưu tập mới", title: "Pickleball cho vui", subtitle: "Ra sân 5 giờ sáng, mặc áo chữ khiến cả hội bật cười.", ctaLabel: "Xem mẫu pickleball", href: "/bo-suu-tap/pickleball", image: "/showcase/the-thao.webp", bg: "#e2e1df", focus: "62% 40%", startsAt: "", endsAt: "" },
+      { eyebrow: "Mặc đôi", title: "Áo cặp đôi, áo nhóm bạn", subtitle: "Chọn mẫu có sẵn, sửa tên – ngày kỷ niệm trong 1 phút.", ctaLabel: "Xem mẫu cặp đôi", href: "/bo-suu-tap/cap-doi", image: "/showcase/ao-thun.webp", bg: "#e5e5e9", focus: "68% 30%", startsAt: "", endsAt: "" },
+      { eyebrow: "YALA Studio", title: "Tự thiết kế áo của bạn", subtitle: "Tải ảnh, thêm chữ, xem trước trên áo thật – in từ 1 chiếc, giao toàn quốc.", ctaLabel: "Bắt đầu thiết kế", href: "/thiet-ke", image: "/showcase/so-mi-polo.webp", bg: "#e6e8ea", focus: "60% 40%", startsAt: "", endsAt: "" },
+    ],
+  },
+  seasonal: {
+    enabled: true,
+    rules: [
+      { months: [10, 11, 12, 1, 2], eyebrow: "Đang hot mùa lạnh", title: "Hoodie & sweater", href: "/danh-muc/hoodie-sweater", categorySlugs: ["hoodie-sweater"], productSlugs: ["ao-hoodie-ni-bong-yala-everyday", "ao-sweater-ni-bong-yala-everyday", "ao-thun-dai-tay-yala-everyday"] },
+      { months: [5, 6, 7, 8], eyebrow: "Mặc gì hè này", title: "Áo thun & đồ thể thao", href: "/danh-muc/ao-thun", categorySlugs: ["ao-thun", "do-the-thao"], productSlugs: ["ao-thun-relaxed-fit-yala-everyday"] },
+      { months: [3, 4, 9], eyebrow: "Chuyển mùa", title: "Áo thun & áo dài tay", href: "/danh-muc/ao-thun", categorySlugs: ["ao-thun"], productSlugs: ["ao-thun-dai-tay-yala-everyday", "ao-thun-relaxed-fit-yala-everyday"] },
+    ],
+  },
+  collections: { enabled: true, eyebrow: "Chưa có ý tưởng? Chọn mẫu có sẵn", title: "Trọn bộ sưu tập theo chủ đề" },
+  beforeAfter: {
+    enabled: true,
+    eyebrow: "Custom áo theo ý bạn",
+    title: "Từ tấm ảnh của bạn thành chiếc áo",
+    subtitle: "Gửi ảnh, chữ hoặc logo – YALA Studio cho xem trước trên áo, xưởng in đúng file từ 1 chiếc.",
+    before: "/showcase/ao-thun.webp",
+    after: "",
+    beforeLabel: "Ảnh gốc",
+    afterLabel: "Áo in xong",
+    ctaLabel: "Thử in ảnh của bạn",
+    href: "/thiet-ke",
+    points: ["Xem trước trên áo trước khi đặt", "Kiểm tra độ nét ảnh tự động", "In từ 1 chiếc, giao toàn quốc"],
+  },
+  lookbook: {
+    enabled: true,
+    eyebrow: "Shop the look",
+    title: "Set đồ mùa lạnh",
+    image: "/showcase/hoodie.webp",
+    bg: "#bca796",
+    focus: "65% 35%",
+    hotspots: [
+      { x: 0.56, y: 0.62, productSlug: "ao-hoodie-ni-bong-yala-everyday", color: "Đen", label: "Hoodie đen" },
+      { x: 0.86, y: 0.66, productSlug: "ao-hoodie-ni-bong-yala-everyday", color: "Kem", label: "Hoodie kem" },
+    ],
+  },
+  everyday: { enabled: true, eyebrow: "Dòng basic", title: "YALA Everyday", subtitle: "Áo trơn mặc hằng ngày – thêm logo, tên hoặc chữ bạn thích. Mua kèm để đủ đơn freeship.", categorySlug: "yala-everyday" },
   showcase: {
     enabled: true,
     eyebrow: "YALA · Thời trang tuỳ chỉnh cho phong cách của bạn",
@@ -302,6 +376,12 @@ export function mergeLanding(value: unknown): LandingSettings {
     sectionTitles: { ...d.sectionTitles, ...v.sectionTitles },
     steps: v.steps?.length ? v.steps : d.steps,
     showcase: { ...d.showcase, ...v.showcase, tiles: v.showcase?.tiles?.length ? v.showcase.tiles : d.showcase.tiles },
+    slides: { ...d.slides, ...v.slides, items: v.slides?.items?.length ? v.slides.items : d.slides.items },
+    seasonal: { ...d.seasonal, ...v.seasonal, rules: v.seasonal?.rules?.length ? v.seasonal.rules : d.seasonal.rules },
+    collections: { ...d.collections, ...v.collections },
+    beforeAfter: { ...d.beforeAfter, ...v.beforeAfter, points: v.beforeAfter?.points?.length ? v.beforeAfter.points : d.beforeAfter.points },
+    lookbook: { ...d.lookbook, ...v.lookbook, hotspots: v.lookbook?.hotspots?.length ? v.lookbook.hotspots : d.lookbook.hotspots },
+    everyday: { ...d.everyday, ...v.everyday },
     intro: { ...d.intro, ...v.intro },
     fabrics: v.fabrics?.length ? v.fabrics : d.fabrics,
     audienceTiles: v.audienceTiles?.length ? v.audienceTiles : d.audienceTiles,
@@ -314,4 +394,21 @@ export function mergeLanding(value: unknown): LandingSettings {
     bank: { ...d.bank, ...v.bank },
     seo: { ...d.seo, ...v.seo },
   };
+}
+
+/** Tháng hiện tại theo giờ Việt Nam (1–12) */
+export function monthInVietnam(d = new Date()): number {
+  return Number(new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Ho_Chi_Minh", month: "numeric" }).format(d));
+}
+
+/** Quy tắc theo mùa áp dụng cho tháng này (null = không có) */
+export function currentSeasonRule(rules: SeasonRule[], d = new Date()): SeasonRule | null {
+  const m = monthInVietnam(d);
+  return rules.find((r) => r.months.includes(m)) ?? null;
+}
+
+/** Slide đang trong lịch chạy (ngày theo giờ Việt Nam) */
+export function activeSlides(items: HeroSlide[], d = new Date()): HeroSlide[] {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(d); // YYYY-MM-DD
+  return items.filter((s) => (!s.startsAt || s.startsAt <= today) && (!s.endsAt || s.endsAt >= today));
 }

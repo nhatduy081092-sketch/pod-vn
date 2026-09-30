@@ -36,7 +36,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const other = mode === "login" ? `/dang-ky${next !== "/tai-khoan" ? `?next=${encodeURIComponent(next)}` : ""}` : `/dang-nhap${next !== "/tai-khoan" ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   return (
-    <form onSubmit={submit} noValidate className="mx-auto w-full max-w-sm space-y-3 rounded-xl border-2 border-ink bg-white p-5 shadow-hard">
+    <form onSubmit={submit} noValidate className="mx-auto w-full max-w-sm space-y-3 rounded-xl border border-line bg-white p-5 shadow-hard">
       <h1 className="text-2xl font-black">{mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}</h1>
       <p className="text-sm text-ink/70">{mode === "login" ? "Xem đơn hàng, thiết kế đã lưu và đặt lại nhanh." : "Lưu thiết kế, xem lại đơn, đặt lại chỉ với 1 lần bấm."}</p>
       {mode === "register" && (

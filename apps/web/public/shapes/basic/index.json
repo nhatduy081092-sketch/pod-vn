@@ -1,0 +1,20 @@
+{
+ "garments": [
+  "tshirt",
+  "longsleeve",
+  "sweater",
+  "hoodie",
+  "jogger",
+  "tote"
+ ],
+ "colors": {
+  "trang": "#f7f6f2",
+  "den": "#1f1f22",
+  "kem": "#ece2cf",
+  "xam": "#a7a9ad",
+  "navy": "#233049",
+  "nau": "#6b4f3f",
+  "xanh-reu": "#556050",
+  "hong": "#efc2c8"
+ }
+}

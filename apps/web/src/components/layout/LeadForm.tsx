@@ -36,7 +36,7 @@ export function LeadForm({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-labelledby="lead-title" className="w-full max-w-md rounded-t-2xl border-2 border-ink bg-white p-5 shadow-hard sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-labelledby="lead-title" className="w-full max-w-md rounded-t-2xl border border-line bg-white p-5 shadow-hard sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between">
           <h2 id="lead-title" className="text-lg font-black">
             {state === "done" ? "Đã nhận thông tin!" : "Để lại SĐT, chúng tôi gọi lại"}

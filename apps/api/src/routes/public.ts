@@ -5,6 +5,7 @@ import {
   AUDIENCES,
   HELP_CATEGORIES,
   leadCreateSchema,
+  currentSeasonRule,
   parseTiers,
   rankColors,
   searchTokens,
@@ -89,9 +90,36 @@ publicRoutes.get("/home", async (c) => {
   const catalog = catalogRaw
     .filter((x) => x._count.products > 0)
     .map((x) => ({ id: x.id, name: x.name, slug: x.slug, count: x._count.products, image: x.imageUrl || x.products[0]?.images[0] || "" }));
-  const showcase = await showcaseData(settings, catalog);
-  return c.json({ settings, bestSellers, categories: categories.filter((x) => x.products.length), testimonials, b2bProducts, catalog, ...showcase });
+  const [showcase, extras] = await Promise.all([showcaseData(settings, catalog), homeExtras(settings)]);
+  return c.json({ settings, bestSellers, categories: categories.filter((x) => x.products.length), testimonials, b2bProducts, catalog, ...showcase, ...extras });
 });
+
+/** Khối theo mùa, shop the look, dòng basic – 3 truy vấn chạy song song */
+async function homeExtras(settings: Awaited<ReturnType<typeof getLanding>>) {
+  const rule = settings.seasonal.enabled ? currentSeasonRule(settings.seasonal.rules) : null;
+  const lookSlugs = settings.lookbook.enabled ? [...new Set(settings.lookbook.hotspots.map((h) => h.productSlug).filter(Boolean))] : [];
+  const [seasonRows, lookRows, everydayRows] = await Promise.all([
+    rule && (rule.categorySlugs.length || rule.productSlugs.length)
+      ? prisma.product.findMany({
+          where: { isActive: true, category: { isActive: true }, OR: [{ slug: { in: rule.productSlugs } }, { category: { slug: { in: rule.categorySlugs } } }] },
+          orderBy: [{ isBestSeller: "desc" }, { sortOrder: "asc" }],
+          take: 24,
+          select: { ...productSelect, slug: true },
+        })
+      : Promise.resolve([]),
+    lookSlugs.length ? prisma.product.findMany({ where: { isActive: true, slug: { in: lookSlugs } }, select: productSelect }) : Promise.resolve([]),
+    settings.everyday.enabled && settings.everyday.categorySlug
+      ? prisma.product.findMany({ where: { isActive: true, category: { slug: settings.everyday.categorySlug, isActive: true } }, orderBy: { sortOrder: "asc" }, take: 8, select: productSelect })
+      : Promise.resolve([]),
+  ]);
+  // sản phẩm chọn tay (productSlugs) đứng trước, theo đúng thứ tự khai báo
+  const rank = (slug: string) => {
+    const i = rule?.productSlugs.indexOf(slug) ?? -1;
+    return i < 0 ? 1000 : i;
+  };
+  const seasonal = rule && seasonRows.length ? { eyebrow: rule.eyebrow, title: rule.title, href: rule.href, items: [...seasonRows].sort((a, b) => rank(a.slug) - rank(b.slug)).slice(0, 8) } : null;
+  return { seasonal, lookbookProducts: lookRows, everyday: everydayRows };
+}
 
 /**
  * Khối "Dòng sản phẩm": danh mục nào thật sự có hàng (để link không 404) + dải màu thật theo danh mục.

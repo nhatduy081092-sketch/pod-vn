@@ -4,6 +4,7 @@ import { formatVND, sizeSummary } from "@pod/shared";
 import { useCart } from "@/lib/cart";
 import { assetUrl } from "@/lib/config";
 import { IconClose } from "../ui/icons";
+import { CartUpsell } from "./CartUpsell";
 
 export function CartView() {
   const cart = useCart();
@@ -19,8 +20,9 @@ export function CartView() {
     );
 
   return (
+    <>
     <div className="mt-5 grid gap-6 md:grid-cols-[1fr_340px]">
-      <ul className="divide-y divide-ink/10 rounded-lg border-2 border-ink bg-white">
+      <ul className="divide-y divide-ink/10 rounded-lg border border-line bg-white">
         {cart.items.map((i) => {
           const unit = cart.unitPrice(i);
           return (
@@ -63,7 +65,7 @@ export function CartView() {
                   {i.roster?.length ? (
                     <span className="text-sm font-bold">SL: {i.quantity}</span>
                   ) : (
-                  <div className="flex items-center overflow-hidden rounded border-2 border-ink text-sm">
+                  <div className="flex items-center overflow-hidden rounded border border-line text-sm">
                     <button type="button" className="h-7 w-7 font-bold" onClick={() => cart.updateQty(i.key, i.quantity - 1)} aria-label="Giảm">
                       −
                     </button>
@@ -83,7 +85,7 @@ export function CartView() {
           );
         })}
       </ul>
-      <aside className="h-fit rounded-lg border-2 border-ink bg-cream p-4 md:sticky md:top-20">
+      <aside className="h-fit rounded-lg border border-line bg-cream p-4 md:sticky md:top-20">
         <div className="flex justify-between text-sm">
           <span>Tạm tính ({cart.count} sản phẩm)</span>
           <b>{formatVND(cart.subtotal)}</b>
@@ -97,5 +99,7 @@ export function CartView() {
         </Link>
       </aside>
     </div>
+    <CartUpsell exclude={cart.items.map((i) => i.slug)} />
+    </>
   );
 }

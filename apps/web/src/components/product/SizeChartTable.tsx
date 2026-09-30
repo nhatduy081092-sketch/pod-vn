@@ -5,7 +5,7 @@ export function SizeChartTable({ chart }: { chart: SizeChart }) {
   return (
     <div>
       {chart.headers.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border-2 border-ink">
+        <div className="overflow-x-auto rounded-lg border border-line">
           <table className="w-full min-w-max border-collapse text-center text-sm">
             <thead className="bg-brand">
               <tr>
@@ -13,7 +13,7 @@ export function SizeChartTable({ chart }: { chart: SizeChart }) {
                   <th
                     key={i}
                     scope="col"
-                    className={`whitespace-nowrap border-b-2 border-ink px-3 py-2 font-extrabold ${i === 0 ? "sticky left-0 bg-brand text-left" : ""}`}
+                    className={`whitespace-nowrap border-b border-line px-3 py-2 font-extrabold ${i === 0 ? "sticky left-0 bg-brand text-left" : ""}`}
                   >
                     {h}
                   </th>

@@ -277,7 +277,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
   const locked = !!selected?.locked;
 
   return (
-    <div ref={wrapRef} className="relative aspect-square w-full select-none overflow-hidden rounded-lg border-2 border-ink bg-[#f4f4f5]">
+    <div ref={wrapRef} className="relative aspect-square w-full select-none overflow-hidden rounded-lg border border-line bg-[#f4f4f5]">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" style={{ width: size, height: size }} aria-label={`Khung thiết kế – ${area.name}`} />
       <div
         className="absolute inset-0 touch-none"
