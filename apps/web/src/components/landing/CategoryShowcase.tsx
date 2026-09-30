@@ -77,6 +77,7 @@ export function CategoryShowcase({ data, counts = {}, colors = {} }: Props) {
                 mdSpan={mdSpans[i]!}
                 count={t.categorySlug ? counts[t.categorySlug] : undefined}
                 colors={pickShowcaseColors(colors[t.categorySlug], t.colors, data.autoColors)}
+                filterable={data.autoColors && (colors[t.categorySlug]?.length ?? 0) >= 2}
                 eager={i < 2}
               />
             </li>
@@ -87,12 +88,17 @@ export function CategoryShowcase({ data, counts = {}, colors = {} }: Props) {
   );
 }
 
-function Tile({ tile: t, index, lgSpan, mdSpan, count, colors, eager }: { tile: ShowcaseTile; index: number; lgSpan: number; mdSpan: number; count?: number; colors: ShowcaseColor[]; eager: boolean }) {
+/**
+ * filterable = dải màu lấy từ phân loại thật -> chọn màu sẽ lọc danh mục theo màu đó.
+ * Không filterable (VD áo in toàn thân chỉ có màu "Theo thiết kế") -> dải màu chỉ để tham khảo,
+ * không cho chọn, tránh dẫn khách tới trang lọc 0 sản phẩm.
+ */
+function Tile({ tile: t, index, lgSpan, mdSpan, count, colors, filterable, eager }: { tile: ShowcaseTile; index: number; lgSpan: number; mdSpan: number; count?: number; colors: ShowcaseColor[]; filterable: boolean; eager: boolean }) {
   const [sel, setSel] = useState(-1);
   const btns = useRef<(HTMLButtonElement | null)[]>([]);
   const ink = readableInk(t.bg);
   const exists = count !== undefined && count > 0;
-  const chosen = sel >= 0 ? colors[sel] : undefined;
+  const chosen = filterable && sel >= 0 ? colors[sel] : undefined;
   const href = tileHref(t, exists, chosen?.name);
   const shape = t.shape in MOCK_SHAPES ? t.shape : "tshirt";
   const max = lgSpan >= 3 ? 9 : 7;
@@ -165,7 +171,22 @@ function Tile({ tile: t, index, lgSpan, mdSpan, count, colors, eager }: { tile: 
 
       {/* Dải màu: áo tô đúng màu thật, chọn màu -> nút CTA đổi sang link đã lọc */}
       <div className="flex flex-1 flex-col justify-between gap-2 p-3 md:p-3.5">
-        {shown.length > 0 && (
+        {shown.length > 0 && !filterable && (
+          <ul className="flex items-center gap-1.5" aria-label={`Màu tham khảo ${t.title}`}>
+            {shown.map((c, k) => (
+              <li key={`${c.name}-${k}`} title={c.name} className="relative aspect-square min-w-0 flex-[0_1_44px] rounded-lg border-2 border-transparent bg-[#f6f6f7]">
+                <SwatchShape shape={shape} hex={c.hex} />
+                <span className="sr-only">{c.name}</span>
+              </li>
+            ))}
+            {more > 0 && (
+              <li className="flex aspect-square min-w-0 flex-[0_1_44px] items-center justify-center text-xs font-bold text-ink/60" aria-label={`và ${more} màu khác`}>
+                +{more}
+              </li>
+            )}
+          </ul>
+        )}
+        {shown.length > 0 && filterable && (
           <div className="flex items-center gap-1.5" role="radiogroup" aria-label={`Màu ${t.title}`} onKeyDown={onKey}>
             {shown.map((c, k) => (
               <button
@@ -184,16 +205,7 @@ function Tile({ tile: t, index, lgSpan, mdSpan, count, colors, eager }: { tile: 
                   sel === k ? "border-ink shadow-[2px_2px_0_#1d1d1f]" : "border-transparent hover:border-ink/30"
                 }`}
               >
-                <span
-                  className="absolute inset-[9%]"
-                  style={{
-                    backgroundColor: c.hex,
-                    WebkitMask: `url(/shapes/mask-${shape}.svg) center / contain no-repeat`,
-                    mask: `url(/shapes/mask-${shape}.svg) center / contain no-repeat`,
-                  }}
-                  aria-hidden
-                />
-                <img src={`/shapes/line-${shape}.svg`} alt="" className={`absolute inset-[9%] h-[82%] w-[82%] ${isVeryLight(c.hex) ? "" : "opacity-80"}`} aria-hidden />
+                <SwatchShape shape={shape} hex={c.hex} />
               </button>
             ))}
             {more > 0 && (
@@ -215,5 +227,23 @@ function Tile({ tile: t, index, lgSpan, mdSpan, count, colors, eager }: { tile: 
         </p>
       </div>
     </article>
+  );
+}
+
+/** Dáng áo tô màu (mask SVG) + nét viền/đổ bóng */
+function SwatchShape({ shape, hex }: { shape: string; hex: string }) {
+  return (
+    <>
+      <span
+        className="absolute inset-[9%]"
+        style={{
+          backgroundColor: hex,
+          WebkitMask: `url(/shapes/mask-${shape}.svg) center / contain no-repeat`,
+          mask: `url(/shapes/mask-${shape}.svg) center / contain no-repeat`,
+        }}
+        aria-hidden
+      />
+      <img src={`/shapes/line-${shape}.svg`} alt="" className={`absolute inset-[9%] h-[82%] w-[82%] ${isVeryLight(hex) ? "" : "opacity-80"}`} aria-hidden />
+    </>
   );
 }
