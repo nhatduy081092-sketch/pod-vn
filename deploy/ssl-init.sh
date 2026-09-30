@@ -42,11 +42,30 @@ if [ ! -f /etc/letsencrypt/live/yala.vn/fullchain.pem ]; then
   rm -f /etc/nginx/sites-enabled/default
   nginx -t && systemctl reload nginx
 fi
+# Đã có chứng chỉ nhưng cấu hình đang chạy chưa có admin.yala.vn (lần đầu cài chưa có DNS admin)
+# -> mở tạm cổng 80 cho admin.yala.vn để Let's Encrypt xác minh, xong bước 4 sẽ xoá
+ACME_TMP=/etc/nginx/sites-enabled/yala-acme-admin.conf
+if [ "$WITH_ADMIN" = 1 ] && ! grep -q "server_name $ADMIN_DOMAIN" /etc/nginx/sites-available/yala.vn.conf 2>/dev/null; then
+  cat > "$ACME_TMP" <<ACME
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $ADMIN_DOMAIN;
+    location ^~ /.well-known/acme-challenge/ { root /var/www/certbot; default_type "text/plain"; }
+    location / { return 503; }
+}
+ACME
+  nginx -t && systemctl reload nginx
+  log "Mở tạm HTTP cho $ADMIN_DOMAIN để xác minh SSL"
+fi
 
 # 3) Xin / mở rộng chứng chỉ (1 chứng chỉ cho mọi tên miền; không làm gì nếu còn hạn và đủ tên miền)
 args=(); for d in "${DOMAINS[@]}"; do args+=(-d "$d"); done
-certbot certonly --webroot -w /var/www/certbot "${args[@]}" --cert-name yala.vn \
-  --email "$EMAIL" --agree-tos --no-eff-email --non-interactive --expand --keep-until-expiring $STAGING
+if ! certbot certonly --webroot -w /var/www/certbot "${args[@]}" --cert-name yala.vn \
+  --email "$EMAIL" --agree-tos --no-eff-email --non-interactive --expand --keep-until-expiring $STAGING; then
+  rm -f "$ACME_TMP"; nginx -t >/dev/null 2>&1 && systemctl reload nginx
+  die "Let's Encrypt không xác minh được tên miền – kiểm tra DNS/tường lửa cổng 80 rồi chạy lại"
+fi
 
 # 4) Cấu hình Nginx chính thức (HTTPS, www -> apex, admin)
 SITE=/etc/nginx/sites-available/yala.vn.conf
@@ -57,6 +76,7 @@ else
   sed '/^# >>> ADMIN/,/^# <<< ADMIN/d' deploy/nginx/yala.vn.conf > "$SITE"
 fi
 ln -sf "$SITE" /etc/nginx/sites-enabled/yala.vn.conf
+rm -f "$ACME_TMP"
 if ! nginx -t; then
   [ -f "$SITE.bak" ] && mv -f "$SITE.bak" "$SITE"
   die "Cấu hình Nginx mới lỗi – đã khôi phục cấu hình cũ (xem lỗi ở trên)"
