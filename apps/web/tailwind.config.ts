@@ -18,9 +18,9 @@ export default {
           badge: "#FFE44D", // chữ vàng trên nền đen
         },
         zalo: "#0068FF",
-        // nhận diện OEM Group (lấy từ oemgroup.vn)
+        // nhận diện YALA: navy + cam nhấn (accent)
         navy: { DEFAULT: "#1C4D99", dark: "#0F2F63", light: "#E8EFFA" },
-        oem: "#F88125",
+        accent: "#F88125",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "Be Vietnam Pro", "system-ui", "sans-serif"],

@@ -69,7 +69,7 @@ export function DesignCard({ slug, productId, areas, design, step = "Thiết k�
         <Link href={editHref} className={`group flex items-center gap-3 rounded-lg border-2 ${ring} ${tone === "navy" ? "bg-navy text-white" : "bg-brand text-ink"} px-4 py-3.5 shadow-hard transition hover:-translate-y-0.5`}>
           <IconBrush className="h-7 w-7 shrink-0" />
           <span>
-            <span className="block text-base font-black">Bắt đầu thiết kế</span>
+            <span className="block text-base font-black">Tự thiết kế với YALA Studio</span>
             <span className="block text-xs opacity-80">
               Tải ảnh, thêm chữ trên {areas.length > 1 ? `${areas.length} mặt in` : "vùng in"} · xem trước ngay trên sản phẩm
             </span>

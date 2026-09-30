@@ -101,7 +101,7 @@ const CATALOG: { name: string; description: string; products: SeedProduct[] }[] 
 
 async function main() {
   // 1. Admin
-  const email = (process.env.ADMIN_EMAIL ?? "admin@podviet.vn").toLowerCase();
+  const email = (process.env.ADMIN_EMAIL ?? "admin@yala.vn").toLowerCase();
   const password = process.env.ADMIN_PASSWORD ?? "Admin@123456";
   // Production: không cho tạo admin bằng mật khẩu mặc định/yếu
   if (process.env.NODE_ENV === "production" && (password.length < 12 || password === "Admin@123456" || !process.env.ADMIN_EMAIL)) {
@@ -153,7 +153,7 @@ async function main() {
   if (!landingRow) {
     await prisma.setting.create({ data: { key: "landing", value: DEFAULT_LANDING } });
   } else {
-    // Chuyển thương hiệu mẫu "PODViet" -> OEM Group (chỉ khi chưa được đổi trong CMS)
+    // Thương hiệu mẫu cũ "PODViet" -> YALA (OEM Group -> YALA do migration 20260930090000_rebrand_yala xử lý)
     const cur = mergeLanding(landingRow.value);
     if (cur.brand.name === "PODViet") {
       const next = {
@@ -166,7 +166,7 @@ async function main() {
         bank: { ...cur.bank, accountName: cur.bank.accountName === "CONG TY PODVIET" ? DEFAULT_LANDING.bank.accountName : cur.bank.accountName },
       };
       await prisma.setting.update({ where: { key: "landing" }, data: { value: next } });
-      console.log("✓ Đã chuyển thương hiệu sang OEM Group");
+      console.log("✓ Đã chuyển thương hiệu sang YALA");
     }
   }
 

@@ -27,7 +27,7 @@ export function Sidebar() {
     <aside className="sticky top-0 z-20 border-b border-neutral-200 bg-white md:h-screen md:w-60 md:shrink-0 md:border-b-0 md:border-r">
       <div className="flex items-center justify-between px-4 py-3 md:block md:px-5 md:py-5">
         <p className="font-black">
-          OEM <span className="text-brand-dark">Group</span> <span className="text-xs font-semibold text-neutral-400">CMS</span>
+          YALA<span className="text-brand-dark">.</span> <span className="text-xs font-semibold text-neutral-400">CMS</span>
         </p>
         <form action={logoutAction} className="md:hidden">
           <button className="text-sm text-neutral-500">Đăng xuất</button>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart";
-import { IconCart, IconClose, IconMenu, IconPackage, IconSearch, IconUser } from "../ui/icons";
+import { IconCart, IconClose, IconMenu, IconPackage, IconSearch, IconSparkle, IconUser } from "../ui/icons";
 import { SearchBox } from "../shop/SearchBox";
 import { Logo } from "./Logo";
 
@@ -49,7 +49,18 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
           >
             <IconSearch className="h-6 w-6" />
           </button>
-          <Link href="/tra-cuu" className="flex items-center gap-1 p-1 text-ink/80 hover:text-ink" aria-label="Tra cứu đơn hàng">
+          <Link
+            href="/thiet-ke"
+            className={`flex h-9 shrink-0 items-center gap-1 rounded-md border-2 border-ink px-2 text-[13px] font-extrabold shadow-hard transition hover:-translate-y-px md:h-10 md:px-3 md:text-sm ${
+              pathname.startsWith("/thiet-ke") ? "bg-ink text-brand-badge" : "bg-brand-badge text-ink"
+            }`}
+          >
+            <IconSparkle className="h-4 w-4" aria-hidden />
+            <span className="whitespace-nowrap">
+              <span className="hidden sm:inline">Tự </span>thiết kế
+            </span>
+          </Link>
+          <Link href="/tra-cuu" className="hidden items-center gap-1 p-1 text-ink/80 hover:text-ink sm:flex" aria-label="Tra cứu đơn hàng">
             <IconPackage className="h-6 w-6" />
             <span className="hidden whitespace-nowrap text-sm font-semibold xl:inline">Tra cứu đơn</span>
           </Link>
@@ -83,14 +94,20 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
       {/* Thanh danh mục (desktop) */}
       <nav className="hidden border-t border-ink/10 lg:block" aria-label="Danh mục">
         <div className="container-site no-scrollbar flex h-10 items-center gap-6 overflow-x-auto text-[13px] font-semibold">
-          <Link href="/#danh-muc" className="shrink-0 font-extrabold text-navy hover:text-oem">
+          <Link href="/#danh-muc" className="shrink-0 font-extrabold text-navy hover:text-accent">
             ☰ Tất cả danh mục
+          </Link>
+          <Link
+            href="/thiet-ke"
+            className={`shrink-0 whitespace-nowrap font-extrabold hover:text-accent ${pathname === "/thiet-ke" ? "text-accent" : "text-ink"}`}
+          >
+            ✦ YALA Studio
           </Link>
           {categories.map((c) => (
             <Link
               key={c.slug}
               href={`/danh-muc/${c.slug}`}
-              className={`shrink-0 whitespace-nowrap hover:text-oem ${pathname === `/danh-muc/${c.slug}` ? "text-oem" : "text-ink/80"}`}
+              className={`shrink-0 whitespace-nowrap hover:text-accent ${pathname === `/danh-muc/${c.slug}` ? "text-accent" : "text-ink/80"}`}
             >
               {c.name}
             </Link>
@@ -113,6 +130,9 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
           <nav className="flex-1 overflow-y-auto px-2 py-3 text-[15px] font-semibold" aria-label="Menu">
             <Link href="/" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Trang chủ
+            </Link>
+            <Link href="/thiet-ke" className="my-1 flex items-center gap-2 rounded-md border-2 border-ink bg-brand-badge px-3 py-2.5 font-extrabold shadow-hard">
+              <IconSparkle className="h-4 w-4" aria-hidden /> Tự thiết kế – YALA Studio
             </Link>
             <Link href="/san-pham" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Tất cả sản phẩm

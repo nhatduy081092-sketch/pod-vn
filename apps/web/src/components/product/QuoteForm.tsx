@@ -181,7 +181,7 @@ export function QuoteForm({ productId, productName, slug, sizes, areas, variants
         )}
       </div>
       {error && <p className="rounded bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p>}
-      <button type="submit" disabled={sending || uploading} className="btn w-full border-navy bg-oem py-3 text-base text-white">
+      <button type="submit" disabled={sending || uploading} className="btn w-full border-navy bg-accent py-3 text-base text-white">
         {sending ? "Đang gửi..." : "Gửi yêu cầu báo giá miễn phí"}
       </button>
       <p className="text-center text-xs text-ink/60">Nhận làm từ số lượng nhỏ · Mockup miễn phí trước khi sản xuất</p>

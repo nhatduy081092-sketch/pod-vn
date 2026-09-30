@@ -150,7 +150,7 @@ export function SearchBox({ autoFocus = false, onDone }: { autoFocus?: boolean; 
                         <span className="line-clamp-1 text-sm font-semibold">{p.name}</span>
                         <span className="text-xs text-ink/60">{p.category.name}</span>
                       </span>
-                      <span className="shrink-0 text-xs font-bold text-oem">{shortPriceLabel(p, formatVND)}</span>
+                      <span className="shrink-0 text-xs font-bold text-accent">{shortPriceLabel(p, formatVND)}</span>
                     </button>
                   </li>
                 ))}

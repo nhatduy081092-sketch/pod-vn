@@ -47,7 +47,7 @@ export function EditorLoader({ product, mode, savedId, templateId, initialColor,
     <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#fafafa]">
       {!state.ready ? (
         <div className="flex h-full items-center justify-center gap-3 text-sm font-semibold">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-ink border-t-transparent" /> Đang mở công cụ thiết kế…
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-ink border-t-transparent" /> Đang mở YALA Studio…
         </div>
       ) : (
         <>

@@ -24,7 +24,7 @@ export function FilterSheet({ children, count }: { children: ReactNode; count: n
         className="flex h-9 items-center gap-1.5 rounded-md border border-ink/20 bg-white px-3 text-sm font-semibold lg:hidden"
       >
         <IconFilter className="h-4 w-4" /> Lọc
-        {count > 0 && <span className="rounded-full bg-oem px-1.5 text-[11px] font-bold text-white">{count}</span>}
+        {count > 0 && <span className="rounded-full bg-accent px-1.5 text-[11px] font-bold text-white">{count}</span>}
       </button>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Bộ lọc">

@@ -19,11 +19,11 @@ export function QuoteProduct({ product, brand, hasSizeGuide = false }: { product
         {product.priceFrom ? (
           <p className="mt-2 flex flex-wrap items-baseline gap-x-2">
             <span className="text-sm font-bold text-ink/70">Giá tham khảo từ</span>
-            <span className="text-2xl font-black text-oem md:text-3xl">{formatVND(product.priceFrom)}</span>
+            <span className="text-2xl font-black text-accent md:text-3xl">{formatVND(product.priceFrom)}</span>
             {product.minQty > 1 && <span className="text-sm font-semibold text-ink/60">· tối thiểu {product.minQty} cái</span>}
           </p>
         ) : (
-          <p className="mt-2 text-2xl font-black text-oem">Liên hệ báo giá</p>
+          <p className="mt-2 text-2xl font-black text-accent">Liên hệ báo giá</p>
         )}
         <p className="text-sm font-semibold text-navy">✦ Cá nhân hoá được: in / thêu / khắc logo, tên, thông điệp riêng</p>
         <p className="mt-1 text-sm text-ink/70">Giá phụ thuộc số lượng, chất liệu và kỹ thuật in/thêu. Báo giá trong giờ làm việc.</p>

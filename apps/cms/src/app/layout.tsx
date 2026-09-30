@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "CMS – Quản trị", template: "%s | CMS" },
+  title: { default: "YALA CMS – Quản trị", template: "%s | YALA CMS" },
   robots: { index: false, follow: false },
 };
 

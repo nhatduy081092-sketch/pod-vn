@@ -39,7 +39,7 @@ function Inlines({ items }: { items: Inline[] }) {
           <a
             key={i}
             href={x.href}
-            className="font-semibold text-navy underline underline-offset-2 hover:text-oem"
+            className="font-semibold text-navy underline underline-offset-2 hover:text-accent"
             {...(x.href.startsWith("https://") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           >
             {x.text}

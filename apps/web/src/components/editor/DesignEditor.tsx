@@ -478,7 +478,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           </Link>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-extrabold md:text-base">{product.name}</p>
-            <p className="text-[11px] text-ink/60">{mode === "seller" ? "Thiết kế mẫu seller" : "Công cụ thiết kế"} · tự lưu nháp</p>
+            <p className="text-[11px] text-ink/60">{mode === "seller" ? "Thiết kế mẫu seller" : "YALA Studio"} · tự lưu nháp</p>
           </div>
           <button type="button" onClick={undo} disabled={!past.length} className="rounded-md p-2 disabled:opacity-30 hover:bg-cream" aria-label="Hoàn tác">
             <IconUndo className="h-5 w-5" />

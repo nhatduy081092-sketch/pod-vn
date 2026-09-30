@@ -260,7 +260,7 @@ export function AccountDesigns() {
   return (
     <Card>
       <h2 className="font-extrabold">Thiết kế của tôi</h2>
-      <p className="text-sm text-ink/60">Trong công cụ thiết kế bấm &quot;Lưu&quot; để lưu vào đây, mở lại bất kỳ lúc nào để chỉnh hoặc đặt thêm.</p>
+      <p className="text-sm text-ink/60">Trong YALA Studio bấm &quot;Lưu&quot; để lưu vào đây, mở lại bất kỳ lúc nào để chỉnh hoặc đặt thêm.</p>
       {!rows ? (
         <p className="py-4 text-sm text-ink/60">Đang tải…</p>
       ) : !rows.length ? (

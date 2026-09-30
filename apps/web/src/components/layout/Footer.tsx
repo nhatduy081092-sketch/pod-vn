@@ -13,7 +13,7 @@ type Props = {
 
 export function Footer({ brand, categories, pages }: Props) {
   return (
-    <footer className="border-t-4 border-oem bg-navy-dark pb-24 pt-10 text-white/80 md:pb-10">
+    <footer className="border-t-4 border-accent bg-navy-dark pb-24 pt-10 text-white/80 md:pb-10">
       <div className="container-site grid gap-8 md:grid-cols-4">
         <div className="md:col-span-1">
           <Logo name={brand.name} logoUrl={brand.logoUrl} dark />
@@ -22,6 +22,11 @@ export function Footer({ brand, categories, pages }: Props) {
         <div>
           <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-white">Sản phẩm</h3>
           <ul className="space-y-2 text-sm">
+            <li>
+              <Link href="/thiet-ke" className="font-bold text-brand hover:underline">
+                ✦ Tự thiết kế – YALA Studio
+              </Link>
+            </li>
             {categories.map((c) => (
               <li key={c.slug}>
                 <Link href={`/danh-muc/${c.slug}`} className="hover:text-brand">

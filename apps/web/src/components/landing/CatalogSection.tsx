@@ -25,7 +25,7 @@ export function CatalogSection({ items }: { items: CatalogItem[] }) {
               <Link href={`/danh-muc/${c.slug}`} className="group block overflow-hidden rounded-xl border-2 border-navy bg-white transition hover:-translate-y-0.5 hover:shadow-[4px_4px_0_#F88125]">
                 <div className="relative aspect-square overflow-hidden bg-white">
                   {c.image && <img src={assetUrl(c.image)} alt="" loading="lazy" className="h-full w-full object-contain p-2 transition duration-500 group-hover:scale-105" />}
-                  <span className="absolute right-2 top-2 rounded-full bg-oem px-2 py-0.5 text-[11px] font-extrabold text-white">{c.count}</span>
+                  <span className="absolute right-2 top-2 rounded-full bg-accent px-2 py-0.5 text-[11px] font-extrabold text-white">{c.count}</span>
                 </div>
                 <p className="flex min-h-[3.2em] items-center justify-center bg-navy px-2 py-1.5 text-center text-[12.5px] font-bold leading-tight text-white md:text-sm">{c.name}</p>
               </Link>

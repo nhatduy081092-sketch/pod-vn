@@ -83,8 +83,8 @@ export type LandingSettings = {
 
 export const DEFAULT_LANDING: LandingSettings = {
   brand: {
-    name: "OEM Group",
-    tagline: "Sáng tạo ý tưởng và giải pháp merchandise, hàng khuyến mãi và quà tặng doanh nghiệp – nay in áo theo yêu cầu từ 1 chiếc.",
+    name: "YALA",
+    tagline: "Tự thiết kế áo, túi, phụ kiện theo ý bạn ngay trên web – xem trước tức thì, in từ 1 chiếc, giao toàn quốc.",
     hotline: "0931819333",
     zalo: "0931819333",
     messengerUrl: "https://m.me/oemgroupvn",
@@ -92,12 +92,12 @@ export const DEFAULT_LANDING: LandingSettings = {
     address: "219 Hai Bà Trưng, P. Võ Thị Sáu, Q.3, TP.HCM",
     companyName: "Công ty Cổ phần OEM",
     taxCode: "0317199345",
-    logoUrl: "https://oemgroup.vn/wp-content/uploads/2025/04/cropped-oem-fav-icon-1.png",
-    website: "https://oemgroup.vn",
+    logoUrl: "",
+    website: "https://yala.vn",
   },
   b2b: {
     enabled: true,
-    eyebrow: "OEM GROUP · GIẢI PHÁP DOANH NGHIỆP",
+    eyebrow: "YALA · GIẢI PHÁP DOANH NGHIỆP",
     title: "Đồng phục & quà tặng in logo cho doanh nghiệp",
     subtitle:
       "Từ ý tưởng đến thành phẩm: tư vấn, thiết kế theo nhận diện thương hiệu, in – thêu – khắc logo, sản xuất số lượng lớn và giao hàng toàn quốc.",
@@ -118,15 +118,15 @@ export const DEFAULT_LANDING: LandingSettings = {
     line2: "NHẬN HÀNG CHỈ TỪ",
     highlight: "3",
     line3: "NGÀY.",
-    line4: "IN TỪ 1 CHIẾC – KHÔNG CẦN ĐẶT SỐ LƯỢNG LỚN.",
-    href: "#hot-sale",
+    line4: "TỰ THIẾT KẾ ONLINE – IN TỪ 1 CHIẾC.",
+    href: "/thiet-ke",
   },
   hero: {
-    tag: "Xu hướng POD mới · OEM Group",
-    title: "IN TOÀN THÂN",
-    badge: "Thiết kế theo yêu cầu",
+    tag: "YALA Studio · Tự thiết kế theo ý bạn",
+    title: "TỰ THIẾT KẾ",
+    badge: "Miễn phí thiết kế",
     imageUrl: "",
-    ctaHref: "#hot-sale",
+    ctaHref: "/thiet-ke",
   },
   sectionTitles: {
     bestSellers: "Bán Chạy Nhất",
@@ -134,10 +134,10 @@ export const DEFAULT_LANDING: LandingSettings = {
     reviews: "Khách Hàng Nói Gì",
   },
   steps: [
-    { title: "Chọn sản phẩm & tải thiết kế", color: "#A9D8F7" },
-    { title: "Nhận mockup duyệt miễn phí qua Zalo", color: "#F79A9A" },
-    { title: "Xác nhận đơn & thanh toán COD / chuyển khoản", color: "#FF9A22" },
-    { title: "Xưởng in toàn thân & kiểm tra chất lượng", color: "#D6A9F2" },
+    { title: "Chọn sản phẩm & mở YALA Studio", color: "#A9D8F7" },
+    { title: "Thêm ảnh, chữ, mẫu có sẵn – xem trước ngay", color: "#F79A9A" },
+    { title: "Đặt hàng & thanh toán COD / VietQR", color: "#FF9A22" },
+    { title: "Xưởng in đúng file thiết kế & kiểm tra chất lượng", color: "#D6A9F2" },
     { title: "Đóng gói & giao hàng toàn quốc", color: "#8BE3D3" },
   ],
   intro: {
@@ -158,15 +158,15 @@ export const DEFAULT_LANDING: LandingSettings = {
     { label: "Trẻ em & Thiếu niên", audience: "KIDS", imageUrl: "" },
   ],
   whyChoose: {
-    title: "Vì sao chọn OEM Group?",
+    title: "Vì sao chọn YALA?",
     text: "Chúng tôi tin rằng ai cũng xứng đáng có một chiếc áo mang dấu ấn riêng – giá hợp lý, chất lượng ổn định, giao nhanh.",
     items: [
       { title: "Không giới hạn số lượng", desc: "In từ 1 chiếc, giá sỉ tự động khi đặt nhiều." },
-      { title: "Duyệt mockup miễn phí", desc: "Xem trước sản phẩm trước khi in qua Zalo." },
+      { title: "Tự thiết kế online", desc: "Ảnh, chữ, sticker, mẫu có sẵn – xem trước trên áo thật trước khi đặt." },
       { title: "Chất lượng ổn định", desc: "In chuyển nhiệt sắc nét, không bong, không phai." },
       { title: "Giao nhanh toàn quốc", desc: "Sản xuất 2–4 ngày, giao 34 tỉnh thành." },
       { title: "COD & VietQR", desc: "Nhận hàng mới trả tiền hoặc chuyển khoản quét mã." },
-      { title: "Đồng phục nhóm", desc: "Lớp, team, công ty, sự kiện – báo giá trong 15 phút." },
+      { title: "Đồng phục in tên & số", desc: "Lớp, team, công ty – mỗi người một tên, một số, đặt trong 1 đơn." },
     ],
   },
   shipping: DEFAULT_SHIPPING,
@@ -176,9 +176,9 @@ export const DEFAULT_LANDING: LandingSettings = {
     accountName: "CONG TY CO PHAN OEM",
   },
   seo: {
-    title: "OEM Group – In áo theo yêu cầu, in toàn thân & đồng phục doanh nghiệp",
+    title: "YALA – Tự thiết kế áo, in theo yêu cầu từ 1 chiếc",
     description:
-      "In áo thun, hoodie, pijama, sơ mi, đồ thể thao in toàn thân theo thiết kế riêng. In từ 1 chiếc, duyệt mockup miễn phí, COD toàn quốc.",
+      "Tự thiết kế áo thun, hoodie, đồng phục, túi và phụ kiện online với YALA Studio: thêm ảnh, chữ, in tên số từng người, xem trước tức thì. In từ 1 chiếc, COD toàn quốc.",
   },
 };
 

@@ -149,7 +149,7 @@ function collectionWhere(key?: string): Prisma.ProductWhereInput {
   return {};
 }
 
-/** Điều kiện chung cho danh sách + bộ lọc: q (không dấu), category, sub, doi-tuong, gia=co|bao-gia */
+/** Điều kiện chung cho danh sách + bộ lọc: q (không dấu), category, sub, doi-tuong, gia=co|bao-gia, thiet-ke=1 */
 async function listingWhere(query: Record<string, string>, omit: "sub" | "category" | null = null): Promise<Prisma.ProductWhereInput> {
   const audience = audienceFromSlug(query["doi-tuong"]);
   return {
@@ -159,6 +159,8 @@ async function listingWhere(query: Record<string, string>, omit: "sub" | "catego
     ...(audience ? { audience: { in: [audience, ...(audience !== "KIDS" ? (["UNISEX"] as Audience[]) : [])] } } : {}),
     ...(query.gia === "co" ? { basePrice: { gt: 0 } } : query.gia === "bao-gia" ? { basePrice: 0 } : {}),
     ...collectionWhere(query["bo-suu-tap"]),
+    // thiet-ke=1: chỉ sản phẩm khách tự thiết kế được (có vùng in)
+    ...(query["thiet-ke"] === "1" ? { printAreas: { some: {} } } : {}),
     ...(await resolveSearch(query.q)),
   };
 }

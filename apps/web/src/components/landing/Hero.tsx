@@ -77,12 +77,12 @@ export function Hero({ data }: { data: LandingSettings["hero"] }) {
                 className="absolute left-[-1%] top-[50%] z-30 -rotate-[8deg] rounded-md border-2 border-ink bg-[#FFE44D] px-[clamp(8px,2vw,18px)] pb-1 pt-[clamp(8px,1.6vw,14px)] shadow-hard transition hover:rotate-[-6deg]"
               >
                 <span className="absolute inset-x-0 top-0.5 text-center text-[5px] font-bold tracking-widest text-ink/40 md:text-[7px]">
-                  POD • POD • POD • POD
+                  YALA • YALA • YALA
                 </span>
                 <span className="block text-[clamp(10px,2.8vw,22px)] font-black leading-tight text-ink">
                   {data.badge}
                   <br />
-                  <span className="tracking-tight">Đặt ngay &gt;&gt;&gt;</span>
+                  <span className="tracking-tight">Bắt đầu &gt;&gt;&gt;</span>
                 </span>
               </Link>
             </div>
