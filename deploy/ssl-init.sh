@@ -73,5 +73,5 @@ chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
 if ! systemctl list-timers 2>/dev/null | grep -q certbot; then
   { crontab -l 2>/dev/null | grep -vF "certbot renew" || true; echo "17 3 * * * certbot renew --quiet"; } | crontab -
 fi
-certbot renew --dry-run && log "✓ Gia hạn tự động hoạt động"
+certbot renew --dry-run --cert-name yala.vn && log "✓ Gia hạn tự động hoạt động"
 log "✓ SSL xong: https://yala.vn$([ "$WITH_ADMIN" = 1 ] && echo '  ·  https://admin.yala.vn')"
