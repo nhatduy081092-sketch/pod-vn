@@ -5,8 +5,16 @@ import type { Category, HomeData, Paged, ProductCardData, ProductDetail } from "
 
 const REVALIDATE = 60; // ISR: cập nhật nội dung CMS sau tối đa 60s
 
+/**
+ * Lúc build Docker không có API (http://api:4000 chưa chạy): báo lỗi NGAY thay vì chờ mạng
+ * (DNS/kết nối treo làm trang build quá 60s -> hỏng cả bản build). Trang dùng dữ liệu dự phòng,
+ * deploy.sh gọi /revalidate sau khi chạy -> trang được dựng lại với dữ liệu thật.
+ */
+const BUILDING = process.env.NEXT_PHASE === "phase-production-build";
+
 async function get<T>(path: string, opts: { revalidate?: number; allow404?: boolean } = {}): Promise<T | null> {
-  const res = await fetch(`${API_URL}/api${path}`, { next: { revalidate: opts.revalidate ?? REVALIDATE } });
+  if (BUILDING) throw new Error(`API chưa sẵn sàng lúc build (${path})`);
+  const res = await fetch(`${API_URL}/api${path}`, { next: { revalidate: opts.revalidate ?? REVALIDATE }, signal: AbortSignal.timeout(10_000) });
   if (res.status === 404 && opts.allow404) return null;
   if (!res.ok) throw new Error(`API ${path} lỗi ${res.status}`);
   return (await res.json()) as T;
