@@ -468,13 +468,14 @@ export type DesignAssetKind = (typeof DESIGN_ASSET_KINDS)[number];
 export const DESIGN_ASSET_KIND_LABEL: Record<DesignAssetKind, string> = { CLIPART: "Hình minh hoạ", TEMPLATE: "Mẫu thiết kế" };
 
 /** Nguồn nội dung – để biết quyền sử dụng khi in bán */
-export const DESIGN_ASSET_SOURCES = ["SELF", "PURCHASED", "AI", "PARTNER"] as const;
+export const DESIGN_ASSET_SOURCES = ["SELF", "PURCHASED", "AI", "PARTNER", "OPEN"] as const;
 export type DesignAssetSource = (typeof DESIGN_ASSET_SOURCES)[number];
 export const DESIGN_ASSET_SOURCE_LABEL: Record<DesignAssetSource, string> = {
   SELF: "Tự thiết kế",
   PURCHASED: "Mua bản quyền",
   AI: "Tạo bằng AI",
   PARTNER: "Đối tác / cộng tác viên",
+  OPEN: "Nguồn mở (MIT, CC0…)",
 };
 
 /** Trạng thái duyệt: chỉ APPROVED (và đang bật) mới hiện cho khách */
@@ -513,7 +514,7 @@ export const designAssetUpsertSchema = z
     status: z.enum(DESIGN_ASSET_STATUSES).default("APPROVED"),
   })
   .refine((a) => (a.kind === "CLIPART" ? !!a.imageUrl && a.natW > 0 && a.natH > 0 : !!a.data), { message: "Hình minh hoạ cần ảnh; mẫu thiết kế cần dữ liệu lớp" })
-  .refine((a) => a.source !== "PURCHASED" || a.license.length > 0, { message: "Hình mua bản quyền: ghi số giấy phép / nơi mua" });
+  .refine((a) => !["PURCHASED", "OPEN"].includes(a.source) || a.license.length > 0, { message: "Hình mua bản quyền / nguồn mở: ghi giấy phép và nơi lấy" });
 
 /** Sửa nhanh / hàng loạt trong CMS */
 export const designAssetPatchSchema = z.object({

@@ -89,6 +89,7 @@ CMD ["node", "apps/web/server.js"]
 FROM next-runtime AS cms
 COPY --from=next-build --chown=node:node /app/apps/cms/.next/standalone ./
 COPY --from=next-build --chown=node:node /app/apps/cms/.next/static ./apps/cms/.next/static
+COPY --from=next-build --chown=node:node /app/apps/cms/public ./apps/cms/public
 USER node
 ENV PORT=3001
 EXPOSE 3001

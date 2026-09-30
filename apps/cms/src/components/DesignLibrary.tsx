@@ -66,6 +66,7 @@ const LICENSE_HINT: Record<DesignAssetSource, string> = {
   PURCHASED: "Bắt buộc: số giấy phép / đơn mua, VD Envato #123456",
   AI: "Công cụ + prompt, VD Midjourney v7: hoa mai vector…",
   PARTNER: "Tên đối tác + hợp đồng / thoả thuận",
+  OPEN: "Tên giấy phép + link, VD MIT – github.com/…",
 };
 const STATUS_CLS: Record<DesignAssetStatus, string> = { DRAFT: "bg-amber-100 text-amber-800", APPROVED: "bg-green-100 text-green-800", REJECTED: "bg-red-100 text-red-700" };
 
@@ -119,7 +120,7 @@ export function DesignLibrary({ assets, saved }: { assets: AdminAsset[]; saved: 
   async function upload(files: FileList | null) {
     const arr = Array.from(files ?? []).slice(0, 100);
     if (!arr.length) return;
-    if (up.source === "PURCHASED" && !up.license.trim()) return setMsg("Hình mua bản quyền: nhập số giấy phép / nơi mua trước khi tải.");
+    if ((up.source === "PURCHASED" || up.source === "OPEN") && !up.license.trim()) return setMsg("Hình mua bản quyền / nguồn mở: nhập giấy phép và nơi lấy trước khi tải.");
     setMsg("");
     let ok = 0;
     let small = 0;

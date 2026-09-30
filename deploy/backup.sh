@@ -29,7 +29,9 @@ if docker volume inspect yala_uploads >/dev/null 2>&1; then
   [ -f "$UP_FILE" ] && log "Sao lưu ảnh upload -> $UP_FILE ($(du -h "$UP_FILE" | cut -f1))"
 fi
 
-# 3) Xoá bản cũ
+# 3) Xoá bản cũ: database giữ theo số ngày; ảnh upload nặng (thư viện hình) chỉ giữ vài bản mới nhất
 find "$ROOT/backups" -type f \( -name 'db-*.dump' -o -name 'uploads-*.tgz' \) -mtime +"$KEEP" -delete
+KEEP_UP="$(env_get BACKUP_KEEP_UPLOADS)"; KEEP_UP="${KEEP_UP:-3}"
+ls -1t "$ROOT"/backups/uploads-*.tgz 2>/dev/null | tail -n +"$((KEEP_UP + 1))" | xargs -r rm -f
 log "✓ Sao lưu xong ($(du -h "$DB_FILE" | cut -f1)), giữ $KEEP ngày"
 echo "$DB_FILE"
