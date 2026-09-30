@@ -115,3 +115,15 @@ Xem `.env.production.example`. Lưu ý:
 ## Kiểm tra build trước khi lên VPS (máy Windows)
 
 `scripts\prod-check.cmd` – install, prisma validate/generate/migrate status, typecheck, `next build` web + cms (giả lập không có API như lúc build Docker), chạy API chế độ production + health check. Kết quả: `logs\prod-check-summary.txt`.
+
+## Ảnh thật cho sản phẩm (AI – ảnh minh hoạ tạm)
+
+28 sản phẩm mẫu dùng ảnh vẽ 2D. Đổi sang ảnh chụp bằng Google Gemini (Nano Banana 2 Lite, ~0,034 USD/ảnh):
+
+1. Tạo key tại https://aistudio.google.com/apikey (gắn thanh toán – API không có gói free cho tạo ảnh).
+2. `nano /opt/yala/.env.production` → thêm `GEMINI_API_KEY="…"` → `bash deploy/deploy.sh --force`
+3. `bash deploy/ai-photos.sh` – tự tạo ảnh cho mọi sản phẩm còn ảnh 2D, gắn vào sản phẩm, làm mới web.
+   `--dry` xem trước · `--style=model` ảnh người mẫu · `--keep-2d` giữ ảnh 2D làm ảnh phụ. Chạy lại an toàn.
+
+Ảnh AI (`/uploads/ai-*`) có nhãn "Ảnh minh hoạ" trên web; thay bằng ảnh/mockup thật từ xưởng (CMS → Sản phẩm) thì nhãn tự mất.
+Có thể tạo/duyệt từng ảnh trong CMS → **Ảnh thật AI**.
