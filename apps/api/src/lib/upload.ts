@@ -93,10 +93,10 @@ export async function saveUpload(file: unknown, opts: { kind?: "design" | "print
 }
 
 /** Lưu ảnh đã có sẵn trong bộ nhớ (VD ảnh AI trả về) – cùng kiểm tra định dạng & nơi lưu như upload */
-export async function saveBuffer(buf: Buffer): Promise<{ url: string; size: number }> {
+export async function saveBuffer(buf: Buffer, prefix = ""): Promise<{ url: string; size: number }> {
   const ext = detectImage(buf);
   if (!ext) throw badRequest("Chỉ chấp nhận ảnh PNG, JPG hoặc WEBP");
-  const name = `${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${randomUUID()}.${ext}`;
+  const name = `${prefix}${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${randomUUID()}.${ext}`;
   if (r2) await putR2(`uploads/${name}`, buf, MIME[ext]);
   else await putLocal(name, buf);
   return { url: `/uploads/${name}`, size: buf.length };

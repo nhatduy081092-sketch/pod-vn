@@ -93,3 +93,6 @@ export const MOCK_SHAPES = {
   bandana: "Khăn bandana",
 } as const;
 export type MockShape = keyof typeof MOCK_SHAPES;
+
+/** Ảnh sản phẩm do AI tạo (CMS → Ảnh thật AI, file /uploads/ai-…) -> hiện nhãn "Ảnh minh hoạ" trên web */
+export const isAiImage = (url?: string | null) => !!url && /\/uploads\/ai-[^/]*$/.test(url.split("?")[0]!);

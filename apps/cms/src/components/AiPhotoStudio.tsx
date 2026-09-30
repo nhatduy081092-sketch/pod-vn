@@ -12,8 +12,8 @@ const STYLES: { v: Style; label: string; hint: string }[] = [
   { v: "flatlay", label: "Trải phẳng (flat-lay)", hint: "Chụp từ trên xuống, nếp vải tự nhiên" },
   { v: "model", label: "Người mẫu mặc", hint: "Ảnh lifestyle – soát kỹ tay, mặt, hoạ tiết" },
 ];
-/** Giá tham khảo Nano Banana 2 – ảnh 1K (USD) */
-const PRICE_1K = 0.067;
+/** Giá tham khảo 1 ảnh 1K (USD) theo model – ai.google.dev/gemini-api/docs/pricing (9/2026) */
+const priceOf = (model: string) => (/pro/.test(model) ? 0.134 : /lite/.test(model) ? 0.034 : 0.067);
 const is2D = (u?: string) => !!u && (/\.svg($|\?)/i.test(u) || u.startsWith("/mock/"));
 
 /** Ảnh sản phẩm (SVG 2D / ảnh) -> PNG 1024px nền trắng để gửi AI */
@@ -50,6 +50,7 @@ export function AiPhotoStudio({ products: initial, enabled, model }: { products:
 
   const list = useMemo(() => products.filter((p) => !only2D || is2D(p.images[0])), [products, only2D]);
   const count2D = products.filter((p) => is2D(p.images[0])).length;
+  const PRICE_1K = priceOf(model || "lite");
   const pending = list.filter((p) => rows[p.id]?.shots.length && !rows[p.id]?.applied);
   const patch = (id: string, r: Partial<Row>) => setRows((s) => ({ ...s, [id]: { ...(s[id] ?? { status: "idle", shots: [] }), ...r } }));
 
@@ -122,7 +123,7 @@ export function AiPhotoStudio({ products: initial, enabled, model }: { products:
           </li>
         </ol>
         <p className="text-neutral-500">
-          {count2D}/{products.length} sản phẩm đang dùng ảnh vẽ 2D. Chi phí ước tính ~{(count2D * PRICE_1K).toFixed(2)} USD cho 1 lượt tạo tất cả (Nano Banana 2, ảnh 1K).
+          {count2D}/{products.length} sản phẩm đang dùng ảnh vẽ 2D. Chi phí ước tính ~{(count2D * PRICE_1K).toFixed(2)} USD cho 1 lượt tạo tất cả (Nano Banana 2 Lite, ảnh 1K).
         </p>
       </div>
     );
@@ -165,7 +166,7 @@ export function AiPhotoStudio({ products: initial, enabled, model }: { products:
           )}
         </div>
         <p className="text-xs text-neutral-500">
-          Mỗi ảnh ~{PRICE_1K} USD, 10–30 giây. Ảnh chỉ thay trên web khi bạn bấm <b>Dùng ảnh này</b>. Soát kỹ: hoạ tiết giống bản 2D, không có chữ/logo lạ, tay & mặt (ảnh người mẫu).
+          Mỗi ảnh ~{PRICE_1K} USD, 10–30 giây. Ảnh chỉ thay trên web khi bạn bấm <b>Dùng ảnh này</b>. Ảnh AI tự có nhãn “Ảnh minh hoạ” trên web – nhãn mất khi bạn thay bằng ảnh/mockup thật từ xưởng.
         </p>
       </section>
 

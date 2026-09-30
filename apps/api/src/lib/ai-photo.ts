@@ -3,11 +3,11 @@ import { HTTPException } from "hono/http-exception";
 /**
  * Ảnh thật bằng AI (Google Gemini – "Nano Banana"): biến ảnh sản phẩm vẽ 2D thành ảnh chụp.
  * Đầu vào là chính ảnh 2D (đúng hoạ tiết in) -> AI giữ hoạ tiết, chỉ đổi sang chất liệu/ánh sáng thật.
- * Cấu hình: GEMINI_API_KEY (bắt buộc), GEMINI_IMAGE_MODEL (mặc định gemini-3.1-flash-image = Nano Banana 2).
+ * Cấu hình: GEMINI_API_KEY (bắt buộc), GEMINI_IMAGE_MODEL (mặc định gemini-3.1-flash-lite-image = Nano Banana 2 Lite, rẻ nhất).
  * Ảnh AI luôn có watermark ẩn SynthID của Google.
  */
 const KEY = () => process.env.GEMINI_API_KEY?.trim() ?? "";
-export const aiPhotoModel = () => process.env.GEMINI_IMAGE_MODEL?.trim() || "gemini-3.1-flash-image";
+export const aiPhotoModel = () => process.env.GEMINI_IMAGE_MODEL?.trim() || "gemini-3.1-flash-lite-image";
 export const aiPhotoEnabled = () => KEY().length > 0;
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";

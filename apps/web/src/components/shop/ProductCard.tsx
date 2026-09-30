@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { discountPercent, displayCompareAt, effectiveBasePrice, formatVND, saleActive } from "@pod/shared";
+import { discountPercent, displayCompareAt, effectiveBasePrice, formatVND, isAiImage, saleActive } from "@pod/shared";
 import type { ProductCardData } from "@/lib/types";
 import { Img } from "../ui/Img";
 
@@ -36,6 +36,9 @@ export function ProductCard({ p, priority = false, color }: { p: ProductCardData
               className="object-contain transition duration-300 group-hover:scale-105"
             />
           </div>
+          {isAiImage(p.images[0]) && (
+            <span className="absolute bottom-1 right-1 rounded bg-white/85 px-1 py-px text-[9px] font-semibold text-ink/70 md:text-[10px]">Ảnh minh hoạ</span>
+          )}
           {(isNew || sale) && (
             <span className="absolute left-1 top-1 flex gap-1">
               {isNew && <span className="rounded bg-[#16a34a] px-1.5 py-0.5 text-[10px] font-black text-white md:text-[11px]">MỚI</span>}

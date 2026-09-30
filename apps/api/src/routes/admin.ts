@@ -123,7 +123,8 @@ adminRoutes.post("/ai-photo", async (c) => {
   if (!mime) throw new HTTPException(400, { message: "Ảnh nguồn phải là PNG/JPG/WEBP" });
   const prompt = buildPrompt({ name: p.name, material: p.material, audience: p.audience, category: p.category.name }, style);
   const out = await generateAiPhoto(src, mime, prompt);
-  const saved = await saveBuffer(out);
+  // tiền tố "ai-" -> web tự gắn nhãn "Ảnh minh hoạ" (isAiImage) cho tới khi thay bằng ảnh/mockup thật
+  const saved = await saveBuffer(out, "ai-");
   return c.json({ ...saved, style, model: aiPhotoModel() }, 201);
 });
 

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { areaExtraPrice, designFields, displayCompareAt, formatVND, linePrice, saleActive, TEAM_SIZE_LABEL, type RosterRow } from "@pod/shared";
+import { areaExtraPrice, designFields, displayCompareAt, formatVND, isAiImage, linePrice, saleActive, TEAM_SIZE_LABEL, type RosterRow } from "@pod/shared";
 import { useCart } from "@/lib/cart";
 import { assetUrl } from "@/lib/config";
 import { track } from "@/lib/track";
@@ -122,6 +122,9 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
           <img src={assetUrl(gallery[imgIdx] ?? gallery[0])} alt={product.name} className="h-full w-full object-contain" />
           {design && imgIdx < design.files.length && (
             <span className="absolute left-2 top-2 rounded bg-ink px-2 py-0.5 text-[11px] font-bold text-brand-badge">Thiết kế của bạn · {design.files[imgIdx]?.name}</span>
+          )}
+          {isAiImage(gallery[imgIdx] ?? gallery[0]) && (
+            <span className="absolute bottom-2 right-2 rounded bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-ink/75">Ảnh minh hoạ · sản phẩm in theo đúng file thiết kế</span>
           )}
         </div>
         <Thumbs images={gallery} active={imgIdx} onPick={setImgIdx} name={product.name} />
