@@ -267,9 +267,9 @@ publicRoutes.get("/notices", async (c) => {
 publicRoutes.get("/design-assets", async (c) => {
   const kind = c.req.query("kind") === "TEMPLATE" ? "TEMPLATE" : "CLIPART";
   const items = await prisma.designAsset.findMany({
-    where: { kind, isActive: true },
+    where: { kind, isActive: true, status: "APPROVED" },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-    take: 500,
+    take: 5000,
     select: { id: true, kind: true, name: true, category: true, tags: true, imageUrl: true, natW: true, natH: true, data: true },
   });
   c.header("Cache-Control", "public, max-age=60");

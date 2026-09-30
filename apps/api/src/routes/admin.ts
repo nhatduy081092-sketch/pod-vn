@@ -24,6 +24,8 @@ import {
   toSearchText,
   type OrderStatus,
   DESIGN_ASSET_KINDS,
+  designAssetBulkSchema,
+  designAssetPatchSchema,
   designAssetUpsertSchema,
   designJsonSchema,
   designTemplateSchema,
@@ -422,7 +424,7 @@ adminRoutes.get("/design-assets", async (c) => {
     await prisma.designAsset.findMany({
       where: kind && (DESIGN_ASSET_KINDS as readonly string[]).includes(kind) ? { kind } : {},
       orderBy: [{ kind: "asc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
-      take: 1000,
+      take: 5000,
     }),
   );
 });
@@ -432,8 +434,15 @@ const assetData = (raw: unknown) => {
 };
 adminRoutes.post("/design-assets", async (c) => c.json(await prisma.designAsset.create({ data: assetData(await c.req.json()) }), 201));
 adminRoutes.put("/design-assets/:id", async (c) => c.json(await prisma.designAsset.update({ where: { id: c.req.param("id") }, data: assetData(await c.req.json()) })));
+/** Sửa / duyệt / xoá hàng loạt (đặt trước /:id) */
+adminRoutes.post("/design-assets/bulk", async (c) => {
+  const { ids, patch, remove } = designAssetBulkSchema.parse(await c.req.json());
+  if (remove) return c.json({ count: (await prisma.designAsset.deleteMany({ where: { id: { in: ids } } })).count });
+  if (!patch || !Object.keys(patch).length) throw new HTTPException(400, { message: "Không có thay đổi" });
+  return c.json({ count: (await prisma.designAsset.updateMany({ where: { id: { in: ids } }, data: patch })).count });
+});
 adminRoutes.patch("/design-assets/:id", async (c) => {
-  const p = z.object({ isActive: z.boolean().optional(), sortOrder: z.number().int().min(-9999).max(9999).optional(), name: z.string().trim().min(1).max(80).optional(), category: z.string().trim().max(40).optional() }).parse(await c.req.json());
+  const p = designAssetPatchSchema.parse(await c.req.json());
   return c.json(await prisma.designAsset.update({ where: { id: c.req.param("id") }, data: p }));
 });
 adminRoutes.delete("/design-assets/:id", async (c) => {

@@ -519,8 +519,15 @@ model DesignAsset {
   data      Json?
   isActive  Boolean  @default(true)
   sortOrder Int      @default(0)
+  /// SELF | PURCHASED | AI | PARTNER – nguồn nội dung
+  source    String   @default("SELF")
+  /// Số giấy phép / nơi mua / công cụ AI + prompt
+  license   String   @default("")
+  /// DRAFT | APPROVED | REJECTED – chỉ APPROVED mới hiện cho khách
+  status    String   @default("APPROVED")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([kind, isActive, sortOrder])
+  @@index([status])
 }

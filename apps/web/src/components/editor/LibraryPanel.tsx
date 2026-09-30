@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { applyTemplate, removeVietnameseTones, TEXT_PRESETS, type DesignAssetView, type DesignLayer, type DesignTemplateData } from "@pod/shared";
+import { applyTemplate, ASSET_SHAPE_LABEL, ASSET_SHAPES, assetShape, removeVietnameseTones, TEXT_PRESETS, type AssetShape, type DesignAssetView, type DesignLayer, type DesignTemplateData } from "@pod/shared";
 import { assetUrl } from "@/lib/config";
 import { createCanvas, drawArea, measureText, type ImageCache } from "./render";
 import { ensureFonts } from "./fonts";
@@ -60,6 +60,9 @@ export function LibraryPanel({ onTemplate, onClipart }: Props) {
   const [data, setData] = useState<{ templates: DesignAssetView[]; clipart: DesignAssetView[] } | null>(cache);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
+  const [shape, setShape] = useState<AssetShape | "">("");
+  const [limit, setLimit] = useState(90);
+  useEffect(() => setLimit(90), [tab, cat, shape, q]);
   useEffect(() => {
     if (!data) void loadAssets().then(setData);
   }, [data]);
@@ -73,7 +76,12 @@ export function LibraryPanel({ onTemplate, onClipart }: Props) {
   const list = tab === "templates" ? templates : (data?.clipart ?? []).map((c) => ({ ...c, image: c.imageUrl }));
   const cats = [...new Set(list.map((x) => x.category).filter(Boolean))];
   const k = norm(q.trim());
-  const shown = list.filter((x) => (!cat || x.category === cat) && (!k || norm(`${x.name} ${x.category} ${"tags" in x ? (x.tags ?? "") : ""}`).includes(k)));
+  const shown = list.filter(
+    (x) =>
+      (!cat || x.category === cat) &&
+      (!shape || ("natW" in x && x.natW > 0 && assetShape(x.natW, x.natH) === shape)) &&
+      (!k || norm(`${x.name} ${x.category} ${"tags" in x ? (x.tags ?? "") : ""}`).includes(k)),
+  );
 
   return (
     <section className="space-y-2.5">
@@ -109,13 +117,30 @@ export function LibraryPanel({ onTemplate, onClipart }: Props) {
           ))}
         </div>
       )}
+      {tab === "clipart" && list.length > 12 && (
+        <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="Dáng ảnh">
+          {(["", ...ASSET_SHAPES] as const).map((s) => (
+            <button
+              key={s || "all"}
+              type="button"
+              role="radio"
+              aria-checked={shape === s}
+              onClick={() => setShape(s)}
+              className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold ${shape === s ? "border-ink bg-brand" : "border-ink/15"}`}
+            >
+              {s && <ShapeIcon s={s} />}
+              {s ? ASSET_SHAPE_LABEL[s] : "Mọi dáng"}
+            </button>
+          ))}
+        </div>
+      )}
       {!data && tab === "clipart" ? (
         <p className="text-xs text-ink/60">Đang tải…</p>
       ) : !shown.length ? (
         <p className="text-xs text-ink/60">{tab === "clipart" && !list.length ? "Thư viện hình đang được cập nhật. Bạn có thể tải ảnh của mình ở mục Tải ảnh." : "Không có kết quả phù hợp."}</p>
       ) : (
         <ul className="grid max-h-[46vh] grid-cols-3 gap-1.5 overflow-y-auto pr-0.5 lg:max-h-[52vh]">
-          {shown.map((x) => (
+          {shown.slice(0, limit).map((x) => (
             <li key={x.id}>
               <button
                 type="button"
@@ -130,7 +155,22 @@ export function LibraryPanel({ onTemplate, onClipart }: Props) {
           ))}
         </ul>
       )}
+      {shown.length > limit && (
+        <button type="button" onClick={() => setLimit((l) => l + 90)} className="btn-sm w-full text-xs font-bold">
+          Xem thêm ({shown.length - limit})
+        </button>
+      )}
       <p className="text-[11px] text-ink/55">Bấm để thêm vào mặt đang chọn, sau đó sửa chữ, màu, vị trí tuỳ ý.</p>
     </section>
+  );
+}
+
+/** Biểu tượng dáng ảnh */
+function ShapeIcon({ s }: { s: AssetShape }) {
+  const [w, h] = { square: [10, 10], landscape: [13, 9], portrait: [9, 13], wide: [15, 6], tall: [6, 15] }[s];
+  return (
+    <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden>
+      <rect x={(16 - w) / 2} y={(16 - h) / 2} width={w} height={h} rx="1" fill="none" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
   );
 }

@@ -228,8 +228,11 @@ export async function saveDesignAssetAction(id: string | null, data: import("@po
     return { id: r.id };
   }, ["/design-library"], false);
 }
-export async function patchDesignAssetAction(id: string, data: { isActive?: boolean; sortOrder?: number; name?: string; category?: string }) {
+export async function patchDesignAssetAction(id: string, data: import("@pod/shared").DesignAssetPatch) {
   return run(() => adminFetch(`/design-assets/${id}`, { method: "PATCH", body: JSON.stringify(data) }).then(() => undefined), ["/design-library"], false);
+}
+export async function bulkDesignAssetAction(ids: string[], op: { patch?: import("@pod/shared").DesignAssetPatch; remove?: boolean }) {
+  return run(() => adminFetch(`/design-assets/bulk`, { method: "POST", body: JSON.stringify({ ids, ...op }) }).then(() => undefined), ["/design-library"], false);
 }
 export async function deleteDesignAssetAction(id: string) {
   return run(() => adminFetch(`/design-assets/${id}`, { method: "DELETE" }).then(() => undefined), ["/design-library"], false);

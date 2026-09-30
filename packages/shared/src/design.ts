@@ -467,6 +467,34 @@ export const DESIGN_ASSET_KINDS = ["CLIPART", "TEMPLATE"] as const;
 export type DesignAssetKind = (typeof DESIGN_ASSET_KINDS)[number];
 export const DESIGN_ASSET_KIND_LABEL: Record<DesignAssetKind, string> = { CLIPART: "Hình minh hoạ", TEMPLATE: "Mẫu thiết kế" };
 
+/** Nguồn nội dung – để biết quyền sử dụng khi in bán */
+export const DESIGN_ASSET_SOURCES = ["SELF", "PURCHASED", "AI", "PARTNER"] as const;
+export type DesignAssetSource = (typeof DESIGN_ASSET_SOURCES)[number];
+export const DESIGN_ASSET_SOURCE_LABEL: Record<DesignAssetSource, string> = {
+  SELF: "Tự thiết kế",
+  PURCHASED: "Mua bản quyền",
+  AI: "Tạo bằng AI",
+  PARTNER: "Đối tác / cộng tác viên",
+};
+
+/** Trạng thái duyệt: chỉ APPROVED (và đang bật) mới hiện cho khách */
+export const DESIGN_ASSET_STATUSES = ["DRAFT", "APPROVED", "REJECTED"] as const;
+export type DesignAssetStatus = (typeof DESIGN_ASSET_STATUSES)[number];
+export const DESIGN_ASSET_STATUS_LABEL: Record<DesignAssetStatus, string> = { DRAFT: "Chờ duyệt", APPROVED: "Đã duyệt", REJECTED: "Từ chối" };
+
+/** Dáng ảnh (lọc thư viện như Printdoors: vuông / ngang / dọc / siêu ngang / siêu dọc) */
+export const ASSET_SHAPES = ["square", "landscape", "portrait", "wide", "tall"] as const;
+export type AssetShape = (typeof ASSET_SHAPES)[number];
+export const ASSET_SHAPE_LABEL: Record<AssetShape, string> = { square: "Vuông", landscape: "Ngang", portrait: "Dọc", wide: "Siêu ngang", tall: "Siêu dọc" };
+export function assetShape(w: number, h: number): AssetShape {
+  const r = w / Math.max(1, h);
+  if (r >= 2) return "wide";
+  if (r <= 0.5) return "tall";
+  if (r > 1.2) return "landscape";
+  if (r < 1 / 1.2) return "portrait";
+  return "square";
+}
+
 export const designAssetUpsertSchema = z
   .object({
     kind: z.enum(DESIGN_ASSET_KINDS),
@@ -479,8 +507,27 @@ export const designAssetUpsertSchema = z
     data: designTemplateSchema.nullable().default(null),
     isActive: z.boolean().default(true),
     sortOrder: z.number().int().min(-9999).max(9999).default(0),
+    source: z.enum(DESIGN_ASSET_SOURCES).default("SELF"),
+    /** Số giấy phép / nơi mua / công cụ AI + prompt – bằng chứng quyền sử dụng */
+    license: z.string().trim().max(300).default(""),
+    status: z.enum(DESIGN_ASSET_STATUSES).default("APPROVED"),
   })
-  .refine((a) => (a.kind === "CLIPART" ? !!a.imageUrl && a.natW > 0 && a.natH > 0 : !!a.data), { message: "Hình minh hoạ cần ảnh; mẫu thiết kế cần dữ liệu lớp" });
+  .refine((a) => (a.kind === "CLIPART" ? !!a.imageUrl && a.natW > 0 && a.natH > 0 : !!a.data), { message: "Hình minh hoạ cần ảnh; mẫu thiết kế cần dữ liệu lớp" })
+  .refine((a) => a.source !== "PURCHASED" || a.license.length > 0, { message: "Hình mua bản quyền: ghi số giấy phép / nơi mua" });
+
+/** Sửa nhanh / hàng loạt trong CMS */
+export const designAssetPatchSchema = z.object({
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().min(-9999).max(9999).optional(),
+  name: z.string().trim().min(1).max(80).optional(),
+  category: z.string().trim().max(40).optional(),
+  tags: z.string().trim().max(200).optional(),
+  source: z.enum(DESIGN_ASSET_SOURCES).optional(),
+  license: z.string().trim().max(300).optional(),
+  status: z.enum(DESIGN_ASSET_STATUSES).optional(),
+});
+export type DesignAssetPatch = z.infer<typeof designAssetPatchSchema>;
+export const designAssetBulkSchema = z.object({ ids: z.array(z.string().min(1).max(40)).min(1).max(500), patch: designAssetPatchSchema.optional(), remove: z.boolean().optional() });
 export type DesignAssetInput = z.infer<typeof designAssetUpsertSchema>;
 
 /** Dữ liệu hiển thị trong editor */
