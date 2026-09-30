@@ -1,4 +1,5 @@
 import type { DesignLayer, DesignTemplateData, TextLayer } from "./design";
+import { SLOGAN_PRESETS } from "./slogan-presets";
 
 /**
  * Mẫu chữ dựng sẵn (không dùng hình/tên thương hiệu có bản quyền).
@@ -60,4 +61,5 @@ export const TEXT_PRESETS: TextPreset[] = [
   P("smile", "Chữ cong xuống", "Chữ nghệ thuật", [
     t({ text: "Ngày tuyệt vời", font: "Nunito", fontSize: 44, color: "#7c3aed", bold: true, x: 150, y: 150, curve: -26 }),
   ]),
+  ...SLOGAN_PRESETS,
 ];

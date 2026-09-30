@@ -15,6 +15,7 @@ import {
   layerBounds,
   scaleAreaDesign,
   sizeScale,
+  TEXT_PRESETS,
   UPLOAD_MAX_BYTES,
   UPLOAD_MAX_SIDE_PX,
   usedAreas,
@@ -54,6 +55,8 @@ type Props = {
   savedId?: string | null;
   savedName?: string;
   templateId?: string | null;
+  /** Mẫu in sẵn (id trong TEXT_PRESETS hoặc DesignAsset TEMPLATE) – gắn lên mặt in đầu tiên khi mở */
+  presetId?: string | null;
   /** màu phân loại đang chọn ở trang sản phẩm (tên màu) */
   initialColor?: string | null;
   returnTo: string;
@@ -97,7 +100,7 @@ function garmentColors(product: ProductDetail) {
   return [...seen].map(([name, hex]) => ({ name, hex }));
 }
 
-export function DesignEditor({ product, mode, initial, savedId, savedName, templateId, initialColor, returnTo }: Props) {
+export function DesignEditor({ product, mode, initial, savedId, savedName, templateId, presetId, initialColor, returnTo }: Props) {
   const router = useRouter();
   const areas = product.printAreas;
   const colors = garmentColors(product);
@@ -169,7 +172,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
   /* ---------- khôi phục bản nháp ---------- */
   useEffect(() => {
-    if (initial) return;
+    if (initial || presetId) return;
     // vừa đổi sản phẩm trong editor: mang thiết kế sang (co giãn theo mặt cùng tên)
     const carry = takeCarry();
     if (carry && carry.from !== product.id && carry.areas.some((a) => a.design.layers.length || a.design.bg)) {
@@ -189,6 +192,28 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       apply(normalize(d.design, product), false);
       setNotice("Đã mở lại bản nháp gần nhất của bạn.");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* ---------- mở từ trang Mẫu in sẵn: gắn mẫu lên mặt đầu tiên ---------- */
+  const addTemplateRef = useRef<(data: DesignTemplateData, name: string) => void>(() => undefined);
+  const presetDone = useRef(false);
+  useEffect(() => {
+    if (initial || !presetId || presetDone.current) return;
+    presetDone.current = true;
+    void (async () => {
+      const built = TEXT_PRESETS.find((p) => p.id === presetId);
+      let found: { data: DesignTemplateData; name: string } | null = built ? { data: built.data, name: built.name } : null;
+      if (!found) {
+        const list = await fetch("/api/design-assets?kind=TEMPLATE")
+          .then((r) => (r.ok ? (r.json() as Promise<DesignAssetView[]>) : []))
+          .catch(() => [] as DesignAssetView[]);
+        const a = list.find((x) => x.id === presetId && x.data);
+        if (a?.data) found = { data: a.data, name: a.name };
+      }
+      if (found) addTemplateRef.current(found.data, found.name);
+      else setError("Mẫu này không còn – bạn có thể chọn mẫu khác trong Thư viện.");
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -364,6 +389,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       apply({ ...cur, areas: { ...cur.areas, [area.key]: { ...a, layers: a.layers.map((l) => (ids.has(l.id) && l.type === "text" ? { ...l, ...measureText(l) } : l)) } } }, false);
     });
   }
+
+  addTemplateRef.current = addTemplate;
 
   function addClipart(a: DesignAssetView) {
     const u = { src: a.imageUrl, natW: a.natW, natH: a.natH, name: a.name };

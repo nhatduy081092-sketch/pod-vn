@@ -1,6 +1,7 @@
 import "server-only";
-import { mergeLanding, type ContentPage, type LandingSettings } from "@pod/shared";
-import { API_URL } from "./config";
+import { mergeLanding, SLOGAN_PRESETS, type ContentPage, type DesignAssetView, type LandingSettings } from "@pod/shared";
+import type { ReadyItem } from "@/components/ready/ReadyGallery";
+import { API_URL, assetUrl } from "./config";
 import type { Category, HomeData, Paged, ProductCardData, ProductDetail } from "./types";
 
 const REVALIDATE = 60; // ISR: cập nhật nội dung CMS sau tối đa 60s
@@ -104,3 +105,13 @@ export const getHelpArticle = (slug: string) =>
   get<{ slug: string; category: string; title: string; content: string; updatedAt: string; related: { slug: string; title: string }[] }>(`/help/${encodeURIComponent(slug)}`, {
     allow404: true,
   });
+
+/** Mẫu in sẵn: mẫu thiết kế trong CMS (TEMPLATE, đã duyệt) + bộ câu chữ dựng sẵn theo chủ đề */
+export async function getReadyDesigns(): Promise<ReadyItem[]> {
+  const cms = await get<DesignAssetView[]>("/design-assets?kind=TEMPLATE").catch(() => null);
+  const fromCms = (cms ?? [])
+    .filter((t) => t.data)
+    .map((t) => ({ id: t.id, name: t.name, category: t.category || "Mẫu thiết kế", data: t.data!, image: t.imageUrl ? assetUrl(t.imageUrl) : "" }));
+  const built = SLOGAN_PRESETS.map((p) => ({ id: p.id, name: p.name, category: p.category, data: p.data, image: "" }));
+  return [...fromCms, ...built];
+}

@@ -103,6 +103,12 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
           >
             ✦ YALA Studio
           </Link>
+          <Link
+            href="/mau-in-san"
+            className={`shrink-0 whitespace-nowrap font-extrabold hover:text-accent ${pathname === "/mau-in-san" ? "text-accent" : "text-ink"}`}
+          >
+            Mẫu in sẵn
+          </Link>
           {categories.map((c) => (
             <Link
               key={c.slug}
@@ -133,6 +139,9 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
             </Link>
             <Link href="/thiet-ke" className="my-1 flex items-center gap-2 rounded-md border-2 border-ink bg-brand-badge px-3 py-2.5 font-extrabold shadow-hard">
               <IconSparkle className="h-4 w-4" aria-hidden /> Tự thiết kế – YALA Studio
+            </Link>
+            <Link href="/mau-in-san" className="block rounded-md px-3 py-2.5 font-extrabold hover:bg-cream">
+              Mẫu in sẵn theo chủ đề
             </Link>
             <Link href="/san-pham" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Tất cả sản phẩm
