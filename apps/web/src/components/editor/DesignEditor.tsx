@@ -29,7 +29,7 @@ import {
   type TextLayer,
 } from "@pod/shared";
 import type { PrintArea, ProductDetail } from "@/lib/types";
-import { IconClose, IconCopy, IconEye, IconGrid, IconLayers, IconLock, IconPalette, IconRedo, IconSave, IconText, IconTrash, IconUndo, IconUpload } from "../ui/icons";
+import { IconCalendar, IconClose, IconCopy, IconEye, IconGrid, IconLayers, IconLock, IconPalette, IconRedo, IconSave, IconText, IconTrash, IconUndo, IconUpload } from "../ui/icons";
 import { Stage } from "./Stage";
 import { canvasSrc, imgSize, loadImage, measureText, type ImageCache, type MockupAssets } from "./render";
 import { ensureFonts, GOOGLE_FONTS_HREF } from "./fonts";
@@ -45,6 +45,7 @@ import { pushRecent } from "./recent";
 import { ShortcutsModal } from "./ShortcutsModal";
 import { ProductSwitcher } from "./ProductSwitcher";
 import { OrderSheet } from "./OrderSheet";
+import { CalendarPanel } from "./CalendarPanel";
 
 type Props = {
   product: ProductDetail;
@@ -58,7 +59,7 @@ type Props = {
   returnTo: string;
 };
 
-type Tool = "upload" | "library" | "text" | "bg" | "layers";
+type Tool = "upload" | "library" | "text" | "bg" | "layers" | "calendar";
 type Upload = { src: string; natW: number; natH: number; name: string };
 
 const uid = () => `l${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -125,6 +126,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const [fullscreen, setFullscreen] = useState(false);
   const clipboard = useRef<DesignLayer | null>(null);
   const [switcher, setSwitcher] = useState(false);
+  /** Cách xem khung chỉnh: mặc định bản phẳng với cốc/bình (mặt cong), còn lại trên ảnh sản phẩm */
+  const [viewPref, setViewPref] = useState<Record<string, "flat" | "mockup">>({});
   const [orderOut, setOrderOut] = useState<import("@pod/shared").OrderDesign | null>(null);
   const images = useRef<ImageCache>(new Map()).current;
   const [assets, setAssets] = useState<Record<string, MockupAssets>>({});
@@ -136,6 +139,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const selected = ad.layers.find((l) => l.id === selectedId) ?? null;
   const fields = designFields(design);
   const sized = areaForSize(area, size);
+  // mặt cong (cốc/bình) luôn chỉnh trên bản phẳng trải dài, ảnh nhỏ góc khung hiện dáng cong
+  const view = area.warp ? "flat" : (viewPref[area.key] ?? "mockup");
   const dpiScale = sizeScale(area, sized);
 
   useEffect(() => {
@@ -406,6 +411,17 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     const x = h === "left" ? b.right : h === "right" ? area.widthMm - b.right : h === "center" ? area.widthMm / 2 : selected.x;
     const y = v === "top" ? b.bottom : v === "bottom" ? area.heightMm - b.bottom : v === "middle" ? area.heightMm / 2 : selected.y;
     patchSelected({ x, y });
+  }
+
+  /** Chép lớp sang mọi mặt còn lại (VD lịch 12 tháng, gối 2 mặt) */
+  function copyToAll() {
+    if (!selected) return;
+    for (const t of areas) {
+      if (t.key === area.key) continue;
+      const [l] = templateLayers({ srcW: area.widthMm, srcH: area.heightMm, bg: null, layers: [selected] }, t, uid);
+      if (l) addLayers([{ ...l, locked: false }], t.key);
+    }
+    setNotice(`Đã chép sang ${areas.length - 1} mặt còn lại.`);
   }
 
   /** Chép lớp sang mặt khác (co giãn theo tỉ lệ vùng in) */
@@ -720,6 +736,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           {toolBtn("text", "Chữ", IconText, () => (selected?.type === "text" ? setTool("text") : addText()))}
           {toolBtn("bg", colors.length > 1 ? "Màu" : "Màu nền", IconPalette)}
           {toolBtn("layers", `Lớp (${ad.layers.length})`, IconLayers)}
+          {toolBtn("calendar", "Lịch", IconCalendar)}
         </nav>
 
         <div className="order-1 mx-auto w-full max-w-[640px] lg:order-2">
@@ -743,6 +760,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             selectedId={selectedId}
             garmentColor={color?.hex}
             dpiScale={dpiScale}
+            view={view}
             sizeLabel={size ? `${sized.widthMm / 10}×${sized.heightMm / 10} cm · size ${size}` : undefined}
             onSelect={(id) => {
               setSelectedId(id);
@@ -752,7 +770,29 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             onChangeLayer={patchLayer}
             onCommit={endDrag}
           />
-          <p className="mt-2 text-center text-[11px] text-ink/55">Kéo để di chuyển · kéo góc để đổi cỡ · nút tròn để xoay · lăn chuột để phóng to/thu nhỏ · điện thoại: 2 ngón</p>
+          {!area.warp && (
+          <div className="mt-2 flex justify-center gap-1 text-[11px] font-bold" role="radiogroup" aria-label="Cách xem">
+            {(
+              [
+                ["mockup", "Trên sản phẩm"],
+                ["flat", "Bản phẳng"],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                role="radio"
+                aria-checked={view === v}
+                onClick={() => setViewPref((p) => ({ ...p, [area.key]: v }))}
+                className={`rounded-full border-2 px-3 py-0.5 ${view === v ? "border-ink bg-ink text-white" : "border-ink/15 bg-white"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          )}
+          {area.warp === "cylinder" && <p className="mt-2 text-center text-[11px] text-ink/60">Dải in cuộn quanh thân – ảnh nhỏ ở góc là mặt trước khi nhìn thẳng.</p>}
+          <p className="mt-1 text-center text-[11px] text-ink/55">Kéo để di chuyển · kéo góc để đổi cỡ · nút tròn để xoay · lăn chuột để phóng to/thu nhỏ · điện thoại: 2 ngón</p>
         </div>
 
         {/* Bảng thuộc tính */}
@@ -812,6 +852,20 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           )}
 
           {tool === "library" && <LibraryPanel onTemplate={addTemplate} onClipart={addClipart} />}
+
+          {tool === "calendar" && (
+            <CalendarPanel
+              areas={areas}
+              area={area}
+              onBusy={setBusy}
+              onError={setError}
+              onInsert={async (key, blob, box, px) => {
+                const src = await uploadBlob(blob, `lich-${key}.png`, "design");
+                images.set(src, await loadImage(src));
+                addLayers([{ id: uid(), type: "image", src, natW: px.w, natH: px.h, x: box.x, y: box.y, w: box.w, h: box.h, rotation: 0, opacity: 1 }], key);
+              }}
+            />
+          )}
 
           {tool === "text" && (
             <section className="space-y-3">
@@ -1051,11 +1105,12 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               {otherAreas.length > 0 && (
                 <select
                   value=""
-                  onChange={(e) => e.target.value && copyTo(e.target.value)}
+                  onChange={(e) => (e.target.value === "*" ? copyToAll() : e.target.value && copyTo(e.target.value))}
                   className="w-full rounded-md border-2 border-ink/15 px-2 py-1.5 text-xs font-bold"
                   aria-label="Chép lớp sang mặt khác"
                 >
                   <option value="">Chép lớp này sang mặt…</option>
+                  {otherAreas.length > 1 && <option value="*">★ Tất cả {otherAreas.length} mặt còn lại</option>}
                   {otherAreas.map((a) => (
                     <option key={a.key} value={a.key}>
                       {a.name}

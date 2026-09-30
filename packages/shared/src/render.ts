@@ -434,7 +434,7 @@ export function layerImageSrcs(design: AreaDesign): string[] {
 
 /* ---------- mockup ---------- */
 
-export type AreaGeom = { zoneX: number; zoneY: number; zoneW: number; zoneH: number; widthMm: number; heightMm: number };
+export type AreaGeom = { zoneX: number; zoneY: number; zoneW: number; zoneH: number; widthMm: number; heightMm: number; warp?: string };
 
 /** Hình chữ nhật (px) của vùng in trên ảnh mockup đã đặt tại (mx,my,mw,mh), giữ đúng tỉ lệ mm */
 export function printRectOnMockup(area: AreaGeom, mock: { x: number; y: number; w: number; h: number }) {
@@ -510,8 +510,11 @@ export function drawMockup(ctx: Ctx, canvasW: number, canvasH: number, area: Are
     octx.fillStyle = opts.garmentColor || "#ffffff";
     octx.fillRect(mock.x, mock.y, mock.w, mock.h);
   }
-  octx.translate(pr.x, pr.y);
-  drawArea(octx, design, area.widthMm, area.heightMm, pr.k, images);
+  if (area.warp === "cylinder") drawCylinder(octx, area, design, mock, images);
+  else {
+    octx.translate(pr.x, pr.y);
+    drawArea(octx, design, area.widthMm, area.heightMm, pr.k, images);
+  }
   octx.setTransform(1, 0, 0, 1, 0, 0);
   if (assets.mask) {
     octx.globalCompositeOperation = "destination-in";
@@ -542,6 +545,70 @@ export function drawMockup(ctx: Ctx, canvasW: number, canvasH: number, area: Are
   if (assets.overlay) ctx.drawImage(assets.overlay, mock.x, mock.y, mock.w, mock.h);
   ctx.restore();
   return { mock, printRect: pr };
+}
+
+/**
+ * Cốc / bình: vùng in là dải cuộn quanh thân (chu vi × chiều cao).
+ * Khung vùng in trên ảnh = mặt nhìn thấy (nửa vòng) -> hiện phần giữa dải in, co dần về 2 mép như mặt trụ thật.
+ */
+function drawCylinder(ctx: Ctx, area: AreaGeom, design: AreaDesign, mock: { x: number; y: number; w: number; h: number }, images: ImageCache) {
+  const zx = mock.x + area.zoneX * mock.w;
+  const zy = mock.y + area.zoneY * mock.h;
+  const zw = Math.max(1, area.zoneW * mock.w);
+  const zh = Math.max(1, area.zoneH * mock.h);
+  const k = zh / area.heightMm; // px/mm theo chiều cao
+  const flat = createCanvas(area.widthMm * k, zh);
+  const fctx = flat.getContext("2d");
+  if (!fctx) return;
+  drawArea(fctx, design, area.widthMm, area.heightMm, k, images);
+  const W = flat.width;
+  const cols = Math.ceil(zw);
+  const srcX = (i: number) => {
+    const u = Math.max(-1, Math.min(1, (i / cols) * 2 - 1));
+    return (0.5 + Math.asin(u) / (2 * Math.PI)) * W;
+  };
+  for (let i = 0; i < cols; i++) {
+    const s0 = srcX(i);
+    const s1 = srcX(i + 1);
+    ctx.drawImage(flat, s0, 0, Math.max(0.5, s1 - s0), flat.height, zx + (i * zw) / cols, zy, zw / cols + 0.5, zh);
+  }
+  // bóng mặt trụ: tối dần về 2 mép
+  ctx.save();
+  ctx.globalCompositeOperation = "source-atop";
+  const g = ctx.createLinearGradient(zx, 0, zx + zw, 0);
+  g.addColorStop(0, "rgba(0,0,0,.32)");
+  g.addColorStop(0.18, "rgba(0,0,0,.06)");
+  g.addColorStop(0.4, "rgba(255,255,255,.06)");
+  g.addColorStop(0.82, "rgba(0,0,0,.06)");
+  g.addColorStop(1, "rgba(0,0,0,.36)");
+  ctx.fillStyle = g;
+  ctx.fillRect(zx, zy, zw, zh);
+  ctx.restore();
+  flat.width = flat.height = 0;
+}
+
+/** Vẽ phẳng (không có ảnh sản phẩm): vùng in căn giữa khung, nền trắng – dùng để chỉnh chi tiết / sản phẩm cong */
+export function drawFlat(ctx: Ctx, canvasW: number, canvasH: number, area: { widthMm: number; heightMm: number }, design: AreaDesign, images: ImageCache, opts: { background?: string; padding?: number; paper?: string } = {}) {
+  const pad = opts.padding ?? 0;
+  if (opts.background) {
+    ctx.fillStyle = opts.background;
+    ctx.fillRect(0, 0, canvasW, canvasH);
+  }
+  const k = Math.min((canvasW - pad * 2) / area.widthMm, (canvasH - pad * 2) / area.heightMm);
+  const w = area.widthMm * k;
+  const h = area.heightMm * k;
+  const rect = { x: (canvasW - w) / 2, y: (canvasH - h) / 2, w, h, k };
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,.18)";
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = opts.paper ?? "#ffffff";
+  ctx.fillRect(rect.x, rect.y, w, h);
+  ctx.restore();
+  ctx.save();
+  ctx.translate(rect.x, rect.y);
+  drawArea(ctx, design, area.widthMm, area.heightMm, k, images);
+  ctx.restore();
+  return rect;
 }
 
 /* ---------- xuất file ---------- */

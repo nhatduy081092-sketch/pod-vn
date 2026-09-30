@@ -281,6 +281,8 @@ model PrintArea {
   sizeSpecs    Json    @default("{}")
   /// Gợi ý thiết kế cho mặt này (hiện trong công cụ thiết kế)
   tips         String  @default("")
+  /// Kiểu xem trước: "" = phẳng như ảnh sản phẩm · "cylinder" = cuộn quanh thân trụ (cốc, bình)
+  warp         String  @default("")
   /// Ảnh sản phẩm của mặt này (trống = ảnh đại diện sản phẩm)
   mockupImage  String  @default("")
   /// Mask hình dáng (in toàn thân) – thiết kế chỉ hiện trong vùng trắng của mask

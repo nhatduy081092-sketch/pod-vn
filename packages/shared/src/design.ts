@@ -246,7 +246,7 @@ export type DesignFile = z.infer<typeof designFileSchema>;
 export const orderDesignSchema = z
   .object({
     json: designJsonSchema,
-    files: z.array(designFileSchema).min(1).max(12),
+    files: z.array(designFileSchema).min(1).max(16),
   })
   .refine((d) => d.files.every((f) => d.json.areas[f.area]), { message: "File thiết kế không khớp mặt in" })
   .refine((d) => JSON.stringify(d.json).length <= 60_000, { message: "Thiết kế quá lớn" });

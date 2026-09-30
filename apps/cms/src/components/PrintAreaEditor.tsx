@@ -18,6 +18,7 @@ const toInput = (a: AdminPrintArea): PrintAreaInput => ({
   safeMm: a.safeMm ?? 0,
   sizeSpecs: a.sizeSpecs ?? {},
   tips: a.tips ?? "",
+  warp: a.warp === "cylinder" ? "cylinder" : "",
   mockupImage: a.mockupImage,
   maskImage: a.maskImage,
   overlayImage: a.overlayImage,
@@ -109,7 +110,7 @@ export function PrintAreaEditor({ productId, productImage, initial, sizes = [] }
     if (!p) return;
     let k = p.key;
     for (let i = 2; areas.some((a) => a.key === k); i++) k = `${p.key}-${i}`;
-    setAreas((a) => [...a, { ...p, key: k, mockupImage: "", maskImage: "", overlayImage: "", bleedMm: 0, safeMm: 0, sizeSpecs: {}, tips: "" }]);
+    setAreas((a) => [...a, { ...p, key: k, mockupImage: "", maskImage: "", overlayImage: "", bleedMm: 0, safeMm: 0, sizeSpecs: {}, tips: "", warp: "" }]);
     setOpen(areas.length);
   }
 
@@ -178,6 +179,14 @@ export function PrintAreaEditor({ productId, productImage, initial, sizes = [] }
                             </option>
                           ))}
                         </select>
+                      </label>
+                      <label className="block text-xs">
+                        <span className="label">Kiểu xem trước</span>
+                        <select className="input" value={a.warp} onChange={(e) => patch(i, { warp: e.target.value === "cylinder" ? "cylinder" : "" })}>
+                          <option value="">Phẳng (áo, tranh, cờ, gối…)</option>
+                          <option value="cylinder">Cuộn quanh thân (cốc, bình)</option>
+                        </select>
+                        {a.warp === "cylinder" && <span className="text-[11px] text-neutral-500">Rộng = chu vi dải in, khung xanh = mặt nhìn thấy trên ảnh.</span>}
                       </label>
                       <label className="block text-xs">
                         <span className="label">Phụ phí khi in mặt này (₫)</span>

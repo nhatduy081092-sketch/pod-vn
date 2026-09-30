@@ -110,6 +110,8 @@ export const printAreaInputSchema = z
     sizeSpecs: sizeSpecsSchema.default({}),
     /** Gợi ý thiết kế riêng cho mặt này (hiện trong công cụ thiết kế) */
     tips: z.string().trim().max(600).default(""),
+    /** Xem trước cuộn quanh thân trụ (cốc, bình): vùng in = chu vi × chiều cao, khung trên ảnh = mặt nhìn thấy */
+    warp: z.enum(["", "cylinder"]).default(""),
     mockupImage: imgPath,
     maskImage: imgPath,
     overlayImage: imgPath,
@@ -124,11 +126,11 @@ export const printAreaInputSchema = z
 export type PrintAreaInput = z.infer<typeof printAreaInputSchema>;
 
 export const printAreasSaveSchema = z
-  .object({ areas: z.array(printAreaInputSchema).min(1, "Cần ít nhất 1 mặt in").max(8) })
+  .object({ areas: z.array(printAreaInputSchema).min(1, "Cần ít nhất 1 mặt in").max(16) })
   .refine((v) => new Set(v.areas.map((a) => a.key)).size === v.areas.length, { message: "Trùng mã mặt in" });
 
 /** Mẫu mặt in hay dùng cho may mặc – admin bấm để thêm nhanh rồi chỉnh số đo */
-export const PRINT_AREA_PRESETS: Omit<PrintAreaInput, "mockupImage" | "maskImage" | "overlayImage" | "bleedMm" | "safeMm" | "sizeSpecs" | "tips">[] = [
+export const PRINT_AREA_PRESETS: Omit<PrintAreaInput, "mockupImage" | "maskImage" | "overlayImage" | "bleedMm" | "safeMm" | "sizeSpecs" | "tips" | "warp">[] = [
   { key: "front", name: "Mặt trước", widthMm: 300, heightMm: 400, dpi: 150, zoneX: 0.3, zoneY: 0.24, zoneW: 0.4, zoneH: 0.5, extraPrice: 0 },
   { key: "back", name: "Mặt sau", widthMm: 300, heightMm: 400, dpi: 150, zoneX: 0.3, zoneY: 0.2, zoneW: 0.4, zoneH: 0.55, extraPrice: 0 },
   { key: "chest-left", name: "Ngực trái (logo)", widthMm: 90, heightMm: 90, dpi: 300, zoneX: 0.56, zoneY: 0.28, zoneW: 0.13, zoneH: 0.13, extraPrice: 0 },

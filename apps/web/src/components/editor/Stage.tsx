@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from "react";
 import { areaGuides, DPI_LEVEL_LABEL, dpiLevel, effectiveDpi, layerBounds, type AreaDesign, type DesignLayer } from "@pod/shared";
 import type { PrintArea } from "@/lib/types";
-import { drawMockup, measureText, type ImageCache, type MockupAssets } from "./render";
+import { drawFlat, drawMockup, measureText, type ImageCache, type MockupAssets } from "./render";
 
 type Rect = { x: number; y: number; w: number; h: number; k: number };
 type Drag =
@@ -25,6 +25,8 @@ type Props = {
   dpiScale?: number;
   /** Nhãn kích thước in đang hiển thị (theo size) */
   sizeLabel?: string;
+  /** "flat": chỉnh trên bản phẳng (kèm ảnh xem trước nhỏ) · "mockup": chỉnh ngay trên ảnh sản phẩm */
+  view?: "flat" | "mockup";
   onSelect: (id: string | null) => void;
   /** commit=false khi đang kéo (không ghi lịch sử), true khi thả tay */
   onChangeLayer: (id: string, patch: Partial<DesignLayer>, commit: boolean) => void;
@@ -54,9 +56,10 @@ function snapAxis(center: number, halfExtent: number, size: number, tol: number)
   return best ? { v: best.c, guide: best.g } : { v: center, guide: null };
 }
 
-export function Stage({ area, design, assets, images, version, selectedId, garmentColor, dpiScale = 1, sizeLabel, onSelect, onChangeLayer, onCommit }: Props) {
+export function Stage({ area, design, assets, images, version, selectedId, garmentColor, dpiScale = 1, sizeLabel, view = "mockup", onSelect, onChangeLayer, onCommit }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const miniRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState(0);
   const [pr, setPr] = useState<Rect | null>(null);
   const [guides, setGuides] = useState<{ v: number | null; h: number | null }>({ v: null, h: null });
@@ -82,7 +85,10 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
     const ctx = c.getContext("2d")!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, size, size);
-    const r = drawMockup(ctx, size, size, area, design, assets, images, { background: "#f4f4f5", padding: size * 0.03, garmentColor, shading: 0.45 });
+    const r =
+      view === "flat"
+        ? { printRect: drawFlat(ctx, size, size, area, design, images, { background: "#e9e9ec", padding: size * 0.06 }) }
+        : drawMockup(ctx, size, size, area, design, assets, images, { background: "#f4f4f5", padding: size * 0.03, garmentColor, shading: 0.45 });
     // viền vùng in
     ctx.save();
     ctx.setLineDash([6, 4]);
@@ -105,7 +111,23 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
     }
     ctx.restore();
     setPr(r.printRect);
-  }, [size, area, design, assets, images, version, garmentColor]);
+  }, [size, area, design, assets, images, version, garmentColor, view]);
+
+  // ảnh xem trước nhỏ trên sản phẩm khi đang chỉnh bản phẳng
+  useEffect(() => {
+    const c = miniRef.current;
+    if (!c || view !== "flat" || !size) return;
+    const px = Math.round(size * 0.3);
+    const t = setTimeout(() => {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      c.width = px * dpr;
+      c.height = px * dpr;
+      const ctx = c.getContext("2d")!;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawMockup(ctx, px, px, area, design, assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45 });
+    }, 120);
+    return () => clearTimeout(t);
+  }, [size, area, design, assets, images, version, garmentColor, view]);
 
   const pointMm = useCallback(
     (e: { clientX: number; clientY: number }) => {
@@ -312,6 +334,14 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
         >
           {dpi} DPI · {DPI_LEVEL_LABEL[dpiLevel(dpi, area.dpi)]}
         </span>
+      )}
+      {view === "flat" && assets.mockup && (
+        <canvas
+          ref={miniRef}
+          className="pointer-events-none absolute left-2 top-2 rounded-md border border-ink/15 bg-white shadow"
+          style={{ width: Math.round(size * 0.3), height: Math.round(size * 0.3) }}
+          aria-label="Xem trước trên sản phẩm"
+        />
       )}
       <span className="pointer-events-none absolute right-2 top-2 rounded bg-ink/80 px-2 py-0.5 text-[11px] font-semibold text-white">
         {area.name} · {sizeLabel ?? `${area.widthMm / 10}×${area.heightMm / 10} cm`}

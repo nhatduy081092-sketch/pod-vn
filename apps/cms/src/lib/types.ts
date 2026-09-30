@@ -72,6 +72,7 @@ export type AdminPrintArea = {
   safeMm?: number;
   sizeSpecs?: Record<string, { widthMm: number; heightMm: number }> | null;
   tips?: string;
+  warp?: string;
   mockupImage: string;
   maskImage: string;
   overlayImage: string;

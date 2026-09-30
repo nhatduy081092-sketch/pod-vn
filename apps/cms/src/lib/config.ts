@@ -4,5 +4,7 @@ export const WEB_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:30
 export function assetUrl(path: string | null | undefined): string {
   if (!path) return "";
   if (/^https?:\/\//.test(path) || path.startsWith("blob:")) return path;
+  // ảnh mockup có sẵn của web (dáng áo, mẫu loại sản phẩm) nằm ở web, không ở API
+  if (path.startsWith("/shapes/")) return `${WEB_URL}${path}`;
   return path.startsWith("/") ? path : `/${path}`; // rewrites -> API
 }

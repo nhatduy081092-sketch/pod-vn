@@ -120,7 +120,10 @@ export async function ensureProductParts(p: { id: string; name: string; colors: 
 
 export function assertAreasAllowed(areas: PrintAreaInput[]) {
   for (const a of areas) {
-    const px = (a.widthMm / 25.4) * a.dpi * ((a.heightMm / 25.4) * a.dpi);
-    if (px > 40_000_000) throw badRequest(`Mặt "${a.name}": khổ ${a.widthMm}×${a.heightMm}mm ở ${a.dpi} DPI quá lớn – giảm DPI`);
+    const dims = [{ widthMm: a.widthMm, heightMm: a.heightMm }, ...Object.values(a.sizeSpecs ?? {})];
+    for (const d of dims) {
+      const px = (d.widthMm / 25.4) * a.dpi * ((d.heightMm / 25.4) * a.dpi);
+      if (px > 64_000_000) throw badRequest(`Mặt "${a.name}": khổ ${d.widthMm}×${d.heightMm}mm ở ${a.dpi} DPI quá lớn (> 64 triệu điểm ảnh) – giảm DPI`);
+    }
   }
 }
