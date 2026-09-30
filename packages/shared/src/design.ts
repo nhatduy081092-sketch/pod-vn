@@ -25,8 +25,10 @@ const FONT_FAMILIES = DESIGN_FONTS.map((f) => f.family) as [DesignFont, ...Desig
 export const DESIGN_LIMITS = {
   layersPerArea: 40,
   textLength: 300,
-  /** Giới hạn pixel 1 file in (iOS Safari giới hạn canvas ~16,7 triệu px) */
+  /** Giới hạn pixel 1 file in xuất trên máy khách (iOS Safari giới hạn canvas ~16,7 triệu px) */
   maxPrintPixels: 16_000_000,
+  /** File in cho xưởng (CMS, máy tính): cho phép lớn hơn – cờ/backdrop khổ lớn */
+  maxProductionPixels: 64_000_000,
   /** Mức DPI dưới ngưỡng này cảnh báo đỏ (in sẽ vỡ) */
   hardMinDpi: 72,
 } as const;
@@ -50,14 +52,56 @@ const baseLayer = {
   locked: z.boolean().optional(),
 };
 
+/** Kiểu lặp họa tiết */
+export const TILE_MODES = ["grid", "halfDrop", "brick", "mirror", "random"] as const;
+export type TileMode = (typeof TILE_MODES)[number];
+export const TILE_MODE_LABEL: Record<TileMode, string> = {
+  grid: "Lưới thẳng",
+  halfDrop: "So le dọc",
+  brick: "So le ngang",
+  mirror: "Soi gương",
+  random: "Ngẫu nhiên",
+};
+
+/** Mặt nạ hình cho ảnh (cắt ảnh theo hình) */
+export const IMAGE_MASKS = ["circle", "rounded", "heart", "star", "hexagon", "triangle", "diamond"] as const;
+export type ImageMask = (typeof IMAGE_MASKS)[number];
+export const IMAGE_MASK_LABEL: Record<ImageMask, string> = {
+  circle: "Tròn",
+  rounded: "Bo góc",
+  heart: "Trái tim",
+  star: "Ngôi sao",
+  hexagon: "Lục giác",
+  triangle: "Tam giác",
+  diamond: "Thoi",
+};
+
+const unit = z.number().finite().min(0).max(1);
+export const cropSchema = z
+  .object({ x: unit, y: unit, w: z.number().finite().min(0.01).max(1), h: z.number().finite().min(0.01).max(1) })
+  .refine((c) => c.x + c.w <= 1.0001 && c.y + c.h <= 1.0001, { message: "Vùng cắt ảnh không hợp lệ" });
+export type ImageCrop = z.infer<typeof cropSchema>;
+
 export const imageLayerSchema = z.object({
   ...baseLayer,
   type: z.literal("image"),
   src: uploadUrl,
   natW: z.number().int().min(1).max(100000),
   natH: z.number().int().min(1).max(100000),
+  /** Ảnh gốc trước khi xoá nền (để khôi phục) */
+  origSrc: uploadUrl.optional(),
+  /** Cắt ảnh: phần giữ lại, tỉ lệ 0–1 so với ảnh gốc; w/h của lớp = kích thước phần đã cắt */
+  crop: cropSchema.optional(),
+  /** Cắt theo hình */
+  mask: z.enum(IMAGE_MASKS).optional(),
   /** Lặp họa tiết phủ kín vùng in; w/h = kích thước 1 ô lặp */
   tile: z.boolean().optional(),
+  tileMode: z.enum(TILE_MODES).optional(),
+  /** Khoảng cách giữa các ô lặp (mm) */
+  tileGapX: z.number().finite().min(0).max(1000).optional(),
+  tileGapY: z.number().finite().min(0).max(1000).optional(),
+  /** Hạt giống cho kiểu ngẫu nhiên (đổi = xáo lại) */
+  tileSeed: z.number().int().min(0).max(1_000_000).optional(),
 });
 
 export const textLayerSchema = z.object({
@@ -101,6 +145,85 @@ export const designJsonSchema = z.object({
 });
 export type DesignJson = z.infer<typeof designJsonSchema>;
 
+/* ---------- Kích thước vùng in theo size, viền tràn, vùng an toàn ---------- */
+
+const areaMm = z.number().int().min(5).max(5000);
+/** Kích thước vùng in riêng cho từng size (khoá = tên size, VD "60x90 cm") */
+export const sizeSpecsSchema = z
+  .record(z.string().trim().min(1).max(40), z.object({ widthMm: areaMm, heightMm: areaMm }))
+  .refine((r) => Object.keys(r).length <= 40, { message: "Tối đa 40 size" });
+export type SizeSpecs = z.infer<typeof sizeSpecsSchema>;
+
+/** Thông số in của 1 mặt (đủ để dựng lại file in đúng size) */
+export type AreaSpec = {
+  widthMm: number;
+  heightMm: number;
+  dpi: number;
+  /** Viền tràn mỗi cạnh (mm) – phần này bị xén bỏ sau khi in */
+  bleedMm?: number;
+  /** Vùng an toàn (mm, tính từ đường xén vào trong) – chữ/logo quan trọng nên nằm trong */
+  safeMm?: number;
+  sizeSpecs?: SizeSpecs | null;
+};
+
+/** Kích thước vùng in áp dụng cho 1 size (không có cấu hình riêng -> kích thước gốc) */
+export function areaForSize<T extends AreaSpec>(a: T, size?: string | null): T {
+  const s = size ? a.sizeSpecs?.[size] : undefined;
+  return s ? { ...a, widthMm: s.widthMm, heightMm: s.heightMm } : a;
+}
+
+/** Sản phẩm có vùng in đổi theo size không */
+export const hasSizeSpecs = (a: Pick<AreaSpec, "sizeSpecs">) => !!a.sizeSpecs && Object.keys(a.sizeSpecs).length > 0;
+
+/** Khung (mm) của đường xén và vùng an toàn */
+export function areaGuides(a: Pick<AreaSpec, "widthMm" | "heightMm" | "bleedMm" | "safeMm">) {
+  const b = Math.max(0, a.bleedMm ?? 0);
+  const s = Math.max(0, a.safeMm ?? 0);
+  return {
+    trim: { left: b, top: b, right: a.widthMm - b, bottom: a.heightMm - b },
+    safe: { left: b + s, top: b + s, right: a.widthMm - b - s, bottom: a.heightMm - b - s },
+    bleed: b,
+    safeInset: s,
+  };
+}
+
+/** Hệ số co giãn nội dung (theo đường xén) khi đổi từ vùng in gốc sang vùng in của 1 size */
+export function sizeScale(from: Pick<AreaSpec, "widthMm" | "heightMm" | "bleedMm">, to: Pick<AreaSpec, "widthMm" | "heightMm" | "bleedMm">): number {
+  const bf = Math.max(0, from.bleedMm ?? 0);
+  const bt = Math.max(0, to.bleedMm ?? 0);
+  return Math.min((to.widthMm - 2 * bt) / Math.max(1, from.widthMm - 2 * bf), (to.heightMm - 2 * bt) / Math.max(1, from.heightMm - 2 * bf));
+}
+
+/** Lớp có phủ kín toàn bộ vùng in không (ảnh nền tràn viền) */
+function coversArea(l: DesignLayer, w: number, h: number) {
+  if (l.type === "image" && l.tile) return true;
+  const b = layerBounds(l);
+  return b.left <= 0.5 && b.top <= 0.5 && b.right >= w - 0.5 && b.bottom >= h - 0.5;
+}
+
+/**
+ * Co giãn thiết kế từ vùng in gốc sang kích thước của 1 size:
+ * - nội dung co đều theo đường xén, giữ tâm; viền tràn giữ nguyên số mm
+ * - lớp phủ kín vùng in (ảnh nền, họa tiết) vẫn phủ kín vùng mới
+ */
+export function scaleAreaDesign(ad: AreaDesign, from: Pick<AreaSpec, "widthMm" | "heightMm" | "bleedMm">, to: Pick<AreaSpec, "widthMm" | "heightMm" | "bleedMm">): AreaDesign {
+  if (from.widthMm === to.widthMm && from.heightMm === to.heightMm) return ad;
+  const s = sizeScale(from, to);
+  const cover = Math.max(to.widthMm / from.widthMm, to.heightMm / from.heightMm);
+  const cxF = from.widthMm / 2;
+  const cyF = from.heightMm / 2;
+  const cxT = to.widthMm / 2;
+  const cyT = to.heightMm / 2;
+  const layers = ad.layers.map((l) => {
+    const f = coversArea(l, from.widthMm, from.heightMm) && !(l.type === "image" && l.tile) ? cover : s;
+    const base = { ...l, x: cxT + (l.x - cxF) * f, y: cyT + (l.y - cyF) * f, w: l.w * f, h: l.h * f };
+    if (l.type === "text") return { ...base, fontSize: Math.max(1, l.fontSize * f), stroke: l.stroke ? { ...l.stroke, width: l.stroke.width * f } : undefined } as DesignLayer;
+    if (l.type === "image" && l.tile) return { ...base, tileGapX: l.tileGapX ? l.tileGapX * f : l.tileGapX, tileGapY: l.tileGapY ? l.tileGapY * f : l.tileGapY } as DesignLayer;
+    return base as DesignLayer;
+  });
+  return { ...ad, layers };
+}
+
 /** File đã xuất cho từng mặt: file in (PNG trong suốt, đúng kích thước thật) + ảnh xem trước trên sản phẩm */
 export const designFileSchema = z.object({
   area: z.string().regex(/^[a-z0-9-]{1,30}$/),
@@ -110,6 +233,13 @@ export const designFileSchema = z.object({
   widthPx: z.number().int().min(1).max(40000),
   heightPx: z.number().int().min(1).max(40000),
   dpi: z.number().int().min(10).max(1200),
+  /** Thông số mặt in lúc đặt (xưởng dựng lại file đúng kích thước thật, đúng size) */
+  widthMm: z.number().min(1).max(5000).optional(),
+  heightMm: z.number().min(1).max(5000).optional(),
+  targetDpi: z.number().int().min(10).max(1200).optional(),
+  bleedMm: z.number().min(0).max(100).optional(),
+  safeMm: z.number().min(0).max(200).optional(),
+  sizeSpecs: sizeSpecsSchema.optional(),
 });
 export type DesignFile = z.infer<typeof designFileSchema>;
 
@@ -133,20 +263,23 @@ export function emptyDesign(productId: string, areaKeys: string[]): DesignJson {
   return { v: DESIGN_VERSION, productId, areas: Object.fromEntries(areaKeys.map((k) => [k, { bg: null, layers: [] }])) };
 }
 
-/** DPI thực tế của ảnh trong lớp: pixel gốc / kích thước in (inch) */
-export function effectiveDpi(layer: Pick<ImageLayer, "natW" | "natH" | "w" | "h">): number {
-  const dx = layer.natW / (layer.w / 25.4);
-  const dy = layer.natH / (layer.h / 25.4);
+/** DPI thực tế của ảnh trong lớp: pixel gốc (phần đã cắt) / kích thước in (inch) */
+export function effectiveDpi(layer: Pick<ImageLayer, "natW" | "natH" | "w" | "h"> & { crop?: ImageCrop }): number {
+  const cw = layer.natW * (layer.crop?.w ?? 1);
+  const ch = layer.natH * (layer.crop?.h ?? 1);
+  const dx = cw / (layer.w / 25.4);
+  const dy = ch / (layer.h / 25.4);
   return Math.round(Math.min(dx, dy));
 }
 
-/** Kích thước file in (px) cho vùng in, tự hạ DPI nếu vượt giới hạn pixel */
-export function printPixelSize(area: { widthMm: number; heightMm: number; dpi: number }) {
+/** Kích thước file in (px) cho vùng in, tự hạ DPI nếu vượt giới hạn pixel (và cạnh tối đa 30.000 px) */
+export function printPixelSize(area: { widthMm: number; heightMm: number; dpi: number }, maxPixels: number = DESIGN_LIMITS.maxPrintPixels) {
   let dpi = area.dpi;
-  const px = (d: number) => ({ w: Math.round((area.widthMm / 25.4) * d), h: Math.round((area.heightMm / 25.4) * d) });
+  const px = (d: number) => ({ w: Math.max(1, Math.round((area.widthMm / 25.4) * d)), h: Math.max(1, Math.round((area.heightMm / 25.4) * d)) });
   let s = px(dpi);
-  if (s.w * s.h > DESIGN_LIMITS.maxPrintPixels) {
-    dpi = Math.floor(dpi * Math.sqrt(DESIGN_LIMITS.maxPrintPixels / (s.w * s.h)));
+  const side = 30000;
+  if (s.w * s.h > maxPixels || Math.max(s.w, s.h) > side) {
+    dpi = Math.max(10, Math.floor(dpi * Math.min(Math.sqrt(maxPixels / (s.w * s.h)), side / Math.max(s.w, s.h))));
     s = px(dpi);
   }
   return { ...s, dpi };
@@ -212,33 +345,61 @@ export function layerBounds(l: Pick<DesignLayer, "x" | "y" | "w" | "h" | "rotati
 }
 
 /**
- * Báo cáo chất lượng: ảnh thiếu DPI, lớp nằm ngoài vùng in, lớp bị cắt.
+ * Báo cáo chất lượng: ảnh thiếu DPI, lớp nằm ngoài vùng in, lớp bị cắt,
+ * nội dung vượt vùng an toàn, ảnh chạm đường xén nhưng chưa phủ tới viền tràn.
  * Dùng chung: editor (trước khi hoàn tất), API (khi đặt đơn), CMS (trước khi in).
  */
-export function designReport(json: Pick<DesignJson, "areas">, areas: { key: string; name: string; widthMm: number; heightMm: number; dpi: number }[]): DesignIssue[] {
+export function designReport(
+  json: Pick<DesignJson, "areas">,
+  areas: ({ key: string; name: string } & Pick<AreaSpec, "widthMm" | "heightMm" | "dpi" | "bleedMm" | "safeMm">)[],
+): DesignIssue[] {
   const out: DesignIssue[] = [];
   for (const a of areas) {
     const ad = json.areas[a.key];
     if (!ad) continue;
+    const g = areaGuides(a);
+    const push = (level: DesignIssue["level"], message: string) => out.push({ area: a.key, areaName: a.name, level, message });
+    let partialBleed = false;
     for (const l of ad.layers) {
       const label = l.type === "text" ? `chữ "${l.text.slice(0, 20)}"` : "ảnh";
-      if (l.type === "image" && l.tile) continue;
-      const b = layerBounds(l);
-      if (b.right <= 0 || b.bottom <= 0 || b.left >= a.widthMm || b.top >= a.heightMm) {
-        out.push({ area: a.key, areaName: a.name, level: "warn", message: `Lớp ${label} nằm ngoài vùng in – sẽ không được in` });
-        continue;
-      }
-      const cut = b.left < -1 || b.top < -1 || b.right > a.widthMm + 1 || b.bottom > a.heightMm + 1;
       if (l.type === "image") {
         const d = effectiveDpi(l);
         const lv = dpiLevel(d, a.dpi);
-        if (lv === "low") out.push({ area: a.key, areaName: a.name, level: "error", message: `Ảnh chỉ đạt ${d} DPI (khuyến nghị ${a.dpi}) – in dễ vỡ` });
-        else if (lv === "ok") out.push({ area: a.key, areaName: a.name, level: "warn", message: `Ảnh đạt ${d} DPI – in được nhưng chưa nét tối đa` });
-        // ảnh lớn hơn vùng in (phủ kín) là chủ ý, chỉ cảnh báo chữ bị cắt
-      } else if (cut) {
-        out.push({ area: a.key, areaName: a.name, level: "warn", message: `Lớp ${label} tràn ra ngoài vùng in – phần tràn sẽ bị cắt` });
+        if (lv === "low") push("error", `Ảnh chỉ đạt ${d} DPI (khuyến nghị ${a.dpi}) – in dễ vỡ`);
+        else if (lv === "ok") push("warn", `Ảnh đạt ${d} DPI – in được nhưng chưa nét tối đa`);
+        if (l.tile) continue;
+      }
+      const b = layerBounds(l);
+      if (b.right <= 0 || b.bottom <= 0 || b.left >= a.widthMm || b.top >= a.heightMm) {
+        push("warn", `Lớp ${label} nằm ngoài vùng in – sẽ không được in`);
+        continue;
+      }
+      if (coversArea(l, a.widthMm, a.heightMm)) continue; // ảnh nền phủ kín: chủ ý
+      const cut = b.left < -1 || b.top < -1 || b.right > a.widthMm + 1 || b.bottom > a.heightMm + 1;
+      if (l.type === "text" && cut) {
+        push("warn", `Lớp ${label} tràn ra ngoài vùng in – phần tràn sẽ bị cắt`);
+        continue;
+      }
+      // vùng an toàn: chỉ khi sản phẩm có viền tràn/vùng an toàn
+      if (g.bleed + g.safeInset > 0) {
+        const s = g.safe;
+        const outSafe = b.left < s.left - 0.5 || b.top < s.top - 0.5 || b.right > s.right + 0.5 || b.bottom > s.bottom + 0.5;
+        if (outSafe && l.type === "text") push("warn", `Lớp ${label} vượt vùng an toàn (đường xanh) – có thể bị xén hoặc may mất`);
+        // ảnh vượt đường xén nhưng không kéo tới mép ngoài -> lộ viền trắng sau khi xén
+        if (l.type === "image" && g.bleed > 0) {
+          const t = g.trim;
+          const edge = (over: boolean, reach: boolean) => over && !reach;
+          if (
+            edge(b.left < t.left + 0.5, b.left <= 0.5) ||
+            edge(b.top < t.top + 0.5, b.top <= 0.5) ||
+            edge(b.right > t.right - 0.5, b.right >= a.widthMm - 0.5) ||
+            edge(b.bottom > t.bottom - 0.5, b.bottom >= a.heightMm - 0.5)
+          )
+            partialBleed = true;
+        }
       }
     }
+    if (partialBleed) push("warn", `Ảnh chạm đường xén nhưng chưa kéo tới mép ngoài (viền tràn ${g.bleed} mm) – sau khi xén có thể lộ viền trắng`);
   }
   return out;
 }

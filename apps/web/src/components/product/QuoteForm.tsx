@@ -35,7 +35,7 @@ export function QuoteForm({ productId, productName, slug, sizes, areas, variants
     setError("");
     if (!file) return;
     if (!ACCEPT.includes(file.type)) return setError("Chỉ nhận ảnh PNG, JPG hoặc WEBP");
-    if (file.size > UPLOAD_MAX_BYTES) return setError("Ảnh tối đa 15MB");
+    if (file.size > UPLOAD_MAX_BYTES) return setError("Ảnh tối đa 50MB");
     setUploading(true);
     try {
       setDesignUrl((await uploadDesign(file)).url);
@@ -117,7 +117,7 @@ export function QuoteForm({ productId, productName, slug, sizes, areas, variants
             ) : (
               <>
                 <IconUpload className="h-6 w-6 shrink-0 text-navy" />
-                <span>{uploading ? "Đang tải lên..." : "Hoặc chỉ gửi file logo (PNG, JPG, WEBP ≤ 15MB)"}</span>
+                <span>{uploading ? "Đang tải lên..." : "Hoặc chỉ gửi file logo (PNG, JPG, WEBP ≤ 50MB)"}</span>
               </>
             )}
           </button>

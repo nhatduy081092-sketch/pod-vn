@@ -27,6 +27,10 @@ export type PrintArea = {
   widthMm: number;
   heightMm: number;
   dpi: number;
+  bleedMm?: number;
+  safeMm?: number;
+  sizeSpecs?: Record<string, { widthMm: number; heightMm: number }> | null;
+  tips?: string;
   mockupImage: string;
   maskImage: string;
   overlayImage: string;

@@ -12,7 +12,7 @@ import { currentCustomer } from "../lib/customer-auth";
 
 export const checkoutRoutes = new Hono();
 
-/** Upload file của khách: ảnh thiết kế (≤15MB) hoặc file in xuất từ editor (kind=print, ≤30MB) */
+/** Upload file của khách: ảnh thiết kế (≤50MB) hoặc file in xuất từ editor (kind=print, ≤60MB) */
 checkoutRoutes.post("/uploads", rateLimit({ key: "upload", limit: 80, windowMs: 10 * 60_000 }), async (c) => {
   const body = await c.req.parseBody();
   const kind = body["kind"] === "print" ? "print" : "design";

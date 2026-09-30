@@ -107,7 +107,7 @@ Bạn có thể yêu cầu xem, sửa hoặc xoá thông tin cá nhân bằng c�
     sortOrder: 4,
     content: `## Định dạng
 - PNG, JPG hoặc WEBP; PNG nền trong suốt cho logo, chữ
-- Hệ màu RGB, dung lượng tối đa 15MB
+- Hệ màu RGB, dung lượng tối đa 50MB
 
 ## Độ phân giải
 - In toàn thân: ảnh tối thiểu **3000px** cạnh dài, khuyến nghị 4500px trở lên

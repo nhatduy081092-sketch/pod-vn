@@ -1,4 +1,4 @@
-import { DESIGN_FONTS, type AreaDesign, type DesignLayer, type TextLayer } from "./design";
+import { DESIGN_FONTS, type AreaDesign, type DesignLayer, type ImageLayer, type ImageMask, type TextLayer } from "./design";
 
 /**
  * Bộ vẽ DUY NHẤT cho: khung soạn thảo (web), ảnh xem trước, file in (web + CMS dựng lại cho xưởng).
@@ -241,6 +241,150 @@ function drawText(ctx: Ctx, l: TextLayer, k: number) {
   paint(false);
 }
 
+/* ---------- ảnh: cắt, mặt nạ hình, lặp họa tiết ---------- */
+
+/** Đường viền mặt nạ hình, tâm (0,0), khung w×h (px) */
+export function maskPath(ctx: Ctx | Path2D, mask: ImageMask, w: number, h: number) {
+  const rx = w / 2;
+  const ry = h / 2;
+  const poly = (pts: [number, number][]) => {
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * rx, y * ry) : ctx.moveTo(x * rx, y * ry)));
+    ctx.closePath();
+  };
+  switch (mask) {
+    case "circle":
+      ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+      break;
+    case "rounded": {
+      const r = Math.min(w, h) * 0.18;
+      ctx.moveTo(-rx + r, -ry);
+      ctx.arcTo(rx, -ry, rx, ry, r);
+      ctx.arcTo(rx, ry, -rx, ry, r);
+      ctx.arcTo(-rx, ry, -rx, -ry, r);
+      ctx.arcTo(-rx, -ry, rx, -ry, r);
+      ctx.closePath();
+      break;
+    }
+    case "heart":
+      ctx.moveTo(0, ry * 0.95);
+      ctx.bezierCurveTo(-rx * 1.1, ry * 0.2, -rx * 1.05, -ry * 0.95, -rx * 0.5, -ry * 0.95);
+      ctx.bezierCurveTo(-rx * 0.15, -ry * 0.95, 0, -ry * 0.62, 0, -ry * 0.5);
+      ctx.bezierCurveTo(0, -ry * 0.62, rx * 0.15, -ry * 0.95, rx * 0.5, -ry * 0.95);
+      ctx.bezierCurveTo(rx * 1.05, -ry * 0.95, rx * 1.1, ry * 0.2, 0, ry * 0.95);
+      ctx.closePath();
+      break;
+    case "star":
+      poly(
+        Array.from({ length: 10 }, (_, i) => {
+          const a = -Math.PI / 2 + (i * Math.PI) / 5;
+          const r = i % 2 ? 0.45 : 1;
+          return [Math.cos(a) * r, Math.sin(a) * r + 0.08] as [number, number];
+        }),
+      );
+      break;
+    case "hexagon":
+      poly(Array.from({ length: 6 }, (_, i) => [Math.cos((i * Math.PI) / 3), Math.sin((i * Math.PI) / 3)] as [number, number]));
+      break;
+    case "triangle":
+      poly([
+        [0, -1],
+        [1, 1],
+        [-1, 1],
+      ]);
+      break;
+    case "diamond":
+      poly([
+        [0, -1],
+        [1, 0],
+        [0, 1],
+        [-1, 0],
+      ]);
+      break;
+  }
+}
+
+/** Vẽ 1 ảnh (đã cắt + mặt nạ) vào khung w×h px, tâm tại gốc toạ độ hiện tại */
+function drawCell(ctx: Ctx, img: Img, l: Pick<ImageLayer, "crop" | "mask">, w: number, h: number, flipX = false, flipY = false) {
+  const s = imgSize(img);
+  const c = l.crop;
+  ctx.save();
+  if (flipX || flipY) ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+  if (l.mask) {
+    ctx.beginPath();
+    maskPath(ctx, l.mask, w, h);
+    ctx.clip();
+  }
+  ctx.imageSmoothingQuality = "high";
+  if (c) ctx.drawImage(img, c.x * s.w, c.y * s.h, c.w * s.w, c.h * s.h, -w / 2, -h / 2, w, h);
+  else ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+/** PRNG có hạt giống (kiểu lặp ngẫu nhiên phải giống hệt nhau giữa web và file in) */
+function rng(seed: number) {
+  let a = seed >>> 0 || 1;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Lặp họa tiết: dựng 1 "ô mẫu" (unit) theo kiểu lặp rồi phủ kín bằng pattern.
+ * Ô mẫu không vượt độ phân giải ảnh gốc và tối đa 4096px mỗi cạnh (đủ nét, không tốn bộ nhớ).
+ */
+function drawTiled(ctx: Ctx, img: Img, l: ImageLayer, k: number, areaWmm: number, areaHmm: number) {
+  const mode = l.tileMode ?? "grid";
+  const cw = l.w + (l.tileGapX ?? 0);
+  const ch = l.h + (l.tileGapY ?? 0);
+  const [nx, ny] = mode === "halfDrop" ? [2, 1] : mode === "brick" ? [1, 2] : mode === "mirror" ? [2, 2] : mode === "random" ? [4, 4] : [1, 1];
+  const unitW = cw * nx * k;
+  const unitH = ch * ny * k;
+  const src = imgSize(img);
+  const srcPxPerMm = Math.max((src.w * (l.crop?.w ?? 1)) / l.w, (src.h * (l.crop?.h ?? 1)) / l.h);
+  const r = Math.min(1, srcPxPerMm / k, 4096 / unitW, 4096 / unitH);
+  const unit = createCanvas(unitW * r, unitH * r);
+  const u = unit.getContext("2d");
+  if (!u) return;
+  const sx = unit.width / unitW;
+  const sy = unit.height / unitH;
+  u.scale(sx * k, sy * k); // từ đây đơn vị = mm
+  const rand = rng(l.tileSeed ?? 1);
+  const cell = (cx: number, cy: number, fx = false, fy = false) => {
+    u.save();
+    u.translate(cx, cy);
+    drawCell(u, img, l, l.w, l.h, fx, fy);
+    u.restore();
+  };
+  for (let j = 0; j < ny; j++)
+    for (let i = 0; i < nx; i++) {
+      const cx = (i + 0.5) * cw;
+      const cy = (j + 0.5) * ch;
+      if (mode === "halfDrop" && i === 1) {
+        cell(cx, cy + ch / 2);
+        cell(cx, cy - ch / 2);
+      } else if (mode === "brick" && j === 1) {
+        cell(cx + cw / 2, cy);
+        cell(cx - cw / 2, cy);
+      } else if (mode === "mirror") cell(cx, cy, i === 1, j === 1);
+      else if (mode === "random") {
+        const v = Math.floor(rand() * 4);
+        cell(cx, cy, v === 1 || v === 3, v === 2 || v === 3);
+      } else cell(cx, cy);
+    }
+  const pat = ctx.createPattern(unit, "repeat");
+  if (pat) {
+    pat.setTransform(new DOMMatrix().translate((-cw / 2) * k, (-ch / 2) * k).scale(1 / sx, 1 / sy));
+    ctx.fillStyle = pat;
+    const d = Math.hypot(areaWmm, areaHmm) * k * 2 + Math.hypot(l.x, l.y) * k;
+    ctx.fillRect(-d, -d, d * 2, d * 2);
+  }
+  unit.width = unit.height = 0;
+}
+
 /* ---------- lớp & mặt in ---------- */
 
 function drawLayer(ctx: Ctx, l: DesignLayer, k: number, images: ImageCache, areaWmm: number, areaHmm: number) {
@@ -252,20 +396,8 @@ function drawLayer(ctx: Ctx, l: DesignLayer, k: number, images: ImageCache, area
   if (l.type === "image") {
     const img = images.get(l.src);
     if (img) {
-      if (l.tile) {
-        // Lặp họa tiết: mỗi ô w×h mm, phủ kín vùng in (tính theo đường chéo để xoay vẫn kín)
-        const s = imgSize(img);
-        const pat = ctx.createPattern(img, "repeat");
-        if (pat) {
-          pat.setTransform(new DOMMatrix().translate((-l.w / 2) * k, (-l.h / 2) * k).scale((l.w * k) / s.w, (l.h * k) / s.h));
-          ctx.fillStyle = pat;
-          const d = Math.hypot(areaWmm, areaHmm) * k * 2;
-          ctx.fillRect(-d, -d, d * 2, d * 2);
-        }
-      } else {
-        ctx.imageSmoothingQuality = "high";
-        ctx.drawImage(img, (-l.w / 2) * k, (-l.h / 2) * k, l.w * k, l.h * k);
-      }
+      if (l.tile) drawTiled(ctx, img, l, k, areaWmm, areaHmm);
+      else drawCell(ctx, img, l, l.w * k, l.h * k);
     }
   } else if (l.field) {
     // ô tên/số: tên dài hơn vùng in thì tự thu nhỏ cỡ chữ cho vừa (giữ nguyên tâm)

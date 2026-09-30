@@ -65,9 +65,12 @@ export const PRINT_MODE_LABEL: Record<PrintMode, string> = {
 export const DEFAULT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"];
 export const KIDS_SIZES = ["2-3T", "4-5T", "6-7T", "8-9T", "10-11T", "12-13T"];
 
-export const UPLOAD_MAX_BYTES = 15 * 1024 * 1024;
+/** Ảnh khách tải lên thiết kế (Printdoors cho 50MB) */
+export const UPLOAD_MAX_BYTES = 50 * 1024 * 1024;
+/** Cạnh ảnh tối đa (px) – lớn hơn trình duyệt điện thoại không giải mã nổi */
+export const UPLOAD_MAX_SIDE_PX = 20000;
 /** File in xuất từ editor (PNG trong suốt, khổ lớn) */
-export const PRINT_FILE_MAX_BYTES = 30 * 1024 * 1024;
+export const PRINT_FILE_MAX_BYTES = 60 * 1024 * 1024;
 export const UPLOAD_MIME_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
 
 /** Dáng sản phẩm hỗ trợ xem trước thiết kế (file mask/line trong apps/web/public/shapes) */

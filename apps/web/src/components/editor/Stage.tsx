@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from "react";
-import { DPI_LEVEL_LABEL, dpiLevel, effectiveDpi, layerBounds, type AreaDesign, type DesignLayer } from "@pod/shared";
+import { areaGuides, DPI_LEVEL_LABEL, dpiLevel, effectiveDpi, layerBounds, type AreaDesign, type DesignLayer } from "@pod/shared";
 import type { PrintArea } from "@/lib/types";
 import { drawMockup, measureText, type ImageCache, type MockupAssets } from "./render";
 
@@ -21,6 +21,10 @@ type Props = {
   version: number;
   selectedId: string | null;
   garmentColor?: string | null;
+  /** Size đang xem: hệ số phóng từ vùng in gốc -> DPI thực tế = DPI / dpiScale */
+  dpiScale?: number;
+  /** Nhãn kích thước in đang hiển thị (theo size) */
+  sizeLabel?: string;
   onSelect: (id: string | null) => void;
   /** commit=false khi đang kéo (không ghi lịch sử), true khi thả tay */
   onChangeLayer: (id: string, patch: Partial<DesignLayer>, commit: boolean) => void;
@@ -50,7 +54,7 @@ function snapAxis(center: number, halfExtent: number, size: number, tol: number)
   return best ? { v: best.c, guide: best.g } : { v: center, guide: null };
 }
 
-export function Stage({ area, design, assets, images, version, selectedId, garmentColor, onSelect, onChangeLayer, onCommit }: Props) {
+export function Stage({ area, design, assets, images, version, selectedId, garmentColor, dpiScale = 1, sizeLabel, onSelect, onChangeLayer, onCommit }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState(0);
@@ -85,6 +89,20 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
     ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(29,29,31,.55)";
     ctx.strokeRect(r.printRect.x + 0.5, r.printRect.y + 0.5, r.printRect.w - 1, r.printRect.h - 1);
+    // đường xén (đỏ) + vùng an toàn (xanh) cho sản phẩm có viền tràn
+    const g = areaGuides(area);
+    const pk = r.printRect.k;
+    const box = (b: { left: number; top: number; right: number; bottom: number }) => [r.printRect.x + b.left * pk, r.printRect.y + b.top * pk, (b.right - b.left) * pk, (b.bottom - b.top) * pk] as const;
+    if (g.bleed > 0) {
+      ctx.strokeStyle = "rgba(225,29,72,.9)";
+      ctx.setLineDash([]);
+      ctx.strokeRect(...box(g.trim));
+    }
+    if (g.bleed + g.safeInset > 0 && g.safeInset > 0) {
+      ctx.strokeStyle = "rgba(22,163,74,.9)";
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(...box(g.safe));
+    }
     ctx.restore();
     setPr(r.printRect);
   }, [size, area, design, assets, images, version, garmentColor]);
@@ -214,7 +232,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
   // khung chọn (px màn hình)
   let box: { cx: number; cy: number; w: number; h: number; rot: number } | null = null;
   if (selected && pr) box = { cx: pr.x + selected.x * pr.k, cy: pr.y + selected.y * pr.k, w: selected.w * pr.k, h: selected.h * pr.k, rot: selected.rotation ?? 0 };
-  const dpi = selected?.type === "image" && !selected.tile ? effectiveDpi(selected) : null;
+  const dpi = selected?.type === "image" ? Math.round(effectiveDpi(selected) / dpiScale) : null;
   const locked = !!selected?.locked;
 
   return (
@@ -277,8 +295,22 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
         </span>
       )}
       <span className="pointer-events-none absolute right-2 top-2 rounded bg-ink/80 px-2 py-0.5 text-[11px] font-semibold text-white">
-        {area.name} · {area.widthMm / 10}×{area.heightMm / 10} cm
+        {area.name} · {sizeLabel ?? `${area.widthMm / 10}×${area.heightMm / 10} cm`}
       </span>
+      {(area.bleedMm ?? 0) + (area.safeMm ?? 0) > 0 && (
+        <span className="pointer-events-none absolute bottom-2 right-2 flex gap-2 rounded bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-ink/80">
+          {(area.bleedMm ?? 0) > 0 && (
+            <span className="flex items-center gap-1">
+              <i className="inline-block h-0.5 w-3 bg-[#e11d48]" /> đường xén
+            </span>
+          )}
+          {(area.safeMm ?? 0) > 0 && (
+            <span className="flex items-center gap-1">
+              <i className="inline-block h-0.5 w-3 border-t-2 border-dashed border-[#16a34a]" /> vùng an toàn
+            </span>
+          )}
+        </span>
+      )}
     </div>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   areaExtraPrice,
+  areaForSize,
   DESIGN_FIELDS,
   DESIGN_FONTS,
   DESIGN_LIMITS,
@@ -12,7 +13,10 @@ import {
   emptyDesign,
   formatVND,
   layerBounds,
+  scaleAreaDesign,
+  sizeScale,
   UPLOAD_MAX_BYTES,
+  UPLOAD_MAX_SIDE_PX,
   usedAreas,
   type AreaDesign,
   type DesignAssetView,
@@ -27,12 +31,15 @@ import {
 import type { PrintArea, ProductDetail } from "@/lib/types";
 import { IconClose, IconCopy, IconEye, IconGrid, IconLayers, IconLock, IconPalette, IconRedo, IconSave, IconText, IconTrash, IconUndo, IconUpload } from "../ui/icons";
 import { Stage } from "./Stage";
-import { imgSize, loadImage, measureText, type ImageCache, type MockupAssets } from "./render";
+import { canvasSrc, imgSize, loadImage, measureText, type ImageCache, type MockupAssets } from "./render";
 import { ensureFonts, GOOGLE_FONTS_HREF } from "./fonts";
 import { exportDesign, loadAreaAssets, renderPreview, uploadBlob } from "./export";
 import { attachDesign, clearDraft, loadDraft, saveDraft, stashSellerDesign } from "./storage";
 import { LibraryPanel, templateLayers } from "./LibraryPanel";
 import { OverviewModal } from "./OverviewModal";
+import { ImagePanel } from "./ImagePanel";
+import { ColorPicker } from "./ui";
+import { removeBackground } from "./bgRemoval";
 
 type Props = {
   product: ProductDetail;
@@ -49,7 +56,6 @@ type Props = {
 type Tool = "upload" | "library" | "text" | "bg" | "layers";
 type Upload = { src: string; natW: number; natH: number; name: string };
 
-const SWATCHES = ["#1d1d1f", "#ffffff", "#e11d48", "#f97316", "#facc15", "#16a34a", "#0ea5e9", "#1c4d99", "#7c3aed", "#ec4899", "#a16207", "#6b7280"];
 const uid = () => `l${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 const FIELD_SAMPLE: Record<DesignField, string> = { name: "TÊN", number: "10" };
 
@@ -60,6 +66,23 @@ function normalize(design: DesignJson | null | undefined, product: ProductDetail
   for (const k of Object.keys(base.areas)) if (design.areas[k]) base.areas[k] = design.areas[k]!;
   return base;
 }
+
+/** Các size có vùng in riêng (theo thứ tự phân loại), size lớn nhất trước để kiểm tra độ nét khắt khe nhất */
+function sizeOptions(product: ProductDetail): { list: string[]; largest: string | null } {
+  const keys = new Set<string>();
+  for (const a of product.printAreas) for (const k of Object.keys(a.sizeSpecs ?? {})) keys.add(k);
+  if (!keys.size) return { list: [], largest: null };
+  const order = [...new Set(product.variants.map((v) => v.size))];
+  const list = [...order.filter((x) => keys.has(x)), ...[...keys].filter((x) => !order.includes(x))];
+  const a0 = product.printAreas.find((a) => a.sizeSpecs && Object.keys(a.sizeSpecs).length) ?? product.printAreas[0]!;
+  const largest = [...list].sort((x, y) => {
+    const s = (k: string) => areaForSize(a0, k);
+    return s(y).widthMm * s(y).heightMm - s(x).widthMm * s(x).heightMm;
+  })[0]!;
+  return { list, largest };
+}
+
+const AGREE_KEY = "yala-upload-agree";
 
 /** Màu vải có mã hex (từ phân loại) */
 function garmentColors(product: ProductDetail) {
@@ -87,6 +110,11 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const [issues, setIssues] = useState<DesignIssue[] | null>(null);
   const [saveDlg, setSaveDlg] = useState<{ name: string; needLogin?: boolean } | null>(null);
   const [overview, setOverview] = useState(false);
+  const sizes = useMemo(() => sizeOptions(product), [product]);
+  const [size, setSize] = useState<string | null>(sizes.largest);
+  const [agreed, setAgreed] = useState(false);
+  const [askAgree, setAskAgree] = useState(false);
+  const [bgSupported, setBgSupported] = useState(false);
   const images = useRef<ImageCache>(new Map()).current;
   const [assets, setAssets] = useState<Record<string, MockupAssets>>({});
   const [version, setVersion] = useState(0);
@@ -96,6 +124,17 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const ad: AreaDesign = design.areas[area.key] ?? { bg: null, layers: [] };
   const selected = ad.layers.find((l) => l.id === selectedId) ?? null;
   const fields = designFields(design);
+  const sized = areaForSize(area, size);
+  const dpiScale = sizeScale(area, sized);
+
+  useEffect(() => {
+    setBgSupported(typeof WebAssembly !== "undefined");
+    try {
+      setAgreed(localStorage.getItem(AGREE_KEY) === "1");
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   /* ---------- khôi phục bản nháp ---------- */
   useEffect(() => {
@@ -211,14 +250,14 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
   async function onFiles(files: FileList | null) {
     setError("");
-    const list = Array.from(files ?? []).slice(0, 5);
+    const list = Array.from(files ?? []).slice(0, 10);
     for (const f of list) {
       if (!["image/png", "image/jpeg", "image/webp"].includes(f.type)) {
         setError("Chỉ nhận ảnh PNG, JPG hoặc WEBP");
         continue;
       }
       if (f.size > UPLOAD_MAX_BYTES) {
-        setError("Ảnh tối đa 15MB");
+        setError(`Ảnh tối đa ${Math.round(UPLOAD_MAX_BYTES / 1024 / 1024)}MB`);
         continue;
       }
       setBusy(`Đang tải "${f.name}"…`);
@@ -226,6 +265,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         const local = URL.createObjectURL(f);
         const img = await loadImage(local);
         const { w, h } = imgSize(img);
+        if (w > UPLOAD_MAX_SIDE_PX || h > UPLOAD_MAX_SIDE_PX) {
+          setError(`Ảnh "${f.name}" quá lớn (${w}×${h}px) – tối đa ${UPLOAD_MAX_SIDE_PX.toLocaleString("vi-VN")}px mỗi cạnh`);
+          continue;
+        }
         const src = await uploadBlob(f, f.name, "design");
         images.set(src, img);
         const u = { src, natW: w, natH: h, name: f.name };
@@ -334,18 +377,40 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     setNotice(`Đã chép sang "${target.name}".`);
   }
 
-  function fitImage(kind: "fill" | "fit") {
+  /** Xoá nền ảnh ngay trên máy khách, giữ ảnh gốc để khôi phục */
+  async function removeBg() {
     if (!selected || selected.type !== "image") return;
-    const f = kind === "fill" ? Math.max(area.widthMm / selected.natW, area.heightMm / selected.natH) : Math.min(area.widthMm / selected.natW, area.heightMm / selected.natH);
-    patchSelected({ w: selected.natW * f, h: selected.natH * f, x: area.widthMm / 2, y: area.heightMm / 2, rotation: 0, tile: false });
+    const l = selected;
+    setError("");
+    try {
+      setBusy("Đang chuẩn bị xoá nền…");
+      const blob = await removeBackground(canvasSrc(l.src), setBusy);
+      setBusy("Đang lưu ảnh đã xoá nền…");
+      const src = await uploadBlob(blob, "xoa-nen.png", "design");
+      images.set(src, await loadImage(src));
+      patchLayer(l.id, { src, origSrc: l.src } as Partial<DesignLayer>, true);
+      setNotice("✓ Đã xoá nền. Bấm “Ảnh gốc” nếu muốn trả lại.");
+    } catch (e) {
+      setError(`Không xoá được nền: ${(e as Error).message}`);
+    } finally {
+      setBusy("");
+    }
   }
 
-  function toggleTile() {
-    if (!selected || selected.type !== "image") return;
-    if (selected.tile) return patchSelected({ tile: false });
-    const cell = Math.min(area.widthMm, area.heightMm) / 4;
-    const f = cell / Math.max(selected.natW, selected.natH);
-    patchSelected({ tile: true, w: selected.natW * f, h: selected.natH * f, x: area.widthMm / 2, y: area.heightMm / 2 });
+  function restoreOriginal() {
+    if (!selected || selected.type !== "image" || !selected.origSrc) return;
+    patchLayer(selected.id, { src: selected.origSrc, origSrc: undefined } as Partial<DesignLayer>, true);
+  }
+
+  /** Kiểm tra theo size đang chọn (vùng in theo size + nội dung đã co giãn) */
+  function report() {
+    const scaled = Object.fromEntries(areas.map((a) => [a.key, scaleAreaDesign(design.areas[a.key] ?? { bg: null, layers: [] }, a, areaForSize(a, size))]));
+    return designReport({ areas: scaled }, areas.map((a) => areaForSize(a, size)));
+  }
+
+  function openUpload() {
+    if (!agreed) return setAskAgree(true);
+    fileRef.current?.click();
   }
 
   /* ---------- phím tắt ---------- */
@@ -391,7 +456,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     setError("");
     if (!used.length) return setError("Thiết kế đang trống – thêm ảnh hoặc chữ trước khi hoàn tất");
     if (!force) {
-      const rep = designReport(design, areas);
+      const rep = report();
       // chỉ dừng lại khi có lỗi thật sự hoặc lớp bị cắt/nằm ngoài; cảnh báo DPI "tạm được" hiện kèm
       if (rep.some((i) => i.level === "error" || !i.message.includes("DPI"))) return setIssues(rep);
     }
@@ -521,6 +586,24 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             })}
           </div>
         )}
+        {/* Size in (sản phẩm có vùng in đổi theo size: cờ, tranh, poster…) */}
+        {sizes.list.length > 0 && (
+          <div className="no-scrollbar mx-auto flex max-w-[1320px] items-center gap-1 overflow-x-auto px-3 pb-2 md:px-5" role="radiogroup" aria-label="Size in">
+            <span className="mr-1 shrink-0 text-[11px] font-bold text-ink/60">Xem theo size:</span>
+            {sizes.list.map((k) => (
+              <button
+                key={k}
+                type="button"
+                role="radio"
+                aria-checked={size === k}
+                onClick={() => setSize(k)}
+                className={`shrink-0 whitespace-nowrap rounded-full border-2 px-3 py-0.5 text-xs font-bold ${size === k ? "border-ink bg-brand" : "border-ink/15 bg-white"}`}
+              >
+                {k}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {(notice || fields.length > 0) && (
@@ -567,6 +650,17 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         </nav>
 
         <div className="order-1 mx-auto w-full max-w-[640px] lg:order-2">
+          {(area.tips || (area.bleedMm ?? 0) > 0) && (
+            <details className="mb-2 rounded-lg border border-navy/20 bg-navy-light px-3 py-2 text-xs text-navy-dark" open={!!area.tips}>
+              <summary className="cursor-pointer font-bold">💡 Gợi ý thiết kế cho {area.name.toLowerCase()}</summary>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                {area.tips && <li className="whitespace-pre-line">{area.tips}</li>}
+                {(area.bleedMm ?? 0) > 0 && <li>Ảnh nền nên phủ tới mép ngoài: phần ngoài đường đỏ ({area.bleedMm} mm) sẽ bị xén sau khi in.</li>}
+                {(area.safeMm ?? 0) > 0 && <li>Chữ, logo, khuôn mặt nên nằm trong đường xanh (vùng an toàn).</li>}
+                {size && <li>Thiết kế tự co giãn theo size bạn đặt; đang xem size {size}.</li>}
+              </ul>
+            </details>
+          )}
           <Stage
             area={area}
             design={ad}
@@ -575,6 +669,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             version={version}
             selectedId={selectedId}
             garmentColor={color?.hex}
+            dpiScale={dpiScale}
+            sizeLabel={size ? `${sized.widthMm / 10}×${sized.heightMm / 10} cm · size ${size}` : undefined}
             onSelect={(id) => {
               setSelectedId(id);
               const l = ad.layers.find((x) => x.id === id);
@@ -590,13 +686,37 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         <aside className="order-3 space-y-3 rounded-xl border border-ink/10 bg-white p-4 lg:h-fit">
           {tool === "upload" && (
             <section className="space-y-3">
-              <button type="button" onClick={() => fileRef.current?.click()} disabled={!!busy} className="btn w-full border-dashed border-ink/40 bg-cream py-3 text-sm">
-                <IconUpload className="h-5 w-5" /> Tải ảnh lên (PNG, JPG, WEBP)
+              <button type="button" onClick={openUpload} disabled={!!busy} className="btn w-full border-dashed border-ink/40 bg-cream py-3 text-sm">
+                <IconUpload className="h-5 w-5" /> Tải ảnh lên (PNG, JPG, WEBP · tối đa 10 ảnh)
               </button>
+              {askAgree && !agreed && (
+                <div className="rounded-lg border-2 border-ink/15 bg-white p-3 text-xs leading-relaxed">
+                  <p className="font-bold">Cam kết khi tải ảnh lên</p>
+                  <p className="mt-1 text-ink/75">
+                    Tôi có quyền sử dụng hình ảnh, chữ, logo tải lên; không vi phạm bản quyền, nhãn hiệu, hình ảnh cá nhân của người khác và không chứa nội dung trái pháp luật. Đơn vi phạm sẽ bị từ chối in.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn mt-2 w-full border-ink bg-brand py-2 text-xs"
+                    onClick={() => {
+                      setAgreed(true);
+                      setAskAgree(false);
+                      try {
+                        localStorage.setItem(AGREE_KEY, "1");
+                      } catch {
+                        /* ignore */
+                      }
+                      fileRef.current?.click();
+                    }}
+                  >
+                    Tôi đồng ý – chọn ảnh
+                  </button>
+                </div>
+              )}
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple className="hidden" onChange={(e) => void onFiles(e.target.files)} />
               <p className="text-[11px] text-ink/60">
-                Logo nên dùng PNG nền trong suốt. Mặt này in tốt nhất với ảnh ≥ {area.dpi} DPI ở kích thước thật ({area.widthMm / 10}×{area.heightMm / 10} cm ≈{" "}
-                {Math.round((area.widthMm / 25.4) * area.dpi)}×{Math.round((area.heightMm / 25.4) * area.dpi)} px).
+                Logo nên dùng PNG nền trong suốt (hoặc bấm “Xoá nền”). Mặt này in tốt nhất với ảnh ≥ {area.dpi} DPI ở kích thước thật ({sized.widthMm / 10}×{sized.heightMm / 10} cm ≈{" "}
+                {Math.round((sized.widthMm / 25.4) * area.dpi)}×{Math.round((sized.heightMm / 25.4) * area.dpi)} px). Tối đa {Math.round(UPLOAD_MAX_BYTES / 1024 / 1024)}MB mỗi ảnh.
               </p>
               {uploads.length > 0 && (
                 <div>
@@ -613,40 +733,15 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 </div>
               )}
               {selected?.type === "image" && (
-                <div className="space-y-2 border-t border-ink/10 pt-3">
-                  <p className="text-xs font-bold text-ink/70">Ảnh đang chọn</p>
-                  <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
-                    <button type="button" className="btn-sm" onClick={() => fitImage("fill")}>
-                      Phủ kín vùng in
-                    </button>
-                    <button type="button" className="btn-sm" onClick={() => fitImage("fit")}>
-                      Vừa khít
-                    </button>
-                    <button type="button" className={`btn-sm ${selected.tile ? "!border-ink !bg-brand" : ""}`} onClick={toggleTile}>
-                      {selected.tile ? "✓ Lặp họa tiết" : "Lặp họa tiết"}
-                    </button>
-                    <button type="button" className="btn-sm" onClick={() => patchSelected({ rotation: 0 })}>
-                      Bỏ xoay
-                    </button>
-                  </div>
-                  {selected.tile &&
-                    slider(
-                      "Cỡ ô lặp",
-                      Math.round(Math.max(selected.w, selected.h)),
-                      10,
-                      Math.round(Math.min(area.widthMm, area.heightMm)),
-                      1,
-                      (v) => {
-                        const f = v / Math.max(selected.w, selected.h);
-                        patchLayer(selected.id, { w: selected.w * f, h: selected.h * f }, false);
-                      },
-                      (v) => `${v} mm`,
-                    )}
-                  {slider("Độ đậm", Math.round((selected.opacity ?? 1) * 100), 10, 100, 1, (v) => patchLayer(selected.id, { opacity: v / 100 }, false), (v) => `${v}%`)}
-                  <p className="text-[11px] text-ink/60">
-                    Kích thước in: {(selected.w / 10).toFixed(1)} × {(selected.h / 10).toFixed(1)} cm
-                  </p>
-                </div>
+                <ImagePanel
+                  layer={selected}
+                  area={area}
+                  onPatch={(p, commit) => patchLayer(selected.id, p as Partial<DesignLayer>, commit)}
+                  onEnd={endDrag}
+                  onRemoveBg={() => void removeBg()}
+                  onRestore={restoreOriginal}
+                  bgSupported={bgSupported}
+                />
               )}
             </section>
           )}
@@ -719,19 +814,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                     (fontSize) => patchLayer(selected.id, { fontSize, ...measureText({ ...selected, fontSize }) } as Partial<DesignLayer>, false),
                     (v) => `${v} mm`,
                   )}
-                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Màu chữ">
-                    {SWATCHES.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => patchSelected({ color: c })}
-                        className={`h-7 w-7 rounded-full border-2 ${selected.color === c ? "border-ink ring-2 ring-brand" : "border-ink/20"}`}
-                        style={{ background: c }}
-                        aria-label={`Màu ${c}`}
-                      />
-                    ))}
-                    <input type="color" value={selected.color} onChange={(e) => patchSelected({ color: e.target.value })} className="h-7 w-9 cursor-pointer rounded border border-ink/20" aria-label="Chọn màu khác" />
-                  </div>
+                  <ColorPicker label="Màu chữ" value={selected.color} onChange={(c) => c && patchSelected({ color: c })} />
                   <div className="flex flex-wrap gap-1.5 text-xs font-bold">
                     <button type="button" className={`btn-sm ${selected.bold ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ bold: !selected.bold })}>
                       Đậm
@@ -820,23 +903,13 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 </div>
               )}
               <div>
-                <p className="text-xs font-bold text-ink/70">Màu nền in cả mặt {area.maskImage ? "(phủ toàn thân áo)" : ""}</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  <button type="button" onClick={() => updateArea((a) => ({ ...a, bg: null }))} className={`h-8 rounded-full border-2 px-3 text-xs font-bold ${!ad.bg ? "border-ink bg-brand" : "border-ink/20"}`}>
-                    Không in nền
-                  </button>
-                  {SWATCHES.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => updateArea((a) => ({ ...a, bg: c }))}
-                      className={`h-8 w-8 rounded-full border-2 ${ad.bg === c ? "border-ink ring-2 ring-brand" : "border-ink/20"}`}
-                      style={{ background: c }}
-                      aria-label={`Nền ${c}`}
-                    />
-                  ))}
-                  <input type="color" value={ad.bg ?? "#ffffff"} onChange={(e) => updateArea((a) => ({ ...a, bg: e.target.value }))} className="h-8 w-10 cursor-pointer rounded border border-ink/20" aria-label="Màu nền khác" />
-                </div>
+                <ColorPicker
+                  label={`Màu nền in cả mặt${area.maskImage ? " (phủ toàn thân áo)" : ""}`}
+                  none="Không in nền"
+                  value={ad.bg}
+                  onChange={(c) => updateArea((a) => ({ ...a, bg: c }))}
+                />
+                {(area.bleedMm ?? 0) > 0 && <p className="mt-1 text-[11px] text-ink/55">Màu nền tự phủ tới mép ngoài (viền tràn) – không lo lộ viền trắng.</p>}
               </div>
             </section>
           )}

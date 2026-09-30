@@ -14,6 +14,10 @@ const toInput = (a: AdminPrintArea): PrintAreaInput => ({
   widthMm: a.widthMm,
   heightMm: a.heightMm,
   dpi: a.dpi,
+  bleedMm: a.bleedMm ?? 0,
+  safeMm: a.safeMm ?? 0,
+  sizeSpecs: a.sizeSpecs ?? {},
+  tips: a.tips ?? "",
   mockupImage: a.mockupImage,
   maskImage: a.maskImage,
   overlayImage: a.overlayImage,
@@ -90,7 +94,7 @@ function ZonePicker({ image, mask, zone, onChange }: { image: string; mask: stri
  * Mặt in = nơi khách thiết kế. Kích thước thật (mm) + DPI quyết định file in xuất ra.
  * Khung trên ảnh chỉ để hiển thị trong editor; file in luôn đúng tỉ lệ mm.
  */
-export function PrintAreaEditor({ productId, productImage, initial }: { productId: string; productImage: string; initial: AdminPrintArea[] }) {
+export function PrintAreaEditor({ productId, productImage, initial, sizes = [] }: { productId: string; productImage: string; initial: AdminPrintArea[]; sizes?: string[] }) {
   const router = useRouter();
   const [areas, setAreas] = useState<PrintAreaInput[]>(() => initial.map(toInput));
   const [open, setOpen] = useState(0);
@@ -105,7 +109,7 @@ export function PrintAreaEditor({ productId, productImage, initial }: { productI
     if (!p) return;
     let k = p.key;
     for (let i = 2; areas.some((a) => a.key === k); i++) k = `${p.key}-${i}`;
-    setAreas((a) => [...a, { ...p, key: k, mockupImage: "", maskImage: "", overlayImage: "" }]);
+    setAreas((a) => [...a, { ...p, key: k, mockupImage: "", maskImage: "", overlayImage: "", bleedMm: 0, safeMm: 0, sizeSpecs: {}, tips: "" }]);
     setOpen(areas.length);
   }
 
@@ -181,8 +185,25 @@ export function PrintAreaEditor({ productId, productImage, initial }: { productI
                       </label>
                     </div>
                     <p className="rounded bg-neutral-50 px-2 py-1 text-xs text-neutral-600">
-                      File in xuất ra: <b>{px.w}×{px.h} px</b> ở {px.dpi} DPI{px.dpi < a.dpi ? " (đã hạ DPI để vừa giới hạn điện thoại)" : ""}
+                      File in xuất ra: <b>{px.w}×{px.h} px</b> ở {px.dpi} DPI{px.dpi < a.dpi ? " (máy khách hạ DPI để vừa giới hạn điện thoại; file cho xưởng vẫn dựng đủ DPI)" : ""}
                     </p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="block text-xs">
+                        <span className="label">Viền tràn mỗi cạnh (mm)</span>
+                        <input className="input" inputMode="numeric" value={a.bleedMm || ""} placeholder="0" onChange={(e) => patch(i, { bleedMm: intIn(e.target.value) })} />
+                        <span className="text-[11px] text-neutral-500">Đã nằm trong kích thước trên, bị xén sau khi in (tranh, poster, cờ: thường 3–5 mm).</span>
+                      </label>
+                      <label className="block text-xs">
+                        <span className="label">Vùng an toàn (mm, từ đường xén vào)</span>
+                        <input className="input" inputMode="numeric" value={a.safeMm || ""} placeholder="0" onChange={(e) => patch(i, { safeMm: intIn(e.target.value) })} />
+                        <span className="text-[11px] text-neutral-500">Chữ/logo nằm ngoài vùng này sẽ bị cảnh báo (đường may, mép bọc khung…).</span>
+                      </label>
+                    </div>
+                    <SizeSpecsInput sizes={sizes} base={{ w: a.widthMm, h: a.heightMm }} dpi={a.dpi} value={a.sizeSpecs} onChange={(v) => patch(i, { sizeSpecs: v })} />
+                    <label className="block text-xs">
+                      <span className="label">Gợi ý thiết kế cho khách (tuỳ chọn)</span>
+                      <textarea className="input" rows={2} maxLength={600} value={a.tips} placeholder="VD: Dùng ảnh phủ kín tới mép ngoài; chữ cách mép ít nhất 3 cm vì phần mép bọc vào khung." onChange={(e) => patch(i, { tips: e.target.value })} />
+                    </label>
                     <ImageInput label="Ảnh sản phẩm của mặt này (trống = ảnh đại diện)" value={a.mockupImage} onChange={(v) => patch(i, { mockupImage: v })} />
                     <ImageInput label="Mask in toàn thân (tuỳ chọn, PNG trắng/trong suốt)" value={a.maskImage} onChange={(v) => patch(i, { maskImage: v })} />
                     <ImageInput label="Lớp viền/bóng đè lên (tuỳ chọn)" value={a.overlayImage} onChange={(v) => patch(i, { overlayImage: v })} />
@@ -216,5 +237,101 @@ export function PrintAreaEditor({ productId, productImage, initial }: { productI
         {msg && <span className={`text-sm ${msg.ok ? "text-green-700" : "text-red-700"}`}>{msg.text}</span>}
       </div>
     </section>
+  );
+}
+
+/** Kích thước vùng in riêng theo từng size (VD cờ, tranh nhiều khổ). Để trống = dùng kích thước chung */
+function SizeSpecsInput({
+  sizes,
+  base,
+  dpi,
+  value,
+  onChange,
+}: {
+  sizes: string[];
+  base: { w: number; h: number };
+  dpi: number;
+  value: Record<string, { widthMm: number; heightMm: number }>;
+  onChange: (v: Record<string, { widthMm: number; heightMm: number }>) => void;
+}) {
+  const on = Object.keys(value).length > 0;
+  const list = [...new Set([...sizes, ...Object.keys(value)])];
+  if (!list.length) return <p className="text-[11px] text-neutral-500">Thêm phân loại size ở trên để khai kích thước vùng in riêng từng size.</p>;
+  const num = (v: string) => Math.max(0, Math.round(Number(v.replace(/\D/g, "")) || 0));
+  const set = (size: string, k: "widthMm" | "heightMm", v: number) => {
+    const cur = value[size] ?? { widthMm: base.w, heightMm: base.h };
+    onChange({ ...value, [size]: { ...cur, [k]: v } });
+  };
+  return (
+    <div className="rounded-lg border border-dashed p-2 text-xs">
+      <label className="flex items-center gap-2 font-semibold">
+        <input
+          type="checkbox"
+          checked={on}
+          onChange={(e) => onChange(e.target.checked ? Object.fromEntries(list.map((s) => [s, { widthMm: base.w, heightMm: base.h }])) : {})}
+        />
+        Vùng in khác nhau theo size (cờ, tranh, poster nhiều khổ…)
+      </label>
+      {on && (
+        <>
+          <p className="mt-1 text-[11px] text-neutral-500">
+            Khách thiết kế trên kích thước chung ({base.w}×{base.h} mm); file in từng size được co giãn đều, giữ viền tràn. Nên để kích thước chung = size lớn nhất.
+          </p>
+          <table className="mt-2 w-full">
+            <thead>
+              <tr className="text-left text-neutral-500">
+                <th className="font-medium">Size</th>
+                <th className="font-medium">Rộng (mm)</th>
+                <th className="font-medium">Cao (mm)</th>
+                <th className="font-medium">File in</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((size) => {
+                const v = value[size];
+                const ratioOff = v && Math.abs(v.widthMm / Math.max(1, v.heightMm) - base.w / Math.max(1, base.h)) > 0.03;
+                const px = v ? printPixelSize({ widthMm: v.widthMm, heightMm: v.heightMm, dpi }, 64_000_000) : null;
+                return (
+                  <tr key={size} className="border-t">
+                    <td className="py-1 pr-2 font-semibold">{size}</td>
+                    <td className="py-1 pr-2">
+                      {v ? <input className="input py-1" inputMode="numeric" value={v.widthMm} onChange={(e) => set(size, "widthMm", num(e.target.value))} /> : <span className="text-neutral-400">chung</span>}
+                    </td>
+                    <td className="py-1 pr-2">
+                      {v ? <input className="input py-1" inputMode="numeric" value={v.heightMm} onChange={(e) => set(size, "heightMm", num(e.target.value))} /> : <span className="text-neutral-400">chung</span>}
+                    </td>
+                    <td className={`py-1 pr-2 ${ratioOff ? "text-amber-700" : "text-neutral-500"}`}>
+                      {px ? `${px.w}×${px.h}px${ratioOff ? " · khác tỉ lệ" : ""}` : "–"}
+                    </td>
+                    <td className="py-1 text-right">
+                      {v ? (
+                        <button
+                          type="button"
+                          className="text-red-600 underline"
+                          onClick={() => {
+                            const { [size]: _drop, ...rest } = value;
+                            onChange(rest);
+                          }}
+                        >
+                          bỏ
+                        </button>
+                      ) : (
+                        <button type="button" className="underline" onClick={() => set(size, "widthMm", base.w)}>
+                          khai
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {list.some((sz) => value[sz] && Math.abs(value[sz]!.widthMm / Math.max(1, value[sz]!.heightMm) - base.w / Math.max(1, base.h)) > 0.03) && (
+            <p className="mt-1 text-[11px] text-amber-700">Size khác tỉ lệ với kích thước chung: thiết kế được co vừa và căn giữa, ảnh nền phủ kín được giữ phủ kín.</p>
+          )}
+        </>
+      )}
+    </div>
   );
 }

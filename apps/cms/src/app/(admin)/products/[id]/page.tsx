@@ -22,7 +22,7 @@ export default async function EditProduct({ params }: { params: Promise<{ id: st
       <ProductForm categories={cats} product={product} />
       <div className="mt-4 grid gap-4">
         <VariantEditor productId={product.id} productName={product.name} initial={product.variants ?? []} />
-        <PrintAreaEditor productId={product.id} productImage={product.images[0] ?? ""} initial={product.printAreas ?? []} />
+        <PrintAreaEditor productId={product.id} productImage={product.images[0] ?? ""} initial={product.printAreas ?? []} sizes={[...new Set((product.variants ?? []).map((v) => v.size).filter(Boolean))]} />
       </div>
     </>
   );

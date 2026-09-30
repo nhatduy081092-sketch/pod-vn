@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { removeVietnameseTones } from "./vn";
+import { sizeSpecsSchema } from "./design";
 
 /* ---------- Biến thể (màu × size) ---------- */
 
@@ -98,9 +99,17 @@ export const printAreaInputSchema = z
       .trim()
       .regex(/^[a-z0-9-]{1,30}$/, "Mã mặt in: chữ thường không dấu, số, gạch ngang"),
     name: z.string().trim().min(1, "Nhập tên mặt in").max(40),
-    widthMm: z.number().int().min(5).max(3000),
-    heightMm: z.number().int().min(5).max(3000),
+    widthMm: z.number().int().min(5).max(5000),
+    heightMm: z.number().int().min(5).max(5000),
     dpi: z.number().int().min(50).max(600).default(150),
+    /** Viền tràn mỗi cạnh (mm) – đã nằm trong widthMm/heightMm, bị xén sau khi in */
+    bleedMm: z.number().int().min(0).max(100).default(0),
+    /** Vùng an toàn tính từ đường xén vào trong (mm) */
+    safeMm: z.number().int().min(0).max(200).default(0),
+    /** Kích thước riêng theo size (trống = mọi size dùng kích thước trên) */
+    sizeSpecs: sizeSpecsSchema.default({}),
+    /** Gợi ý thiết kế riêng cho mặt này (hiện trong công cụ thiết kế) */
+    tips: z.string().trim().max(600).default(""),
     mockupImage: imgPath,
     maskImage: imgPath,
     overlayImage: imgPath,
@@ -110,7 +119,8 @@ export const printAreaInputSchema = z
     zoneH: ratio.min(0.02),
     extraPrice: z.number().int().min(0).max(10_000_000).default(0),
   })
-  .refine((a) => a.zoneX + a.zoneW <= 1.0001 && a.zoneY + a.zoneH <= 1.0001, { message: "Khung vùng in vượt ra ngoài ảnh" });
+  .refine((a) => a.zoneX + a.zoneW <= 1.0001 && a.zoneY + a.zoneH <= 1.0001, { message: "Khung vùng in vượt ra ngoài ảnh" })
+  .refine((a) => (a.bleedMm + a.safeMm) * 2 < Math.min(a.widthMm, a.heightMm), { message: "Viền tràn + vùng an toàn quá lớn so với vùng in" });
 export type PrintAreaInput = z.infer<typeof printAreaInputSchema>;
 
 export const printAreasSaveSchema = z
@@ -118,7 +128,7 @@ export const printAreasSaveSchema = z
   .refine((v) => new Set(v.areas.map((a) => a.key)).size === v.areas.length, { message: "Trùng mã mặt in" });
 
 /** Mẫu mặt in hay dùng cho may mặc – admin bấm để thêm nhanh rồi chỉnh số đo */
-export const PRINT_AREA_PRESETS: Omit<PrintAreaInput, "mockupImage" | "maskImage" | "overlayImage">[] = [
+export const PRINT_AREA_PRESETS: Omit<PrintAreaInput, "mockupImage" | "maskImage" | "overlayImage" | "bleedMm" | "safeMm" | "sizeSpecs" | "tips">[] = [
   { key: "front", name: "Mặt trước", widthMm: 300, heightMm: 400, dpi: 150, zoneX: 0.3, zoneY: 0.24, zoneW: 0.4, zoneH: 0.5, extraPrice: 0 },
   { key: "back", name: "Mặt sau", widthMm: 300, heightMm: 400, dpi: 150, zoneX: 0.3, zoneY: 0.2, zoneW: 0.4, zoneH: 0.55, extraPrice: 0 },
   { key: "chest-left", name: "Ngực trái (logo)", widthMm: 90, heightMm: 90, dpi: 300, zoneX: 0.56, zoneY: 0.28, zoneW: 0.13, zoneH: 0.13, extraPrice: 0 },

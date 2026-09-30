@@ -1,12 +1,12 @@
 "use client";
 import { useMemo, useState } from "react";
-import { designFields, designReport, orderDesignSchema, personalizeArea, removeVietnameseTones, type DesignFile, type OrderDesign, type RosterRow } from "@pod/shared";
+import { areaForSize, DESIGN_LIMITS, designFields, designReport, orderDesignSchema, personalizeArea, printPixelSize, removeVietnameseTones, scaleAreaDesign, type DesignFile, type OrderDesign, type RosterRow } from "@pod/shared";
 import { DESIGN_FONTS_HREF, ensureDesignFonts, layerImageSrcs, loadImage, renderAreaPng, type ImageCache } from "@pod/shared/render";
 import { ZipWriter } from "@/lib/zip";
 
 export type ProductionItem = { id: string; productName: string; color: string; size: string; quantity: number; sku: string | null; design: unknown; roster: RosterRow[] | null };
 
-type Job = { file: string; item: ProductionItem; idx: number; f: DesignFile; person: RosterRow | null; copies: number };
+type Job = { file: string; item: ProductionItem; idx: number; f: DesignFile; person: RosterRow | null; copies: number; px: { w: number; h: number; dpi: number }; mm: { w: number; h: number } };
 
 type DirHandle = { getFileHandle(name: string, o: { create: boolean }): Promise<{ createWritable(): Promise<{ write(d: Blob | string): Promise<void>; close(): Promise<void> }> }> };
 
@@ -16,8 +16,25 @@ const slug = (s: string) =>
     .replace(/^-|-$/g, "")
     .slice(0, 30) || "x";
 
-/** Kích thước vùng in (mm) lấy từ file khách đã xuất lúc đặt -> đúng với lúc khách thiết kế kể cả khi sản phẩm đổi sau này */
-const areaOf = (f: DesignFile) => ({ key: f.area, name: f.name, widthMm: (f.widthPx / f.dpi) * 25.4, heightMm: (f.heightPx / f.dpi) * 25.4, dpi: f.dpi });
+/** Thông số vùng in lấy từ file khách đã xuất lúc đặt -> đúng với lúc khách thiết kế kể cả khi sản phẩm đổi sau này */
+const areaOf = (f: DesignFile) => ({
+  key: f.area,
+  name: f.name,
+  widthMm: f.widthMm ?? (f.widthPx / f.dpi) * 25.4,
+  heightMm: f.heightMm ?? (f.heightPx / f.dpi) * 25.4,
+  dpi: f.targetDpi ?? f.dpi,
+  bleedMm: f.bleedMm ?? 0,
+  safeMm: f.safeMm ?? 0,
+  sizeSpecs: f.sizeSpecs ?? null,
+});
+
+/** Kích thước file in cho xưởng theo size: đủ DPI (máy tính), vùng in riêng theo size nếu có */
+function productionSpec(f: DesignFile, size: string) {
+  const base = areaOf(f);
+  const target = areaForSize(base, size);
+  const px = f.widthMm ? printPixelSize(target, DESIGN_LIMITS.maxProductionPixels) : { w: f.widthPx, h: f.heightPx, dpi: f.dpi };
+  return { base, target, px };
+}
 
 /**
  * File in cho xưởng: dựng lại từ DỮ LIỆU THIẾT KẾ (không dùng file PNG khách gửi lên),
@@ -41,9 +58,16 @@ export function ProductionFiles({ orderCode, items }: { orderCode: string; items
       for (const f of d.data.files) {
         const personal = designFields(d.data.json, f.area).length > 0 && !!it.roster?.length;
         const base = `${orderCode}_${String(idx).padStart(2, "0")}_${slug(it.productName)}_${f.area}`;
+        const spec = (size: string) => {
+          const p = productionSpec(f, size);
+          return { px: p.px, mm: { w: p.target.widthMm, h: p.target.heightMm } };
+        };
+        const sized = !!f.sizeSpecs && Object.keys(f.sizeSpecs).length > 0;
         if (personal)
-          it.roster!.forEach((r, i) => out.push({ file: `${base}_${String(i + 1).padStart(3, "0")}_${slug(r.name || "khong-ten")}_${r.number || "-"}_${slug(r.size)}.png`, item: it, idx, f, person: r, copies: 1 }));
-        else out.push({ file: `${base}_x${it.quantity}.png`, item: it, idx, f, person: null, copies: it.quantity });
+          it.roster!.forEach((r, i) =>
+            out.push({ file: `${base}_${String(i + 1).padStart(3, "0")}_${slug(r.name || "khong-ten")}_${r.number || "-"}_${slug(r.size)}.png`, item: it, idx, f, person: r, copies: 1, ...spec(r.size || it.size) }),
+          );
+        else out.push({ file: `${base}${sized ? `_${slug(it.size)}` : ""}_x${it.quantity}.png`, item: it, idx, f, person: null, copies: it.quantity, ...spec(it.size) });
       }
     }
     return out;
@@ -54,9 +78,9 @@ export function ProductionFiles({ orderCode, items }: { orderCode: string; items
   const reports = parsed.map(({ it, idx, d }) => ({ it, idx, issues: designReport(d.data.json, d.data.files.map(areaOf)) }));
 
   function manifest(): string {
-    const head = ["file", "san_pham", "mat_in", "mau", "size", "ten", "so", "so_luong", "kich_thuoc_px", "dpi"];
+    const head = ["file", "san_pham", "mat_in", "mau", "size", "ten", "so", "so_luong", "kich_thuoc_mm", "kich_thuoc_px", "dpi", "vien_tran_mm"];
     const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
-    const rows = jobs.map((j) => [j.file, j.item.productName, j.f.name, j.item.color, j.person?.size ?? j.item.size, j.person?.name ?? "", j.person?.number ?? "", j.copies, `${j.f.widthPx}x${j.f.heightPx}`, j.f.dpi].map(esc).join(","));
+    const rows = jobs.map((j) => [j.file, j.item.productName, j.f.name, j.item.color, j.person?.size ?? j.item.size, j.person?.name ?? "", j.person?.number ?? "", j.copies, `${Math.round(j.mm.w)}x${Math.round(j.mm.h)}`, `${j.px.w}x${j.px.h}`, j.px.dpi, j.f.bleedMm ?? 0].map(esc).join(","));
     return "﻿" + [head.join(","), ...rows].join("\n");
   }
 
@@ -76,10 +100,11 @@ export function ProductionFiles({ orderCode, items }: { orderCode: string; items
       for (const [i, j] of jobs.entries()) {
         setBusy(`Đang dựng ${i + 1}/${jobs.length}: ${j.file}`);
         const d = parsed.find((x) => x.it.id === j.item.id)!.d.data;
-        const ad = personalizeArea(d.json.areas[j.f.area] ?? { bg: null, layers: [] }, j.person);
+        const spec = productionSpec(j.f, j.person?.size || j.item.size);
+        const ad = scaleAreaDesign(personalizeArea(d.json.areas[j.f.area] ?? { bg: null, layers: [] }, j.person), spec.base, spec.target);
         await ensureDesignFonts(ad.layers);
         for (const src of layerImageSrcs(ad)) if (!images.has(src)) images.set(src, await loadImage(src));
-        const blob = await renderAreaPng(ad, areaOf(j.f), { w: j.f.widthPx, h: j.f.heightPx }, images);
+        const blob = await renderAreaPng(ad, spec.target, { w: j.px.w, h: j.px.h }, images);
         if (dir) {
           const w = await (await dir.getFileHandle(j.file, { create: true })).createWritable();
           await w.write(blob);

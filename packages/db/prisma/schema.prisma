@@ -273,6 +273,14 @@ model PrintArea {
   heightMm     Int
   /// Độ phân giải file in (DPI). Ảnh khách thấp hơn mức này sẽ bị cảnh báo
   dpi          Int     @default(150)
+  /// Viền tràn mỗi cạnh (mm, nằm trong widthMm/heightMm) – bị xén sau khi in
+  bleedMm      Int     @default(0)
+  /// Vùng an toàn tính từ đường xén vào trong (mm)
+  safeMm       Int     @default(0)
+  /// Kích thước riêng theo size: { "60x90 cm": { widthMm, heightMm } } – trống = mọi size như trên
+  sizeSpecs    Json    @default("{}")
+  /// Gợi ý thiết kế cho mặt này (hiện trong công cụ thiết kế)
+  tips         String  @default("")
   /// Ảnh sản phẩm của mặt này (trống = ảnh đại diện sản phẩm)
   mockupImage  String  @default("")
   /// Mask hình dáng (in toàn thân) – thiết kế chỉ hiện trong vùng trắng của mask

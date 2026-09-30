@@ -84,7 +84,22 @@ export async function exportDesign(areas: PrintArea[], design: DesignJson, cache
     const assets = await loadAreaAssets(area);
     const preview = await renderPreview(area, ad, cache, assets, 900, { garmentColor: opts.garmentColor });
     const previewUrl = await uploadBlob(preview, `${key}-preview.jpg`, "design");
-    files.push({ area: key, name: area.name, printUrl, previewUrl, widthPx: print.w, heightPx: print.h, dpi: print.dpi });
+    files.push({
+      area: key,
+      name: area.name,
+      printUrl,
+      previewUrl,
+      widthPx: print.w,
+      heightPx: print.h,
+      dpi: print.dpi,
+      // thông số thật để xưởng dựng lại file đủ DPI, đúng từng size
+      widthMm: area.widthMm,
+      heightMm: area.heightMm,
+      targetDpi: area.dpi,
+      ...(area.bleedMm ? { bleedMm: area.bleedMm } : {}),
+      ...(area.safeMm ? { safeMm: area.safeMm } : {}),
+      ...(area.sizeSpecs && Object.keys(area.sizeSpecs).length ? { sizeSpecs: area.sizeSpecs } : {}),
+    });
   }
   return { json: design, files };
 }
