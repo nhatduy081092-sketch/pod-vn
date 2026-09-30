@@ -9,6 +9,7 @@ const NAV = [
   { href: "/orders", label: "Đơn hàng" },
   { href: "/leads", label: "Khách để lại SĐT" },
   { href: "/products", label: "Sản phẩm" },
+  { href: "/ai-photos", label: "Ảnh thật AI" },
   { href: "/categories", label: "Danh mục" },
   { href: "/design-library", label: "Thư viện thiết kế" },
   { href: "/customers", label: "Khách hàng" },

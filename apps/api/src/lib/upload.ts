@@ -89,7 +89,11 @@ export async function saveUpload(file: unknown, opts: { kind?: "design" | "print
   if (!(file instanceof File)) throw badRequest("Thiếu file (field 'file')");
   const max = opts.kind === "print" ? PRINT_FILE_MAX_BYTES : UPLOAD_MAX_BYTES;
   if (file.size > max) throw badRequest(`File tối đa ${Math.round(max / 1024 / 1024)}MB`);
-  const buf = Buffer.from(await file.arrayBuffer());
+  return saveBuffer(Buffer.from(await file.arrayBuffer()));
+}
+
+/** Lưu ảnh đã có sẵn trong bộ nhớ (VD ảnh AI trả về) – cùng kiểm tra định dạng & nơi lưu như upload */
+export async function saveBuffer(buf: Buffer): Promise<{ url: string; size: number }> {
   const ext = detectImage(buf);
   if (!ext) throw badRequest("Chỉ chấp nhận ảnh PNG, JPG hoặc WEBP");
   const name = `${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${randomUUID()}.${ext}`;

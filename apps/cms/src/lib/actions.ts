@@ -80,6 +80,20 @@ export async function uploadImageAction(fd: FormData): Promise<{ ok: true; url: 
   }
 }
 
+/* ---------- Ảnh thật bằng AI ---------- */
+export async function aiPhotoAction(fd: FormData): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  try {
+    const r = await adminFetch<{ url: string }>("/ai-photo", { method: "POST", body: fd });
+    return { ok: true, url: r.url };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+export async function setProductImagesAction(id: string, images: string[]) {
+  return run(() => adminFetch(`/products/${id}/images`, { method: "PATCH", body: JSON.stringify({ images }) }).then(() => undefined), ["/products", `/products/${id}`]);
+}
+
 /* ---------- Products ---------- */
 export async function saveProductAction(id: string | null, data: ProductUpsertInput) {
   return run(async () => {

@@ -40,7 +40,8 @@ import { conflict, notFound, pageParams } from "../lib/http";
 import { rateLimit } from "../lib/rate-limit";
 import { getLanding, invalidateLanding } from "../lib/settings";
 import { uniqueSlug } from "../lib/slug";
-import { saveUpload } from "../lib/upload";
+import { saveBuffer, saveUpload } from "../lib/upload";
+import { aiPhotoEnabled, aiPhotoModel, buildPrompt, generateAiPhoto, type AiPhotoStyle } from "../lib/ai-photo";
 import { listPages } from "../lib/pages";
 import { importOemCatalog } from "../lib/oem-import";
 import { searchFields, searchWhere } from "../lib/search";
@@ -102,6 +103,42 @@ adminRoutes.get("/stats", async (c) => {
 adminRoutes.post("/uploads", async (c) => {
   const body = await c.req.parseBody();
   return c.json(await saveUpload(body["file"]), 201);
+});
+
+/* ---------- Ảnh thật bằng AI (Gemini) ---------- */
+adminRoutes.get("/ai-photo/config", (c) => c.json({ enabled: aiPhotoEnabled(), model: aiPhotoModel() }));
+
+/** Ảnh 2D của sản phẩm (CMS đã chuyển SVG -> PNG) + kiểu ảnh -> ảnh chụp thật, lưu vào /uploads (CHƯA gắn vào sản phẩm) */
+adminRoutes.post("/ai-photo", async (c) => {
+  const body = await c.req.parseBody();
+  const file = body["file"];
+  const productId = String(body["productId"] ?? "");
+  const style = (["studio", "flatlay", "model"].includes(String(body["style"])) ? body["style"] : "studio") as AiPhotoStyle;
+  if (!(file instanceof File)) throw new HTTPException(400, { message: "Thiếu ảnh nguồn" });
+  if (file.size > 12 * 1024 * 1024) throw new HTTPException(400, { message: "Ảnh nguồn tối đa 12MB" });
+  const p = await prisma.product.findUnique({ where: { id: productId }, select: { name: true, material: true, audience: true, category: { select: { name: true } } } });
+  if (!p) throw notFound("Không tìm thấy sản phẩm");
+  const src = Buffer.from(await file.arrayBuffer());
+  const mime = src[0] === 0x89 ? "image/png" : src[0] === 0xff ? "image/jpeg" : src.toString("ascii", 8, 12) === "WEBP" ? "image/webp" : "";
+  if (!mime) throw new HTTPException(400, { message: "Ảnh nguồn phải là PNG/JPG/WEBP" });
+  const prompt = buildPrompt({ name: p.name, material: p.material, audience: p.audience, category: p.category.name }, style);
+  const out = await generateAiPhoto(src, mime, prompt);
+  const saved = await saveBuffer(out);
+  return c.json({ ...saved, style, model: aiPhotoModel() }, 201);
+});
+
+/** Đổi danh sách ảnh của 1 sản phẩm (duyệt ảnh AI, sắp xếp ảnh) */
+const imagesSchema = z.object({
+  images: z
+    .array(z.string().trim().max(500).regex(/^(\/uploads\/|\/mock\/|https:\/\/)/, "Ảnh không hợp lệ"))
+    .max(12),
+});
+adminRoutes.patch("/products/:id/images", async (c) => {
+  const { images } = imagesSchema.parse(await c.req.json());
+  const exists = await prisma.product.findUnique({ where: { id: c.req.param("id") }, select: { id: true } });
+  if (!exists) throw notFound();
+  const p = await prisma.product.update({ where: { id: c.req.param("id") }, data: { images: [...new Set(images)] }, select: { id: true, images: true } });
+  return c.json(p);
 });
 
 /* ---------- Categories ---------- */
