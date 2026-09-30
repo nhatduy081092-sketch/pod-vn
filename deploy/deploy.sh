@@ -79,7 +79,7 @@ echo "$NEW_TAG" > .deploy/current_tag
 echo "$NEW_TAG" >> .deploy/history
 
 # 8) Làm mới nội dung (trang build sẵn lúc chưa có API)
-curl -fsS -X POST -H "x-revalidate-secret: $(env_get REVALIDATE_SECRET)" http://127.0.0.1:3000/revalidate >/dev/null 2>&1 || true
+curl -fsS -X POST -H "x-revalidate-secret: $(env_get REVALIDATE_SECRET)" http://127.0.0.1:3180/revalidate >/dev/null 2>&1 || true
 
 # 9) Dọn image cũ: giữ 3 bản gần nhất để rollback
 for s in api web cms; do

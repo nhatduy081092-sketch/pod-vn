@@ -4,8 +4,8 @@ Kiến trúc chạy thật (1 VPS, không đổi kiến trúc monorepo):
 
 ```
 Internet ──443──► Nginx (VPS, SSL Let's Encrypt)
-                   ├─ yala.vn        ─► 127.0.0.1:3000  web (Next.js standalone, Docker)
-                   ├─ admin.yala.vn  ─► 127.0.0.1:3001  cms (Next.js standalone, Docker)
+                   ├─ yala.vn        ─► 127.0.0.1:3180  web (Next.js standalone, Docker)
+                   ├─ admin.yala.vn  ─► 127.0.0.1:3181  cms (Next.js standalone, Docker)
                    └─ www.yala.vn    ─► 301 https://yala.vn
 web / cms ──(mạng Docker nội bộ)──► api:4000 (Hono + Prisma) ──► PostgreSQL (Neon/Supabase hoặc Postgres nội bộ)
                                      └─ volume "uploads" (hoặc Cloudflare R2)

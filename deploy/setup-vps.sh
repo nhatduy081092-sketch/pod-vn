@@ -25,7 +25,7 @@ if [ "$(swapon --show | wc -l)" -eq 0 ]; then
   grep -q '/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
 fi
 
-echo "==> Tường lửa: chỉ mở SSH, HTTP, HTTPS (Postgres/API/3000/3001 không mở ra ngoài)"
+echo "==> Tường lửa: chỉ mở SSH, HTTP, HTTPS (Postgres/API/web/cms không mở ra ngoài)"
 ufw allow OpenSSH
 ufw allow 'Nginx Full'
 ufw --force enable

@@ -100,7 +100,7 @@ cat <<'MSG'
 
 ✓ HOÀN TẤT. Website: https://yala.vn
   CMS: https://admin.yala.vn (nếu đã có DNS admin.yala.vn)
-       chưa có DNS -> từ máy bạn: ssh -L 3001:127.0.0.1:3001 root@<IP-VPS>  rồi mở http://localhost:3001
+       chưa có DNS -> từ máy bạn: ssh -L 3181:127.0.0.1:3181 root@<IP-VPS>  rồi mở http://localhost:3181
   Deploy bản mới: cd /opt/yala && bash deploy/deploy.sh
   Bảo mật: đổi mật khẩu root (passwd) và chuyển sang đăng nhập SSH bằng key.
 MSG

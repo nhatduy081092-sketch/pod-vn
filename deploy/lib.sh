@@ -48,9 +48,9 @@ compose_profiles() {
 wait_healthy() {
   local i
   for i in $(seq 1 40); do
-    if curl -fsS --max-time 5 http://127.0.0.1:3000/healthz >/dev/null 2>&1 \
-      && curl -fsS --max-time 5 http://127.0.0.1:3000/api/health >/dev/null 2>&1 \
-      && curl -fsS --max-time 5 http://127.0.0.1:3001/healthz >/dev/null 2>&1; then
+    if curl -fsS --max-time 5 http://127.0.0.1:3180/healthz >/dev/null 2>&1 \
+      && curl -fsS --max-time 5 http://127.0.0.1:3180/api/health >/dev/null 2>&1 \
+      && curl -fsS --max-time 5 http://127.0.0.1:3181/healthz >/dev/null 2>&1; then
       return 0
     fi
     sleep 3

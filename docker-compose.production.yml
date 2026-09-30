@@ -1,7 +1,7 @@
 # ============================================================
 # YALA – production trên 1 VPS (xem DEPLOY.md)
 #   docker compose --env-file .env.production -f docker-compose.production.yml up -d
-# - Nginx chạy trên VPS (ngoài Docker) giữ SSL, proxy vào 127.0.0.1:3000 / 3001
+# - Nginx chạy trên VPS (ngoài Docker) giữ SSL, proxy vào 127.0.0.1:3180 (web) / 3181 (cms) – cổng lạ để không đụng app khác trên VPS
 # - API KHÔNG mở cổng ra ngoài: web/cms gọi nội bộ http://api:4000
 # - Database: dùng DATABASE_URL (Neon/Supabase) HOẶC bật Postgres nội bộ: --profile localdb
 # ============================================================
@@ -59,7 +59,7 @@ services:
       api:
         condition: service_healthy
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3180:3000"
     restart: unless-stopped
     logging: *logging
 
@@ -79,7 +79,7 @@ services:
       api:
         condition: service_healthy
     ports:
-      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:3181:3001"
     restart: unless-stopped
     logging: *logging
 
