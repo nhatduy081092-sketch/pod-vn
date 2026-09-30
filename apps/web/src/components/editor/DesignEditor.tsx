@@ -34,12 +34,17 @@ import { Stage } from "./Stage";
 import { canvasSrc, imgSize, loadImage, measureText, type ImageCache, type MockupAssets } from "./render";
 import { ensureFonts, GOOGLE_FONTS_HREF } from "./fonts";
 import { exportDesign, loadAreaAssets, renderPreview, uploadBlob } from "./export";
-import { attachDesign, clearDraft, loadDraft, saveDraft, stashSellerDesign } from "./storage";
+import { attachDesign, clearDraft, loadDraft, saveDraft, stashCarry, stashSellerDesign, takeCarry } from "./storage";
 import { LibraryPanel, templateLayers } from "./LibraryPanel";
 import { OverviewModal } from "./OverviewModal";
 import { ImagePanel } from "./ImagePanel";
 import { ColorPicker } from "./ui";
 import { removeBackground } from "./bgRemoval";
+import { MyGallery, saveToGallery } from "./MyGallery";
+import { pushRecent } from "./recent";
+import { ShortcutsModal } from "./ShortcutsModal";
+import { ProductSwitcher } from "./ProductSwitcher";
+import { OrderSheet } from "./OrderSheet";
 
 type Props = {
   product: ProductDetail;
@@ -115,6 +120,12 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const [agreed, setAgreed] = useState(false);
   const [askAgree, setAskAgree] = useState(false);
   const [bgSupported, setBgSupported] = useState(false);
+  const [galleryKey, setGalleryKey] = useState(0);
+  const [showKeys, setShowKeys] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const clipboard = useRef<DesignLayer | null>(null);
+  const [switcher, setSwitcher] = useState(false);
+  const [orderOut, setOrderOut] = useState<import("@pod/shared").OrderDesign | null>(null);
   const images = useRef<ImageCache>(new Map()).current;
   const [assets, setAssets] = useState<Record<string, MockupAssets>>({});
   const [version, setVersion] = useState(0);
@@ -128,6 +139,21 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const dpiScale = sizeScale(area, sized);
 
   useEffect(() => {
+    const on = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", on);
+    return () => document.removeEventListener("fullscreenchange", on);
+  }, []);
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void document.documentElement.requestFullscreen?.().catch(() => undefined);
+  };
+
+  // sản phẩm thiết kế gần đây (trên máy này)
+  useEffect(() => {
+    pushRecent({ id: product.id, slug: product.slug, name: product.name, image: product.images[0] ?? "" });
+  }, [product.id, product.slug, product.name, product.images]);
+
+  useEffect(() => {
     setBgSupported(typeof WebAssembly !== "undefined");
     try {
       setAgreed(localStorage.getItem(AGREE_KEY) === "1");
@@ -139,6 +165,20 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   /* ---------- khôi phục bản nháp ---------- */
   useEffect(() => {
     if (initial) return;
+    // vừa đổi sản phẩm trong editor: mang thiết kế sang (co giãn theo mặt cùng tên)
+    const carry = takeCarry();
+    if (carry && carry.from !== product.id && carry.areas.some((a) => a.design.layers.length || a.design.bg)) {
+      const next = normalize(null, product);
+      const used = carry.areas.filter((a) => a.design.layers.length || a.design.bg);
+      product.printAreas.forEach((t, i) => {
+        const src = used.find((a) => a.key === t.key) ?? (i === 0 ? used[0] : undefined);
+        if (!src) return;
+        next.areas[t.key] = { bg: src.design.bg, layers: templateLayers({ srcW: src.widthMm, srcH: src.heightMm, bg: null, layers: src.design.layers }, t, uid) };
+      });
+      apply(next, false);
+      setNotice("Đã mang thiết kế sang sản phẩm này – kiểm tra lại vị trí và kích thước.");
+      return;
+    }
     const d = loadDraft(product.id);
     if (d && usedAreas(d.design).length) {
       apply(normalize(d.design, product), false);
@@ -274,6 +314,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         const u = { src, natW: w, natH: h, name: f.name };
         setUploads((p) => [u, ...p.filter((x) => x.src !== src)]);
         addLayer(imageLayer(u));
+        void saveToGallery({ url: src, name: f.name, natW: w, natH: h }).then((ok) => ok && setGalleryKey((k) => k + 1));
       } catch (e) {
         setError((e as Error).message);
       } finally {
@@ -427,8 +468,28 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         e.preventDefault();
         return redo();
       }
+      if (mod && e.key.toLowerCase() === "s" && mode === "customer") {
+        e.preventDefault();
+        return setSaveDlg({ name: savedName || product.name });
+      }
+      if (mod && e.key.toLowerCase() === "v" && clipboard.current) {
+        e.preventDefault();
+        const c = clipboard.current;
+        return addLayer({ ...c, id: uid(), x: c.x + 5, y: c.y + 5, locked: false });
+      }
+      if (e.key === "?") return setShowKeys(true);
       if (!selected) return;
       if (e.key === "Escape") return setSelectedId(null);
+      if (mod && e.key.toLowerCase() === "c") {
+        clipboard.current = selected;
+        return setNotice("Đã sao chép lớp – Ctrl+V để dán (dán được sang mặt khác)");
+      }
+      if (e.key === "]" || e.key === "[") return moveOrder(e.key === "]" ? 1 : -1);
+      if ((e.key === "+" || e.key === "=" || e.key === "-") && !selected.locked && !mod) {
+        e.preventDefault();
+        const f = e.key === "-" ? 1 / 1.05 : 1.05;
+        return patchSelected(selected.type === "text" ? ({ fontSize: Math.max(1, Math.round(selected.fontSize * f * 10) / 10) } as Partial<DesignLayer>) : { w: selected.w * f, h: selected.h * f });
+      }
       if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
         removeSelected();
@@ -469,7 +530,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       } else {
         attachDesign(product.id, out, color?.name);
         clearDraft(product.id);
-        router.push(returnTo);
+        setBusy("");
+        // có giá bán + phân loại, không phải đồng phục in tên/số -> đặt ngay theo size trong editor
+        if (!designFields(out.json).length && product.basePrice > 0 && product.variants.length) setOrderOut(out);
+        else router.push(returnTo);
       }
     } catch (e) {
       setError((e as Error).message);
@@ -542,7 +606,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             <IconClose className="h-5 w-5" />
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-extrabold md:text-base">{product.name}</p>
+            <button type="button" onClick={() => setSwitcher(true)} className="flex max-w-full items-center gap-1 text-left" title="Đổi sản phẩm">
+              <span className="truncate text-sm font-extrabold md:text-base">{product.name}</span>
+              <span className="shrink-0 rounded border border-ink/20 px-1 text-[10px] font-bold text-ink/60">Đổi ▾</span>
+            </button>
             <p className="text-[11px] text-ink/60">{mode === "seller" ? "Thiết kế mẫu seller" : "YALA Studio"} · tự lưu nháp</p>
           </div>
           <button type="button" onClick={undo} disabled={!past.length} className="rounded-md p-2 disabled:opacity-30 hover:bg-cream" aria-label="Hoàn tác">
@@ -550,6 +617,12 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           </button>
           <button type="button" onClick={redo} disabled={!future.length} className="rounded-md p-2 disabled:opacity-30 hover:bg-cream" aria-label="Làm lại">
             <IconRedo className="h-5 w-5" />
+          </button>
+          <button type="button" onClick={() => setShowKeys(true)} className="hidden rounded-md p-2 text-sm font-bold hover:bg-cream lg:block" aria-label="Phím tắt" title="Phím tắt (?)">
+            ⌨
+          </button>
+          <button type="button" onClick={toggleFullscreen} className="hidden rounded-md p-2 text-sm font-bold hover:bg-cream md:block" aria-label={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
+            {fullscreen ? "⤡" : "⤢"}
           </button>
           <button type="button" onClick={() => setOverview(true)} className="flex items-center gap-1 rounded-md p-2 text-sm font-bold hover:bg-cream md:border-2 md:border-ink/15 md:px-3 md:py-1.5" aria-label="Xem tổng thể">
             <IconEye className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Xem</span>
@@ -679,7 +752,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             onChangeLayer={patchLayer}
             onCommit={endDrag}
           />
-          <p className="mt-2 text-center text-[11px] text-ink/55">Kéo để di chuyển · kéo ô vuông ở góc để đổi cỡ · nút tròn để xoay · điện thoại: 2 ngón để phóng to/xoay</p>
+          <p className="mt-2 text-center text-[11px] text-ink/55">Kéo để di chuyển · kéo góc để đổi cỡ · nút tròn để xoay · lăn chuột để phóng to/thu nhỏ · điện thoại: 2 ngón</p>
         </div>
 
         {/* Bảng thuộc tính */}
@@ -718,20 +791,12 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 Logo nên dùng PNG nền trong suốt (hoặc bấm “Xoá nền”). Mặt này in tốt nhất với ảnh ≥ {area.dpi} DPI ở kích thước thật ({sized.widthMm / 10}×{sized.heightMm / 10} cm ≈{" "}
                 {Math.round((sized.widthMm / 25.4) * area.dpi)}×{Math.round((sized.heightMm / 25.4) * area.dpi)} px). Tối đa {Math.round(UPLOAD_MAX_BYTES / 1024 / 1024)}MB mỗi ảnh.
               </p>
-              {uploads.length > 0 && (
-                <div>
-                  <p className="mb-1 text-xs font-bold text-ink/70">Ảnh đã tải (bấm để thêm lại)</p>
-                  <ul className="grid grid-cols-4 gap-1.5">
-                    {uploads.map((u) => (
-                      <li key={u.src}>
-                        <button type="button" onClick={() => addLayer(imageLayer(u))} className="block aspect-square w-full overflow-hidden rounded border border-ink/15 bg-[#f4f4f5]" title={u.name}>
-                          <img src={u.src} alt={u.name} className="h-full w-full object-contain" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <MyGallery
+                session={uploads.map((u) => ({ url: u.src, name: u.name, natW: u.natW, natH: u.natH }))}
+                refreshKey={galleryKey}
+                onPick={(g) => addLayer(imageLayer({ src: g.url, natW: g.natW, natH: g.natH, name: g.name }))}
+                loginHref={`/dang-nhap?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : returnTo)}`}
+              />
               {selected?.type === "image" && (
                 <ImagePanel
                   layer={selected}
@@ -1044,6 +1109,32 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             {busy}
           </div>
         </div>
+      )}
+
+      {showKeys && <ShortcutsModal onClose={() => setShowKeys(false)} />}
+
+      {switcher && (
+        <ProductSwitcher
+          currentId={product.id}
+          onClose={() => setSwitcher(false)}
+          onPick={(slug) => {
+            const cur = designRef.current;
+            stashCarry({ from: product.id, areas: areas.map((a) => ({ key: a.key, widthMm: a.widthMm, heightMm: a.heightMm, design: cur.areas[a.key] ?? { bg: null, layers: [] } })) });
+            saveDraft(product.id, cur);
+            router.push(`/thiet-ke/${slug}${mode === "seller" ? "?seller=1" : ""}`);
+          }}
+        />
+      )}
+
+      {orderOut && (
+        <OrderSheet
+          product={product}
+          design={orderOut}
+          initialColor={color?.name}
+          initialSize={size}
+          onProductPage={() => router.push(returnTo)}
+          onClose={() => setOrderOut(null)}
+        />
       )}
 
       {overview && (

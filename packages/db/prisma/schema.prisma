@@ -334,12 +334,29 @@ model Customer {
   orders       Order[]        @relation("CustomerOrders")
   sellerOrders Order[]        @relation("SellerOrders")
   designs      SavedDesign[]
+  assets       CustomerAsset[]
   seller       SellerProfile?
   apiKeys      ApiKey[]
   templates    SellerProduct[]
   batches      PaymentBatch[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+}
+
+/// Kho ảnh của tôi (ảnh khách tải lên để dùng lại khi thiết kế)
+model CustomerAsset {
+  id         String   @id @default(cuid())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String
+  url        String
+  name       String   @default("")
+  label      String   @default("")
+  natW       Int
+  natH       Int
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, url])
+  @@index([customerId, createdAt])
 }
 
 model SavedDesign {

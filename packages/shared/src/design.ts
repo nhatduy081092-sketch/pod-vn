@@ -400,8 +400,44 @@ export function designReport(
       }
     }
     if (partialBleed) push("warn", `Ảnh chạm đường xén nhưng chưa kéo tới mép ngoài (viền tràn ${g.bleed} mm) – sau khi xén có thể lộ viền trắng`);
+    const risky = designRiskWords({ areas: { [a.key]: ad } });
+    if (risky.length) push("warn", `Chữ có tên nhãn hiệu/nhân vật (${risky.join(", ")}) – cần có quyền sử dụng, đơn có thể bị từ chối in`);
   }
   return out;
+}
+
+/* ---------- Từ ngữ rủi ro (nhãn hiệu nổi tiếng) ---------- */
+
+/**
+ * Nhãn hiệu / nhân vật hay bị in lậu – chỉ CẢNH BÁO (khách có thể có giấy phép), xưởng duyệt lại.
+ * Viết thường, không dấu; khớp theo từ.
+ */
+export const RISK_WORDS = [
+  "nike", "adidas", "puma", "gucci", "louis vuitton", "chanel", "dior", "hermes", "prada", "versace", "balenciaga", "supreme", "burberry",
+  "fendi", "rolex", "off-white", "bape", "yeezy", "jordan", "disney", "marvel", "pokemon", "pikachu", "hello kitty", "doraemon", "mickey",
+  "minnie", "batman", "superman", "spiderman", "spider-man", "coca-cola", "coca cola", "starbucks", "manchester united", "real madrid",
+  "lamborghini", "ferrari", "porsche", "playboy", "harry potter", "naruto", "one piece",
+] as const;
+
+function normText(s: string) {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .toLowerCase();
+}
+
+/** Các từ rủi ro xuất hiện trong chữ của thiết kế (bỏ qua ô tên/số của thành viên) */
+export function designRiskWords(json: Pick<DesignJson, "areas">): string[] {
+  const found = new Set<string>();
+  for (const a of Object.values(json.areas))
+    for (const l of a.layers) {
+      if (l.type !== "text" || l.field) continue;
+      const t = ` ${normText(l.text).replace(/[^a-z0-9-]+/g, " ")} `;
+      for (const w of RISK_WORDS) if (t.includes(` ${w} `)) found.add(w);
+    }
+  return [...found];
 }
 
 /* ---------- Mẫu thiết kế (thư viện) ---------- */

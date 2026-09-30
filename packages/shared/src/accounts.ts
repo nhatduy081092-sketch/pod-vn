@@ -40,6 +40,17 @@ export const savedDesignSchema = z.object({
     .default(""),
 });
 
+/** Kho ảnh của tôi: ảnh khách đã tải lên để dùng lại trong công cụ thiết kế */
+export const customerAssetSchema = z.object({
+  url: z.string().max(300).regex(/^\/uploads\/[\w.-]+$/, "Ảnh không hợp lệ"),
+  name: z.string().trim().max(80).default(""),
+  natW: z.number().int().min(1).max(100000),
+  natH: z.number().int().min(1).max(100000),
+  label: z.string().trim().max(40).default(""),
+});
+export const customerAssetPatchSchema = z.object({ name: z.string().trim().max(80).optional(), label: z.string().trim().max(40).optional() });
+export const CUSTOMER_ASSET_LIMIT = 500;
+
 /** Nhận đơn đặt khi chưa đăng nhập vào tài khoản: phải đúng mã đơn + SĐT của đơn */
 export const claimOrderSchema = z.object({ code: z.string().trim().min(4).max(30) });
 

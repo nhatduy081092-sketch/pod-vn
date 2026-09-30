@@ -118,6 +118,25 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
 
   const selected = design.layers.find((l) => l.id === selectedId) ?? null;
 
+  // Cuộn chuột trên khung khi đang chọn lớp: phóng to / thu nhỏ lớp (không cuộn trang)
+  const wheelRef = useRef({ selected, commitTimer: 0 as unknown as ReturnType<typeof setTimeout> });
+  wheelRef.current.selected = selected;
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      const l = wheelRef.current.selected;
+      if (!l || l.locked) return;
+      e.preventDefault();
+      const f = Math.exp(-Math.max(-60, Math.min(60, e.deltaY)) * 0.0025);
+      onChangeLayer(l.id, scalePatch(l, f, { ow: l.w, oh: l.h, ofs: l.type === "text" ? l.fontSize : undefined }), false);
+      clearTimeout(wheelRef.current.commitTimer);
+      wheelRef.current.commitTimer = setTimeout(onCommit, 350);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [onChangeLayer, onCommit]);
+
   /** Lớp trên cùng tại điểm bấm; lớp đã khoá được bỏ qua (bấm xuyên xuống lớp dưới) */
   function hitTest(x: number, y: number): DesignLayer | null {
     for (let i = design.layers.length - 1; i >= 0; i--) {

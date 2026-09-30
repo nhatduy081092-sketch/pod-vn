@@ -8,6 +8,9 @@ import {
   customerLoginSchema,
   customerProfileSchema,
   customerRegisterSchema,
+  CUSTOMER_ASSET_LIMIT,
+  customerAssetPatchSchema,
+  customerAssetSchema,
   passwordChangeSchema,
   savedDesignSchema,
   sellerApplySchema,
@@ -182,6 +185,40 @@ accountRoutes.put("/designs/:id", async (c) => {
 accountRoutes.delete("/designs/:id", async (c) => {
   const r = await prisma.savedDesign.deleteMany({ where: { id: c.req.param("id"), customerId: c.get("customer").id } });
   if (!r.count) throw notFound("Không tìm thấy thiết kế");
+  return c.json({ ok: true });
+});
+
+/* ---------- Kho ảnh của tôi ---------- */
+const assetSelect = { id: true, url: true, name: true, label: true, natW: true, natH: true, createdAt: true } satisfies Prisma.CustomerAssetSelect;
+
+accountRoutes.get("/assets", async (c) => {
+  return c.json(await prisma.customerAsset.findMany({ where: { customerId: c.get("customer").id }, orderBy: { createdAt: "desc" }, take: CUSTOMER_ASSET_LIMIT, select: assetSelect }));
+});
+
+accountRoutes.post("/assets", rateLimit({ key: "casset", limit: 120, windowMs: 10 * 60_000 }), async (c) => {
+  const input = customerAssetSchema.parse(await c.req.json());
+  const me = c.get("customer").id;
+  const count = await prisma.customerAsset.count({ where: { customerId: me } });
+  if (count >= CUSTOMER_ASSET_LIMIT) throw new HTTPException(400, { message: `Kho ảnh tối đa ${CUSTOMER_ASSET_LIMIT} ảnh – xoá bớt ảnh cũ` });
+  const a = await prisma.customerAsset.upsert({
+    where: { customerId_url: { customerId: me, url: input.url } },
+    create: { ...input, customerId: me },
+    update: { name: input.name, label: input.label || undefined },
+    select: assetSelect,
+  });
+  return c.json(a, 201);
+});
+
+accountRoutes.put("/assets/:id", async (c) => {
+  const input = customerAssetPatchSchema.parse(await c.req.json());
+  const r = await prisma.customerAsset.updateMany({ where: { id: c.req.param("id"), customerId: c.get("customer").id }, data: input });
+  if (!r.count) throw notFound("Không tìm thấy ảnh");
+  return c.json({ ok: true });
+});
+
+accountRoutes.delete("/assets/:id", async (c) => {
+  const r = await prisma.customerAsset.deleteMany({ where: { id: c.req.param("id"), customerId: c.get("customer").id } });
+  if (!r.count) throw notFound("Không tìm thấy ảnh");
   return c.json({ ok: true });
 });
 

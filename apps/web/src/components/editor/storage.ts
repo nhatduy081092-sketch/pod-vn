@@ -62,3 +62,19 @@ export function takeSellerDesign(): { productId: string; design: OrderDesign } |
     return raw ? (JSON.parse(raw) as { productId: string; design: OrderDesign }) : null;
   }, null);
 }
+
+/* ---------- Mang thiết kế sang sản phẩm khác (đổi sản phẩm trong editor) ---------- */
+const CARRY = "yala-carry-design";
+export type CarryDesign = { from: string; areas: { key: string; widthMm: number; heightMm: number; design: import("@pod/shared").AreaDesign }[] };
+
+export function stashCarry(c: CarryDesign) {
+  safe(() => sessionStorage.setItem(CARRY, JSON.stringify(c)), undefined);
+}
+
+export function takeCarry(): CarryDesign | null {
+  return safe(() => {
+    const raw = sessionStorage.getItem(CARRY);
+    sessionStorage.removeItem(CARRY);
+    return raw ? (JSON.parse(raw) as CarryDesign) : null;
+  }, null);
+}
