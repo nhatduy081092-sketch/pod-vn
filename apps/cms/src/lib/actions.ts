@@ -209,6 +209,38 @@ export async function b2bPricingAction(input: { dryRun: boolean; includeManual: 
   }
 }
 
+/* ---------- Bảng giá Excel ---------- */
+export type PriceImportReport = {
+  dryRun: boolean;
+  rows: number;
+  changed: number;
+  unchanged: number;
+  errors: { sheet: string; row: number; message: string }[];
+  changes: { kind: "product" | "variant"; id: string; name: string; fields: { field: string; before: string; after: string }[] }[];
+};
+export async function importPricesAction(fd: FormData): Promise<{ ok: true; report: PriceImportReport } | { ok: false; error: string }> {
+  try {
+    const file = fd.get("file");
+    if (!(file instanceof File) || !file.size) return { ok: false, error: "Chưa chọn file Excel" };
+    if (!/\.xlsx$/i.test(file.name)) return { ok: false, error: "Chỉ nhận file .xlsx (Excel). Nếu đang dùng .xls/.csv, mở bằng Excel rồi Lưu thành .xlsx" };
+    const apply = fd.get("apply") === "1";
+    const report = await adminFetch<PriceImportReport>(`/prices/import?apply=${apply ? 1 : 0}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/octet-stream" },
+      body: new Uint8Array(await file.arrayBuffer()),
+    });
+    if (apply && report.changed) {
+      revalidatePath("/products");
+      revalidatePath("/products/prices");
+      await revalidateWeb();
+    }
+    return { ok: true, report };
+  } catch (e) {
+    if (e && typeof e === "object" && "digest" in e && String((e as { digest: string }).digest).startsWith("NEXT_REDIRECT")) throw e;
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 /* ---------- Kết nối nhận báo giá ---------- */
 export type IntegrationStatus = { telegram: boolean; quoteWebhook: boolean; cmsUrl: boolean };
 export async function integrationStatusAction(): Promise<IntegrationStatus | null> {

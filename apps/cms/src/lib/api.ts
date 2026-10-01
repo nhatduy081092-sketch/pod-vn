@@ -15,7 +15,7 @@ export async function adminFetch<T>(path: string, init: RequestInit = {}): Promi
   const token = await requireToken();
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${token}`);
-  if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
+  if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   const res = await fetch(`${API_URL}/api/admin${path}`, { ...init, headers, cache: "no-store" });
   if (res.status === 401) redirect("/login?expired=1");
   const data = await res.json().catch(() => ({}));

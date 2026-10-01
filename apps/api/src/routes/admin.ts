@@ -37,7 +37,7 @@ import { randomBytes } from "node:crypto";
 import { assertAreasAllowed, ensureProductParts, savePrintAreas, saveVariants } from "../lib/product-parts";
 import { emitOrderEvent } from "../lib/webhooks";
 import { requireAdmin, signAdminToken, type AdminClaims } from "../lib/auth";
-import { conflict, notFound, pageParams } from "../lib/http";
+import { badRequest, conflict, notFound, pageParams } from "../lib/http";
 import { rateLimit } from "../lib/rate-limit";
 import { getLanding, invalidateLanding } from "../lib/settings";
 import { uniqueSlug } from "../lib/slug";
@@ -46,6 +46,7 @@ import { aiPhotoEnabled, aiPhotoModel, buildPrompt, generateAiPhoto, type AiPhot
 import { listPages } from "../lib/pages";
 import { importOemCatalog } from "../lib/oem-import";
 import { applyB2BPricing } from "../lib/b2b-pricing";
+import { exportPriceSheet, importPriceSheet } from "../lib/price-sheet";
 import { cmsLink, postWebhook, webhookConfigured } from "../lib/quote-dispatch";
 import { searchFields, searchWhere } from "../lib/search";
 import { HTTPException } from "hono/http-exception";
@@ -422,6 +423,32 @@ adminRoutes.delete("/pages/:slug", async (c) => {
   const slug = pageSlugSchema.parse(c.req.param("slug"));
   await prisma.setting.deleteMany({ where: { key: PAGE_KEY_PREFIX + slug } });
   return c.json({ ok: true });
+});
+
+/* ---------- Bảng giá Excel ---------- */
+adminRoutes.get("/prices/export", async (c) => {
+  const buf = await exportPriceSheet({ categoryId: c.req.query("categoryId") || undefined, source: c.req.query("nguon") || undefined, q: c.req.query("q")?.trim() || undefined });
+  const date = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
+  return new Response(new Uint8Array(buf), {
+    headers: {
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="yala-bang-gia-${date}.xlsx"`,
+      "Cache-Control": "no-store",
+    },
+  });
+});
+/** POST /prices/import?apply=1 – body: file .xlsx (application/octet-stream). apply=0 = chỉ xem trước */
+adminRoutes.post("/prices/import", async (c) => {
+  const buf = Buffer.from(await c.req.arrayBuffer());
+  if (!buf.length) throw badRequest("Chưa chọn file");
+  if (buf.length > 15 * 1024 * 1024) throw badRequest("File quá lớn (tối đa 15MB)");
+  try {
+    const report = await importPriceSheet(buf, c.req.query("apply") !== "1");
+    return c.json(report);
+  } catch (e) {
+    if (e instanceof Error && !("status" in e)) throw badRequest(e.message);
+    throw e;
+  }
 });
 
 /* ---------- Kết nối nhận báo giá (Telegram, Google Sheets + Email) ---------- */

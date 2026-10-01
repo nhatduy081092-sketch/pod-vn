@@ -20,6 +20,9 @@ export default async function PricesPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <PageHeader title={`Bảng giá nhanh (${data.total})`}>
+        <Link href="/products/excel" className="btn-ghost h-fit">
+          Bảng giá Excel
+        </Link>
         <Link href={`/products?${qs.toString()}`} className="btn-ghost h-fit">
           ← Danh sách sản phẩm
         </Link>

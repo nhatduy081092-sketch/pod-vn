@@ -26,6 +26,9 @@ export default async function ProductsPage({ searchParams }: { searchParams: SP 
         <Link href={`/products/prices?${qs.toString()}`} className="btn-ghost h-fit">
           Bảng giá nhanh
         </Link>
+        <Link href="/products/excel" className="btn-ghost h-fit">
+          Bảng giá Excel
+        </Link>
         <Link href="/products/new-type" className="btn-ghost h-fit">
           + Theo loại (tranh, cờ, cốc, gối…)
         </Link>
