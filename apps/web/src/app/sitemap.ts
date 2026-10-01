@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/san-pham`, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/thiet-ke`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/bo-suu-tap`, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${SITE_URL}/doanh-nghiep`, changeFrequency: "weekly", priority: 0.9 },
     ...DESIGN_COLLECTIONS.map((c) => ({ url: `${SITE_URL}/bo-suu-tap/${c.slug}`, changeFrequency: "weekly" as const, priority: 0.6 })),
     ...cats.map((c) => ({ url: `${SITE_URL}/danh-muc/${c.slug}`, changeFrequency: "weekly" as const, priority: 0.7 })),
     ...pages.map((p) => ({ url: `${SITE_URL}/trang/${p.slug}`, changeFrequency: "monthly" as const, priority: 0.3 })),

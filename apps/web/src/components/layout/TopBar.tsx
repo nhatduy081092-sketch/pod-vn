@@ -16,7 +16,7 @@ export function TopBar({ brand }: { brand: LandingSettings["brand"] }) {
           <a href="/thiet-ke" className="hidden font-semibold text-accent hover:underline sm:inline">
             Tự thiết kế →
           </a>
-          <a href="/#doanh-nghiep" className="hidden font-semibold text-white/85 hover:underline lg:inline">
+          <a href="/doanh-nghiep" className="hidden font-semibold text-white/85 hover:underline lg:inline">
             Báo giá doanh nghiệp
           </a>
         </div>

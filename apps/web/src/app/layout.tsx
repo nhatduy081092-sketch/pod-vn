@@ -43,7 +43,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <CartProvider>
           <NoticeBanner notices={notices} />
           <TopBar brand={settings.brand} />
-          <Header brandName={settings.brand.name} logoUrl={settings.brand.logoUrl} categories={categories} hotline={settings.brand.hotline} />
+          <Header
+            brandName={settings.brand.name}
+            logoUrl={settings.brand.logoUrl}
+            categories={categories}
+            hotline={settings.brand.hotline}
+            industries={settings.b2bHub.industries}
+            solutions={settings.b2bHub.solutions}
+          />
           <main className="min-h-[60vh]">{children}</main>
           <Footer brand={settings.brand} categories={categories} pages={pages} />
           <FloatingContact zalo={settings.brand.zalo} hotline={settings.brand.hotline} messengerUrl={settings.brand.messengerUrl} />

@@ -7,17 +7,32 @@ import { IconCart, IconClose, IconMenu, IconPackage, IconSearch, IconSparkle, Ic
 import { SearchBox } from "../shop/SearchBox";
 import { Logo } from "./Logo";
 
-type Props = { brandName: string; logoUrl?: string; categories: { name: string; slug: string }[]; hotline: string };
+type Lite = { name: string; slug: string };
+type Props = {
+  brandName: string;
+  logoUrl?: string;
+  categories: Lite[];
+  hotline: string;
+  /** Nhóm ngành B2B + giải pháp theo dịp (settings.b2bHub) cho mega menu "Doanh nghiệp" */
+  industries?: Lite[];
+  solutions?: { key: string; title: string }[];
+};
 
-export function Header({ brandName, logoUrl, categories, hotline }: Props) {
+export function Header({ brandName, logoUrl, categories, hotline, industries = [], solutions = [] }: Props) {
   const [open, setOpen] = useState(false);
+  const [mega, setMega] = useState(false);
+  // danh mục bán lẻ (Cá nhân) = bỏ các danh mục thuộc ngành hàng doanh nghiệp
+  const b2bSlugs = new Set(industries.map((i) => i.slug));
+  const retail = categories.filter((c) => !b2bSlugs.has(c.slug));
   const [searchOpen, setSearchOpen] = useState(false);
   const { count, ready } = useCart();
   const pathname = usePathname();
+  const b2bActive = pathname.startsWith("/doanh-nghiep") || [...b2bSlugs].some((sl) => pathname === `/danh-muc/${sl}`);
 
   useEffect(() => {
     setOpen(false);
     setSearchOpen(false);
+    setMega(false);
   }, [pathname]);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -91,24 +106,86 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
         </div>
       )}
 
-      {/* Thanh danh mục (desktop) */}
-      <nav className="hidden border-t border-ink/10 lg:block" aria-label="Danh mục">
-        <div className="container-site no-scrollbar flex h-11 items-center gap-7 overflow-x-auto text-sm font-medium">
-          <Link href="/bo-suu-tap" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/bo-suu-tap") ? "text-brand" : "text-ink"}`}>
-            Mẫu có sẵn
-          </Link>
-          <Link href="/thiet-ke" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === "/thiet-ke" ? "text-brand" : "text-ink"}`}>
-            Tự thiết kế
-          </Link>
-          {categories.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/danh-muc/${c.slug}`}
-              className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === `/danh-muc/${c.slug}` ? "text-brand" : "text-ink/75"}`}
-            >
-              {c.name}
+      {/* Thanh điều hướng desktop: 2 lối vào Cá nhân | Doanh nghiệp */}
+      <nav className="relative hidden border-t border-ink/10 lg:block" aria-label="Danh mục" onMouseLeave={() => setMega(false)}>
+        <div className="container-site flex h-11 items-center gap-6 text-sm font-medium">
+          <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-7 overflow-x-auto">
+            <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-muted">Cá nhân</span>
+            <Link href="/bo-suu-tap" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/bo-suu-tap") ? "text-brand" : "text-ink"}`}>
+              Mẫu có sẵn
             </Link>
-          ))}
+            <Link href="/thiet-ke" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === "/thiet-ke" ? "text-brand" : "text-ink"}`}>
+              Tự thiết kế
+            </Link>
+            {retail.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/danh-muc/${c.slug}`}
+                className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === `/danh-muc/${c.slug}` ? "text-brand" : "text-ink/75"}`}
+              >
+                {c.name}
+              </Link>
+            ))}
+          </div>
+          <div className="flex shrink-0 items-center gap-2 border-l border-line pl-6">
+            <button
+              type="button"
+              onClick={() => setMega((v) => !v)}
+              onMouseEnter={() => setMega(true)}
+              aria-expanded={mega}
+              aria-controls="mega-b2b"
+              className={`flex h-8 items-center gap-1.5 rounded-full px-3.5 font-semibold transition ${mega || b2bActive ? "bg-ink text-white" : "text-ink hover:bg-surface"}`}
+            >
+              Doanh nghiệp
+              <svg viewBox="0 0 12 12" className={`h-3 w-3 transition ${mega ? "rotate-180" : ""}`} aria-hidden>
+                <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Mega menu doanh nghiệp */}
+        <div
+          id="mega-b2b"
+          className={`absolute inset-x-0 top-full border-t border-line bg-white shadow-soft transition ${mega ? "visible opacity-100" : "invisible opacity-0"}`}
+          onKeyDown={(e) => e.key === "Escape" && setMega(false)}
+        >
+          <div className="container-site grid grid-cols-[1.5fr_1fr_0.9fr] gap-10 py-7">
+            <div>
+              <p className="eyebrow">Ngành hàng in logo</p>
+              <ul className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1">
+                {industries.map((i) => (
+                  <li key={i.slug}>
+                    <Link href={`/doanh-nghiep#nganh-${i.slug}`} className="block rounded-md py-1.5 text-[14px] text-ink hover:text-brand">
+                      {i.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="eyebrow">Giải pháp theo dịp</p>
+              <ul className="mt-3 space-y-1">
+                {solutions.map((s) => (
+                  <li key={s.key}>
+                    <Link href={`/doanh-nghiep#giai-phap-${s.key}`} className="block rounded-md py-1.5 text-[14px] text-ink hover:text-brand">
+                      {s.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl bg-ink p-5 text-white">
+              <p className="text-lg font-semibold leading-snug">Cần quà tặng, đồng phục số lượng lớn?</p>
+              <p className="mt-2 text-[13px] leading-relaxed text-white/70">Gửi nhu cầu – YALA tư vấn theo ngân sách và làm mockup miễn phí.</p>
+              <Link href="/doanh-nghiep#bao-gia" className="btn-primary mt-4 w-full justify-center">
+                Nhận báo giá
+              </Link>
+              <Link href="/doanh-nghiep" className="mt-2 block text-center text-[13px] font-semibold text-white/80 hover:text-white">
+                Xem tất cả giải pháp →
+              </Link>
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -128,6 +205,7 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
             <Link href="/" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Trang chủ
             </Link>
+            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Cá nhân</p>
             <Link href="/bo-suu-tap" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Mẫu có sẵn theo chủ đề
             </Link>
@@ -137,15 +215,28 @@ export function Header({ brandName, logoUrl, categories, hotline }: Props) {
             <Link href="/san-pham" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Tất cả sản phẩm
             </Link>
-            <Link href="/#doanh-nghiep" className="block rounded-md px-3 py-2.5 font-bold text-navy hover:bg-cream">
-              Giải pháp doanh nghiệp
-            </Link>
-            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Danh mục</p>
-            {categories.map((c) => (
-              <Link key={c.slug} href={`/danh-muc/${c.slug}`} className="block rounded-md px-3 py-2.5 hover:bg-cream">
+            {retail.map((c) => (
+              <Link key={c.slug} href={`/danh-muc/${c.slug}`} className="block rounded-md px-3 py-2.5 font-medium hover:bg-cream">
                 {c.name}
               </Link>
             ))}
+            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Doanh nghiệp</p>
+            <Link href="/doanh-nghiep" className="block rounded-md px-3 py-2.5 hover:bg-cream">
+              Giải pháp doanh nghiệp
+            </Link>
+            <details className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between rounded-md px-3 py-2.5 hover:bg-cream">
+                Ngành hàng in logo <span className="text-muted transition group-open:rotate-180">▾</span>
+              </summary>
+              {industries.map((i) => (
+                <Link key={i.slug} href={`/doanh-nghiep#nganh-${i.slug}`} className="block rounded-md py-2 pl-6 pr-3 text-[14px] font-medium text-ink/80 hover:bg-cream">
+                  {i.name}
+                </Link>
+              ))}
+            </details>
+            <Link href="/doanh-nghiep#bao-gia" className="my-1 block rounded-lg bg-brand px-3 py-2.5 text-center text-white">
+              Nhận báo giá doanh nghiệp
+            </Link>
             <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Hỗ trợ</p>
             <Link href="/tra-cuu" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Tra cứu đơn hàng

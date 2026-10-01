@@ -6,6 +6,7 @@ import { TopBanner } from "@/components/landing/TopBanner";
 import { Hero } from "@/components/landing/Hero";
 import { HeroSlider } from "@/components/landing/HeroSlider";
 import { BrandSlogan } from "@/components/landing/BrandSlogan";
+import { Lanes } from "@/components/landing/Lanes";
 import { CategoryShowcase } from "@/components/landing/CategoryShowcase";
 import { BestSellers } from "@/components/landing/BestSellers";
 import { Steps } from "@/components/landing/Steps";
@@ -42,6 +43,7 @@ export default async function HomePage() {
     <>
       <TopBanner data={settings.topBanner} />
       <BrandSlogan data={settings.slogan} />
+      <Lanes data={settings.positioning} />
       {slides.length ? <HeroSlider slides={slides} intervalMs={settings.slides.intervalMs} /> : <Hero data={settings.hero} />}
       <CategoryShowcase data={settings.showcase} counts={showcaseCounts} colors={showcaseColors} />
 

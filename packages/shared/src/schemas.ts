@@ -162,6 +162,17 @@ export const loginSchema = z.object({
 
 const nonEmpty = z.string().max(500);
 const zoneRate = z.object({ first: z.number().int().min(0), step: z.number().int().min(0), days: z.string().max(40) });
+const laneSchema = z.object({
+  label: z.string().max(30),
+  title: z.string().trim().min(1).max(80),
+  points: z.array(z.string().max(100)).max(5),
+  ctaLabel: z.string().max(40),
+  href: z.string().max(300),
+  secondaryLabel: z.string().max(40),
+  secondaryHref: z.string().max(300),
+  image: z.string().max(500),
+});
+
 export const landingSettingsSchema = z.object({
   brand: z.object({
     name: nonEmpty,
@@ -199,6 +210,22 @@ export const landingSettingsSchema = z.object({
   hero: z.object({ tag: nonEmpty, title: nonEmpty, badge: nonEmpty, imageUrl: nonEmpty, ctaHref: nonEmpty }),
   sectionTitles: z.object({ bestSellers: nonEmpty, hotSale: nonEmpty, reviews: nonEmpty }),
   steps: z.array(z.object({ title: nonEmpty, color: nonEmpty })).min(1).max(8),
+  positioning: z.object({
+    enabled: z.boolean(),
+    statement: z.string().max(200),
+    personal: laneSchema,
+    business: laneSchema,
+    services: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(160), href: z.string().max(300) })).max(6),
+  }),
+  b2bHub: z.object({
+    eyebrow: z.string().max(60),
+    title: z.string().trim().min(1).max(120),
+    subtitle: z.string().max(300),
+    industries: z.array(z.object({ name: z.string().trim().min(1).max(60), slug: z.string().trim().min(1).max(120), blurb: z.string().max(160) })).max(16),
+    solutions: z.array(z.object({ key: z.string().trim().min(1).max(40), title: z.string().trim().min(1).max(80), desc: z.string().max(240), items: z.string().max(160) })).max(12),
+    process: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(10),
+    benefits: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(12),
+  }),
   slogan: z.object({ enabled: z.boolean(), words: z.array(z.string().trim().min(1).max(24)).min(1).max(6), vi: z.string().max(140) }),
   slides: z.object({
     enabled: z.boolean(),

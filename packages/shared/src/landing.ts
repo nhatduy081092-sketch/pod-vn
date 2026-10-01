@@ -55,6 +55,18 @@ export type LandingSettings = {
     reviews: string;
   };
   steps: { title: string; color: string }[];
+  /** Định vị đầu trang: YALA là ai + 2 lối vào Cá nhân | Doanh nghiệp + dịch vụ chính */
+  positioning: { enabled: boolean; statement: string; personal: Lane; business: Lane; services: { title: string; desc: string; href: string }[] };
+  /** Trang /doanh-nghiep: merchandise, quà tặng, đồng phục doanh nghiệp */
+  b2bHub: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    industries: { name: string; slug: string; blurb: string }[];
+    solutions: { key: string; title: string; desc: string; items: string }[];
+    process: { title: string; desc: string }[];
+    benefits: { title: string; desc: string }[];
+  };
   /** Slogan thương hiệu đầu trang: mỗi từ tiếng Anh, chữ cái đầu tô màu nhấn (ghép thành YALA) + câu tiếng Việt */
   slogan: { enabled: boolean; words: string[]; vi: string };
   /** Banner slider đầu trang theo chiến dịch (thay hero cũ khi bật) */
@@ -104,6 +116,8 @@ export type LandingSettings = {
   };
 };
 
+export type Lane = { label: string; title: string; points: string[]; ctaLabel: string; href: string; secondaryLabel: string; secondaryHref: string; image: string };
+
 export type HeroSlide = {
   eyebrow: string;
   title: string;
@@ -142,6 +156,23 @@ export type ShowcaseTile = {
 
 const C = (name: string, hex: string) => ({ name, hex });
 
+/** Số liệu khối doanh nghiệp: chỉ ghi điều YALA làm được (không dùng số liệu của nguồn hàng) */
+const B2B_STATS = [
+  { value: "Từ 1", label: "sản phẩm – đơn nhỏ đến số lượng lớn" },
+  { value: "9", label: "nhóm ngành merchandise & quà tặng" },
+  { value: "Miễn phí", label: "tư vấn & thiết kế mockup" },
+  { value: "Toàn quốc", label: "giao một hoặc nhiều điểm" },
+];
+/** Giá trị mặc định cũ (số liệu & khách hàng của OEM Group) – gặp lại trong DB thì thay bằng thông tin của YALA */
+const LEGACY_B2B_STATS = [
+  { value: "15+", label: "năm kinh nghiệm bán lẻ & phân phối" },
+  { value: "500+", label: "thương hiệu trong và ngoài nước" },
+  { value: "20%", label: "tiết kiệm chi phí nhờ sản xuất trực tiếp" },
+  { value: "60 ngày", label: "lưu kho miễn phí, giao theo đợt" },
+];
+const LEGACY_B2B_CLIENTS = ["Saigon Co.op", "ShopeeFood", "Vietnam Airlines", "BIDV", "Samsung", "7-Eleven", "VNG", "Acecook", "Schneider Electric", "GHN"];
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
 export const DEFAULT_LANDING: LandingSettings = {
   brand: {
     name: "YALA",
@@ -164,13 +195,8 @@ export const DEFAULT_LANDING: LandingSettings = {
       "Từ ý tưởng đến thành phẩm: tư vấn, thiết kế theo nhận diện thương hiệu, in – thêu – khắc logo, sản xuất số lượng lớn và giao hàng toàn quốc.",
     categorySlug: "dong-phuc-may-mac",
     ctaLabel: "Nhận báo giá B2B",
-    stats: [
-      { value: "15+", label: "năm kinh nghiệm bán lẻ & phân phối" },
-      { value: "500+", label: "thương hiệu trong và ngoài nước" },
-      { value: "20%", label: "tiết kiệm chi phí nhờ sản xuất trực tiếp" },
-      { value: "60 ngày", label: "lưu kho miễn phí, giao theo đợt" },
-    ],
-    clients: ["Saigon Co.op", "ShopeeFood", "Vietnam Airlines", "BIDV", "Samsung", "7-Eleven", "VNG", "Acecook", "Schneider Electric", "GHN"],
+    stats: B2B_STATS,
+    clients: [],
   },
   topBanner: {
     enabled: true,
@@ -201,6 +227,76 @@ export const DEFAULT_LANDING: LandingSettings = {
     { title: "Xưởng in đúng file thiết kế & kiểm tra chất lượng", color: "#D6A9F2" },
     { title: "Đóng gói & giao hàng toàn quốc", color: "#8BE3D3" },
   ],
+  positioning: {
+    enabled: true,
+    statement: "YALA in theo yêu cầu cho cá nhân và làm merchandise, quà tặng, đồng phục cho doanh nghiệp.",
+    personal: {
+      label: "Cá nhân",
+      title: "In áo & quà theo ý bạn",
+      points: ["Tự thiết kế online, xem trước trên áo thật", "Hơn 90 mẫu chữ có sẵn theo chủ đề", "In từ 1 chiếc, giao toàn quốc"],
+      ctaLabel: "Bắt đầu thiết kế",
+      href: "/thiet-ke",
+      secondaryLabel: "Xem mẫu có sẵn",
+      secondaryHref: "/bo-suu-tap",
+      image: "/showcase/ao-thun.webp",
+    },
+    business: {
+      label: "Doanh nghiệp",
+      title: "Merchandise & quà tặng doanh nghiệp",
+      points: ["Quà Tết, welcome kit, quà sự kiện, đồng phục", "In – thêu – khắc logo theo nhận diện thương hiệu", "Tư vấn & thiết kế mockup miễn phí"],
+      ctaLabel: "Xem giải pháp doanh nghiệp",
+      href: "/doanh-nghiep",
+      secondaryLabel: "Nhận báo giá",
+      secondaryHref: "/doanh-nghiep#bao-gia",
+      image: "",
+    },
+    services: [
+      { title: "In theo yêu cầu", desc: "Áo, túi, cốc, gối… in ảnh, chữ, logo từ 1 chiếc", href: "/thiet-ke" },
+      { title: "Merchandise thương hiệu", desc: "Bộ nhận diện trên sản phẩm: áo, túi, bình, sổ", href: "/doanh-nghiep#nganh-hang" },
+      { title: "Quà tặng doanh nghiệp", desc: "Quà Tết, tri ân khách hàng, quà sự kiện theo ngân sách", href: "/doanh-nghiep#giai-phap" },
+      { title: "Đồng phục", desc: "Đồng phục công ty, lớp, đội nhóm – in tên & số từng người", href: "/danh-muc/ao-thun" },
+    ],
+  },
+  b2bHub: {
+    eyebrow: "YALA cho doanh nghiệp",
+    title: "Merchandise & quà tặng doanh nghiệp in logo theo yêu cầu",
+    subtitle: "Một đầu mối cho áo, túi, bình, sổ, hộp quà… Tư vấn theo ngân sách, thiết kế mockup miễn phí, sản xuất và giao tận nơi.",
+    industries: [
+      { name: "Đồng phục & may mặc", slug: "dong-phuc-may-mac", blurb: "Áo thun, polo, áo khoác, đồng phục sự kiện" },
+      { name: "Balo, túi & phụ kiện", slug: "balo-tui-phu-kien", blurb: "Balo laptop, túi tote, túi rút, túi thể thao" },
+      { name: "Bình giữ nhiệt & ly cốc", slug: "binh-nuoc-ly-coc", blurb: "Bình giữ nhiệt, cốc sứ, ly thuỷ tinh in logo" },
+      { name: "Mũ nón, áo mưa & ô dù", slug: "mu-non-ao-mua-o-du", blurb: "Mũ lưỡi trai, nón bảo hiểm, áo mưa, ô dù" },
+      { name: "Văn phòng phẩm", slug: "van-phong-pham", blurb: "Sổ tay, bút, thẻ tên – dây đeo, huy hiệu" },
+      { name: "Hộp quà & sản phẩm giấy", slug: "hop-giay-san-pham-giay", blurb: "Hộp quà, túi giấy, lịch Tết, thiệp, sticker" },
+      { name: "Vali & đồ du lịch", slug: "vali-du-lich", blurb: "Vali in logo, thẻ hành lý, gối cổ, ví hộ chiếu" },
+      { name: "Gia dụng & đồ bếp", slug: "gia-dung-dien-bep", blurb: "Đồ gia dụng, gốm sứ, thuỷ tinh, đồ điện nhỏ" },
+      { name: "Đồ chơi & mẹ bé", slug: "do-choi-me-be", blurb: "Thú bông, đồ chơi trí tuệ, lồng đèn Trung thu" },
+    ],
+    solutions: [
+      { key: "qua-tet", title: "Quà Tết doanh nghiệp", desc: "Hộp quà Tết in logo cho nhân viên, đối tác, khách hàng – chọn theo ngân sách từng người.", items: "Lịch Tết · Bình giữ nhiệt · Sổ tay · Hộp quà" },
+      { key: "welcome-kit", title: "Welcome kit nhân viên mới", desc: "Bộ quà chào đón đồng bộ nhận diện, đóng hộp sẵn, giao theo đợt tuyển dụng.", items: "Áo · Sổ · Bình nước · Túi tote · Thẻ tên" },
+      { key: "su-kien", title: "Sự kiện, hội nghị, hội thảo", desc: "Áo sự kiện, quà check-in, túi hội thảo số lượng lớn – bám sát deadline sự kiện.", items: "Áo sự kiện · Túi tote · Dây đeo thẻ · Quà check-in" },
+      { key: "tri-an", title: "Quà tri ân khách hàng & đối tác", desc: "Bộ quà chỉn chu, có thể khắc tên riêng từng người, kèm thiệp cảm ơn.", items: "Bình khắc tên · Sổ da · Hộp quà cao cấp" },
+      { key: "dong-phuc", title: "Đồng phục công ty & team building", desc: "Áo thun, polo, áo khoác in/thêu logo đủ size; in tên – số từng người.", items: "Polo · Áo thun · Áo khoác · Mũ" },
+      { key: "truong-hoc", title: "Trường học & tổ chức", desc: "Áo lớp, đồng phục, quà tốt nghiệp, quà khai giảng cho trường và tổ chức.", items: "Áo lớp · Balo · Sổ · Huy hiệu" },
+    ],
+    process: [
+      { title: "Gửi nhu cầu", desc: "Dịp tặng, số lượng, ngân sách, deadline, file logo." },
+      { title: "Tư vấn & đề xuất", desc: "Gợi ý sản phẩm theo ngân sách và hình ảnh thương hiệu." },
+      { title: "Mockup miễn phí", desc: "Xem trước logo trên từng sản phẩm, chỉnh đến khi duyệt." },
+      { title: "Báo giá & mẫu", desc: "Báo giá chi tiết; làm mẫu thật khi đơn cần." },
+      { title: "Sản xuất & kiểm tra", desc: "Sản xuất theo mẫu đã duyệt, kiểm tra chất lượng từng lô." },
+      { title: "Đóng gói & giao", desc: "Đóng gói quà, giao một hoặc nhiều điểm trên toàn quốc." },
+    ],
+    benefits: [
+      { title: "Một đầu mối, nhiều ngành hàng", desc: "Áo, túi, bình, sổ, hộp quà… gom trong một đơn, một người phụ trách." },
+      { title: "Xem trước trước khi sản xuất", desc: "Mockup miễn phí cho từng sản phẩm, duyệt xong mới làm." },
+      { title: "In, thêu, khắc theo chất liệu", desc: "Chọn kỹ thuật phù hợp để logo bền, đúng màu nhận diện." },
+      { title: "Linh hoạt số lượng", desc: "Từ đơn nhỏ cho team đến số lượng lớn cho cả công ty." },
+      { title: "Đóng gói quà theo yêu cầu", desc: "Hộp, túi, thiệp in lời chúc – sẵn sàng để trao tặng." },
+      { title: "Giao toàn quốc", desc: "Giao một điểm hoặc chia nhiều chi nhánh theo danh sách." },
+    ],
+  },
   slogan: {
     enabled: true,
     words: ["Young", "Ambitious", "Limitless", "Authentic"],
@@ -375,8 +471,9 @@ export function mergeLanding(value: unknown): LandingSettings {
     b2b: {
       ...d.b2b,
       ...v.b2b,
-      stats: v.b2b?.stats?.length ? v.b2b.stats : d.b2b.stats,
-      clients: v.b2b?.clients ?? d.b2b.clients,
+      // dữ liệu cũ còn nguyên số liệu/khách hàng của OEM Group (nguồn hàng) -> thay bằng thông tin của YALA
+      stats: v.b2b?.stats?.length && !sameJson(v.b2b.stats, LEGACY_B2B_STATS) ? v.b2b.stats : d.b2b.stats,
+      clients: v.b2b?.clients && !sameJson(v.b2b.clients, LEGACY_B2B_CLIENTS) ? v.b2b.clients : d.b2b.clients,
     },
     topBanner: { ...d.topBanner, ...v.topBanner },
     hero: { ...d.hero, ...v.hero },
@@ -384,6 +481,21 @@ export function mergeLanding(value: unknown): LandingSettings {
     steps: v.steps?.length ? v.steps : d.steps,
     showcase: { ...d.showcase, ...v.showcase, tiles: v.showcase?.tiles?.length ? v.showcase.tiles : d.showcase.tiles },
     slogan: { ...d.slogan, ...v.slogan, words: v.slogan?.words?.length ? v.slogan.words : d.slogan.words },
+    positioning: {
+      ...d.positioning,
+      ...v.positioning,
+      personal: { ...d.positioning.personal, ...v.positioning?.personal },
+      business: { ...d.positioning.business, ...v.positioning?.business },
+      services: v.positioning?.services?.length ? v.positioning.services : d.positioning.services,
+    },
+    b2bHub: {
+      ...d.b2bHub,
+      ...v.b2bHub,
+      industries: v.b2bHub?.industries?.length ? v.b2bHub.industries : d.b2bHub.industries,
+      solutions: v.b2bHub?.solutions?.length ? v.b2bHub.solutions : d.b2bHub.solutions,
+      process: v.b2bHub?.process?.length ? v.b2bHub.process : d.b2bHub.process,
+      benefits: v.b2bHub?.benefits?.length ? v.b2bHub.benefits : d.b2bHub.benefits,
+    },
     slides: { ...d.slides, ...v.slides, items: v.slides?.items?.length ? v.slides.items : d.slides.items },
     seasonal: { ...d.seasonal, ...v.seasonal, rules: v.seasonal?.rules?.length ? v.seasonal.rules : d.seasonal.rules },
     collections: { ...d.collections, ...v.collections },

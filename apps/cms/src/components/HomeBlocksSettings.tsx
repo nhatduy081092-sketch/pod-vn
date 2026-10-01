@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { DEFAULT_LANDING, type HeroSlide, type LandingSettings, type LookHotspot, type SeasonRule } from "@pod/shared";
+import { DEFAULT_LANDING, type HeroSlide, type Lane, type LandingSettings, type LookHotspot, type SeasonRule } from "@pod/shared";
 import { ImageInput } from "./ImageInput";
 
 type S = LandingSettings;
@@ -72,6 +72,71 @@ function Card({ open, onToggle, title, hint, children }: { id: string; open: boo
   );
 }
 
+/** Danh sách nhiều cột dạng textarea: mỗi dòng 1 mục, các cột cách nhau bằng "|" (giữ nguyên chữ đang gõ) */
+function PipeLines<T>({ label, hint, rows, cols, toRow, fromRow, onChange, max = 20 }: {
+  label: string;
+  hint: string;
+  rows: T[];
+  cols: number;
+  toRow: (r: T) => string[];
+  fromRow: (c: string[]) => T | null;
+  onChange: (rows: T[]) => void;
+  max?: number;
+}) {
+  const [text, setText] = useState(rows.map((r) => toRow(r).join(" | ")).join("\n"));
+  return (
+    <label className="block md:col-span-2">
+      <span className="label">{label}</span>
+      <textarea
+        className="input font-mono text-[13px]"
+        rows={Math.min(12, Math.max(3, rows.length + 1))}
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+          const out = e.target.value
+            .split("\n")
+            .map((l) => l.split("|").map((x) => x.trim()))
+            .filter((c) => c[0])
+            .map((c) => fromRow([...c, ...Array(cols).fill("")].slice(0, cols)))
+            .filter((x): x is T => x !== null)
+            .slice(0, max);
+          onChange(out);
+        }}
+      />
+      <span className="mt-0.5 block text-xs text-neutral-500">{hint}</span>
+    </label>
+  );
+}
+
+const slugify = (v: string) =>
+  v
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+function LaneEditor({ lane, onChange, name }: { lane: Lane; onChange: (v: Partial<Lane>) => void; name: string }) {
+  return (
+    <fieldset className="rounded-lg border p-3">
+      <legend className="px-1 text-sm font-bold">{name}</legend>
+      <div className="grid gap-2 md:grid-cols-2">
+        <Field label="Nhãn" value={lane.label} onChange={(v) => onChange({ label: v })} />
+        <Field label="Tiêu đề" value={lane.title} onChange={(v) => onChange({ title: v })} />
+        <ListField label="Các ý chính (cách nhau dấu ;)" sep=";" initial={lane.points.join("; ")} onChange={(v) => onChange({ points: v.slice(0, 5) })} wide />
+        <Field label="Chữ nút chính" value={lane.ctaLabel} onChange={(v) => onChange({ ctaLabel: v })} />
+        <Field label="Link nút chính" value={lane.href} onChange={(v) => onChange({ href: v })} />
+        <Field label="Chữ link phụ" value={lane.secondaryLabel} onChange={(v) => onChange({ secondaryLabel: v })} />
+        <Field label="Link phụ" value={lane.secondaryHref} onChange={(v) => onChange({ secondaryHref: v })} />
+        <div className="md:col-span-2">
+          <ImageInput label="Ảnh (để trống ở lối Doanh nghiệp = hình minh hoạ bộ quà)" value={lane.image} onChange={(v) => onChange({ image: v })} />
+        </div>
+      </div>
+    </fieldset>
+  );
+}
+
 /** Các khối trang chủ mới: slider, theo mùa, bộ sưu tập, trước/sau, shop the look, dòng basic */
 export function HomeBlocksSettings({ value: s, onChange }: Props) {
   const set = <K extends keyof S>(k: K, v: Partial<S[K]>) => onChange((p) => ({ ...p, [k]: { ...(p[k] as object), ...v } }));
@@ -84,6 +149,73 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
 
   return (
     <div className="space-y-4">
+      <Card {...cardProps("positioning")} title="Định vị + 2 lối vào (Cá nhân | Doanh nghiệp)" hint="Ngay dưới slogan: 1 câu YALA làm gì, 2 thẻ lối vào và hàng dịch vụ.">
+        <Toggle label="Hiển thị" checked={s.positioning.enabled} onChange={(v) => set("positioning", { enabled: v })} />
+        <Field label="Câu định vị" value={s.positioning.statement} onChange={(v) => set("positioning", { statement: v })} wide />
+        <div className="grid gap-3 lg:grid-cols-2">
+          <LaneEditor name="Lối Cá nhân" lane={s.positioning.personal} onChange={(v) => set("positioning", { personal: { ...s.positioning.personal, ...v } })} />
+          <LaneEditor name="Lối Doanh nghiệp" lane={s.positioning.business} onChange={(v) => set("positioning", { business: { ...s.positioning.business, ...v } })} />
+        </div>
+        <PipeLines
+          label="Dịch vụ (tối đa 6)"
+          hint="Mỗi dòng: Tên dịch vụ | Mô tả ngắn | Link"
+          rows={s.positioning.services}
+          cols={3}
+          max={6}
+          toRow={(r) => [r.title, r.desc, r.href]}
+          fromRow={([title, desc, href]) => ({ title: title!, desc: desc!, href: href! })}
+          onChange={(v) => set("positioning", { services: v })}
+        />
+      </Card>
+
+      <Card {...cardProps("b2bHub")} title="Trang Doanh nghiệp (/doanh-nghiep)" hint="Ngành hàng, giải pháp theo dịp, quy trình, lợi ích. Số liệu & khách hàng sửa ở khối “Giải pháp doanh nghiệp” phía trên.">
+        <div className="grid gap-2 md:grid-cols-2">
+          <Field label="Nhãn nhỏ" value={s.b2bHub.eyebrow} onChange={(v) => set("b2bHub", { eyebrow: v })} />
+          <Field label="Tiêu đề (H1)" value={s.b2bHub.title} onChange={(v) => set("b2bHub", { title: v })} />
+          <Field label="Mô tả" value={s.b2bHub.subtitle} onChange={(v) => set("b2bHub", { subtitle: v })} wide />
+          <PipeLines
+            label="Ngành hàng (hiện trên menu Doanh nghiệp)"
+            hint="Mỗi dòng: Tên ngành | slug danh mục | mô tả ngắn. Slug trùng danh mục có sản phẩm → thẻ dẫn vào danh mục; chưa có → dẫn tới form báo giá. Danh mục có slug ở đây sẽ ẩn khỏi menu Cá nhân."
+            rows={s.b2bHub.industries}
+            cols={3}
+            max={16}
+            toRow={(r) => [r.name, r.slug, r.blurb]}
+            fromRow={([name, slug, blurb]) => ({ name: name!, slug: slugify(slug || name!), blurb: blurb! })}
+            onChange={(v) => set("b2bHub", { industries: v })}
+          />
+          <PipeLines
+            label="Giải pháp theo dịp"
+            hint="Mỗi dòng: Tên giải pháp | mô tả | gợi ý món (VD: Lịch Tết · Bình giữ nhiệt) | mã (tuỳ chọn, dùng cho link ?dip=)"
+            rows={s.b2bHub.solutions}
+            cols={4}
+            max={12}
+            toRow={(r) => [r.title, r.desc, r.items, r.key]}
+            fromRow={([title, desc, items, key]) => ({ title: title!, desc: desc!, items: items!, key: slugify(key || title!) })}
+            onChange={(v) => set("b2bHub", { solutions: v })}
+          />
+          <PipeLines
+            label="Quy trình"
+            hint="Mỗi dòng: Bước | mô tả"
+            rows={s.b2bHub.process}
+            cols={2}
+            max={8}
+            toRow={(r) => [r.title, r.desc]}
+            fromRow={([title, desc]) => ({ title: title!, desc: desc! })}
+            onChange={(v) => set("b2bHub", { process: v })}
+          />
+          <PipeLines
+            label="Vì sao chọn YALA"
+            hint="Mỗi dòng: Lợi ích | mô tả"
+            rows={s.b2bHub.benefits}
+            cols={2}
+            max={9}
+            toRow={(r) => [r.title, r.desc]}
+            fromRow={([title, desc]) => ({ title: title!, desc: desc! })}
+            onChange={(v) => set("b2bHub", { benefits: v })}
+          />
+        </div>
+      </Card>
+
       <Card {...cardProps("slogan")} title="Slogan thương hiệu (đầu trang)" hint="Mỗi từ 1 dòng tiếng Anh – chữ cái đầu tự tô màu cam (Young, Ambitious, Limitless, Authentic → YALA).">
         <Toggle label="Hiển thị" checked={s.slogan.enabled} onChange={(v) => set("slogan", { enabled: v })} />
         <div className="grid gap-2 md:grid-cols-2">

@@ -29,11 +29,14 @@ export function B2BSection({ data, brand, products }: Props) {
             <h2 className="mt-3 text-[clamp(28px,3.6vw,44px)] font-bold leading-[1.1] tracking-[-0.02em]">{data.title}</h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80 md:text-base">{data.subtitle}</p>
             <div className="mt-5 flex flex-wrap gap-2.5">
-              <a href={zalo} target="_blank" rel="noopener noreferrer" className="btn border-white bg-accent text-white hover:bg-brand-dark">
+              <Link href="/doanh-nghiep#bao-gia" className="btn-primary">
                 {data.ctaLabel} <IconArrow className="h-4 w-4" />
-              </a>
-              <a href={`mailto:${brand.email}?subject=${encodeURIComponent("Yêu cầu báo giá – " + brand.name)}`} className="btn border-white/60 bg-transparent text-white hover:bg-white/10">
-                {brand.email}
+              </Link>
+              <Link href="/doanh-nghiep" className="btn border-white/40 bg-transparent text-white hover:border-white">
+                Xem giải pháp doanh nghiệp
+              </Link>
+              <a href={zalo} target="_blank" rel="noopener noreferrer" className="btn border-white/40 bg-transparent text-white hover:border-white">
+                Chat Zalo
               </a>
             </div>
           </div>
