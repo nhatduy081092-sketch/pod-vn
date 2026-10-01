@@ -6,7 +6,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* Hệ màu YALA 2026: nền trung tính, 1 màu nhấn cam cho hành động mua & giá sale.
+        /* Hệ màu YALA: ĐEN (ink) + CAM ĐẬM (brand) là chủ đạo, nền trung tính; đỏ riêng cho giá sale.
            Các tên cũ (cream, navy, brand-*) giữ lại nhưng trỏ về bảng màu mới để toàn site đổi đồng loạt. */
         ink: "#1d1d1f",
         muted: "#6b6660",
@@ -15,18 +15,18 @@ export default {
         cream: "#f6f4f1",
         banner: "#f6f4f1",
         brand: {
-          DEFAULT: "#F2711C", // cam YALA – nút mua, giá sale, trạng thái chọn
-          dark: "#D65F10",
-          light: "#FFF1E7",
+          DEFAULT: "#E4570B", // cam đậm YALA – nút mua, điểm nhấn, trạng thái chọn
+          dark: "#C2410C", // hover + chữ cam trên nền trắng (đủ tương phản AA)
+          light: "#FFF1E6",
           yellow: "#f6f4f1",
-          gold: "#F2711C",
-          band: "#F2711C",
+          gold: "#E4570B",
+          band: "#E4570B",
           badge: "#ffffff",
         },
         zalo: "#0068FF",
         navy: { DEFAULT: "#1d1d1f", dark: "#000000", light: "#f1eee9" },
-        accent: "#F2711C",
-        sale: "#D9480F",
+        accent: "#E4570B",
+        sale: "#D62828", // đỏ – tách khỏi cam thương hiệu
       },
       fontFamily: {
         sans: ["var(--font-sans)", "Be Vietnam Pro", "system-ui", "sans-serif"],

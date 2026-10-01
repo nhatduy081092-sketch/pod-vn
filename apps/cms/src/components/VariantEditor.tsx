@@ -142,7 +142,7 @@ export function VariantEditor({ productId, productName, initial }: { productId: 
                   <input className="input h-8 w-24 px-2 text-right text-sm" inputMode="numeric" value={v.priceDelta || ""} onChange={(e) => patch(i, { priceDelta: num(e.target.value) })} placeholder="0" aria-label="Phụ phí" />
                 </td>
                 <td>
-                  <input type="checkbox" checked={v.isActive} onChange={(e) => patch(i, { isActive: e.target.checked })} className="h-4 w-4 accent-[#F08A00]" aria-label="Đang bán" />
+                  <input type="checkbox" checked={v.isActive} onChange={(e) => patch(i, { isActive: e.target.checked })} className="h-4 w-4 accent-[#E4570B]" aria-label="Đang bán" />
                 </td>
                 <td>
                   <button type="button" className="text-xs text-red-600" onClick={() => setRows((r) => r.filter((_, k) => k !== i))}>

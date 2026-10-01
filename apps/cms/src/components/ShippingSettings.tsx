@@ -93,7 +93,7 @@ export function ShippingSettings({ value, onChange }: { value: ShippingConfig; o
 
       <div className="grid gap-3 rounded-lg border p-3 md:grid-cols-3">
         <label className="flex items-center gap-2 text-sm font-semibold">
-          <input type="checkbox" checked={value.express.enabled} onChange={(e) => set({ express: { ...value.express, enabled: e.target.checked } })} className="h-4 w-4 accent-[#F08A00]" />
+          <input type="checkbox" checked={value.express.enabled} onChange={(e) => set({ express: { ...value.express, enabled: e.target.checked } })} className="h-4 w-4 accent-[#E4570B]" />
           Cho chọn giao nhanh
         </label>
         <label className="block">

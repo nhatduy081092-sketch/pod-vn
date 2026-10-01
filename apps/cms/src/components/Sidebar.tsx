@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { YALA_WORDMARK } from "@pod/shared";
 import { logoutAction } from "@/lib/actions";
 import { WEB_URL } from "@/lib/config";
 
@@ -27,8 +28,11 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 z-20 border-b border-neutral-200 bg-white md:h-screen md:w-60 md:shrink-0 md:border-b-0 md:border-r">
       <div className="flex items-center justify-between px-4 py-3 md:block md:px-5 md:py-5">
-        <p className="font-black">
-          YALA<span className="text-brand-dark">.</span> <span className="text-xs font-semibold text-neutral-400">CMS</span>
+        <p className="flex items-center gap-2 font-black">
+          <svg viewBox={`0 0 ${YALA_WORDMARK.w} ${YALA_WORDMARK.h}`} className="h-4 w-auto" role="img" aria-label="YALA">
+            <path fill="currentColor" fillRule="evenodd" d={YALA_WORDMARK.d} />
+          </svg>
+          <span className="text-xs font-semibold text-neutral-400">CMS</span>
         </p>
         <form action={logoutAction} className="md:hidden">
           <button className="text-sm text-neutral-500">Đăng xuất</button>

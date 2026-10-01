@@ -243,7 +243,7 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
             <div className="space-y-2">
               {opts.map((o) => (
                 <label key={o.method} className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-3 ${chosen?.method === o.method ? "border-ink bg-cream" : "border-ink/15"}`}>
-                  <input type="radio" name="ship" className="accent-[#F08A00]" checked={chosen?.method === o.method} onChange={() => setShipMethod(o.method)} />
+                  <input type="radio" name="ship" className="accent-[#E4570B]" checked={chosen?.method === o.method} onChange={() => setShipMethod(o.method)} />
                   <span className="flex-1">
                     <span className="block text-sm font-bold">{o.label}</span>
                     <span className="text-xs text-ink/60">
@@ -263,7 +263,7 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
           <div className="space-y-2">
             {PAYMENT_METHODS.map((m) => (
               <label key={m} className={`flex cursor-pointer items-start gap-3 rounded-lg border-2 p-3 ${form.paymentMethod === m ? "border-ink bg-cream" : "border-ink/15"}`}>
-                <input type="radio" name="pm" className="mt-1 accent-[#F08A00]" checked={form.paymentMethod === m} onChange={() => set("paymentMethod", m)} />
+                <input type="radio" name="pm" className="mt-1 accent-[#E4570B]" checked={form.paymentMethod === m} onChange={() => set("paymentMethod", m)} />
                 <span>
                   <span className="block text-sm font-bold">{PAYMENT_METHOD_LABEL[m]}</span>
                   <span className="text-xs text-ink/60">

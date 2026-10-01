@@ -607,7 +607,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const slider = (label: string, value: number, min: number, max: number, step: number, onChange: (v: number) => void, fmt?: (v: number) => string) => (
     <label className="block text-xs font-semibold">
       {label}: {fmt ? fmt(value) : value}
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} onPointerUp={endDrag} onKeyUp={endDrag} className="w-full accent-[#F08A00]" />
+      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} onPointerUp={endDrag} onKeyUp={endDrag} className="w-full accent-[#E4570B]" />
     </label>
   );
   const otherAreas = areas.filter((a) => a.key !== area.key);
@@ -978,7 +978,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                         const width = Number(e.target.value);
                         patchSelected({ stroke: width > 0 ? { color: selected.stroke?.color ?? "#ffffff", width } : undefined });
                       }}
-                      className="w-full accent-[#F08A00]"
+                      className="w-full accent-[#E4570B]"
                       aria-label="Độ dày viền chữ"
                     />
                     <input

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { LandingSettings } from "@pod/shared";
-import { Logo } from "./Logo";
+import { Logo, YalaLogoFull } from "./Logo";
 
 const CARRIERS = ["GHN", "GHTK", "Viettel Post", "J&T Express", "Ninja Van"];
 const PAYMENTS = ["COD", "VietQR", "Chuyển khoản ngân hàng"];
@@ -16,7 +16,13 @@ export function Footer({ brand, categories, pages }: Props) {
     <footer className="bg-ink pb-24 pt-12 text-white/75 md:pb-12 md:pt-16">
       <div className="container-site grid gap-8 md:grid-cols-4">
         <div className="md:col-span-1">
-          <Logo name={brand.name} logoUrl={brand.logoUrl} dark />
+          {brand.logoUrl ? (
+            <Logo name={brand.name} logoUrl={brand.logoUrl} dark />
+          ) : (
+            <Link href="/" className="inline-block text-white" aria-label={`${brand.name} – Trang chủ`}>
+              <YalaLogoFull className="h-12 w-auto md:h-14" />
+            </Link>
+          )}
           <p className="mt-3 text-sm leading-relaxed">{brand.tagline}</p>
         </div>
         <div>

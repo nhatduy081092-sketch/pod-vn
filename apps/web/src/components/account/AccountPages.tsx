@@ -333,7 +333,7 @@ export function AccountAddresses() {
           <li key={i} className="grid gap-2 rounded-lg border-2 border-ink/10 p-3 sm:grid-cols-2">
             <input className="input" value={a.label} onChange={(e) => patch(i, { label: e.target.value })} placeholder="Tên gợi nhớ (Nhà, Công ty…)" aria-label="Tên gợi nhớ" />
             <label className="flex items-center gap-2 text-sm font-semibold">
-              <input type="radio" name="def" checked={a.isDefault} onChange={() => patch(i, { isDefault: true })} className="accent-[#F08A00]" /> Mặc định
+              <input type="radio" name="def" checked={a.isDefault} onChange={() => patch(i, { isDefault: true })} className="accent-[#E4570B]" /> Mặc định
             </label>
             <input className="input" value={a.name} onChange={(e) => patch(i, { name: e.target.value })} placeholder="Người nhận" aria-label="Người nhận" />
             <input className="input" value={a.phone} onChange={(e) => patch(i, { phone: e.target.value })} placeholder="SĐT" aria-label="SĐT" />

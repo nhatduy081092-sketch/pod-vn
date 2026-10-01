@@ -25,7 +25,7 @@
     @apply btn bg-ink text-white hover:bg-black;
   }
   .btn-brand {
-    @apply btn bg-brand text-ink hover:bg-brand-dark;
+    @apply btn bg-brand text-white hover:bg-brand-dark;
   }
   .btn-ghost {
     @apply btn border border-neutral-300 bg-white hover:bg-neutral-50;

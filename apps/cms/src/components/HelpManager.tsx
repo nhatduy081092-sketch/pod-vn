@@ -135,7 +135,7 @@ export function HelpManager({ initial }: { initial: AdminHelp[] }) {
             </span>
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={f.isPublished} onChange={(e) => setF({ ...f, isPublished: e.target.checked })} className="h-4 w-4 accent-[#F08A00]" />
+            <input type="checkbox" checked={f.isPublished} onChange={(e) => setF({ ...f, isPublished: e.target.checked })} className="h-4 w-4 accent-[#E4570B]" />
             Hiển thị trên website
           </label>
           {err && <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}

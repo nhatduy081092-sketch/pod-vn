@@ -5,7 +5,7 @@
 export function MerchKit({ className = "", logo = "LOGO" }: { className?: string; logo?: string }) {
   const Mark = ({ x, y, s = 1, light = false }: { x: number; y: number; s?: number; light?: boolean }) => (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <rect x="-22" y="-22" width="44" height="44" rx="11" fill="#F2711C" />
+      <rect x="-22" y="-22" width="44" height="44" rx="11" fill="#E4570B" />
       <text y="1" textAnchor="middle" dominantBaseline="central" fontFamily="var(--font-sans), sans-serif" fontWeight="700" fontSize="11" fill="#fff" letterSpacing="0.5">
         {logo}
       </text>
@@ -81,7 +81,7 @@ export function MerchKit({ className = "", logo = "LOGO" }: { className?: string
       {/* sổ tay đen */}
       <g transform="rotate(-4 520 330)">
         <rect x="470" y="236" width="104" height="164" rx="6" fill="#1f1f22" />
-        <rect x="560" y="236" width="6" height="164" fill="#F2711C" opacity=".9" />
+        <rect x="560" y="236" width="6" height="164" fill="#E4570B" opacity=".9" />
         <g opacity=".85">
           <Mark x={518} y={300} s={0.75} />
         </g>

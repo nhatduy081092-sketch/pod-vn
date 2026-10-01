@@ -33,7 +33,7 @@ export function Slider({
         onChange={(e) => onChange(Number(e.target.value))}
         onPointerUp={onEnd}
         onKeyUp={onEnd}
-        className="w-full accent-[#F08A00]"
+        className="w-full accent-[#E4570B]"
       />
     </label>
   );

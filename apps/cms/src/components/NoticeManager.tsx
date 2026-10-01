@@ -138,7 +138,7 @@ export function NoticeManager({ initial }: { initial: AdminNotice[] }) {
             ] as const
           ).map(([k, label]) => (
             <label key={k} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={Boolean(f[k])} onChange={(e) => setF({ ...f, [k]: e.target.checked })} className="h-4 w-4 accent-[#F08A00]" />
+              <input type="checkbox" checked={Boolean(f[k])} onChange={(e) => setF({ ...f, [k]: e.target.checked })} className="h-4 w-4 accent-[#E4570B]" />
               {label}
             </label>
           ))}
