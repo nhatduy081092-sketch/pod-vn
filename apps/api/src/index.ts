@@ -16,6 +16,7 @@ import { sellerRoutes } from "./routes/seller";
 import { v1Routes } from "./routes/v1";
 import { backfillSearchText } from "./lib/search";
 import { ensureStarterCatalog } from "./lib/starter-catalog";
+import { applySettingsUpdates } from "./lib/settings-updates";
 import { remoteUploadUrl, storageInfo } from "./lib/upload";
 
 const app = new Hono();
@@ -97,6 +98,7 @@ const server = serve({ fetch: app.fetch, port: env.port, hostname: process.env.A
   console.log(`[upload] lưu ảnh: ${storageInfo.driver === "r2" ? `Cloudflare R2 → ${storageInfo.publicUrl}` : "ổ đĩa local (chỉ dùng khi dev)"}`);
   backfillSearchText().catch((e) => console.warn("[search] backfill lỗi:", (e as Error).message));
   ensureStarterCatalog().catch((e) => console.warn("[starter] tạo YALA Everyday lỗi:", (e as Error).message));
+  applySettingsUpdates().catch((e) => console.warn("[settings] cập nhật lỗi:", (e as Error).message));
 });
 
 // Tắt êm khi Docker/PM2 dừng container: ngừng nhận request, đóng kết nối DB
