@@ -199,6 +199,7 @@ export const landingSettingsSchema = z.object({
   hero: z.object({ tag: nonEmpty, title: nonEmpty, badge: nonEmpty, imageUrl: nonEmpty, ctaHref: nonEmpty }),
   sectionTitles: z.object({ bestSellers: nonEmpty, hotSale: nonEmpty, reviews: nonEmpty }),
   steps: z.array(z.object({ title: nonEmpty, color: nonEmpty })).min(1).max(8),
+  slogan: z.object({ enabled: z.boolean(), words: z.array(z.string().trim().min(1).max(24)).min(1).max(6), vi: z.string().max(140) }),
   slides: z.object({
     enabled: z.boolean(),
     intervalMs: z.number().int().min(2500).max(20000),

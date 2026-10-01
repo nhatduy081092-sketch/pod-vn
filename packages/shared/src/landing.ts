@@ -55,6 +55,8 @@ export type LandingSettings = {
     reviews: string;
   };
   steps: { title: string; color: string }[];
+  /** Slogan thương hiệu đầu trang: mỗi từ tiếng Anh, chữ cái đầu tô màu nhấn (ghép thành YALA) + câu tiếng Việt */
+  slogan: { enabled: boolean; words: string[]; vi: string };
   /** Banner slider đầu trang theo chiến dịch (thay hero cũ khi bật) */
   slides: { enabled: boolean; intervalMs: number; items: HeroSlide[] };
   /** Sản phẩm theo mùa: chọn quy tắc theo tháng hiện tại (giờ Việt Nam) */
@@ -199,6 +201,11 @@ export const DEFAULT_LANDING: LandingSettings = {
     { title: "Xưởng in đúng file thiết kế & kiểm tra chất lượng", color: "#D6A9F2" },
     { title: "Đóng gói & giao hàng toàn quốc", color: "#8BE3D3" },
   ],
+  slogan: {
+    enabled: true,
+    words: ["Young", "Ambitious", "Limitless", "Authentic"],
+    vi: "Trẻ trung – Khát vọng – Không giới hạn – Sống thật.",
+  },
   slides: {
     enabled: true,
     intervalMs: 6000,
@@ -376,6 +383,7 @@ export function mergeLanding(value: unknown): LandingSettings {
     sectionTitles: { ...d.sectionTitles, ...v.sectionTitles },
     steps: v.steps?.length ? v.steps : d.steps,
     showcase: { ...d.showcase, ...v.showcase, tiles: v.showcase?.tiles?.length ? v.showcase.tiles : d.showcase.tiles },
+    slogan: { ...d.slogan, ...v.slogan, words: v.slogan?.words?.length ? v.slogan.words : d.slogan.words },
     slides: { ...d.slides, ...v.slides, items: v.slides?.items?.length ? v.slides.items : d.slides.items },
     seasonal: { ...d.seasonal, ...v.seasonal, rules: v.seasonal?.rules?.length ? v.seasonal.rules : d.seasonal.rules },
     collections: { ...d.collections, ...v.collections },

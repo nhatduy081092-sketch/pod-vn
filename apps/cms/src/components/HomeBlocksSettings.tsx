@@ -84,6 +84,14 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
 
   return (
     <div className="space-y-4">
+      <Card {...cardProps("slogan")} title="Slogan thương hiệu (đầu trang)" hint="Mỗi từ 1 dòng tiếng Anh – chữ cái đầu tự tô màu cam (Young, Ambitious, Limitless, Authentic → YALA).">
+        <Toggle label="Hiển thị" checked={s.slogan.enabled} onChange={(v) => set("slogan", { enabled: v })} />
+        <div className="grid gap-2 md:grid-cols-2">
+          <ListField label="Các từ (cách nhau dấu phẩy)" initial={s.slogan.words.join(", ")} onChange={(v) => set("slogan", { words: v.slice(0, 6) })} wide />
+          <Field label="Câu tiếng Việt" value={s.slogan.vi} onChange={(v) => set("slogan", { vi: v })} wide />
+        </div>
+      </Card>
+
       <Card {...cardProps("slides")} title="Banner slider đầu trang (chiến dịch)" hint="3–5 banner theo chiến dịch. Ảnh ngang ≥ 1400px, người mẫu lệch phải. Để trống ngày = luôn hiện. Tắt slider = dùng hero cũ.">
         <div className="flex flex-wrap items-center gap-4">
           <Toggle label="Hiển thị slider" checked={s.slides.enabled} onChange={(v) => set("slides", { enabled: v })} />
