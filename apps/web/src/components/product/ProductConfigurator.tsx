@@ -12,8 +12,20 @@ import { VariantPicker, defaultVariant } from "./VariantPicker";
 import { DesignCard, useAttachedDesign } from "./DesignCard";
 import { SaleCountdown } from "./SaleCountdown";
 import { TeamPreview } from "./TeamPreview";
+import { AddToQuote } from "../b2b/AddToQuote";
 
-export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { product: ProductDetail; zalo: string; hasSizeGuide?: boolean }) {
+export function ProductConfigurator({
+  product,
+  zalo,
+  hasSizeGuide = false,
+  quote,
+}: {
+  product: ProductDetail;
+  zalo: string;
+  hasSizeGuide?: boolean;
+  /** Sản phẩm doanh nghiệp: từ ngưỡng số lượng -> gợi ý (hoặc bắt buộc) gửi yêu cầu báo giá */
+  quote?: { threshold: number; enforce: boolean };
+}) {
   const router = useRouter();
   const cart = useCart();
   const design = useAttachedDesign(product.id);
@@ -27,6 +39,14 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
   const [imgIdx, setImgIdx] = useState(0);
 
   const variant = product.variants.find((v) => v.color === sel.color && v.size === sel.size) ?? null;
+  const blocked = !!quote?.enforce && mode === "single" && qty >= quote.threshold;
+  const quoteProduct = {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    image: product.images[0] ?? "",
+    priceLabel: `Giá lẻ ${formatVND(product.basePrice)}${product.minQty > 1 ? ` · tối thiểu ${product.minQty}` : ""}`,
+  };
   const colorVariants = product.variants.filter((v) => v.color === sel.color);
   const teamSizes = (colorVariants.length ? colorVariants : product.variants).map((v) => v.size).filter(Boolean);
   const teamFields = design ? designFields(design.json) : [];
@@ -252,7 +272,17 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
 
         {error && <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p>}
 
-        <div className="sticky bottom-0 z-10 -mx-4 mt-5 flex gap-2 border-t border-ink/10 bg-white px-4 py-3 md:static md:mx-0 md:border-0 md:p-0">
+        {quote && mode === "single" && qty >= quote.threshold && (
+          <div className="mt-4 rounded-xl border border-brand/30 bg-brand-light p-3.5 text-sm">
+            <p className="font-semibold">Đơn từ {quote.threshold} sản phẩm – nhận giá số lượng lớn</p>
+            <p className="mt-0.5 text-ink/70">
+              Gửi yêu cầu báo giá để được giá tốt hơn, tư vấn in/khắc logo và mockup miễn phí{quote.enforce ? " (đơn số lượng này không đặt online)." : "."}
+            </p>
+            <AddToQuote variant="primary" className="mt-2.5" quantity={qty} product={quoteProduct} />
+          </div>
+        )}
+
+        <div className={`sticky bottom-0 z-10 -mx-4 mt-5 flex gap-2 border-t border-ink/10 bg-white px-4 py-3 md:static md:mx-0 md:border-0 md:p-0 ${blocked ? "hidden" : ""}`}>
           <button type="button" onClick={addToCart} className="btn-outline flex-1">
             {added ? "✓ Đã thêm" : "Thêm vào giỏ"}
           </button>
@@ -266,6 +296,9 @@ export function ProductConfigurator({ product, zalo, hasSizeGuide = false }: { p
             Đặt ngay
           </button>
         </div>
+        {quote && !(mode === "single" && qty >= quote.threshold) && (
+          <AddToQuote variant="compact" className="mt-2" quantity={Math.max(qty, quote.threshold)} product={quoteProduct} />
+        )}
         {!design && <p className="mt-2 text-center text-xs text-ink/60">Đặt khi chưa có thiết kế: bên mình liên hệ qua Zalo để nhận file trước khi in.</p>}
 
         <ul className="mt-6 space-y-1.5 rounded-lg bg-cream p-4 text-sm">

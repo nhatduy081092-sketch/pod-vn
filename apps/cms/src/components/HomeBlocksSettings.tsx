@@ -3,6 +3,7 @@ import { useState } from "react";
 import { DEFAULT_LANDING, type HeroSlide, type Lane, type LandingSettings, type LookHotspot, type SeasonRule } from "@pod/shared";
 import { ImageInput } from "./ImageInput";
 import { B2BPricingCard } from "./B2BPricingCard";
+import { QuoteRoutingCard } from "./QuoteRoutingCard";
 
 type S = LandingSettings;
 type Props = { value: S; onChange: (fn: (prev: S) => S) => void };
@@ -167,6 +168,10 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
           fromRow={([title, desc, href]) => ({ title: title!, desc: desc!, href: href! })}
           onChange={(v) => set("positioning", { services: v })}
         />
+      </Card>
+
+      <Card {...cardProps("b2bQuote")} title="Báo giá doanh nghiệp (đơn lớn)" hint="Ngưỡng chuyển từ mua online sang báo giá, Zalo sales và kênh nhận yêu cầu (Telegram, Google Sheets + Email).">
+        <QuoteRoutingCard value={s.b2bQuote} onChange={(v) => set("b2bQuote", v)} brandZalo={s.brand.zalo} />
       </Card>
 
       <Card {...cardProps("b2bPricing")} title="Giá B2B (sản phẩm nhập từ nguồn)" hint="Công thức giá bán cho sản phẩm đồng bộ từ nhà cung cấp: theo giá nguồn, cộng %, hoặc chỉ báo giá. Có xem trước trước khi áp dụng.">

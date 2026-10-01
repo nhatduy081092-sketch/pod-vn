@@ -2,9 +2,21 @@ import { formatVND, type LandingSettings } from "@pod/shared";
 import type { ProductDetail } from "@/lib/types";
 import { QuoteForm } from "./QuoteForm";
 import { QuoteGallery } from "./QuoteGallery";
+import { AddToQuote } from "../b2b/AddToQuote";
 
 /** Sản phẩm B2B (giá = 0): không đặt online, chuyển sang nhận báo giá */
-export function QuoteProduct({ product, brand, hasSizeGuide = false }: { product: ProductDetail; brand: LandingSettings["brand"]; hasSizeGuide?: boolean }) {
+export function QuoteProduct({
+  product,
+  brand,
+  hasSizeGuide = false,
+  threshold,
+}: {
+  product: ProductDetail;
+  brand: LandingSettings["brand"];
+  hasSizeGuide?: boolean;
+  /** Số lượng gợi ý khi thêm vào danh sách báo giá */
+  threshold?: number;
+}) {
   const zalo = `https://zalo.me/${brand.zalo.replace(/\D/g, "")}`;
   const subject = encodeURIComponent(`Báo giá: ${product.name}`);
   const body = encodeURIComponent(`Chào ${brand.name},\nTôi cần báo giá "${product.name}".\n- Số lượng dự kiến:\n- Logo/nội dung in:\n- Thời gian cần hàng:\n- Tên công ty / người liên hệ / SĐT:\n`);
@@ -48,6 +60,22 @@ export function QuoteProduct({ product, brand, hasSizeGuide = false }: { product
           <li>✓ Tư vấn & thiết kế theo nhận diện thương hiệu · ✓ Giao toàn quốc · ✓ Xuất hoá đơn VAT</li>
         </ul>
 
+        <div className="mt-5 rounded-xl border border-line p-3.5">
+          <p className="text-sm font-semibold">Cần báo giá nhiều sản phẩm cùng lúc?</p>
+          <p className="mt-0.5 text-[13px] text-muted">Thêm sản phẩm này vào danh sách, chọn thêm món khác rồi gửi 1 yêu cầu.</p>
+          <AddToQuote
+            variant="outline"
+            className="mt-2.5"
+            quantity={Math.max(product.minQty, threshold ?? 1)}
+            product={{
+              id: product.id,
+              slug: product.slug,
+              name: product.name,
+              image: product.images[0] ?? "",
+              priceLabel: product.priceFrom ? `Từ ${formatVND(product.priceFrom)}` : "Liên hệ báo giá",
+            }}
+          />
+        </div>
         <div className="mt-5">
           <QuoteForm productId={product.id} productName={product.name} slug={product.slug} sizes={product.sizes} areas={product.printAreas} variants={product.variants} />
         </div>

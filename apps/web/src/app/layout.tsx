@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart";
+import { QuoteListProvider } from "@/lib/quote-list";
 import { getCategories, getNotices, getPages, getSettings } from "@/lib/api";
 import { SITE_URL } from "@/lib/config";
 import { Header } from "@/components/layout/Header";
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="vi" className={font.variable}>
       <body className="font-sans">
         <CartProvider>
+        <QuoteListProvider>
           <NoticeBanner notices={notices} />
           <TopBar brand={settings.brand} />
           <Header
@@ -54,6 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <main className="min-h-[60vh]">{children}</main>
           <Footer brand={settings.brand} categories={categories} pages={pages} />
           <FloatingContact zalo={settings.brand.zalo} hotline={settings.brand.hotline} messengerUrl={settings.brand.messengerUrl} />
+        </QuoteListProvider>
         </CartProvider>
         <Analytics />
       </body>

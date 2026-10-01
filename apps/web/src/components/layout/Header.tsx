@@ -6,6 +6,7 @@ import { useCart } from "@/lib/cart";
 import { IconCart, IconClose, IconMenu, IconPackage, IconSearch, IconSparkle, IconUser } from "../ui/icons";
 import { SearchBox } from "../shop/SearchBox";
 import { Logo } from "./Logo";
+import { QuoteListBadge } from "../b2b/AddToQuote";
 
 type Lite = { name: string; slug: string };
 type Props = {
@@ -79,10 +80,11 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
             <IconPackage className="h-6 w-6" />
             <span className="hidden whitespace-nowrap text-sm font-semibold xl:inline">Tra cứu đơn</span>
           </Link>
-          <Link href="/tai-khoan" className="flex items-center gap-1 p-1 text-ink/80 hover:text-ink" aria-label="Tài khoản">
+          <Link href="/tai-khoan" className="hidden items-center gap-1 p-1 text-ink/80 hover:text-ink sm:flex" aria-label="Tài khoản">
             <IconUser className="h-6 w-6" />
             <span className="hidden whitespace-nowrap text-sm font-semibold xl:inline">Tài khoản</span>
           </Link>
+          <QuoteListBadge />
           <Link
             href="/gio-hang"
             className="relative flex h-9 w-10 shrink-0 items-center justify-center rounded-full text-ink/85 hover:text-ink md:h-10 lg:w-auto lg:gap-1.5 lg:px-1"
@@ -237,7 +239,13 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
             <Link href="/doanh-nghiep#bao-gia" className="my-1 block rounded-lg bg-brand px-3 py-2.5 text-center text-white">
               Nhận báo giá doanh nghiệp
             </Link>
-            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Hỗ trợ</p>
+            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Tài khoản & hỗ trợ</p>
+            <Link href="/tai-khoan" className="block rounded-md px-3 py-2.5 hover:bg-cream">
+              Tài khoản của tôi
+            </Link>
+            <Link href="/doanh-nghiep/bao-gia" className="block rounded-md px-3 py-2.5 hover:bg-cream">
+              Danh sách báo giá
+            </Link>
             <Link href="/tra-cuu" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Tra cứu đơn hàng
             </Link>

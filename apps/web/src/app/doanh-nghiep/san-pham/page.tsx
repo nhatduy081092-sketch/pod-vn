@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { B2B_BUDGETS } from "@pod/shared";
 import { getFacets, getProducts, getSettings } from "@/lib/api";
-import { ProductGrid } from "@/components/shop/ProductCard";
+import { ProductGrid, priceLabelOf } from "@/components/shop/ProductCard";
+import { AddToQuote } from "@/components/b2b/AddToQuote";
 import { SortSelect } from "@/components/shop/SortSelect";
 
 type SP = Promise<Record<string, string | undefined>>;
@@ -59,7 +60,10 @@ export default async function B2BProductsPage({ searchParams }: { searchParams: 
             {dip ? dip.desc : ind ? ind.blurb : "In / thêu / khắc logo theo nhận diện thương hiệu. Giá lẻ để tham khảo – đơn số lượng lớn được báo giá riêng."}
           </p>
         </div>
-        <Link href={quoteHref} className="btn-primary">Nhận báo giá theo số lượng</Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/doanh-nghiep/bao-gia" className="btn-outline">Danh sách báo giá</Link>
+          <Link href={quoteHref} className="btn-primary">Nhận tư vấn theo ngân sách</Link>
+        </div>
       </div>
 
       {/* Bộ lọc */}
@@ -103,7 +107,16 @@ export default async function B2BProductsPage({ searchParams }: { searchParams: 
 
       {data.items.length ? (
         <div className="mt-6">
-          <ProductGrid items={data.items} />
+          <ProductGrid
+            items={data.items}
+            after={(x) => (
+              <AddToQuote
+                variant="compact"
+                quantity={Math.max(x.minQty ?? 1, s.b2bQuote.threshold)}
+                product={{ id: x.id, slug: x.slug, name: x.name, image: x.images[0] ?? "", priceLabel: priceLabelOf(x) }}
+              />
+            )}
+          />
         </div>
       ) : (
         <div className="mt-6 rounded-2xl bg-surface p-8 text-center">
@@ -136,8 +149,8 @@ export default async function B2BProductsPage({ searchParams }: { searchParams: 
       )}
 
       <p className="mt-10 text-center text-sm text-muted">
-        Giá hiển thị là giá lẻ tham khảo. Đơn từ vài chục sản phẩm trở lên, quà nhiều món hoặc cần đóng hộp:{" "}
-        <Link href={quoteHref} className="font-semibold text-ink underline underline-offset-4">gửi yêu cầu báo giá</Link>.
+        Giá hiển thị là giá lẻ tham khảo. Từ {s.b2bQuote.threshold} sản phẩm, quà nhiều món hoặc cần đóng hộp: bấm “+ Thêm vào báo giá” ở từng sản phẩm rồi{" "}
+        <Link href="/doanh-nghiep/bao-gia" className="font-semibold text-ink underline underline-offset-4">gửi 1 yêu cầu</Link>.
       </p>
     </div>
   );

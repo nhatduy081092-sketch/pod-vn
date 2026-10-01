@@ -17,6 +17,7 @@ import { clientIp, notFound, pageParams } from "../lib/http";
 import { rateLimit } from "../lib/rate-limit";
 import { getPage, listPages } from "../lib/pages";
 import { notifyLead } from "../lib/notify";
+import { cmsLink, dispatchQuote } from "../lib/quote-dispatch";
 import { resolveSearch, phraseWhere } from "../lib/search";
 
 export const publicRoutes = new Hono();
@@ -397,5 +398,26 @@ publicRoutes.post("/leads", rateLimit({ key: "lead", limit: 5, windowMs: 10 * 60
     select: { id: true },
   });
   notifyLead({ ...input, ip: clientIp(c) });
+  // liên hệ doanh nghiệp -> cũng đẩy sang Google Sheets/Email cho sales
+  if (input.topic === "Đồng phục / doanh nghiệp") {
+    const field = (k: string) => input.message.match(new RegExp(`^${k}: (.*)$`, "m"))?.[1]?.trim() ?? "";
+    dispatchQuote({
+      kind: "lead",
+      code: `LH-${lead.id.slice(-6).toUpperCase()}`,
+      createdAt: new Date().toISOString(),
+      name: input.name,
+      phone: input.phone,
+      email: field("Email"),
+      company: field("Công ty"),
+      occasion: field("Dịp"),
+      budget: field("Ngân sách/phần"),
+      deadline: field("Cần hàng"),
+      items: field("Ngành hàng") ? [{ name: field("Ngành hàng"), quantity: 0, note: field("Số lượng") }] : [],
+      note: input.message,
+      pageUrl: input.pageUrl,
+      source: "",
+      adminUrl: cmsLink("/leads"),
+    });
+  }
   return c.json({ ok: true, id: lead.id }, 201);
 });

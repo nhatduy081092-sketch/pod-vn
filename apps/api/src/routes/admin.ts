@@ -46,6 +46,7 @@ import { aiPhotoEnabled, aiPhotoModel, buildPrompt, generateAiPhoto, type AiPhot
 import { listPages } from "../lib/pages";
 import { importOemCatalog } from "../lib/oem-import";
 import { applyB2BPricing } from "../lib/b2b-pricing";
+import { cmsLink, postWebhook, webhookConfigured } from "../lib/quote-dispatch";
 import { searchFields, searchWhere } from "../lib/search";
 import { HTTPException } from "hono/http-exception";
 
@@ -421,6 +422,31 @@ adminRoutes.delete("/pages/:slug", async (c) => {
   const slug = pageSlugSchema.parse(c.req.param("slug"));
   await prisma.setting.deleteMany({ where: { key: PAGE_KEY_PREFIX + slug } });
   return c.json({ ok: true });
+});
+
+/* ---------- Kết nối nhận báo giá (Telegram, Google Sheets + Email) ---------- */
+adminRoutes.get("/integrations", (c) =>
+  c.json({ telegram: !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID), quoteWebhook: webhookConfigured(), cmsUrl: !!process.env.CMS_URL }),
+);
+adminRoutes.post("/integrations/test-webhook", rateLimit({ key: "webhook-test", limit: 10, windowMs: 60_000 }), async (c) => {
+  const r = await postWebhook({
+    kind: "quote",
+    code: "BG-TEST",
+    createdAt: new Date().toISOString(),
+    name: "Gửi thử từ CMS",
+    phone: "0900000000",
+    email: "",
+    company: "YALA",
+    occasion: "Kiểm tra kết nối",
+    budget: "",
+    deadline: "",
+    items: [{ name: "Sản phẩm mẫu", quantity: 1 }],
+    note: "Dòng này do nút Gửi thử trong CMS tạo – có thể xoá.",
+    pageUrl: "",
+    source: "",
+    adminUrl: cmsLink("/settings"),
+  });
+  return c.json({ ok: r.ok, error: r.error });
 });
 
 /* ---------- Giá B2B cho sản phẩm nguồn ---------- */

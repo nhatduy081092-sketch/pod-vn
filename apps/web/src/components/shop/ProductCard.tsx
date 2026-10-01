@@ -67,14 +67,34 @@ export function ProductCard({ p, priority = false, color }: { p: ProductCardData
   );
 }
 
+/** Nhãn giá ngắn cho danh sách báo giá */
+export function priceLabelOf(p: Pick<ProductCardData, "basePrice" | "priceFrom" | "minQty">) {
+  const base = p.basePrice > 0 ? `Giá lẻ ${formatVND(p.basePrice)}` : p.priceFrom ? `Từ ${formatVND(p.priceFrom)}` : "Liên hệ báo giá";
+  return (p.minQty ?? 1) > 1 ? `${base} · tối thiểu ${p.minQty}` : base;
+}
+
 /** Lưới sản phẩm; even = làm tròn về 4/8 ô để không lẻ hàng cuối (khối trang chủ) */
-export function ProductGrid({ items: all, dense = false, color, even = false }: { items: ProductCardData[]; dense?: boolean; color?: string; even?: boolean }) {
+export function ProductGrid({
+  items: all,
+  dense = false,
+  color,
+  even = false,
+  after,
+}: {
+  items: ProductCardData[];
+  dense?: boolean;
+  color?: string;
+  even?: boolean;
+  /** Nội dung dưới mỗi card (VD nút "Thêm vào báo giá") – nằm ngoài link của card */
+  after?: (p: ProductCardData) => React.ReactNode;
+}) {
   const items = even && all.length > 4 ? all.slice(0, all.length >= 8 ? 8 : 4) : all;
   return (
     <ul className={`grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:gap-x-5 md:gap-y-8 ${dense ? "xl:grid-cols-4" : "lg:grid-cols-4"}`}>
       {items.map((p, i) => (
-        <li key={p.id}>
+        <li key={p.id} className={after ? "flex flex-col" : undefined}>
           <ProductCard p={p} priority={i < 2} color={color} />
+          {after && <div className="mt-auto pt-2">{after(p)}</div>}
         </li>
       ))}
     </ul>

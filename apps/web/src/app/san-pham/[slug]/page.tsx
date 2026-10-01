@@ -39,6 +39,8 @@ export default async function ProductPage({ params }: { params: Params }) {
   if (!product) notFound();
 
   const isQuote = product.basePrice <= 0;
+  // sản phẩm thuộc ngành hàng doanh nghiệp -> có nút "Thêm vào báo giá" + gợi ý báo giá khi đặt số lượng lớn
+  const isB2B = settings.b2bHub.industries.some((i) => i.slug === product.category.slug);
   const sizeChart = resolveSizeChart(product.sizeChart, product.category.sizeChart);
   const realSizes = product.sizes.filter((s) => !/^free\s*size$/i.test(s));
   const zaloHref = `https://zalo.me/${settings.brand.zalo.replace(/\D/g, "")}`;
@@ -186,9 +188,14 @@ export default async function ProductPage({ params }: { params: Params }) {
         </div>
       ))}
       {isQuote ? (
-        <QuoteProduct product={product} brand={settings.brand} hasSizeGuide={hasSizeGuide} />
+        <QuoteProduct product={product} brand={settings.brand} hasSizeGuide={hasSizeGuide} threshold={settings.b2bQuote.threshold} />
       ) : (
-        <ProductConfigurator product={product} zalo={settings.brand.zalo} hasSizeGuide={hasSizeGuide} />
+        <ProductConfigurator
+          product={product}
+          zalo={settings.brand.zalo}
+          hasSizeGuide={hasSizeGuide}
+          quote={isB2B ? { threshold: settings.b2bQuote.threshold, enforce: settings.b2bQuote.enforce } : undefined}
+        />
       )}
 
       <ProductTabs tabs={tabs} />

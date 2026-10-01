@@ -5,9 +5,16 @@ import { useCart } from "@/lib/cart";
 import { assetUrl } from "@/lib/config";
 import { IconClose } from "../ui/icons";
 import { CartUpsell } from "./CartUpsell";
+import { useQuoteList } from "@/lib/quote-list";
+import { useRouter } from "next/navigation";
 
-export function CartView() {
+/** threshold: từ số lượng này gợi ý chuyển sang yêu cầu báo giá (đơn nhỏ mua online, đơn lớn báo giá) */
+export function CartView({ threshold = 0 }: { threshold?: number }) {
   const cart = useCart();
+  const quotes = useQuoteList();
+  const router = useRouter();
+  // chỉ chuyển được dòng chưa gắn thiết kế / danh sách đồng phục (báo giá theo sản phẩm, file gửi sau)
+  const bigLines = threshold > 1 ? cart.items.filter((i) => i.quantity >= threshold && !i.roster?.length && !i.design && !i.designUrl) : [];
   if (!cart.ready) return <p className="py-10 text-center text-ink/60">Đang tải giỏ hàng...</p>;
   if (!cart.items.length)
     return (
@@ -21,6 +28,29 @@ export function CartView() {
 
   return (
     <>
+    {bigLines.length > 0 && (
+      <div className="mt-5 flex flex-col gap-3 rounded-xl border border-brand/30 bg-brand-light p-4 text-sm md:flex-row md:items-center">
+        <div className="flex-1">
+          <p className="font-semibold">Đơn số lượng lớn ({threshold}+ sản phẩm) – nhận báo giá tốt hơn</p>
+          <p className="mt-0.5 text-ink/70">
+            {bigLines.map((i) => `${i.name} × ${i.quantity}`).join(", ")}: gửi yêu cầu báo giá để được giá theo số lượng, tư vấn in logo và mockup miễn phí.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn-primary shrink-0"
+          onClick={() => {
+            for (const i of bigLines) {
+              quotes.add({ productId: i.productId, slug: i.slug, name: i.name, image: i.image, quantity: i.quantity, priceLabel: `Giá lẻ ${formatVND(cart.unitPrice(i))}`, note: [i.color, i.size].filter((x) => x && x !== "—").join(" / ") });
+              cart.remove(i.key);
+            }
+            router.push("/doanh-nghiep/bao-gia");
+          }}
+        >
+          Chuyển sang yêu cầu báo giá
+        </button>
+      </div>
+    )}
     <div className="mt-5 grid gap-6 md:grid-cols-[1fr_340px]">
       <ul className="divide-y divide-ink/10 rounded-lg border border-line bg-white">
         {cart.items.map((i) => {

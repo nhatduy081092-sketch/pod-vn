@@ -1,12 +1,13 @@
 import { Hono } from "hono";
 import { prisma, type Prisma } from "@pod/db";
-import { orderCreateSchema, orderLookupSchema, quoteCreateSchema, shippingOptions } from "@pod/shared";
+import { orderCreateSchema, orderLookupSchema, quoteCartSchema, quoteCreateSchema, shippingOptions } from "@pod/shared";
 import { z } from "zod";
 import { getLanding } from "../lib/settings";
 import { badRequest, clientIp, notFound } from "../lib/http";
 import { rateLimit } from "../lib/rate-limit";
 import { saveUpload } from "../lib/upload";
-import { notifyNewOrder, notifyQuote } from "../lib/notify";
+import { notifyNewOrder, notifyQuote, notifyQuoteCart } from "../lib/notify";
+import { cmsLink, dispatchQuote, sourceOf } from "../lib/quote-dispatch";
 import { assertDesign, loadProducts, priceLines, quoteShipping, withUniqueCode } from "../lib/order-service";
 import { currentCustomer } from "../lib/customer-auth";
 
@@ -42,10 +43,26 @@ checkoutRoutes.post("/shipping/quote", rateLimit({ key: "shipq", limit: 120, win
   return c.json({ weightGram, options: shippingOptions(settings.shipping, { province: input.province, weightGram, subtotal: input.subtotal }) });
 });
 
+/**
+ * "Đơn nhỏ mua online, đơn lớn báo giá": khi bật bắt buộc trong CMS, sản phẩm nhập từ nguồn (quà tặng doanh nghiệp)
+ * có số lượng từ ngưỡng trở lên phải gửi yêu cầu báo giá thay vì đặt online.
+ */
+async function assertBelowQuoteThreshold(items: { productId: string; quantity: number }[]) {
+  const { b2bQuote } = await getLanding();
+  if (!b2bQuote.enforce) return;
+  const qty = new Map<string, number>();
+  for (const i of items) qty.set(i.productId, (qty.get(i.productId) ?? 0) + i.quantity);
+  const big = [...qty].filter(([, q]) => q >= b2bQuote.threshold).map(([id]) => id);
+  if (!big.length) return;
+  const hit = await prisma.product.findFirst({ where: { id: { in: big }, externalId: { startsWith: "oem:" } }, select: { name: true } });
+  if (hit) throw badRequest(`"${hit.name}" từ ${b2bQuote.threshold} sản phẩm vui lòng gửi yêu cầu báo giá để nhận giá số lượng lớn`);
+}
+
 /** Tạo đơn – giá & phí ship luôn tính lại phía server */
 checkoutRoutes.post("/orders", rateLimit({ key: "order", limit: 10, windowMs: 10 * 60_000 }), async (c) => {
   const input = orderCreateSchema.parse(await c.req.json());
   const customer = await currentCustomer(c);
+  await assertBelowQuoteThreshold(input.items);
   const priced = await priceLines(input.items);
   const ship = await quoteShipping(input.province, priced.weightGram, priced.subtotal, input.shippingMethod);
   const total = priced.subtotal + ship.fee;
@@ -148,9 +165,26 @@ checkoutRoutes.post("/quotes", rateLimit({ key: "quote", limit: 10, windowMs: 10
           ],
         },
       },
-      select: { code: true },
+      select: { code: true, id: true },
     }),
   );
+  dispatchQuote({
+    kind: "quote",
+    code: order.code,
+    createdAt: new Date().toISOString(),
+    name: input.customerName,
+    phone: input.phone,
+    email: input.email,
+    company: input.company,
+    occasion: "",
+    budget: "",
+    deadline: "",
+    items: [{ name: p.name, quantity: input.quantity, note: variant ? [variant.color, variant.size].filter(Boolean).join(" / ") : input.size }],
+    note: input.note,
+    pageUrl: `/san-pham/${p.slug}`,
+    source: sourceOf(input.utm),
+    adminUrl: cmsLink(`/orders/${order.id}`),
+  });
   notifyQuote({
     code: order.code,
     customerName: input.customerName,
@@ -161,7 +195,85 @@ checkoutRoutes.post("/quotes", rateLimit({ key: "quote", limit: 10, windowMs: 10
     hasDesign: !!(input.designUrl || input.design),
     note: input.note,
   });
-  return c.json(order, 201);
+  return c.json({ code: order.code }, 201);
+});
+
+/** Danh sách báo giá nhiều sản phẩm (doanh nghiệp) – lưu như đơn "báo giá", đẩy Telegram + Sheets/Email */
+checkoutRoutes.post("/quotes/cart", rateLimit({ key: "quote-cart", limit: 6, windowMs: 10 * 60_000 }), async (c) => {
+  const input = quoteCartSchema.parse(await c.req.json());
+  const customer = await currentCustomer(c);
+  const byId = await loadProducts(input.items.map((i) => i.productId));
+  const lines = input.items.map((i) => ({ ...i, p: byId.get(i.productId) })).filter((x) => x.p);
+  if (!lines.length) throw notFound("Các sản phẩm trong danh sách không còn hiển thị");
+  const deadline = input.deadline ? input.deadline.split("-").reverse().join("/") : "";
+  const header = [
+    input.occasion && `Dịp: ${input.occasion}`,
+    input.budget && `Ngân sách/phần: ${input.budget}`,
+    deadline && `Cần hàng trước: ${deadline}`,
+    lines.length < input.items.length ? `(${input.items.length - lines.length} sản phẩm đã ngừng hiển thị nên bị bỏ qua)` : "",
+  ].filter(Boolean);
+  const note = [...header, input.note].filter(Boolean).join("\n").slice(0, 2000);
+
+  const order = await withUniqueCode("BG", (code) =>
+    prisma.order.create({
+      data: {
+        code,
+        isQuote: true,
+        customerName: input.customerName,
+        phone: input.phone,
+        email: input.email,
+        company: input.company,
+        province: "",
+        ward: "",
+        addressLine: "",
+        note,
+        paymentMethod: "BANK_TRANSFER",
+        subtotal: 0,
+        shippingFee: 0,
+        total: 0,
+        customerId: customer?.id,
+        utm: input.utm ?? undefined,
+        ip: clientIp(c),
+        items: {
+          create: lines.map(({ p, quantity, note: n }) => ({
+            productId: p!.id,
+            sku: "",
+            productName: p!.name,
+            productImg: p!.images[0] ?? "",
+            size: "—",
+            color: "",
+            quantity,
+            unitPrice: 0,
+            lineTotal: 0,
+            designUrl: "",
+            designNote: n,
+          })),
+        },
+      },
+      select: { code: true, id: true },
+    }),
+  );
+  const items = lines.map(({ p, quantity, note: n }) => ({ name: p!.name, quantity, note: n, url: `/san-pham/${p!.slug}` }));
+  const adminUrl = cmsLink(`/orders/${order.id}`);
+  notifyQuoteCart({ code: order.code, customerName: input.customerName, phone: input.phone, company: input.company, occasion: input.occasion, budget: input.budget, deadline, items, note: input.note, link: adminUrl });
+  dispatchQuote({
+    kind: "quote",
+    code: order.code,
+    createdAt: new Date().toISOString(),
+    name: input.customerName,
+    phone: input.phone,
+    email: input.email,
+    company: input.company,
+    occasion: input.occasion,
+    budget: input.budget,
+    deadline,
+    items,
+    note: input.note,
+    pageUrl: input.pageUrl,
+    source: sourceOf(input.utm),
+    adminUrl,
+  });
+  return c.json({ code: order.code, items: items.length }, 201);
 });
 
 const orderViewSelect = {

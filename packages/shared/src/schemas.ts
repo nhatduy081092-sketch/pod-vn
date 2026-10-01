@@ -226,6 +226,13 @@ export const landingSettingsSchema = z.object({
     process: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(10),
     benefits: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(12),
   }),
+  b2bQuote: z.object({
+    threshold: z.number().int().min(2).max(1_000_000),
+    enforce: z.boolean(),
+    salesZalo: z.string().trim().max(20),
+    salesName: z.string().trim().max(60),
+    responseTime: z.string().trim().max(80),
+  }),
   b2bPricing: z.object({
     mode: z.enum(["source", "markup", "quote"]),
     markupPct: z.number().min(0, "Tỉ lệ cộng thêm ≥ 0").max(500),
@@ -370,3 +377,30 @@ export const quoteCreateSchema = z.object({
   utm: z.record(z.string().max(200)).optional(),
 });
 export type QuoteCreateInput = z.infer<typeof quoteCreateSchema>;
+
+/** Danh sách yêu cầu báo giá nhiều sản phẩm (giỏ báo giá doanh nghiệp) */
+export const quoteCartSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        productId: z.string().min(1).max(40),
+        quantity: z.number().int().min(1, "Nhập số lượng").max(1_000_000),
+        note: z.string().trim().max(300).optional().default(""),
+      }),
+    )
+    .min(1, "Danh sách báo giá trống")
+    .max(30, "Tối đa 30 sản phẩm mỗi yêu cầu"),
+  customerName: trimmed(2, 80, "Vui lòng nhập họ tên"),
+  phone: z.string().trim().refine(isValidVNPhone, "Số điện thoại không hợp lệ").transform(normalizePhone),
+  email: z.string().trim().email("Email không hợp lệ").max(120).optional().or(z.literal("")).default(""),
+  company: z.string().trim().max(120).optional().default(""),
+  occasion: z.string().trim().max(80).optional().default(""),
+  budget: z.string().trim().max(40).optional().default(""),
+  deadline: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, "Ngày dạng YYYY-MM-DD").optional().default(""),
+  note: z.string().trim().max(1000).optional().default(""),
+  pageUrl: z.string().max(300).optional().default(""),
+  /** bẫy bot: ô ẩn, người thật để trống */
+  website: z.string().max(0, "spam").optional().default(""),
+  utm: z.record(z.string().max(200)).optional(),
+});
+export type QuoteCartInput = z.infer<typeof quoteCartSchema>;

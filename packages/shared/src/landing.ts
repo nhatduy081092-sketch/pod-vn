@@ -69,6 +69,11 @@ export type LandingSettings = {
     process: { title: string; desc: string }[];
     benefits: { title: string; desc: string }[];
   };
+  /**
+   * Báo giá doanh nghiệp: đơn nhỏ mua online, từ ngưỡng số lượng -> gợi ý (hoặc bắt buộc) gửi yêu cầu báo giá.
+   * salesZalo trống = dùng Zalo thương hiệu.
+   */
+  b2bQuote: { threshold: number; enforce: boolean; salesZalo: string; salesName: string; responseTime: string };
   /** Cách tính giá cho sản phẩm nhập từ nguồn (nhà cung cấp) */
   b2bPricing: B2BPricing;
   /** Slogan thương hiệu đầu trang: mỗi từ tiếng Anh, chữ cái đầu tô màu nhấn (ghép thành YALA) + câu tiếng Việt */
@@ -261,6 +266,7 @@ export const DEFAULT_LANDING: LandingSettings = {
       { title: "Đồng phục", desc: "Đồng phục công ty, lớp, đội nhóm – in tên & số từng người", href: "/danh-muc/ao-thun" },
     ],
   },
+  b2bQuote: { threshold: 50, enforce: false, salesZalo: "", salesName: "", responseTime: "Phản hồi trong 2 giờ làm việc" },
   b2bPricing: DEFAULT_B2B_PRICING,
   b2bHub: {
     eyebrow: "YALA cho doanh nghiệp",
@@ -504,6 +510,7 @@ export function mergeLanding(value: unknown): LandingSettings {
       process: v.b2bHub?.process?.length ? v.b2bHub.process : d.b2bHub.process,
       benefits: v.b2bHub?.benefits?.length ? v.b2bHub.benefits : d.b2bHub.benefits,
     },
+    b2bQuote: { ...d.b2bQuote, ...v.b2bQuote },
     b2bPricing: { ...d.b2bPricing, ...v.b2bPricing, tiers: v.b2bPricing?.tiers ?? d.b2bPricing.tiers },
     slides: { ...d.slides, ...v.slides, items: v.slides?.items?.length ? v.slides.items : d.slides.items },
     seasonal: { ...d.seasonal, ...v.seasonal, rules: v.seasonal?.rules?.length ? v.seasonal.rules : d.seasonal.rules },

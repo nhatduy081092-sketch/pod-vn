@@ -209,6 +209,24 @@ export async function b2bPricingAction(input: { dryRun: boolean; includeManual: 
   }
 }
 
+/* ---------- Kết nối nhận báo giá ---------- */
+export type IntegrationStatus = { telegram: boolean; quoteWebhook: boolean; cmsUrl: boolean };
+export async function integrationStatusAction(): Promise<IntegrationStatus | null> {
+  try {
+    return await adminFetch<IntegrationStatus>("/integrations");
+  } catch {
+    return null;
+  }
+}
+export async function testWebhookAction(): Promise<{ ok: boolean; error: string }> {
+  try {
+    return await adminFetch<{ ok: boolean; error: string }>("/integrations/test-webhook", { method: "POST" });
+  } catch (e) {
+    if (e && typeof e === "object" && "digest" in e && String((e as { digest: string }).digest).startsWith("NEXT_REDIRECT")) throw e;
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 /* ---------- Thông báo ---------- */
 export async function saveNoticeAction(id: string | null, data: NoticeInput) {
   return run(async () => {

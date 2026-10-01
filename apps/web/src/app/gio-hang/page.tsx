@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { CartView } from "@/components/shop/CartView";
+import { getSettings } from "@/lib/api";
 
 export const metadata: Metadata = { title: "Giỏ hàng", robots: { index: false } };
 
-export default function CartPage() {
+export default async function CartPage() {
+  const s = await getSettings();
   return (
     <div className="container-site py-6 md:py-10">
       <h1 className="text-2xl font-black md:text-3xl">Giỏ hàng</h1>
-      <CartView />
+      <CartView threshold={s.b2bQuote.threshold} />
     </div>
   );
 }

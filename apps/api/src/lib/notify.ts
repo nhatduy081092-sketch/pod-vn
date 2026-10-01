@@ -56,6 +56,32 @@ export function notifyQuote(q: QuoteInfo): void {
   send(lines.join("\n"));
 }
 
+/** Yêu cầu báo giá nhiều sản phẩm (giỏ báo giá doanh nghiệp) */
+export function notifyQuoteCart(q: {
+  code: string;
+  customerName: string;
+  phone: string;
+  company: string;
+  occasion: string;
+  budget: string;
+  deadline: string;
+  items: { name: string; quantity: number }[];
+  note: string;
+  link: string;
+}): void {
+  const total = q.items.reduce((s, i) => s + i.quantity, 0);
+  const lines = [
+    `🧾 <b>Yêu cầu báo giá ${esc(q.code)}</b> – ${q.items.length} sản phẩm · ${total.toLocaleString("vi-VN")} cái`,
+    `👤 ${esc(q.customerName)} · ${esc(q.phone)}${q.company ? ` · ${esc(q.company)}` : ""}`,
+    [q.occasion && `🎯 ${esc(q.occasion)}`, q.budget && `💰 ${esc(q.budget)}/phần`, q.deadline && `⏰ ${esc(q.deadline)}`].filter(Boolean).join(" · "),
+    ...q.items.slice(0, 15).map((i) => `• ${esc(i.name)} × ${i.quantity.toLocaleString("vi-VN")}`),
+    q.items.length > 15 ? `… và ${q.items.length - 15} sản phẩm khác` : "",
+    q.note ? `📝 ${esc(q.note.slice(0, 400))}` : "",
+    q.link ? `🔗 ${esc(q.link)}` : "",
+  ].filter(Boolean);
+  send(lines.join("\n"));
+}
+
 export function notifyLead(l: { name: string; phone: string; topic: string; message: string; pageUrl: string; ip?: string }): void {
   send(
     [
