@@ -190,7 +190,7 @@ export const DEFAULT_LANDING: LandingSettings = {
     zalo: "0931819333",
     messengerUrl: "https://m.me/oemgroupvn",
     email: "b2b@oemgroup.vn",
-    address: "219 Hai Bà Trưng, P. Võ Thị Sáu, Q.3, TP.HCM",
+    address: "39 Nguyễn Văn Đậu, Phường Bình Lợi Trung, TP. Hồ Chí Minh",
     companyName: "Công ty Cổ phần OEM",
     taxCode: "0317199345",
     logoUrl: "",
