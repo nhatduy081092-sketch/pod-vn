@@ -186,8 +186,8 @@ export const DEFAULT_LANDING: LandingSettings = {
   brand: {
     name: "YALA",
     tagline: "Tự thiết kế áo, túi, phụ kiện theo ý bạn ngay trên web – xem trước tức thì, in từ 1 chiếc, giao toàn quốc.",
-    hotline: "0931819333",
-    zalo: "0931819333",
+    hotline: "0971808330",
+    zalo: "0971808330",
     messengerUrl: "https://m.me/oemgroupvn",
     email: "b2b@oemgroup.vn",
     address: "39 Nguyễn Văn Đậu, Phường Bình Lợi Trung, TP. Hồ Chí Minh",
