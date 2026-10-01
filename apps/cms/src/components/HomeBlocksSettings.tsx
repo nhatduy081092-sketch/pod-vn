@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { DEFAULT_LANDING, type HeroSlide, type Lane, type LandingSettings, type LookHotspot, type SeasonRule } from "@pod/shared";
 import { ImageInput } from "./ImageInput";
+import { B2BPricingCard } from "./B2BPricingCard";
 
 type S = LandingSettings;
 type Props = { value: S; onChange: (fn: (prev: S) => S) => void };
@@ -168,6 +169,10 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
         />
       </Card>
 
+      <Card {...cardProps("b2bPricing")} title="Giá B2B (sản phẩm nhập từ nguồn)" hint="Công thức giá bán cho sản phẩm đồng bộ từ nhà cung cấp: theo giá nguồn, cộng %, hoặc chỉ báo giá. Có xem trước trước khi áp dụng.">
+        <B2BPricingCard value={s.b2bPricing} onChange={(v) => set("b2bPricing", v)} />
+      </Card>
+
       <Card {...cardProps("b2bHub")} title="Trang Doanh nghiệp (/doanh-nghiep)" hint="Ngành hàng, giải pháp theo dịp, quy trình, lợi ích. Số liệu & khách hàng sửa ở khối “Giải pháp doanh nghiệp” phía trên.">
         <div className="grid gap-2 md:grid-cols-2">
           <Field label="Nhãn nhỏ" value={s.b2bHub.eyebrow} onChange={(v) => set("b2bHub", { eyebrow: v })} />
@@ -185,12 +190,12 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
           />
           <PipeLines
             label="Giải pháp theo dịp"
-            hint="Mỗi dòng: Tên giải pháp | mô tả | gợi ý món (VD: Lịch Tết · Bình giữ nhiệt) | mã (tuỳ chọn, dùng cho link ?dip=)"
+            hint="Mỗi dòng: Tên giải pháp | mô tả | gợi ý món (VD: Lịch Tết · Bình giữ nhiệt) | mã (dùng cho link ?dip=) | từ khoá lọc sản phẩm, cách nhau dấu phẩy (VD: binh giu nhiet, so tay, lich)"
             rows={s.b2bHub.solutions}
-            cols={4}
+            cols={5}
             max={12}
-            toRow={(r) => [r.title, r.desc, r.items, r.key]}
-            fromRow={([title, desc, items, key]) => ({ title: title!, desc: desc!, items: items!, key: slugify(key || title!) })}
+            toRow={(r) => [r.title, r.desc, r.items, r.key, r.keywords]}
+            fromRow={([title, desc, items, key, keywords]) => ({ title: title!, desc: desc!, items: items!, key: slugify(key || title!), keywords: keywords! })}
             onChange={(v) => set("b2bHub", { solutions: v })}
           />
           <PipeLines

@@ -104,6 +104,10 @@ model Product {
   colors         String[]
   sizes          String[]
   minQty         Int         @default(1)
+  /// Giá niêm yết của nguồn hàng (sản phẩm nhập từ nhà cung cấp) – dùng tính giá bán B2B, không hiển thị
+  sourcePrice    Int?
+  /// Giá đã chỉnh tay trong CMS -> "Áp dụng giá B2B" bỏ qua sản phẩm này
+  priceManual    Boolean     @default(false)
   /// [{ minQty: number, price: number }] – giá sỉ theo số lượng
   priceTiers     Json        @default("[]")
   isBestSeller   Boolean     @default(false)

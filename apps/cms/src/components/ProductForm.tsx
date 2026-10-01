@@ -129,6 +129,14 @@ export function ProductForm({ categories, product }: { categories: AdminCategory
             <b>Giá bán &gt; 0</b>: khách đặt hàng online (giỏ hàng, COD/VietQR). <b>Giá bán = 0</b>: sản phẩm báo giá – hiện form nhận báo giá; điền
             <b> Giá tham khảo &quot;Từ&quot;</b> để card hiện &quot;Từ …₫&quot; thay vì &quot;Liên hệ báo giá&quot;.
           </p>
+          {product?.sourcePrice ? (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              Sản phẩm nhập từ nguồn – giá nguồn <b>{product.sourcePrice.toLocaleString("vi-VN")}₫</b>.{" "}
+              {product.priceManual
+                ? "Đang dùng giá sửa tay (Cài đặt → Giá B2B sẽ bỏ qua sản phẩm này)."
+                : "Giá đang theo công thức Giá B2B; sửa giá/MOQ/bậc giá ở đây sẽ chuyển sang giá sửa tay."}
+            </p>
+          ) : null}
           <div className="grid gap-3 sm:grid-cols-4">
             <label className="block">
               <span className="label">Giá bán (₫) *</span>
@@ -304,7 +312,7 @@ export function ProductForm({ categories, product }: { categories: AdminCategory
             ] as const
           ).map(([k, label]) => (
             <label key={k} className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={f[k]} onChange={(e) => set(k, e.target.checked)} className="h-4 w-4 accent-[#F08A00]" />
+              <input type="checkbox" checked={f[k]} onChange={(e) => set(k, e.target.checked)} className="h-4 w-4 accent-[#E4570B]" />
               {label}
             </label>
           ))}

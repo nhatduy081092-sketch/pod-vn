@@ -1,13 +1,14 @@
 import { prisma } from "@pod/db";
-import { DEFAULT_SIZES, KIDS_SIZES, mergeLanding, slugify } from "@pod/shared";
-import { invalidateLanding } from "./settings";
+import { b2bPriceFor, DEFAULT_SIZES, KIDS_SIZES, mergeLanding, slugify } from "@pod/shared";
+import { getLanding, invalidateLanding } from "./settings";
 import { searchFields } from "./search";
 import { ensureProductParts } from "./product-parts";
 
 /**
  * Đồng bộ danh mục + sản phẩm từ website OEM Group (WooCommerce Store API công khai).
  * Chạy trên máy chủ API (có Internet). Idempotent: upsert theo externalId = "oem:<id>".
- * Khi cập nhật chỉ ghi đè tên/mô tả/danh mục/link nguồn – KHÔNG đụng giá, nhãn, trạng thái đã chỉnh trong CMS.
+ * Khi cập nhật chỉ ghi đè tên/mô tả/danh mục/link nguồn + giá nguồn (sourcePrice) – KHÔNG đụng giá bán, nhãn, trạng thái
+ * đã có (đổi giá bán hàng loạt bằng CMS → "Giá B2B" → Áp dụng). Sản phẩm mới: giá bán tính theo cấu hình giá B2B.
  * Ảnh: chỉ cập nhật khi sản phẩm vẫn đang dùng ảnh gốc oemgroup.vn (ảnh đã thay trong CMS được giữ nguyên).
  */
 const BASE = process.env.OEM_SOURCE_URL ?? "https://oemgroup.vn";
@@ -112,6 +113,7 @@ async function getJson<T>(path: string): Promise<{ data: T; totalPages: number }
 export async function importOemCatalog(): Promise<ImportReport> {
   const t0 = Date.now();
   const report: ImportReport = { categories: 0, created: 0, updated: 0, skipped: 0, total: 0, errors: [], ms: 0 };
+  const pricing = (await getLanding(true)).b2bPricing;
 
   // 1. Danh mục -> map về danh mục cấp 1
   const { data: cats } = await getJson<WcCat[]>("/wp-json/wc/store/v1/products/categories?per_page=100");
@@ -179,7 +181,7 @@ export async function importOemCatalog(): Promise<ImportReport> {
       const keepImages = existing.images.some((u) => !isSourceImage(u));
       await prisma.product.update({
         where: { id: existing.id },
-        data: { name, description, ...(keepImages ? {} : { images }), categoryId, sourceUrl: p.permalink, ...search },
+        data: { name, description, ...(keepImages ? {} : { images }), categoryId, sourceUrl: p.permalink, sourcePrice: price > 0 ? price : null, ...search },
       });
       report.updated++;
       return;
@@ -199,15 +201,14 @@ export async function importOemCatalog(): Promise<ImportReport> {
         audience: isKids ? "KIDS" : "UNISEX",
         material: "",
         printMethod: "In / thêu / khắc logo theo yêu cầu",
-        basePrice: price, // 0 = liên hệ báo giá
-        sortPrice: price > 0 ? price : null,
+        // giá nguồn 0 = nguồn chưa niêm yết -> liên hệ báo giá
+        ...(price > 0 ? b2bPriceFor(price, pricing) : { basePrice: 0, priceFrom: null, sortPrice: null, minQty: 1, priceTiers: [] }),
+        sourcePrice: price > 0 ? price : null,
         compareAtPrice: null,
         images,
         mockShape: "",
         colors: [],
         sizes: isApparel ? (subSlugs.includes("ao-tre-em") ? KIDS_SIZES : DEFAULT_SIZES) : ["Free size"],
-        minQty: 1,
-        priceTiers: [],
         isBestSeller: false,
         isHotSale: false,
         isActive: true,

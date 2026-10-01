@@ -4,6 +4,7 @@ import { verifyPassword } from "@pod/db/password";
 import {
   categoryUpsertSchema,
   landingSettingsSchema,
+  mergeLanding,
   loginSchema,
   orderUpdateSchema,
   ORDER_STATUSES,
@@ -44,6 +45,7 @@ import { saveBuffer, saveUpload } from "../lib/upload";
 import { aiPhotoEnabled, aiPhotoModel, buildPrompt, generateAiPhoto, type AiPhotoStyle } from "../lib/ai-photo";
 import { listPages } from "../lib/pages";
 import { importOemCatalog } from "../lib/oem-import";
+import { applyB2BPricing } from "../lib/b2b-pricing";
 import { searchFields, searchWhere } from "../lib/search";
 import { HTTPException } from "hono/http-exception";
 
@@ -260,11 +262,20 @@ adminRoutes.put("/products/:id", async (c) => {
   const input = productUpsertSchema.parse(await c.req.json());
   const slug = await uniqueSlug(input.slug || input.name, (s) => prisma.product.findUnique({ where: { slug: s }, select: { id: true } }), id);
   const cat = await prisma.category.findUnique({ where: { id: input.categoryId }, select: { name: true } });
+  const before = await prisma.product.findUnique({ where: { id }, select: { basePrice: true, priceFrom: true, minQty: true, priceTiers: true } });
+  // sửa giá tay -> "Áp dụng giá B2B" sẽ bỏ qua sản phẩm này
+  const priceEdited =
+    !!before &&
+    (before.basePrice !== input.basePrice ||
+      (before.priceFrom ?? null) !== (input.priceFrom || null) ||
+      before.minQty !== input.minQty ||
+      JSON.stringify(parseTiers(before.priceTiers)) !== JSON.stringify(input.priceTiers));
   return c.json(
     await prisma.product.update({
       where: { id },
       data: {
         ...input,
+        ...(priceEdited ? { priceManual: true } : {}),
         ...searchFields(input.name, input.subcategory, cat?.name ?? "", input.material),
         slug,
         compareAtPrice: input.compareAtPrice ?? null,
@@ -292,6 +303,7 @@ adminRoutes.patch("/products/prices", async (c) => {
           priceFrom: i.priceFrom || null,
           minQty: i.minQty,
           sortPrice: sortPriceOf(i.basePrice, i.priceFrom),
+          priceManual: true,
         },
       }),
     ),
@@ -409,6 +421,23 @@ adminRoutes.delete("/pages/:slug", async (c) => {
   const slug = pageSlugSchema.parse(c.req.param("slug"));
   await prisma.setting.deleteMany({ where: { key: PAGE_KEY_PREFIX + slug } });
   return c.json({ ok: true });
+});
+
+/* ---------- Giá B2B cho sản phẩm nguồn ---------- */
+/** POST /b2b/pricing { dryRun, includeManual, cfg? } – xem trước / áp dụng cấu hình giá */
+adminRoutes.post("/b2b/pricing", async (c) => {
+  const body = z
+    .object({ dryRun: z.boolean().default(true), includeManual: z.boolean().default(false), cfg: landingSettingsSchema.shape.b2bPricing.optional() })
+    .parse(await c.req.json().catch(() => ({})));
+  if (!body.dryRun && body.cfg) {
+    // áp dụng = lưu luôn công thức để sản phẩm nhập sau cũng tính theo cùng cách
+    const row = await prisma.setting.findUnique({ where: { key: "landing" } });
+    const cur = mergeLanding(row?.value);
+    await prisma.setting.upsert({ where: { key: "landing" }, update: { value: { ...cur, b2bPricing: body.cfg } }, create: { key: "landing", value: { ...cur, b2bPricing: body.cfg } } });
+    invalidateLanding();
+  }
+  const report = await applyB2BPricing(body);
+  return c.json(report);
 });
 
 /* ---------- Đồng bộ sản phẩm OEM Group ---------- */

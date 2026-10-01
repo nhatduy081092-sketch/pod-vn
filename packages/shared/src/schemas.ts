@@ -222,9 +222,17 @@ export const landingSettingsSchema = z.object({
     title: z.string().trim().min(1).max(120),
     subtitle: z.string().max(300),
     industries: z.array(z.object({ name: z.string().trim().min(1).max(60), slug: z.string().trim().min(1).max(120), blurb: z.string().max(160) })).max(16),
-    solutions: z.array(z.object({ key: z.string().trim().min(1).max(40), title: z.string().trim().min(1).max(80), desc: z.string().max(240), items: z.string().max(160) })).max(12),
+    solutions: z.array(z.object({ key: z.string().trim().min(1).max(40), title: z.string().trim().min(1).max(80), desc: z.string().max(240), items: z.string().max(160), keywords: z.string().max(400) })).max(12),
     process: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(10),
     benefits: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(12),
+  }),
+  b2bPricing: z.object({
+    mode: z.enum(["source", "markup", "quote"]),
+    markupPct: z.number().min(0, "Tỉ lệ cộng thêm ≥ 0").max(500),
+    roundTo: z.number().int().min(1).max(100_000),
+    showFrom: z.boolean(),
+    tiers: z.array(z.object({ minQty: z.number().int().min(2).max(1_000_000), discountPct: z.number().min(0).max(90) })).max(8),
+    moq: z.number().int().min(1).max(100_000),
   }),
   slogan: z.object({ enabled: z.boolean(), words: z.array(z.string().trim().min(1).max(24)).min(1).max(6), vi: z.string().max(140) }),
   slides: z.object({

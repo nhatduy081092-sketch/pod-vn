@@ -101,11 +101,16 @@ export default async function BusinessPage() {
       <section id="nganh-hang" className="scroll-mt-32 py-12 md:py-16">
         <div className="container-site">
           <p className="eyebrow">{hub.industries.length} nhóm ngành hàng</p>
-          <h2 className="h-section mt-1.5">In logo lên gần như mọi thứ doanh nghiệp cần</h2>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="h-section mt-1.5">In logo lên gần như mọi thứ doanh nghiệp cần</h2>
+            <Link href="/doanh-nghiep/san-pham" className="text-sm font-semibold underline underline-offset-4 hover:text-brand">
+              Xem tất cả sản phẩm, lọc theo ngân sách →
+            </Link>
+          </div>
           <ul className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
             {hub.industries.map((i, idx) => {
               const cat = bySlug.get(i.slug);
-              const href = cat ? `/danh-muc/${i.slug}` : `/doanh-nghiep?nganh=${i.slug}#bao-gia`;
+              const href = cat ? `/doanh-nghiep/san-pham?nganh=${i.slug}` : `/doanh-nghiep?nganh=${i.slug}#bao-gia`;
               return (
                 <li key={i.slug} id={`nganh-${i.slug}`} className="scroll-mt-32">
                   <Link href={href} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line transition hover:border-ink">
@@ -147,9 +152,14 @@ export default async function BusinessPage() {
                 <h3 className="mt-1 text-lg font-semibold md:text-xl">{s.title}</h3>
                 <p className="mt-2 flex-1 text-[14px] leading-relaxed text-muted md:text-[15px]">{s.desc}</p>
                 {s.items && <p className="mt-3 text-[13px] font-medium text-ink/80">{s.items}</p>}
-                <a href={`/doanh-nghiep?dip=${s.key}#bao-gia`} className="mt-4 text-sm font-semibold text-ink hover:text-brand">
-                  Nhận báo giá {s.title.toLocaleLowerCase("vi")} →
-                </a>
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm font-semibold">
+                  <Link href={`/doanh-nghiep/san-pham?dip=${s.key}`} className="text-ink hover:text-brand">
+                    Xem sản phẩm gợi ý →
+                  </Link>
+                  <a href={`/doanh-nghiep?dip=${s.key}#bao-gia`} className="text-muted hover:text-brand">
+                    Nhận báo giá
+                  </a>
+                </div>
               </li>
             ))}
           </ul>

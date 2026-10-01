@@ -156,7 +156,7 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
               <ul className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1">
                 {industries.map((i) => (
                   <li key={i.slug}>
-                    <Link href={`/doanh-nghiep#nganh-${i.slug}`} className="block rounded-md py-1.5 text-[14px] text-ink hover:text-brand">
+                    <Link href={`/doanh-nghiep/san-pham?nganh=${i.slug}`} className="block rounded-md py-1.5 text-[14px] text-ink hover:text-brand">
                       {i.name}
                     </Link>
                   </li>
@@ -168,7 +168,7 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
               <ul className="mt-3 space-y-1">
                 {solutions.map((s) => (
                   <li key={s.key}>
-                    <Link href={`/doanh-nghiep#giai-phap-${s.key}`} className="block rounded-md py-1.5 text-[14px] text-ink hover:text-brand">
+                    <Link href={`/doanh-nghiep/san-pham?dip=${s.key}`} className="block rounded-md py-1.5 text-[14px] text-ink hover:text-brand">
                       {s.title}
                     </Link>
                   </li>
@@ -181,8 +181,8 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
               <Link href="/doanh-nghiep#bao-gia" className="btn-primary mt-4 w-full justify-center">
                 Nhận báo giá
               </Link>
-              <Link href="/doanh-nghiep" className="mt-2 block text-center text-[13px] font-semibold text-white/80 hover:text-white">
-                Xem tất cả giải pháp →
+              <Link href="/doanh-nghiep/san-pham" className="mt-2 block text-center text-[13px] font-semibold text-white/80 hover:text-white">
+                Xem sản phẩm theo ngân sách →
               </Link>
             </div>
           </div>
@@ -229,7 +229,7 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
                 Ngành hàng in logo <span className="text-muted transition group-open:rotate-180">▾</span>
               </summary>
               {industries.map((i) => (
-                <Link key={i.slug} href={`/doanh-nghiep#nganh-${i.slug}`} className="block rounded-md py-2 pl-6 pr-3 text-[14px] font-medium text-ink/80 hover:bg-cream">
+                <Link key={i.slug} href={`/doanh-nghiep/san-pham?nganh=${i.slug}`} className="block rounded-md py-2 pl-6 pr-3 text-[14px] font-medium text-ink/80 hover:bg-cream">
                   {i.name}
                 </Link>
               ))}

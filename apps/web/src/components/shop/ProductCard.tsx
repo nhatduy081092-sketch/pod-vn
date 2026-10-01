@@ -58,7 +58,11 @@ export function ProductCard({ p, priority = false, color }: { p: ProductCardData
         )}
         {compare && compare > price && <span className="text-xs text-muted line-through md:text-[13px]">{formatVND(compare)}</span>}
       </p>
-      {p.productionDays && <p className="mt-0.5 text-[11px] text-muted md:text-xs">Sản xuất {p.productionDays}</p>}
+      {(p.minQty ?? 1) > 1 ? (
+        <p className="mt-0.5 text-[11px] text-muted md:text-xs">Tối thiểu {p.minQty} sản phẩm</p>
+      ) : (
+        p.productionDays && <p className="mt-0.5 text-[11px] text-muted md:text-xs">Sản xuất {p.productionDays}</p>
+      )}
     </Link>
   );
 }

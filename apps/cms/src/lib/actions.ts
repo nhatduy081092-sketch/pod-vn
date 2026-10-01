@@ -13,6 +13,7 @@ import type {
   ProductUpsertInput,
   VariantInput,
   TestimonialUpsertInput,
+  B2BPricing,
 } from "@pod/shared";
 import { adminFetch, publicLogin } from "./api";
 import { COOKIE } from "./session";
@@ -177,6 +178,30 @@ export async function importOemAction(): Promise<{ ok: true; report: ImportRepor
     const report = await adminFetch<ImportReport>("/import/oem", { method: "POST" });
     revalidatePath("/products");
     await revalidateWeb();
+    return { ok: true, report };
+  } catch (e) {
+    if (e && typeof e === "object" && "digest" in e && String((e as { digest: string }).digest).startsWith("NEXT_REDIRECT")) throw e;
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+/* ---------- Giá B2B ---------- */
+export type PricingReport = {
+  dryRun: boolean;
+  matched: number;
+  changed: number;
+  skippedManual: number;
+  noSource: number;
+  samples: { name: string; source: number; before: number; after: number; from: number | null }[];
+};
+export async function b2bPricingAction(input: { dryRun: boolean; includeManual: boolean; cfg: B2BPricing }): Promise<{ ok: true; report: PricingReport } | { ok: false; error: string }> {
+  try {
+    const report = await adminFetch<PricingReport>("/b2b/pricing", { method: "POST", body: JSON.stringify(input) });
+    if (!input.dryRun) {
+      revalidatePath("/products");
+      revalidatePath("/settings");
+      await revalidateWeb();
+    }
     return { ok: true, report };
   } catch (e) {
     if (e && typeof e === "object" && "digest" in e && String((e as { digest: string }).digest).startsWith("NEXT_REDIRECT")) throw e;

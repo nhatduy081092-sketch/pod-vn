@@ -1,5 +1,6 @@
 import type { Audience } from "./constants";
 import { DEFAULT_SHIPPING, mergeShipping, type ShippingConfig } from "./shipping";
+import { DEFAULT_B2B_PRICING, type B2BPricing } from "./pricing";
 
 /**
  * Toàn bộ nội dung landing page chỉnh được từ CMS (lưu trong bảng Setting, key = "landing").
@@ -63,10 +64,13 @@ export type LandingSettings = {
     title: string;
     subtitle: string;
     industries: { name: string; slug: string; blurb: string }[];
-    solutions: { key: string; title: string; desc: string; items: string }[];
+    /** keywords: từ khoá (cách nhau dấu phẩy) để gợi ý sản phẩm theo dịp – khớp tên/nhóm sản phẩm, không cần dấu */
+    solutions: { key: string; title: string; desc: string; items: string; keywords: string }[];
     process: { title: string; desc: string }[];
     benefits: { title: string; desc: string }[];
   };
+  /** Cách tính giá cho sản phẩm nhập từ nguồn (nhà cung cấp) */
+  b2bPricing: B2BPricing;
   /** Slogan thương hiệu đầu trang: mỗi từ tiếng Anh, chữ cái đầu tô màu nhấn (ghép thành YALA) + câu tiếng Việt */
   slogan: { enabled: boolean; words: string[]; vi: string };
   /** Banner slider đầu trang theo chiến dịch (thay hero cũ khi bật) */
@@ -257,6 +261,7 @@ export const DEFAULT_LANDING: LandingSettings = {
       { title: "Đồng phục", desc: "Đồng phục công ty, lớp, đội nhóm – in tên & số từng người", href: "/danh-muc/ao-thun" },
     ],
   },
+  b2bPricing: DEFAULT_B2B_PRICING,
   b2bHub: {
     eyebrow: "YALA cho doanh nghiệp",
     title: "Merchandise & quà tặng doanh nghiệp in logo theo yêu cầu",
@@ -273,12 +278,12 @@ export const DEFAULT_LANDING: LandingSettings = {
       { name: "Đồ chơi & mẹ bé", slug: "do-choi-me-be", blurb: "Thú bông, đồ chơi trí tuệ, lồng đèn Trung thu" },
     ],
     solutions: [
-      { key: "qua-tet", title: "Quà Tết doanh nghiệp", desc: "Hộp quà Tết in logo cho nhân viên, đối tác, khách hàng – chọn theo ngân sách từng người.", items: "Lịch Tết · Bình giữ nhiệt · Sổ tay · Hộp quà" },
-      { key: "welcome-kit", title: "Welcome kit nhân viên mới", desc: "Bộ quà chào đón đồng bộ nhận diện, đóng hộp sẵn, giao theo đợt tuyển dụng.", items: "Áo · Sổ · Bình nước · Túi tote · Thẻ tên" },
-      { key: "su-kien", title: "Sự kiện, hội nghị, hội thảo", desc: "Áo sự kiện, quà check-in, túi hội thảo số lượng lớn – bám sát deadline sự kiện.", items: "Áo sự kiện · Túi tote · Dây đeo thẻ · Quà check-in" },
-      { key: "tri-an", title: "Quà tri ân khách hàng & đối tác", desc: "Bộ quà chỉn chu, có thể khắc tên riêng từng người, kèm thiệp cảm ơn.", items: "Bình khắc tên · Sổ da · Hộp quà cao cấp" },
-      { key: "dong-phuc", title: "Đồng phục công ty & team building", desc: "Áo thun, polo, áo khoác in/thêu logo đủ size; in tên – số từng người.", items: "Polo · Áo thun · Áo khoác · Mũ" },
-      { key: "truong-hoc", title: "Trường học & tổ chức", desc: "Áo lớp, đồng phục, quà tốt nghiệp, quà khai giảng cho trường và tổ chức.", items: "Áo lớp · Balo · Sổ · Huy hiệu" },
+      { key: "qua-tet", title: "Quà Tết doanh nghiệp", desc: "Hộp quà Tết in logo cho nhân viên, đối tác, khách hàng – chọn theo ngân sách từng người.", items: "Lịch Tết · Bình giữ nhiệt · Sổ tay · Hộp quà", keywords: "lich, hop qua, bo qua, gio qua, binh giu nhiet, so tay, coc su, ly su, am tra, but ky" },
+      { key: "welcome-kit", title: "Welcome kit nhân viên mới", desc: "Bộ quà chào đón đồng bộ nhận diện, đóng hộp sẵn, giao theo đợt tuyển dụng.", items: "Áo · Sổ · Bình nước · Túi tote · Thẻ tên", keywords: "ao thun, ao polo, so tay, binh giu nhiet, binh nuoc, tui tote, day deo the, the ten, but, balo, coc" },
+      { key: "su-kien", title: "Sự kiện, hội nghị, hội thảo", desc: "Áo sự kiện, quà check-in, túi hội thảo số lượng lớn – bám sát deadline sự kiện.", items: "Áo sự kiện · Túi tote · Dây đeo thẻ · Quà check-in", keywords: "ao thun, tui tote, tui rut, day deo the, the deo, mu luoi trai, non, quat, o du, ao mua, binh nuoc, huy hieu" },
+      { key: "tri-an", title: "Quà tri ân khách hàng & đối tác", desc: "Bộ quà chỉn chu, có thể khắc tên riêng từng người, kèm thiệp cảm ơn.", items: "Bình khắc tên · Sổ da · Hộp quà cao cấp", keywords: "binh giu nhiet, so da, so tay, hop qua, bo qua, but ky, coc su, ly thuy tinh, o du, vali" },
+      { key: "dong-phuc", title: "Đồng phục công ty & team building", desc: "Áo thun, polo, áo khoác in/thêu logo đủ size; in tên – số từng người.", items: "Polo · Áo thun · Áo khoác · Mũ", keywords: "ao thun, ao polo, ao khoac, ao so mi, dong phuc, mu luoi trai, non" },
+      { key: "truong-hoc", title: "Trường học & tổ chức", desc: "Áo lớp, đồng phục, quà tốt nghiệp, quà khai giảng cho trường và tổ chức.", items: "Áo lớp · Balo · Sổ · Huy hiệu", keywords: "ao thun, ao lop, balo, so tay, huy hieu, but, binh nuoc, mu, tui" },
     ],
     process: [
       { title: "Gửi nhu cầu", desc: "Dịp tặng, số lượng, ngân sách, deadline, file logo." },
@@ -492,10 +497,14 @@ export function mergeLanding(value: unknown): LandingSettings {
       ...d.b2bHub,
       ...v.b2bHub,
       industries: v.b2bHub?.industries?.length ? v.b2bHub.industries : d.b2bHub.industries,
-      solutions: v.b2bHub?.solutions?.length ? v.b2bHub.solutions : d.b2bHub.solutions,
+      // dữ liệu cũ chưa có từ khoá -> lấy từ khoá mặc định theo mã giải pháp
+      solutions: v.b2bHub?.solutions?.length
+        ? v.b2bHub.solutions.map((x) => ({ ...x, keywords: x.keywords ?? d.b2bHub.solutions.find((y) => y.key === x.key)?.keywords ?? "" }))
+        : d.b2bHub.solutions,
       process: v.b2bHub?.process?.length ? v.b2bHub.process : d.b2bHub.process,
       benefits: v.b2bHub?.benefits?.length ? v.b2bHub.benefits : d.b2bHub.benefits,
     },
+    b2bPricing: { ...d.b2bPricing, ...v.b2bPricing, tiers: v.b2bPricing?.tiers ?? d.b2bPricing.tiers },
     slides: { ...d.slides, ...v.slides, items: v.slides?.items?.length ? v.slides.items : d.slides.items },
     seasonal: { ...d.seasonal, ...v.seasonal, rules: v.seasonal?.rules?.length ? v.seasonal.rules : d.seasonal.rules },
     collections: { ...d.collections, ...v.collections },

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { prisma, type Prisma } from "@pod/db";
 import {
+  B2B_BUDGETS,
   AUDIENCE_SLUG,
   AUDIENCES,
   HELP_CATEGORIES,
@@ -16,7 +17,7 @@ import { clientIp, notFound, pageParams } from "../lib/http";
 import { rateLimit } from "../lib/rate-limit";
 import { getPage, listPages } from "../lib/pages";
 import { notifyLead } from "../lib/notify";
-import { resolveSearch } from "../lib/search";
+import { resolveSearch, phraseWhere } from "../lib/search";
 
 export const publicRoutes = new Hono();
 
@@ -32,6 +33,7 @@ const productSelect = {
   saleEndsAt: true,
   newUntil: true,
   productionDays: true,
+  minQty: true,
   images: true,
   isBestSeller: true,
   category: { select: { name: true, slug: true } },
@@ -221,7 +223,27 @@ async function listingWhere(query: Record<string, string>, omit: "sub" | "catego
     // mau=Đen: sản phẩm có phân loại màu đó (không phân biệt hoa thường)
     ...(query.mau ? { variants: { some: { isActive: true, color: { equals: query.mau.trim().slice(0, 40), mode: "insensitive" as const } } } } : {}),
     ...(await resolveSearch(query.q)),
+    ...(await b2bWhere(query)),
   };
+}
+
+/**
+ * Bộ lọc doanh nghiệp: b2b=1 (chỉ ngành hàng doanh nghiệp), dip=<mã giải pháp> (khớp từ khoá theo dịp),
+ * ngan-sach=<khoảng> (theo giá bán / giá "Từ" mỗi sản phẩm)
+ */
+async function b2bWhere(query: Record<string, string>): Promise<Prisma.ProductWhereInput> {
+  if (query.b2b !== "1" && !query.dip && !query["ngan-sach"]) return {};
+  const hub = (await getLanding()).b2bHub;
+  const and: Prisma.ProductWhereInput[] = [];
+  if (query.b2b === "1" && !query.category) and.push({ category: { isActive: true, slug: { in: hub.industries.map((i) => i.slug) } } });
+  const dip = query.dip ? hub.solutions.find((s) => s.key === query.dip) : undefined;
+  if (dip) {
+    const ors = dip.keywords.split(",").map((k) => phraseWhere(k)).filter((w): w is Prisma.ProductWhereInput => !!w);
+    if (ors.length) and.push({ OR: ors });
+  }
+  const budget = B2B_BUDGETS.find((b) => b.key === query["ngan-sach"]);
+  if (budget) and.push({ sortPrice: { gte: budget.min, ...(budget.max ? { lt: budget.max } : {}) } });
+  return and.length ? { AND: and } : {};
 }
 
 /** Bộ lọc: nhóm con trong danh mục + danh mục (khi tìm kiếm) kèm số lượng */

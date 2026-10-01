@@ -15,6 +15,10 @@ export type AdminCategory = {
 
 export type AdminProduct = {
   id: string;
+  /** Giá niêm yết của nguồn hàng (sản phẩm nhập từ nhà cung cấp) */
+  sourcePrice?: number | null;
+  /** Đã sửa giá tay -> "Áp dụng giá B2B" bỏ qua */
+  priceManual?: boolean;
   name: string;
   slug: string;
   description: string;

@@ -13,6 +13,8 @@ export type ProductCardData = {
   saleEndsAt?: string | null;
   newUntil?: string | null;
   productionDays?: string;
+  /** Số lượng tối thiểu (>1 = hiện "Tối thiểu …") */
+  minQty?: number;
   images: string[];
   isBestSeller: boolean;
   category: { name: string; slug: string };

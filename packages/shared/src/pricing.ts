@@ -75,3 +75,54 @@ export function displayCompareAt(p: PriceSource & { compareAtPrice?: number | nu
   if (saleActive(p, now)) return Math.max(p.basePrice, p.compareAtPrice ?? 0);
   return p.compareAtPrice && p.compareAtPrice > p.basePrice ? p.compareAtPrice : null;
 }
+
+/* ---------- Giá B2B cho sản phẩm nguồn (nhập từ nhà cung cấp) ---------- */
+
+/**
+ * source: giá bán = giá niêm yết của nguồn (như cũ)
+ * markup: giá bán = giá nguồn × (1 + markupPct%) – làm tròn lên
+ * quote : không bán online, chỉ báo giá; có thể hiện "Từ …đ" ước tính theo markup
+ */
+export type B2BPricingMode = "source" | "markup" | "quote";
+export type B2BPricing = {
+  mode: B2BPricingMode;
+  markupPct: number;
+  roundTo: number;
+  /** quote: hiện giá "Từ …đ" (giá nguồn × markup) */
+  showFrom: boolean;
+  /** Giảm theo số lượng, áp lên giá bán: [{ minQty: 100, discountPct: 5 }] */
+  tiers: { minQty: number; discountPct: number }[];
+  /** Số lượng tối thiểu mặc định cho sản phẩm nguồn (1 = mua lẻ được) */
+  moq: number;
+};
+
+export const DEFAULT_B2B_PRICING: B2BPricing = { mode: "source", markupPct: 0, roundTo: 1000, showFrom: true, tiers: [], moq: 1 };
+
+const roundUp = (n: number, step: number) => (step > 1 ? Math.ceil(n / step) * step : Math.round(n));
+const roundDown = (n: number, step: number) => (step > 1 ? Math.floor(n / step) * step : Math.round(n));
+
+/** Tính giá bán từ giá nguồn theo cấu hình B2B (hàm thuần – dùng chung API, CMS xem trước) */
+export function b2bPriceFor(source: number, cfg: B2BPricing) {
+  const step = Math.max(1, Math.round(cfg.roundTo || 1));
+  const est = cfg.mode === "source" ? source : roundUp(source * (1 + Math.max(0, cfg.markupPct) / 100), step);
+  const basePrice = cfg.mode === "quote" ? 0 : est;
+  const priceFrom = cfg.mode === "quote" && cfg.showFrom ? est : null;
+  const minQty = Math.max(1, Math.round(cfg.moq || 1));
+  const priceTiers: PriceTier[] =
+    basePrice > 0
+      ? [...cfg.tiers]
+          .filter((t) => t.minQty > minQty && t.discountPct > 0 && t.discountPct < 100)
+          .sort((a, b) => a.minQty - b.minQty)
+          .map((t) => ({ minQty: t.minQty, price: roundDown(basePrice * (1 - t.discountPct / 100), step) }))
+      : [];
+  return { basePrice, priceFrom, minQty, priceTiers, sortPrice: sortPriceOf(basePrice, priceFrom) };
+}
+
+/** Khoảng ngân sách mỗi phần quà (lọc theo giá bán / giá "Từ") */
+export const B2B_BUDGETS = [
+  { key: "duoi-50k", label: "Dưới 50.000đ", min: 0, max: 50_000 },
+  { key: "50-100k", label: "50 – 100.000đ", min: 50_000, max: 100_000 },
+  { key: "100-200k", label: "100 – 200.000đ", min: 100_000, max: 200_000 },
+  { key: "200-500k", label: "200 – 500.000đ", min: 200_000, max: 500_000 },
+  { key: "tren-500k", label: "Trên 500.000đ", min: 500_000, max: null },
+] as const;

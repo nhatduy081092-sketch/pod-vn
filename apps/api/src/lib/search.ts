@@ -14,6 +14,12 @@ const atWordStart = (t: string): Prisma.ProductWhereInput => ({
   OR: [{ searchText: { startsWith: t } }, { searchText: { contains: ` ${t}` } }],
 });
 
+/** Khớp nguyên cụm ở đầu từ (VD từ khoá "binh giu nhiet"); cụm rỗng -> null */
+export function phraseWhere(text: string): Prisma.ProductWhereInput | null {
+  const tokens = searchTokens(text);
+  return tokens.length ? atWordStart(tokens.join(" ")) : null;
+}
+
 /** Điều kiện tìm kiếm theo từng từ (không dấu), mọi từ đều phải có */
 export function searchWhere(q?: string): Prisma.ProductWhereInput {
   const tokens = q ? searchTokens(q) : [];
