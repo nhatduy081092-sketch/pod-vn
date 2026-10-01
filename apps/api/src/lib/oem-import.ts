@@ -3,6 +3,7 @@ import { b2bPriceFor, DEFAULT_SIZES, KIDS_SIZES, mergeLanding, slugify } from "@
 import { getLanding, invalidateLanding } from "./settings";
 import { searchFields } from "./search";
 import { ensureProductParts } from "./product-parts";
+import { applyOemPrintPresets } from "./oem-blanks";
 
 /**
  * Đồng bộ danh mục + sản phẩm từ website OEM Group (WooCommerce Store API công khai).
@@ -243,6 +244,9 @@ export async function importOemCatalog(): Promise<ImportReport> {
       invalidateLanding();
     }
   }
+
+  // sản phẩm mới nhập -> vùng in theo ngành (giữ nguyên vùng in đã chỉnh tay)
+  await applyOemPrintPresets(true).catch(() => 0);
 
   report.ms = Date.now() - t0;
   report.errors = report.errors.slice(0, 20);

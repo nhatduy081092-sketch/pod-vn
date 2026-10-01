@@ -9,7 +9,7 @@ import { useQuoteList } from "@/lib/quote-list";
 import { useRouter } from "next/navigation";
 
 /** threshold: từ số lượng này gợi ý chuyển sang yêu cầu báo giá (đơn nhỏ mua online, đơn lớn báo giá) */
-export function CartView({ threshold = 0 }: { threshold?: number }) {
+export function CartView({ threshold = 0, freeThreshold = 0 }: { threshold?: number; freeThreshold?: number }) {
   const cart = useCart();
   const quotes = useQuoteList();
   const router = useRouter();
@@ -129,7 +129,7 @@ export function CartView({ threshold = 0 }: { threshold?: number }) {
         </Link>
       </aside>
     </div>
-    <CartUpsell exclude={cart.items.map((i) => i.slug)} />
+    <CartUpsell productIds={[...new Set(cart.items.map((i) => i.productId))]} subtotal={cart.subtotal} freeThreshold={freeThreshold} />
     </>
   );
 }

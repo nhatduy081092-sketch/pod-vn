@@ -59,6 +59,8 @@ export type ProductDetail = ProductCardData & {
   variants: Variant[];
   printAreas: PrintArea[];
   related: ProductCardData[];
+  /** related lấy từ "thường mua cùng" (đơn thật) */
+  relatedFromOrders?: boolean;
 };
 
 export type Notice = { id: string; title: string; content: string; level: "info" | "warning"; showBanner: boolean; showOnProduct: boolean; startsAt: string; endsAt: string | null };

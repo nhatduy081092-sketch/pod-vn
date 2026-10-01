@@ -123,6 +123,7 @@ model Product {
   externalId     String?     @unique
   sourceUrl      String      @default("")
   orderItems     OrderItem[]
+  dailyStats     ProductDailyStat[]
   variants       ProductVariant[]
   printAreas     PrintArea[]
   savedDesigns   SavedDesign[]
@@ -534,4 +535,15 @@ model DesignAsset {
 
   @@index([kind, isActive, sortOrder])
   @@index([status])
+}
+
+/// Thống kê theo ngày (giờ VN) cho thuật toán "bán chạy" – lượt xem trang sản phẩm
+model ProductDailyStat {
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  day       DateTime @db.Date
+  views     Int      @default(0)
+
+  @@id([productId, day])
+  @@index([day])
 }

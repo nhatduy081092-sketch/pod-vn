@@ -26,10 +26,18 @@ export default {
         zalo: "#0068FF",
         navy: { DEFAULT: "#1d1d1f", dark: "#000000", light: "#f1eee9" },
         accent: "#E4570B",
+        /* Pastel theo chủ đề (vui, GenZ) – chỉ làm nền khối/sticker, cam đậm vẫn là màu hành động */
+        sun: "#FFD23F",
+        sky: "#8FD3FF",
+        bubble: "#FF9EC0",
+        mint: "#A6E58A",
+        lilac: "#C9B8FF",
+        peach: "#FFE3CF",
         sale: "#D62828", // đỏ – tách khỏi cam thương hiệu
       },
       fontFamily: {
         sans: ["var(--font-sans)", "Be Vietnam Pro", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "system-ui", "sans-serif"],
       },
       // Chữ nhẹ hơn: font-black/extrabold cũ -> 700/600 (tiêu đề to nhưng không nặng)
       fontWeight: {
@@ -42,6 +50,10 @@ export default {
         "stack-sm": "0 1px 2px rgb(29 29 31 / .05), 0 6px 18px -10px rgb(29 29 31 / .14)",
         hard: "0 1px 2px rgb(29 29 31 / .06), 0 4px 14px -6px rgb(29 29 31 / .16)",
         soft: "0 1px 2px rgb(29 29 31 / .04), 0 10px 30px -12px rgb(29 29 31 / .14)",
+        // sticker: bóng cứng lệch màu đen (phong cách vui)
+        sticker: "4px 4px 0 #1d1d1f",
+        "sticker-sm": "2px 2px 0 #1d1d1f",
+        "sticker-lg": "6px 6px 0 #1d1d1f",
       },
       maxWidth: {
         site: "1200px",

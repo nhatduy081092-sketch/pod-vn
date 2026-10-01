@@ -226,6 +226,18 @@ export const landingSettingsSchema = z.object({
     process: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(10),
     benefits: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(12),
   }),
+  heroPlay: z.object({
+    enabled: z.boolean(),
+    title: z.string().trim().min(1, "Nhập tiêu đề hero").max(90),
+    subtitle: z.string().max(220),
+    ctaLabel: z.string().max(40),
+    href: z.string().max(300),
+    secondaryLabel: z.string().max(40),
+    secondaryHref: z.string().max(300),
+    image: z.string().max(500),
+    designs: z.array(z.string().trim().max(80)).max(4),
+    stickers: z.array(z.string().trim().max(80)).max(8),
+  }),
   b2bQuote: z.object({
     threshold: z.number().int().min(2).max(1_000_000),
     enforce: z.boolean(),

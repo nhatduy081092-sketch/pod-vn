@@ -226,6 +226,33 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
         </div>
       </Card>
 
+      <Card {...cardProps("heroPlay")} title="Hero cắt dán (đầu trang chủ)" hint="Chữ lớn + ảnh thật + 3 áo chữ mẫu có sẵn + nhãn chủ đề trôi. Tắt = dùng banner slider bên dưới.">
+        <Toggle label="Hiển thị hero cắt dán" checked={s.heroPlay.enabled} onChange={(v) => set("heroPlay", { enabled: v })} />
+        <div className="grid gap-2 md:grid-cols-2">
+          <Field label="Tiêu đề (mỗi câu kết thúc bằng dấu chấm = 1 dòng)" value={s.heroPlay.title} onChange={(v) => set("heroPlay", { title: v })} wide />
+          <Field label="Mô tả" value={s.heroPlay.subtitle} onChange={(v) => set("heroPlay", { subtitle: v })} wide />
+          <Field label="Chữ nút chính" value={s.heroPlay.ctaLabel} onChange={(v) => set("heroPlay", { ctaLabel: v })} />
+          <Field label="Link nút chính" value={s.heroPlay.href} onChange={(v) => set("heroPlay", { href: v })} />
+          <Field label="Chữ nút phụ" value={s.heroPlay.secondaryLabel} onChange={(v) => set("heroPlay", { secondaryLabel: v })} />
+          <Field label="Link nút phụ" value={s.heroPlay.secondaryHref} onChange={(v) => set("heroPlay", { secondaryHref: v })} />
+          <ListField
+            label="3 mẫu áo chữ (mã mẫu, cách nhau dấu phẩy – xem ở /bo-suu-tap, VD chuyen-phong-gym-1)"
+            initial={s.heroPlay.designs.join(", ")}
+            onChange={(v) => set("heroPlay", { designs: v.slice(0, 4) })}
+            wide
+          />
+          <ListField
+            label="Nhãn chủ đề trôi (mã bộ sưu tập, VD ca-phe-tra-sua, tet-li-xi)"
+            initial={s.heroPlay.stickers.join(", ")}
+            onChange={(v) => set("heroPlay", { stickers: v.slice(0, 8) })}
+            wide
+          />
+          <div className="md:col-span-2">
+            <ImageInput label="Ảnh thật ở giữa (người mẫu mặc áo, dọc 4:5)" value={s.heroPlay.image} onChange={(v) => set("heroPlay", { image: v })} />
+          </div>
+        </div>
+      </Card>
+
       <Card {...cardProps("slogan")} title="Slogan thương hiệu (đầu trang)" hint="Mỗi từ 1 dòng tiếng Anh – chữ cái đầu tự tô màu cam (Young, Ambitious, Limitless, Authentic → YALA).">
         <Toggle label="Hiển thị" checked={s.slogan.enabled} onChange={(v) => set("slogan", { enabled: v })} />
         <div className="grid gap-2 md:grid-cols-2">

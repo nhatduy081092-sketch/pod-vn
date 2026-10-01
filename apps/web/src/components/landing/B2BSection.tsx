@@ -3,55 +3,69 @@ import type { LandingSettings } from "@pod/shared";
 import { assetUrl } from "@/lib/config";
 import type { ProductCardData } from "@/lib/types";
 import { IconArrow } from "../ui/icons";
+import { pastel, tiltOf } from "@/lib/pastel";
 
-type Props = { data: LandingSettings["b2b"]; brand: LandingSettings["brand"]; products: ProductCardData[] };
+/** CHỮ IN HOA (dữ liệu cũ) -> câu thường */
+const sentence = (t: string) => (t === t.toLocaleUpperCase("vi") ? t.charAt(0) + t.slice(1).toLocaleLowerCase("vi") : t);
+
+type Industry = { name: string; slug: string; image: string; count: number };
+type Props = { data: LandingSettings["b2b"]; brand: LandingSettings["brand"]; products: ProductCardData[]; industries?: Industry[] };
 
 /**
  * Khối "Giải pháp doanh nghiệp" mang nhận diện YALA (xanh navy + cam accent),
  * tạo khác biệt với bản mẫu: số liệu năng lực, sản phẩm B2B báo giá theo số lượng, khách hàng tiêu biểu.
  */
-export function B2BSection({ data, brand, products }: Props) {
+export function B2BSection({ data, brand, products, industries = [] }: Props) {
+  const tiles = industries.filter((i) => i.image).slice(0, 8);
   if (!data.enabled) return null;
   const zalo = `https://zalo.me/${brand.zalo.replace(/\D/g, "")}`;
   return (
-    <section id="doanh-nghiep" className="relative scroll-mt-16 overflow-hidden bg-ink py-12 text-white md:py-16">
-      {/* lưới + vệt cam trang trí */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.08]"
-        style={{ backgroundImage: "linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)", backgroundSize: "28px 28px" }}
-        aria-hidden
-      />
+    <section id="doanh-nghiep" className="home-b2b relative scroll-mt-16 overflow-hidden bg-ink border-y-2 border-ink py-14 text-white md:py-20">
 
       <div className="container-site relative">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr] lg:items-center">
           <div>
-            <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">{data.eyebrow}</span>
-            <h2 className="mt-3 text-[clamp(28px,3.6vw,44px)] font-bold leading-[1.1] tracking-[-0.02em]">{data.title}</h2>
+            <span className="chip-sticker -rotate-2 bg-brand text-white">{sentence(data.eyebrow.replace(/^YALA\s*·\s*/i, ""))}</span>
+            <h2 className="mt-4 font-display text-[clamp(32px,4.2vw,56px)] font-extrabold leading-[1.0] tracking-[-0.02em] [font-stretch:86%]">{data.title}</h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80 md:text-base">{data.subtitle}</p>
             <div className="mt-5 flex flex-wrap gap-2.5">
-              <Link href="/doanh-nghiep#bao-gia" className="btn-primary">
-                {data.ctaLabel} <IconArrow className="h-4 w-4" />
+              <Link href="/doanh-nghiep#bao-gia" className="btn-primary px-6 py-3">
+                {data.ctaLabel}
               </Link>
-              <Link href="/doanh-nghiep" className="btn border-white/40 bg-transparent text-white hover:border-white">
+              <Link href="/doanh-nghiep" className="btn border-white bg-transparent px-6 py-3 text-white hover:bg-white hover:text-ink">
                 Xem giải pháp doanh nghiệp
               </Link>
-              <a href={zalo} target="_blank" rel="noopener noreferrer" className="btn border-white/40 bg-transparent text-white hover:border-white">
+              <a href={zalo} target="_blank" rel="noopener noreferrer" className="btn border-white/50 bg-transparent px-6 py-3 text-white hover:border-white">
                 Chat Zalo
               </a>
             </div>
           </div>
 
-          <ul className="grid grid-cols-2 gap-3">
-            {data.stats.map((s) => (
-              <li key={s.label} className="relative rounded-xl border border-white/15 bg-navy-dark/70 p-4">
-                <p className="text-[clamp(26px,6vw,40px)] font-black leading-none text-accent">{s.value}</p>
-                <p className="mt-1.5 text-xs leading-snug text-white/75 md:text-sm">{s.label}</p>
+          <ul className="grid grid-cols-2 gap-4">
+            {data.stats.map((s, i) => (
+              <li key={s.label} className={`sticker tilt p-4 text-ink md:p-5 ${pastel(i)}`} style={{ ["--r" as string]: `${tiltOf(i) / 1.5}deg` }}>
+                <p className="font-display text-[clamp(26px,5vw,42px)] font-extrabold leading-none [font-stretch:85%]">{s.value}</p>
+                <p className="mt-1.5 text-xs font-medium leading-snug text-ink/75 md:text-sm">{s.label}</p>
               </li>
             ))}
           </ul>
         </div>
 
-        {products.length > 0 && (
+        {tiles.length >= 4 ? (
+          <ul className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
+            {tiles.map((t, i) => (
+              <li key={t.slug} data-reveal="pop" style={{ ["--d" as string]: `${(i % 4) * 70}ms` }}>
+                <Link href={`/doanh-nghiep/san-pham?nganh=${t.slug}`} className="hover-wiggle tilt group block" style={{ ["--r" as string]: `${tiltOf(i) / 1.5}deg` }}>
+                  <span className="sticker block aspect-square overflow-hidden border-white bg-white shadow-[4px_4px_0_#E4570B]">
+                    <img src={assetUrl(t.image)} alt={t.name} loading="lazy" decoding="async" className="h-full w-full object-contain p-[8%] transition duration-500 group-hover:scale-105" />
+                  </span>
+                  <span className="mt-3 block text-center font-display text-[15px] font-bold leading-tight text-white md:text-base">{t.name}</span>
+                  <span className="block text-center text-xs text-white/60">{t.count} mẫu in được logo</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : products.length > 0 && (
           <ul className="no-scrollbar -mx-4 mt-10 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0">
             {products.map((p) => (
               <li key={p.id} className="w-[72%] shrink-0 snap-start md:w-auto">

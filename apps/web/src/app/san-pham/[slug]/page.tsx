@@ -6,6 +6,8 @@ import { getNotices, getPage, getProduct, getSettings } from "@/lib/api";
 import { absoluteAssetUrl, SITE_URL } from "@/lib/config";
 import { ProductConfigurator } from "@/components/product/ProductConfigurator";
 import { QuoteProduct } from "@/components/product/QuoteProduct";
+import { RecordView } from "@/components/personal/RecordView";
+import { RecentlyViewed } from "@/components/personal/RecentlyViewed";
 import { ProductGrid } from "@/components/shop/ProductCard";
 import { ProductTabs, type ProductTab } from "@/components/product/ProductTabs";
 import { SizeChartTable } from "@/components/product/SizeChartTable";
@@ -202,10 +204,29 @@ export default async function ProductPage({ params }: { params: Params }) {
 
       {product.related.length > 0 && (
         <section className="mt-12">
-          <h2 className="mb-4 text-xl font-black md:text-2xl">Sản phẩm tương tự</h2>
+          <h2 className="h-section mb-5">{product.relatedFromOrders ? "Thường được mua cùng" : "Có thể bạn cũng thích"}</h2>
           <ProductGrid items={product.related} />
         </section>
       )}
+      <RecordView
+        b2b={isB2B}
+        product={{
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          images: product.images.slice(0, 2),
+          basePrice: product.basePrice,
+          compareAtPrice: product.compareAtPrice,
+          priceFrom: product.priceFrom ?? null,
+          salePrice: product.salePrice ?? null,
+          saleEndsAt: product.saleEndsAt ?? null,
+          minQty: product.minQty,
+          audience: product.audience,
+          isBestSeller: product.isBestSeller,
+          category: { name: product.category.name, slug: product.category.slug },
+        }}
+      />
+      <RecentlyViewed exclude={product.id} className="-mx-4 md:-mx-6" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
     </div>
   );

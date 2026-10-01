@@ -8,7 +8,7 @@ import { assetUrl } from "@/lib/config";
  * Trước / sau: kéo thanh giữa để so sánh ảnh gốc của khách với áo in xong.
  * Chưa có ảnh "sau" -> tự ghép ảnh gốc vào vùng in ngực của phôi áo thun (minh hoạ, không cần chụp thật).
  */
-export function BeforeAfter({ data }: { data: LandingSettings["beforeAfter"] }) {
+export function BeforeAfter({ data, steps = [] }: { data: LandingSettings["beforeAfter"]; steps?: LandingSettings["steps"] }) {
   const box = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState(50);
   const drag = useRef(false);
@@ -28,30 +28,38 @@ export function BeforeAfter({ data }: { data: LandingSettings["beforeAfter"] }) 
   const z = GARMENT_ZONE.tshirt;
 
   return (
-    <section className="py-12 md:py-20" aria-label={data.title}>
-      <div className="container-site grid items-center gap-8 md:grid-cols-[1fr_1.1fr] md:gap-14">
-        <div>
-          <p className="eyebrow">{data.eyebrow}</p>
-          <h2 className="h-section mt-1.5">{data.title}</h2>
-          <p className="mt-3 max-w-md text-[15px] leading-relaxed text-muted md:text-base">{data.subtitle}</p>
+    <section className="relative overflow-hidden bg-sun py-14 md:py-24" aria-label={data.title}>
+      <div className="container-site grid items-center gap-10 md:grid-cols-[1fr_1.1fr] md:gap-14">
+        <div data-reveal>
+          <h2 className="h-section">{data.title}</h2>
+          <p className="mt-3 max-w-md text-[15px] leading-relaxed text-ink/80 md:text-base">{data.subtitle}</p>
+          {steps.length > 0 && (
+            <ol className="mt-6 space-y-3">
+              {steps.map((st, i) => (
+                <li key={st.title} className="flex items-center gap-3 text-[15px] font-semibold">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-ink bg-white font-display text-base font-extrabold">{i + 1}</span>
+                  {st.title}
+                </li>
+              ))}
+            </ol>
+          )}
           {data.points.length > 0 && (
-            <ul className="mt-5 space-y-2 text-[15px]">
+            <ul className="mt-5 flex flex-wrap gap-2">
               {data.points.map((p) => (
-                <li key={p} className="flex items-start gap-2.5">
-                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden />
+                <li key={p} className="chip-sticker bg-white text-[13px] shadow-none">
                   {p}
                 </li>
               ))}
             </ul>
           )}
-          <Link href={data.href || "/thiet-ke"} className="btn-primary mt-6 px-6 py-3">
-            {data.ctaLabel || "Thử ngay"} <span aria-hidden>→</span>
+          <Link href={data.href || "/thiet-ke"} className="btn-primary mt-7 px-7 py-3.5 text-base">
+            {data.ctaLabel || "Thử ngay"}
           </Link>
         </div>
-
         <div
           ref={box}
-          className="relative aspect-square touch-pan-y select-none overflow-hidden rounded-2xl bg-surface"
+          data-reveal="pop"
+          className="sticker relative aspect-square touch-pan-y select-none overflow-hidden bg-white shadow-sticker-lg"
           onPointerDown={onDown}
           onPointerMove={(e) => drag.current && move(e.clientX)}
           onPointerUp={() => (drag.current = false)}
@@ -88,10 +96,10 @@ export function BeforeAfter({ data }: { data: LandingSettings["beforeAfter"] }) 
           <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
             {data.before && <img src={assetUrl(data.before)} alt={data.beforeLabel} className="h-full w-full object-cover" draggable={false} />}
           </div>
-          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold">{data.beforeLabel}</span>
-          <span className="absolute right-3 top-3 rounded-full bg-ink px-2.5 py-1 text-xs font-semibold text-white">{data.afterLabel}</span>
+          <span className="chip-sticker absolute left-3 top-3 -rotate-3 bg-white text-xs">{data.beforeLabel}</span>
+          <span className="chip-sticker absolute right-3 top-3 rotate-3 bg-brand text-xs text-white">{data.afterLabel}</span>
           {/* thanh kéo */}
-          <div className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-white shadow-[0_0_0_1px_rgba(0,0,0,.08)]" style={{ left: `${pos}%` }}>
+          <div className="absolute inset-y-0 w-1 -translate-x-1/2 bg-ink" style={{ left: `${pos}%` }}>
             <button
               type="button"
               role="slider"
@@ -100,7 +108,7 @@ export function BeforeAfter({ data }: { data: LandingSettings["beforeAfter"] }) 
               aria-valuemax={100}
               aria-valuenow={Math.round(pos)}
               onKeyDown={onKey}
-              className="absolute left-1/2 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize place-items-center rounded-full bg-white text-sm shadow-soft"
+              className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize place-items-center rounded-full border-2 border-ink bg-white text-base font-bold shadow-sticker-sm"
             >
               ⇆
             </button>

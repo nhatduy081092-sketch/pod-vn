@@ -1,28 +1,29 @@
 import Link from "next/link";
 import type { Lane, LandingSettings } from "@pod/shared";
 import { assetUrl } from "@/lib/config";
+import { pastel } from "@/lib/pastel";
 import { MerchKit } from "../b2b/MerchKit";
 
-/** Đầu trang: YALA là ai + 2 lối vào Cá nhân | Doanh nghiệp + 4 dịch vụ chính */
+/**
+ * YALA là ai + 2 lối vào Cá nhân | Doanh nghiệp (thẻ sticker) + các dịch vụ dạng nhãn.
+ * Khách từng vào khu Doanh nghiệp -> thẻ Doanh nghiệp tự lên trước (CSS theo html[data-lane]).
+ */
 export function Lanes({ data }: { data: LandingSettings["positioning"] }) {
   if (!data.enabled) return null;
   return (
-    <section className="pb-8 pt-2 md:pb-12" aria-label="YALA làm gì">
+    <section className="py-12 md:py-20" aria-label="YALA làm gì" data-reveal>
       <div className="container-site">
-        {data.statement && <p className="mx-auto max-w-3xl text-center text-[15px] text-muted [text-wrap:balance] md:text-lg">{data.statement}</p>}
-        <div className="mt-5 grid gap-4 md:mt-7 md:grid-cols-2 md:gap-6">
-          <LaneCard lane={data.personal} tone="light" />
-          <LaneCard lane={data.business} tone="dark" />
+        {data.statement && <h2 className="h-section max-w-4xl [text-wrap:balance]">{data.statement}</h2>}
+        <div className="mt-8 grid gap-6 md:mt-10 md:grid-cols-2 md:gap-8">
+          <LaneCard lane={data.personal} tone="light" className="lane-personal" tilt={-1} />
+          <LaneCard lane={data.business} tone="dark" className="lane-business" tilt={1} />
         </div>
         {data.services.length > 0 && (
-          <ul className="mt-4 grid grid-cols-2 gap-3 md:mt-6 md:grid-cols-4 md:gap-4">
-            {data.services.map((s) => (
+          <ul className="mt-8 flex flex-wrap gap-2.5">
+            {data.services.map((s, i) => (
               <li key={s.title}>
-                <Link href={s.href || "#"} className="group block h-full rounded-2xl border border-line p-4 transition hover:border-ink md:p-5">
-                  <p className="text-[15px] font-semibold md:text-base">
-                    {s.title} <span className="text-muted transition group-hover:translate-x-0.5 group-hover:text-ink">→</span>
-                  </p>
-                  <p className="mt-1 text-[13px] leading-snug text-muted md:text-sm">{s.desc}</p>
+                <Link href={s.href || "#"} className={`chip-sticker hover-wiggle ${pastel(i + 2)}`} title={s.desc}>
+                  {s.title}
                 </Link>
               </li>
             ))}
@@ -33,38 +34,43 @@ export function Lanes({ data }: { data: LandingSettings["positioning"] }) {
   );
 }
 
-function LaneCard({ lane, tone }: { lane: Lane; tone: "light" | "dark" }) {
+function LaneCard({ lane, tone, className, tilt }: { lane: Lane; tone: "light" | "dark"; className: string; tilt: number }) {
   const dark = tone === "dark";
   return (
-    <article className={`relative flex flex-col overflow-hidden rounded-3xl ${dark ? "bg-ink text-white" : "bg-surface text-ink"}`}>
-      <div className="relative aspect-[16/9] overflow-hidden">
+    <article
+      className={`sticker tilt relative flex flex-col overflow-hidden shadow-sticker-lg transition-transform duration-300 hover:rotate-0 ${dark ? "bg-ink text-white" : "bg-sky text-ink"} ${className}`}
+      style={{ ["--r" as string]: `${tilt}deg` }}
+    >
+      <div className={`relative aspect-[16/10] overflow-hidden border-b-2 border-ink ${dark ? "bg-peach" : "bg-white"}`}>
         {lane.image ? (
           <img src={assetUrl(lane.image)} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "60% 30%" }} />
         ) : (
           <MerchKit className="absolute inset-0 h-full w-full" />
         )}
-        <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-semibold ${dark ? "bg-white text-ink" : "bg-ink text-white"}`}>{lane.label}</span>
+        <span className={`chip-sticker absolute left-4 top-4 -rotate-3 ${dark ? "bg-brand text-white" : "bg-sun"}`}>{lane.label}</span>
       </div>
-      <div className="flex flex-1 flex-col p-5 md:p-7">
-        <h2 className="text-[clamp(22px,2.6vw,32px)] font-bold leading-tight tracking-[-0.02em]">{lane.title}</h2>
+      <div className="flex flex-1 flex-col p-6 md:p-8">
+        <h3 className="font-display text-[clamp(26px,3vw,38px)] font-extrabold leading-[1.02] tracking-[-0.02em] [font-stretch:88%]">{lane.title}</h3>
         {lane.points.length > 0 && (
-          <ul className={`mt-3 space-y-1.5 text-[15px] ${dark ? "text-white/80" : "text-ink/80"}`}>
+          <ul className={`mt-4 space-y-2 text-[15px] ${dark ? "text-white/85" : "text-ink/85"}`}>
             {lane.points.map((p) => (
               <li key={p} className="flex gap-2.5">
-                <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden />
+                <svg viewBox="0 0 24 24" className={`mt-[3px] h-4 w-4 shrink-0 ${dark ? "text-brand" : "text-ink"}`} aria-hidden>
+                  <path d="M12 0c.9 6.4 4.7 10.2 12 12-7.3 1.8-11.1 5.6-12 12-.9-6.4-4.7-10.2-12-12C7.3 10.2 11.1 6.4 12 0Z" fill="currentColor" />
+                </svg>
                 {p}
               </li>
             ))}
           </ul>
         )}
-        <div className="mt-auto flex flex-wrap gap-2.5 pt-5">
+        <div className="mt-auto flex flex-wrap gap-3 pt-6">
           {lane.ctaLabel && (
-            <Link href={lane.href || "#"} className="btn-primary px-5 py-2.5">
-              {lane.ctaLabel} <span aria-hidden>→</span>
+            <Link href={lane.href || "#"} className="btn-primary px-6 py-3">
+              {lane.ctaLabel}
             </Link>
           )}
           {lane.secondaryLabel && (
-            <Link href={lane.secondaryHref || "#"} className={`btn px-5 py-2.5 ${dark ? "border-white/30 text-white hover:border-white" : "border-line bg-white text-ink hover:border-ink"}`}>
+            <Link href={lane.secondaryHref || "#"} className={dark ? "btn border-white bg-transparent px-6 py-3 text-white hover:bg-white hover:text-ink" : "btn-outline px-6 py-3"}>
               {lane.secondaryLabel}
             </Link>
           )}

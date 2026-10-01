@@ -5,6 +5,7 @@ import { getHome } from "@/lib/api";
 import type { HomeData } from "@/lib/types";
 import { assetUrl } from "@/lib/config";
 import { MerchKit } from "@/components/b2b/MerchKit";
+import { pastel } from "@/lib/pastel";
 import { B2BQuoteForm } from "@/components/b2b/B2BQuoteForm";
 
 export const revalidate = 300;
@@ -53,7 +54,7 @@ export default async function BusinessPage() {
         <div className="container-site grid items-center gap-8 py-10 md:grid-cols-[1.05fr_1fr] md:py-16">
           <div>
             <p className="text-[13px] font-semibold text-brand md:text-sm">{hub.eyebrow}</p>
-            <h1 className="mt-2 text-[clamp(30px,4.4vw,54px)] font-bold leading-[1.06] tracking-[-0.025em] [text-wrap:balance]">{hub.title}</h1>
+            <h1 className="mt-2 font-display text-[clamp(34px,5vw,64px)] font-extrabold leading-[1.0] tracking-[-0.025em] [font-stretch:86%] [text-wrap:balance]">{hub.title}</h1>
             <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/75 md:text-lg">{hub.subtitle}</p>
             <div className="mt-6 flex flex-wrap gap-2.5">
               <a href="#bao-gia" className="btn-primary px-6 py-3">
@@ -119,8 +120,7 @@ export default async function BusinessPage() {
                         <img src={assetUrl(cat.image)} alt={i.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                       ) : (
                         // chưa có sản phẩm: ô chữ thay ảnh, giữ lưới đều
-                        <div className="flex h-full flex-col justify-between p-4 md:p-6" aria-hidden>
-                          <span className="text-sm font-semibold text-muted">{String(idx + 1).padStart(2, "0")}</span>
+                        <div className={`flex h-full flex-col justify-end p-4 md:p-6 ${pastel(idx)}`} aria-hidden>
                           <span className="text-[clamp(16px,2vw,26px)] font-semibold leading-[1.15] tracking-[-0.015em] text-ink/80 [text-wrap:balance]">{i.blurb}</span>
                         </div>
                       )}

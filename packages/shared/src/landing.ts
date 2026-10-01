@@ -76,6 +76,22 @@ export type LandingSettings = {
   b2bQuote: { threshold: number; enforce: boolean; salesZalo: string; salesName: string; responseTime: string };
   /** Cách tính giá cho sản phẩm nhập từ nguồn (nhà cung cấp) */
   b2bPricing: B2BPricing;
+  /**
+   * Hero "cắt dán" vui: chữ lớn + ảnh thật + áo chữ mẫu có sẵn (designs = slug mẫu) + sticker chủ đề (stickers = slug bộ sưu tập).
+   * Tắt -> dùng banner slider.
+   */
+  heroPlay: {
+    enabled: boolean;
+    title: string;
+    subtitle: string;
+    ctaLabel: string;
+    href: string;
+    secondaryLabel: string;
+    secondaryHref: string;
+    image: string;
+    designs: string[];
+    stickers: string[];
+  };
   /** Slogan thương hiệu đầu trang: mỗi từ tiếng Anh, chữ cái đầu tô màu nhấn (ghép thành YALA) + câu tiếng Việt */
   slogan: { enabled: boolean; words: string[]; vi: string };
   /** Banner slider đầu trang theo chiến dịch (thay hero cũ khi bật) */
@@ -265,6 +281,18 @@ export const DEFAULT_LANDING: LandingSettings = {
       { title: "Quà tặng doanh nghiệp", desc: "Quà Tết, tri ân khách hàng, quà sự kiện theo ngân sách", href: "/doanh-nghiep#giai-phap" },
       { title: "Đồng phục", desc: "Đồng phục công ty, lớp, đội nhóm – in tên & số từng người", href: "/danh-muc/ao-thun" },
     ],
+  },
+  heroPlay: {
+    enabled: true,
+    title: "Áo in chữ của riêng bạn. Từ 1 chiếc.",
+    subtitle: "Chọn mẫu có sẵn hoặc tự thiết kế – xem trước ngay trên áo, sửa chữ thoải mái, giao toàn quốc.",
+    ctaLabel: "Tự thiết kế ngay",
+    href: "/thiet-ke",
+    secondaryLabel: "Xem mẫu có sẵn",
+    secondaryHref: "/bo-suu-tap",
+    image: "/showcase/ao-thun.webp",
+    designs: ["chuyen-phong-gym-1", "ca-phe-tra-sua-1", "pickleball-1"],
+    stickers: ["chuyen-phong-gym", "ca-phe-tra-sua", "tet-li-xi", "cap-doi", "doi-game-thu"],
   },
   b2bQuote: { threshold: 50, enforce: false, salesZalo: "", salesName: "", responseTime: "Phản hồi trong 2 giờ làm việc" },
   b2bPricing: DEFAULT_B2B_PRICING,
@@ -511,6 +539,12 @@ export function mergeLanding(value: unknown): LandingSettings {
       benefits: v.b2bHub?.benefits?.length ? v.b2bHub.benefits : d.b2bHub.benefits,
     },
     b2bQuote: { ...d.b2bQuote, ...v.b2bQuote },
+    heroPlay: {
+      ...d.heroPlay,
+      ...v.heroPlay,
+      designs: v.heroPlay?.designs?.length ? v.heroPlay.designs : d.heroPlay.designs,
+      stickers: v.heroPlay?.stickers?.length ? v.heroPlay.stickers : d.heroPlay.stickers,
+    },
     b2bPricing: { ...d.b2bPricing, ...v.b2bPricing, tiers: v.b2bPricing?.tiers ?? d.b2bPricing.tiers },
     slides: { ...d.slides, ...v.slides, items: v.slides?.items?.length ? v.slides.items : d.slides.items },
     seasonal: { ...d.seasonal, ...v.seasonal, rules: v.seasonal?.rules?.length ? v.seasonal.rules : d.seasonal.rules },

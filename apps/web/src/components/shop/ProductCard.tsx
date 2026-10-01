@@ -80,6 +80,7 @@ export function ProductGrid({
   color,
   even = false,
   after,
+  mobileMax,
 }: {
   items: ProductCardData[];
   dense?: boolean;
@@ -87,12 +88,14 @@ export function ProductGrid({
   even?: boolean;
   /** Nội dung dưới mỗi card (VD nút "Thêm vào báo giá") – nằm ngoài link của card */
   after?: (p: ProductCardData) => React.ReactNode;
+  /** Mobile chỉ hiện tối đa n sản phẩm (khối trang chủ, đỡ dài) */
+  mobileMax?: number;
 }) {
   const items = even && all.length > 4 ? all.slice(0, all.length >= 8 ? 8 : 4) : all;
   return (
     <ul className={`grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 md:gap-x-5 md:gap-y-8 ${dense ? "xl:grid-cols-4" : "lg:grid-cols-4"}`}>
       {items.map((p, i) => (
-        <li key={p.id} className={after ? "flex flex-col" : undefined}>
+        <li key={p.id} className={[after ? "flex flex-col" : "", mobileMax && i >= mobileMax ? "hidden sm:block" : ""].filter(Boolean).join(" ") || undefined}>
           <ProductCard p={p} priority={i < 2} color={color} />
           {after && <div className="mt-auto pt-2">{after(p)}</div>}
         </li>

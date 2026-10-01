@@ -3,6 +3,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 const SORTS = [
   { v: "", label: "Nổi bật" },
+  { v: "ban-chay", label: "Bán chạy" },
   { v: "newest", label: "Mới nhất" },
   { v: "price-asc", label: "Giá thấp → cao" },
   { v: "price-desc", label: "Giá cao → thấp" },

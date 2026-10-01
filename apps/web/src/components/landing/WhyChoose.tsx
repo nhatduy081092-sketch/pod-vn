@@ -1,23 +1,24 @@
 import type { LandingSettings } from "@pod/shared";
+import { pastel } from "@/lib/pastel";
 import { IconBrush, IconLayers, IconShield, IconTruck, IconUsers, IconWallet } from "../ui/icons";
 
 const ICONS = [IconLayers, IconBrush, IconShield, IconTruck, IconWallet, IconUsers];
 
+/** Cam kết: 1 dải gọn (icon sticker + tiêu đề + 1 dòng), thay cho 6 thẻ to */
 export function WhyChoose({ data }: { data: LandingSettings["whyChoose"] }) {
   return (
-    <section className="container-site py-10 md:py-16">
-      <h2 className="h-section text-center">{data.title}</h2>
-      <p className="mx-auto mt-3 max-w-[640px] text-center text-[15px] leading-relaxed text-muted md:text-base">{data.text}</p>
-      <ul className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+    <section className="container-site py-12 md:py-16" aria-label={data.title} data-reveal>
+      <h2 className="h-section">{data.title}</h2>
+      <ul className="mt-7 grid grid-cols-2 gap-x-5 gap-y-7 md:grid-cols-3 lg:grid-cols-6">
         {data.items.map((it, i) => {
           const Icon = ICONS[i % ICONS.length]!;
           return (
-            <li key={it.title} className="rounded-2xl bg-surface p-4 md:p-6">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-brand md:h-11 md:w-11">
-                <Icon className="h-5 w-5 md:h-6 md:w-6" />
+            <li key={it.title}>
+              <span className={`sticker inline-grid h-12 w-12 place-items-center rounded-xl shadow-sticker-sm ${pastel(i)}`}>
+                <Icon className="h-6 w-6" />
               </span>
-              <h3 className="mt-3 text-[14px] font-semibold md:text-base">{it.title}</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-muted md:text-sm">{it.desc}</p>
+              <h3 className="mt-3 font-display text-[16px] font-bold leading-tight">{it.title}</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-ink/65 md:text-sm">{it.desc}</p>
             </li>
           );
         })}

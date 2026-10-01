@@ -19,6 +19,7 @@ import { getPage, listPages } from "../lib/pages";
 import { notifyLead } from "../lib/notify";
 import { cmsLink, dispatchQuote } from "../lib/quote-dispatch";
 import { resolveSearch, phraseWhere } from "../lib/search";
+import { alsoBought, popularityScores, recordView, topProducts } from "../lib/popularity";
 
 export const publicRoutes = new Hono();
 
@@ -47,12 +48,8 @@ const audienceFromSlug = (slug?: string): Audience | undefined =>
 publicRoutes.get("/home", async (c) => {
   const settings = await getLanding();
   const [bestSellers, categories, testimonials, b2bProducts, catalogRaw] = await Promise.all([
-    prisma.product.findMany({
-      where: { isActive: true, isBestSeller: true },
-      orderBy: { sortOrder: "asc" },
-      take: 12,
-      select: productSelect,
-    }),
+    // bán chạy theo đơn thật 30 ngày + lượt xem (+ sản phẩm admin ghim)
+    topProducts({ take: 12, select: productSelect }),
     prisma.category.findMany({
       where: { isActive: true, showOnHome: true },
       orderBy: { sortOrder: "asc" },
@@ -187,12 +184,61 @@ publicRoutes.get("/products", async (c) => {
         : sort === "newest"
           ? [{ createdAt: "desc" }, { id: "asc" }]
           : [{ sortOrder: "asc" }, { id: "asc" }];
+  if (sort === "ban-chay" || c.req.query("bo-suu-tap") === "ban-chay") {
+    // xếp theo điểm phổ biến: lấy id (tối đa 3000) -> sắp xếp -> cắt trang
+    const [rows, scores] = await Promise.all([prisma.product.findMany({ where, select: { id: true, sortOrder: true }, take: 3000 }), popularityScores()]);
+    const ids = rows.sort((a, b) => (scores.get(b.id) ?? 0) - (scores.get(a.id) ?? 0) || a.sortOrder - b.sortOrder).map((r) => r.id);
+    const pageIds = ids.slice(skip, skip + take);
+    const found = await prisma.product.findMany({ where: { id: { in: pageIds } }, select: productSelect });
+    const byId = new Map(found.map((p) => [p.id, p]));
+    return c.json({ items: pageIds.map((id) => byId.get(id)).filter(Boolean), total: ids.length, page, pageSize });
+  }
   const [items, total] = await Promise.all([
     prisma.product.findMany({ where, orderBy, skip, take, select: productSelect }),
     prisma.product.count({ where }),
   ]);
   return c.json({ items, total, page, pageSize });
 });
+
+/** Ghi lượt xem sản phẩm (thuật toán bán chạy). Trình duyệt chỉ gửi 1 lần / sản phẩm / phiên */
+publicRoutes.post("/events/view", rateLimit({ key: "view", limit: 60, windowMs: 60_000 }), async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { productId?: unknown };
+  const id = typeof body.productId === "string" && /^[a-z0-9]{10,40}$/i.test(body.productId) ? body.productId : "";
+  if (id && (await prisma.product.count({ where: { id, isActive: true } }))) await recordView(id).catch(() => undefined);
+  return c.body(null, 204);
+});
+
+/**
+ * Gợi ý mua kèm: GET /recommendations?ids=a,b&maxPrice=150000&take=8
+ * "Thường mua cùng" (đơn thật 180 ngày) rồi bù bằng sản phẩm phổ biến cùng danh mục / toàn shop.
+ * maxPrice: chỉ gợi ý món có giá ≤ maxPrice (dùng để bù đủ freeship trong giỏ).
+ */
+publicRoutes.get("/recommendations", async (c) => {
+  const ids = (c.req.query("ids") ?? "").split(",").map((x) => x.trim()).filter((x) => /^[a-z0-9]{10,40}$/i.test(x)).slice(0, 20);
+  const take = Math.min(12, Math.max(1, Number(c.req.query("take")) || 8));
+  const maxPrice = Number(c.req.query("maxPrice")) || 0;
+  const priceWhere: Prisma.ProductWhereInput = maxPrice > 0 ? { basePrice: { gt: 0, lte: maxPrice } } : {};
+  const co = await alsoBought(ids, 40);
+  const coItems = co.length
+    ? await prisma.product.findMany({ where: { id: { in: co }, isActive: true, category: { isActive: true }, ...priceWhere }, select: productSelect })
+    : [];
+  const order = new Map(co.map((id, i) => [id, i]));
+  const items = coItems.sort((a, b) => order.get(a.id)! - order.get(b.id)!).slice(0, take);
+  if (items.length < take) {
+    const cats = ids.length ? (await prisma.product.findMany({ where: { id: { in: ids } }, select: { categoryId: true } })).map((x) => x.categoryId) : [];
+    const exclude = [...ids, ...items.map((x) => x.id)];
+    if (cats.length) items.push(...(await topProducts({ where: { categoryId: { in: cats }, ...priceWhere }, take: take - items.length, select: productSelect, exclude })));
+    if (items.length < take) items.push(...(await topProducts({ where: priceWhere, take: take - items.length, select: productSelect, exclude: [...exclude, ...items.map((x) => x.id)] })));
+  }
+  return c.json({ items: items.slice(0, take), basedOnOrders: coItems.length > 0 });
+});
+
+/** Bộ sưu tập "Bán chạy": có đơn/lượt xem 30 ngày (top 200) hoặc được admin ghim */
+async function popularWhere(): Promise<Prisma.ProductWhereInput> {
+  const scores = await popularityScores();
+  const ids = [...scores.entries()].filter(([, v]) => v >= 3).sort((a, b) => b[1] - a[1]).slice(0, 200).map(([id]) => id);
+  return { OR: [{ isBestSeller: true }, ...(ids.length ? [{ id: { in: ids } }] : [])] };
+}
 
 /** Bộ sưu tập: moi (hàng mới) · sale (đang khuyến mãi) · ban-chay */
 function collectionWhere(key?: string): Prisma.ProductWhereInput {
@@ -218,7 +264,7 @@ async function listingWhere(query: Record<string, string>, omit: "sub" | "catego
     ...(query.sub && omit !== "sub" ? { subcategorySlug: query.sub } : {}),
     ...(audience ? { audience: { in: [audience, ...(audience !== "KIDS" ? (["UNISEX"] as Audience[]) : [])] } } : {}),
     ...(query.gia === "co" ? { basePrice: { gt: 0 } } : query.gia === "bao-gia" ? { basePrice: 0 } : {}),
-    ...collectionWhere(query["bo-suu-tap"]),
+    ...(query["bo-suu-tap"] === "ban-chay" ? await popularWhere() : collectionWhere(query["bo-suu-tap"])),
     // thiet-ke=1: chỉ sản phẩm khách tự thiết kế được (có vùng in)
     ...(query["thiet-ke"] === "1" ? { printAreas: { some: {} } } : {}),
     // mau=Đen: sản phẩm có phân loại màu đó (không phân biệt hoa thường)
@@ -317,19 +363,21 @@ publicRoutes.get("/products/:slug", async (c) => {
     },
   });
   if (!product) throw notFound("Không tìm thấy sản phẩm");
-  const related = await prisma.product.findMany({
-    where: { categoryId: product.categoryId, isActive: true, id: { not: product.id } },
-    orderBy: { sortOrder: "asc" },
-    take: 4,
-    select: productSelect,
-  });
-  const { searchText: _s, sortPrice: _p, externalId: _e, sourceUrl: _u, ...rest } = product;
+  // "Thường mua cùng" theo đơn thật, bù bằng sản phẩm phổ biến cùng danh mục
+  const coIds = await alsoBought([product.id], 8);
+  const co = coIds.length ? await prisma.product.findMany({ where: { id: { in: coIds }, isActive: true, category: { isActive: true } }, select: productSelect }) : [];
+  const coOrder = new Map(coIds.map((id, i) => [id, i]));
+  const related = co.sort((a, b) => coOrder.get(a.id)! - coOrder.get(b.id)!).slice(0, 4);
+  if (related.length < 4)
+    related.push(...(await topProducts({ where: { categoryId: product.categoryId }, take: 4 - related.length, select: productSelect, exclude: [product.id, ...related.map((r) => r.id)] })));
+  const { searchText: _s, sortPrice: _p, externalId: _e, sourceUrl: _u, sourcePrice: _sp, priceManual: _pm, ...rest } = product;
   return c.json({
     ...rest,
     priceTiers: parseTiers(product.priceTiers),
     // mặt in chưa có ảnh riêng -> dùng ảnh đại diện sản phẩm
     printAreas: product.printAreas.map((a) => ({ ...a, mockupImage: a.mockupImage || product.images[0] || "" })),
     related,
+    relatedFromOrders: co.length > 0,
   });
 });
 
