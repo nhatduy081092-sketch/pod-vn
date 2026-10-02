@@ -171,3 +171,17 @@ html.reveal-on [data-reveal="pop"].is-in { animation-name: pop-in; animation-dur
 .home-flow > .flow-top { order: -2; }
 html[data-lane="b2b"] .home-flow > .home-b2b { order: -1; }
 html[data-lane="b2b"] .lane-business { order: -1; }
+
+/* ===== Card sản phẩm: phóng to theo con trỏ ===== */
+.zoom-frame .zoom-img {
+  transform-origin: var(--zx, 50%) var(--zy, 50%);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+@media (hover: hover) and (pointer: fine) {
+  .zoom-frame.is-zoom .zoom-img { transform: scale(1.9); }
+  .zoom-frame.is-zoom { cursor: zoom-in; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zoom-frame .zoom-img { transition: none; }
+}

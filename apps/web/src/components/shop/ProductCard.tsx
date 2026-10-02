@@ -2,12 +2,13 @@ import Link from "next/link";
 import { discountPercent, displayCompareAt, effectiveBasePrice, formatVND, isAiImage, saleActive } from "@pod/shared";
 import type { ProductCardData } from "@/lib/types";
 import { Img } from "../ui/Img";
+import { ZoomFrame } from "./ZoomFrame";
 
 const isVector = (u?: string) => !!u && /\.svg(\?|$)/i.test(u);
 
 /**
- * Card sản phẩm: ảnh nền trung tính, rê chuột đổi sang ảnh thứ 2 (nếu có), giá sale màu nhấn.
- * Ảnh vẽ (SVG) giữ nguyên tỉ lệ; ảnh chụp phủ kín khung.
+ * Card sản phẩm: ảnh "nổi" (nền chiếu sáng + bóng đổ), rê chuột -> khung nhấc lên kiểu sticker
+ * và phóng to đúng chỗ con trỏ. Ảnh vẽ (SVG) giữ nguyên tỉ lệ; ảnh chụp phủ kín khung.
  */
 export function ProductCard({ p, priority = false, color }: { p: ProductCardData; priority?: boolean; /** màu khách đã chọn -> chọn sẵn ở trang sản phẩm */ color?: string }) {
   const sale = saleActive(p);
@@ -18,33 +19,33 @@ export function ProductCard({ p, priority = false, color }: { p: ProductCardData
   const [first, second] = p.images;
   const hasSecond = !!second && second !== first;
   const fit = (u?: string) => (isVector(u) ? "object-contain p-[6%]" : "object-cover");
+  const SIZES = "(min-width:1280px) 440px, (min-width:768px) 45vw, 70vw"; // dư ~1,6× để phóng to vẫn nét
   return (
-    <Link href={color ? `/san-pham/${p.slug}?mau=${encodeURIComponent(color)}` : `/san-pham/${p.slug}`} className="group block">
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-surface">
+    <Link href={color ? `/san-pham/${p.slug}?mau=${encodeURIComponent(color)}` : `/san-pham/${p.slug}`} className="product-card group block">
+      <ZoomFrame className="relative aspect-square overflow-hidden rounded-2xl border-2 border-transparent bg-surface transition-[transform,box-shadow,border-color] duration-200 [@media(hover:hover)]:group-hover:-translate-x-0.5 [@media(hover:hover)]:group-hover:-translate-y-1 [@media(hover:hover)]:group-hover:border-ink [@media(hover:hover)]:group-hover:shadow-sticker">
+        {/* nền chiếu sáng nhẹ + bóng đổ dưới sản phẩm -> ảnh "nổi" khỏi nền */}
+        <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_42%,#fff_0%,transparent_70%)]" aria-hidden />
         <Img
           src={first}
           alt={p.name}
           priority={priority}
-          sizes="(min-width:1280px) 280px, (min-width:768px) 30vw, 46vw"
-          className={`${fit(first)} transition duration-500 ${hasSecond ? "[@media(hover:hover)]:group-hover:opacity-0" : "[@media(hover:hover)]:group-hover:scale-[1.03]"}`}
+          sizes={SIZES}
+          className={`zoom-img ${fit(first)} ${isVector(first) ? "drop-shadow-[0_18px_16px_rgba(29,29,31,.22)]" : ""}`}
         />
-        {hasSecond && (
-          <Img
-            src={second}
-            alt=""
-            sizes="(min-width:1280px) 280px, (min-width:768px) 30vw, 46vw"
-            className={`${fit(second)} opacity-0 transition duration-500 [@media(hover:hover)]:group-hover:opacity-100`}
-          />
-        )}
         {(isNew || off > 0) && (
-          <span className="absolute left-2 top-2 flex gap-1">
-            {off > 0 && <span className="rounded-full bg-sale px-2 py-0.5 text-[11px] font-semibold text-white md:text-xs">-{off}%</span>}
-            {isNew && <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-ink md:text-xs">Mới</span>}
+          <span className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex gap-1.5">
+            {off > 0 && <span className="-rotate-3 rounded-lg border-2 border-ink bg-sale px-2 py-0.5 text-[11px] font-bold text-white shadow-sticker-sm md:text-xs">-{off}%</span>}
+            {isNew && <span className="rotate-2 rounded-lg border-2 border-ink bg-sun px-2 py-0.5 text-[11px] font-bold text-ink shadow-sticker-sm md:text-xs">Mới</span>}
           </span>
         )}
-        {isAiImage(first) && <span className="absolute bottom-1.5 right-1.5 rounded bg-white/85 px-1 py-px text-[9px] font-medium text-ink/65 md:text-[10px]">Ảnh minh hoạ</span>}
-      </div>
-      <h3 className="mt-2.5 line-clamp-2 min-h-[2.6em] text-[13px] font-medium leading-[1.3] text-ink md:text-[15px]">{p.name}</h3>
+        {hasSecond && (
+          <span className="pointer-events-none absolute bottom-2.5 right-2.5 z-10 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-ink/70 md:text-[11px]">
+            +{p.images.length - 1} ảnh
+          </span>
+        )}
+        {isAiImage(first) && <span className="pointer-events-none absolute bottom-1.5 left-1.5 z-10 rounded bg-white/85 px-1 py-px text-[9px] font-medium text-ink/65 md:text-[10px]">Ảnh minh hoạ</span>}
+      </ZoomFrame>
+      <h3 className="mt-3 line-clamp-2 min-h-[2.6em] text-[13px] font-medium leading-[1.3] text-ink transition-colors group-hover:text-brand-dark md:text-[15px]">{p.name}</h3>
       <p className="mt-1 flex flex-wrap items-baseline gap-x-2">
         {p.basePrice > 0 ? (
           <span className={`text-[15px] font-semibold md:text-base ${sale || off > 0 ? "text-sale" : "text-ink"}`}>{formatVND(price)}</span>
