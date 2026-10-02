@@ -5,6 +5,7 @@ import { getHome } from "@/lib/api";
 import type { HomeData } from "@/lib/types";
 import { assetUrl } from "@/lib/config";
 import { MerchKit } from "@/components/b2b/MerchKit";
+import { PhotoCollage } from "@/components/b2b/PhotoCollage";
 import { pastel } from "@/lib/pastel";
 import { B2BQuoteForm } from "@/components/b2b/B2BQuoteForm";
 
@@ -31,6 +32,11 @@ export default async function BusinessPage() {
   const bySlug = new Map(catalog.map((c) => [c.slug, c]));
   const zalo = brand.zalo ? `https://zalo.me/${brand.zalo.replace(/\D/g, "")}` : "";
   const clients = settings.b2b.clients;
+  // ảnh thật sản phẩm từng ngành (đã nhập từ nguồn) cho khối minh hoạ đầu trang
+  const photos = hub.industries.flatMap((i) => {
+    const c = bySlug.get(i.slug);
+    return c?.image && !/\.svg(\?|$)/i.test(c.image) ? [{ src: c.image, alt: i.name }] : [];
+  });
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -75,8 +81,8 @@ export default async function BusinessPage() {
               ))}
             </ul>
           </div>
-          <div className="overflow-hidden rounded-3xl bg-white/5">
-            <MerchKit className="h-auto w-full" />
+          <div className="overflow-hidden rounded-3xl bg-peach">
+            {photos.length >= 4 ? <PhotoCollage images={photos} /> : <MerchKit className="h-auto w-full" />}
           </div>
         </div>
       </section>

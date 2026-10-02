@@ -8,7 +8,7 @@ import { assetUrl } from "@/lib/config";
  * Trước / sau: kéo thanh giữa để so sánh ảnh gốc của khách với áo in xong.
  * Chưa có ảnh "sau" -> tự ghép ảnh gốc vào vùng in ngực của phôi áo thun (minh hoạ, không cần chụp thật).
  */
-export function BeforeAfter({ data, steps = [] }: { data: LandingSettings["beforeAfter"]; steps?: LandingSettings["steps"] }) {
+export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings["beforeAfter"]; steps?: LandingSettings["steps"]; /** ảnh thật áo thun trắng (AI) */ blank?: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState(50);
   const drag = useRef(false);
@@ -71,7 +71,7 @@ export function BeforeAfter({ data, steps = [] }: { data: LandingSettings["befor
               <img src={assetUrl(data.after)} alt={data.afterLabel} className="h-full w-full object-cover" draggable={false} />
             ) : (
               <svg viewBox="92 58 216 216" className="h-full w-full" role="img" aria-label={data.afterLabel}>
-                <image href="/shapes/basic/tshirt-trang.svg" width="400" height="400" />
+                <image href={blank ? assetUrl(blank) : "/shapes/basic/tshirt-trang.svg"} width="400" height="400" preserveAspectRatio="xMidYMid slice" />
                 <defs>
                   <clipPath id="ba-zone">
                     <rect x={z.x * 400} y={z.y * 400} width={z.w * 400} height={z.w * 400 * 1.1} rx="3" />

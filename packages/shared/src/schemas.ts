@@ -226,6 +226,10 @@ export const landingSettingsSchema = z.object({
     process: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(10),
     benefits: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(12),
   }),
+  media: z.object({
+    hide2d: z.boolean(),
+    blanks: z.record(z.string().regex(/^[a-z-]{2,40}$/), z.string().max(500)),
+  }),
   heroPlay: z.object({
     enabled: z.boolean(),
     title: z.string().trim().min(1, "Nhập tiêu đề hero").max(90),

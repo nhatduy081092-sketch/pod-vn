@@ -1,4 +1,6 @@
 import { prisma, type Prisma } from "@pod/db";
+import { getLanding } from "./settings";
+import { vectorProductIds } from "./media";
 
 /**
  * Thuật toán "phổ biến / bán chạy":
@@ -43,6 +45,9 @@ export async function popularityScores(): Promise<Map<string, number>> {
 /** Sản phẩm phổ biến nhất (lọc thêm bằng where), bù bằng thứ tự mặc định khi chưa đủ dữ liệu */
 export async function topProducts<S extends Prisma.ProductSelect>(opts: { where?: Prisma.ProductWhereInput; take: number; select: S; exclude?: string[] }) {
   const scores = await popularityScores();
+  // ẩn sản phẩm chỉ có ảnh vẽ 2D (Cài đặt → Hình ảnh)
+  const hidden = (await getLanding()).media.hide2d ? await vectorProductIds() : [];
+  if (hidden.length) opts = { ...opts, exclude: [...(opts.exclude ?? []), ...hidden] };
   const where: Prisma.ProductWhereInput = { isActive: true, category: { isActive: true }, ...opts.where, ...(opts.exclude?.length ? { id: { notIn: opts.exclude } } : {}) };
   const ranked = [...scores.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const hits = ranked.length

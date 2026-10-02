@@ -74,6 +74,11 @@ export type LandingSettings = {
    * salesZalo trống = dùng Zalo thương hiệu.
    */
   b2bQuote: { threshold: number; enforce: boolean; salesZalo: string; salesName: string; responseTime: string };
+  /**
+   * Hình ảnh: hide2d = ẩn sản phẩm chỉ có ảnh vẽ 2D khỏi trang chủ, danh mục, gợi ý (vẫn vào được bằng link trực tiếp).
+   * blanks = ảnh thật của phôi trơn theo "dáng-màu" (VD "tshirt-den") do AI tạo – dùng cho ảnh xem trước mẫu chữ & YALA Everyday.
+   */
+  media: { hide2d: boolean; blanks: Record<string, string> };
   /** Cách tính giá cho sản phẩm nhập từ nguồn (nhà cung cấp) */
   b2bPricing: B2BPricing;
   /**
@@ -282,6 +287,7 @@ export const DEFAULT_LANDING: LandingSettings = {
       { title: "Đồng phục", desc: "Đồng phục công ty, lớp, đội nhóm – in tên & số từng người", href: "/danh-muc/ao-thun" },
     ],
   },
+  media: { hide2d: true, blanks: {} },
   heroPlay: {
     enabled: true,
     title: "Áo in chữ của riêng bạn. Từ 1 chiếc.",
@@ -539,6 +545,7 @@ export function mergeLanding(value: unknown): LandingSettings {
       benefits: v.b2bHub?.benefits?.length ? v.b2bHub.benefits : d.b2bHub.benefits,
     },
     b2bQuote: { ...d.b2bQuote, ...v.b2bQuote },
+    media: { ...d.media, ...v.media, blanks: { ...v.media?.blanks } },
     heroPlay: {
       ...d.heroPlay,
       ...v.heroPlay,

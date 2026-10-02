@@ -36,6 +36,10 @@ export default async function HomePage() {
   const slides = settings.slides.enabled ? activeSlides(settings.slides.items) : [];
   const b2bSlugs = new Set(settings.b2bHub.industries.map((i) => i.slug));
   const retailCats = catalog.filter((c) => !b2bSlugs.has(c.slug)).map((c) => ({ name: c.name, slug: c.slug }));
+  const b2bPhotos = settings.b2bHub.industries.flatMap((i) => {
+    const c = catalog.find((x) => x.slug === i.slug);
+    return c?.image && !/\.svg(\?|$)/i.test(c.image) ? [{ src: c.image, alt: i.name }] : [];
+  });
   return (
     <div className="home-flow flex flex-col">
       <div className="flow-top">
@@ -49,11 +53,11 @@ export default async function HomePage() {
         )}
         <TopicRibbon />
       </div>
-      <Lanes data={settings.positioning} />
+      <Lanes data={settings.positioning} b2bPhotos={b2bPhotos} />
       {settings.collections.enabled && <CollectionGrid title={settings.collections.title} />}
       <BestSellers title={settings.sectionTitles.bestSellers} items={bestSellers} />
       <RecentlyViewed />
-      {settings.beforeAfter.enabled && <BeforeAfter data={settings.beforeAfter} steps={settings.steps} />}
+      {settings.beforeAfter.enabled && <BeforeAfter data={settings.beforeAfter} steps={settings.steps} blank={settings.media.blanks["tshirt-trang"]} />}
       <B2BSection
         data={settings.b2b}
         brand={settings.brand}

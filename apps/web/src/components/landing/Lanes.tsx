@@ -3,12 +3,13 @@ import type { Lane, LandingSettings } from "@pod/shared";
 import { assetUrl } from "@/lib/config";
 import { pastel } from "@/lib/pastel";
 import { MerchKit } from "../b2b/MerchKit";
+import { PhotoCollage } from "../b2b/PhotoCollage";
 
 /**
  * YALA là ai + 2 lối vào Cá nhân | Doanh nghiệp (thẻ sticker) + các dịch vụ dạng nhãn.
  * Khách từng vào khu Doanh nghiệp -> thẻ Doanh nghiệp tự lên trước (CSS theo html[data-lane]).
  */
-export function Lanes({ data }: { data: LandingSettings["positioning"] }) {
+export function Lanes({ data, b2bPhotos = [] }: { data: LandingSettings["positioning"]; /** ảnh thật sản phẩm doanh nghiệp (khi chưa đặt ảnh riêng cho lối Doanh nghiệp) */ b2bPhotos?: { src: string; alt: string }[] }) {
   if (!data.enabled) return null;
   return (
     <section className="py-12 md:py-20" aria-label="YALA làm gì" data-reveal>
@@ -16,7 +17,7 @@ export function Lanes({ data }: { data: LandingSettings["positioning"] }) {
         {data.statement && <h2 className="h-section max-w-4xl [text-wrap:balance]">{data.statement}</h2>}
         <div className="mt-8 grid gap-6 md:mt-10 md:grid-cols-2 md:gap-8">
           <LaneCard lane={data.personal} tone="light" className="lane-personal" tilt={-1} />
-          <LaneCard lane={data.business} tone="dark" className="lane-business" tilt={1} />
+          <LaneCard lane={data.business} tone="dark" className="lane-business" tilt={1} photos={b2bPhotos} />
         </div>
         {data.services.length > 0 && (
           <ul className="mt-8 flex flex-wrap gap-2.5">
@@ -34,7 +35,7 @@ export function Lanes({ data }: { data: LandingSettings["positioning"] }) {
   );
 }
 
-function LaneCard({ lane, tone, className, tilt }: { lane: Lane; tone: "light" | "dark"; className: string; tilt: number }) {
+function LaneCard({ lane, tone, className, tilt, photos = [] }: { lane: Lane; tone: "light" | "dark"; className: string; tilt: number; photos?: { src: string; alt: string }[] }) {
   const dark = tone === "dark";
   return (
     <article
@@ -44,6 +45,8 @@ function LaneCard({ lane, tone, className, tilt }: { lane: Lane; tone: "light" |
       <div className={`relative aspect-[16/10] overflow-hidden border-b-2 border-ink ${dark ? "bg-peach" : "bg-white"}`}>
         {lane.image ? (
           <img src={assetUrl(lane.image)} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "60% 30%" }} />
+        ) : photos.length >= 4 ? (
+          <PhotoCollage images={photos} row className="absolute inset-0 h-full w-full content-center" />
         ) : (
           <MerchKit className="absolute inset-0 h-full w-full" />
         )}

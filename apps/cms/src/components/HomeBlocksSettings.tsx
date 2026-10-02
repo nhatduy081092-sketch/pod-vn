@@ -226,6 +226,14 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
         </div>
       </Card>
 
+      <Card {...cardProps("media")} title="Hình ảnh (chỉ hiện ảnh thật)" hint="Ẩn sản phẩm chỉ có ảnh vẽ 2D khỏi trang chủ, danh mục, tìm kiếm, gợi ý. Ảnh phôi trơn thật do lệnh AI tạo (deploy/ai-photos.sh).">
+        <Toggle label="Chỉ hiện sản phẩm có ảnh thật" checked={s.media.hide2d} onChange={(v) => set("media", { hide2d: v })} />
+        <p className="text-sm text-neutral-600">
+          Phôi trơn đã có ảnh thật: <b>{Object.keys(s.media.blanks).length}</b>/30
+          {Object.keys(s.media.blanks).length < 30 && " – chạy trên VPS: bash deploy/ai-photos.sh (cần GEMINI_API_KEY)"}
+        </p>
+      </Card>
+
       <Card {...cardProps("heroPlay")} title="Hero cắt dán (đầu trang chủ)" hint="Chữ lớn + ảnh thật + 3 áo chữ mẫu có sẵn + nhãn chủ đề trôi. Tắt = dùng banner slider bên dưới.">
         <Toggle label="Hiển thị hero cắt dán" checked={s.heroPlay.enabled} onChange={(v) => set("heroPlay", { enabled: v })} />
         <div className="grid gap-2 md:grid-cols-2">

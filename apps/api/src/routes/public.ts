@@ -20,6 +20,7 @@ import { notifyLead } from "../lib/notify";
 import { cmsLink, dispatchQuote } from "../lib/quote-dispatch";
 import { resolveSearch, phraseWhere } from "../lib/search";
 import { alsoBought, popularityScores, recordView, topProducts } from "../lib/popularity";
+import { realPhotoWhere } from "../lib/media";
 
 export const publicRoutes = new Hono();
 
@@ -47,6 +48,7 @@ const audienceFromSlug = (slug?: string): Audience | undefined =>
 /** Toàn bộ dữ liệu landing trong 1 request (SSR/ISR) */
 publicRoutes.get("/home", async (c) => {
   const settings = await getLanding();
+  const visible = await realPhotoWhere();
   const [bestSellers, categories, testimonials, b2bProducts, catalogRaw] = await Promise.all([
     // bán chạy theo đơn thật 30 ngày + lượt xem (+ sản phẩm admin ghim)
     topProducts({ take: 12, select: productSelect }),
@@ -58,7 +60,7 @@ publicRoutes.get("/home", async (c) => {
         name: true,
         slug: true,
         products: {
-          where: { isActive: true, isHotSale: true },
+          where: { isActive: true, isHotSale: true, ...visible },
           orderBy: { sortOrder: "asc" },
           take: 8,
           select: productSelect,
@@ -68,7 +70,7 @@ publicRoutes.get("/home", async (c) => {
     prisma.testimonial.findMany({ where: { isActive: true }, orderBy: { createdAt: "desc" }, take: 8 }),
     settings.b2b.enabled && settings.b2b.categorySlug
       ? prisma.product.findMany({
-          where: { isActive: true, category: { slug: settings.b2b.categorySlug } },
+          where: { isActive: true, category: { slug: settings.b2b.categorySlug }, ...visible },
           orderBy: { sortOrder: "asc" },
           take: 6,
           select: productSelect,
@@ -82,8 +84,8 @@ publicRoutes.get("/home", async (c) => {
         name: true,
         slug: true,
         imageUrl: true,
-        _count: { select: { products: { where: { isActive: true } } } },
-        products: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, take: 1, select: { images: true } },
+        _count: { select: { products: { where: { isActive: true, ...visible } } } },
+        products: { where: { isActive: true, ...visible }, orderBy: { sortOrder: "asc" }, take: 1, select: { images: true } },
       },
     }),
   ]);
@@ -163,8 +165,10 @@ publicRoutes.get("/pages/:slug", async (c) => {
 });
 
 publicRoutes.get("/categories", async (c) => {
+  // chỉ danh mục còn sản phẩm hiển thị được (ẩn ảnh 2D -> danh mục toàn ảnh 2D cũng ẩn khỏi menu)
+  const visible = await realPhotoWhere();
   const categories = await prisma.category.findMany({
-    where: { isActive: true },
+    where: { isActive: true, products: { some: { isActive: true, ...visible } } },
     orderBy: { sortOrder: "asc" },
     select: { id: true, name: true, slug: true, description: true, imageUrl: true },
   });
@@ -220,7 +224,7 @@ publicRoutes.get("/recommendations", async (c) => {
   const priceWhere: Prisma.ProductWhereInput = maxPrice > 0 ? { basePrice: { gt: 0, lte: maxPrice } } : {};
   const co = await alsoBought(ids, 40);
   const coItems = co.length
-    ? await prisma.product.findMany({ where: { id: { in: co }, isActive: true, category: { isActive: true }, ...priceWhere }, select: productSelect })
+    ? await prisma.product.findMany({ where: { AND: [{ id: { in: co }, isActive: true, category: { isActive: true }, ...priceWhere }, await realPhotoWhere()] }, select: productSelect })
     : [];
   const order = new Map(co.map((id, i) => [id, i]));
   const items = coItems.sort((a, b) => order.get(a.id)! - order.get(b.id)!).slice(0, take);
@@ -269,8 +273,8 @@ async function listingWhere(query: Record<string, string>, omit: "sub" | "catego
     ...(query["thiet-ke"] === "1" ? { printAreas: { some: {} } } : {}),
     // mau=Đen: sản phẩm có phân loại màu đó (không phân biệt hoa thường)
     ...(query.mau ? { variants: { some: { isActive: true, color: { equals: query.mau.trim().slice(0, 40), mode: "insensitive" as const } } } } : {}),
-    ...(await resolveSearch(query.q)),
-    ...(await b2bWhere(query)),
+    // tìm kiếm, bộ lọc doanh nghiệp, ảnh thật: đều có thể dùng AND -> gộp bằng AND riêng, không ghi đè nhau
+    AND: [await resolveSearch(query.q), await b2bWhere(query), await realPhotoWhere()],
   };
 }
 
@@ -365,7 +369,7 @@ publicRoutes.get("/products/:slug", async (c) => {
   if (!product) throw notFound("Không tìm thấy sản phẩm");
   // "Thường mua cùng" theo đơn thật, bù bằng sản phẩm phổ biến cùng danh mục
   const coIds = await alsoBought([product.id], 8);
-  const co = coIds.length ? await prisma.product.findMany({ where: { id: { in: coIds }, isActive: true, category: { isActive: true } }, select: productSelect }) : [];
+  const co = coIds.length ? await prisma.product.findMany({ where: { AND: [{ id: { in: coIds }, isActive: true, category: { isActive: true } }, await realPhotoWhere()] }, select: productSelect }) : [];
   const coOrder = new Map(coIds.map((id, i) => [id, i]));
   const related = co.sort((a, b) => coOrder.get(a.id)! - coOrder.get(b.id)!).slice(0, 4);
   if (related.length < 4)

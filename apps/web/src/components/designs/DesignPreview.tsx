@@ -1,13 +1,18 @@
-import { applyTemplate, GARMENT_ZONE, type ColorKey, type GarmentKey, type ReadyDesign, type TextLayer } from "@pod/shared";
+import { applyTemplate, BASIC_COLORS, GARMENT_ZONE, type ColorKey, type GarmentKey, type ReadyDesign, type TextLayer } from "@pod/shared";
+import { getSettings } from "@/lib/api";
+import { assetUrl } from "@/lib/config";
 
 /**
  * Ảnh xem trước mẫu có sẵn: phôi YALA Everyday + chữ vẽ bằng SVG (render phía server, không cần JS).
  * Cùng quy tắc với YALA Studio: mẫu co giãn vào vùng in ngực, (x, y) = tâm lớp, cỡ chữ theo mm.
  * Chữ cong ước lượng độ rộng (0,56 × cỡ chữ / ký tự) – đủ gần để xem trước; file in thật do Studio vẽ.
  */
-export function DesignPreview({ design, garment, color, className = "", title, zoom = true }: { design: ReadyDesign; garment?: GarmentKey; color?: ColorKey; className?: string; title?: string; /** cận ngực áo (như ảnh chụp sản phẩm) thay vì cả áo */ zoom?: boolean }) {
+export async function DesignPreview({ design, garment, color, className = "", title, zoom = true }: { design: ReadyDesign; garment?: GarmentKey; color?: ColorKey; className?: string; title?: string; /** cận ngực áo (như ảnh chụp sản phẩm) thay vì cả áo */ zoom?: boolean }) {
   const g = garment ?? design.garment;
   const c = color ?? design.color;
+  // ảnh thật của phôi trơn (AI tạo, cùng khung hình với phôi vẽ) – chưa có thì dùng phôi vẽ
+  const photo = (await getSettings()).media.blanks[`${g}-${c}`];
+  const dark = BASIC_COLORS[c as ColorKey]?.dark ?? false;
   const z = GARMENT_ZONE[g];
   const layers = applyTemplate(design.template, { widthMm: z.widthMm, heightMm: z.heightMm }, () => "p");
   const k = (z.w * 400) / z.widthMm; // px (hệ 400) / mm
@@ -19,8 +24,9 @@ export function DesignPreview({ design, garment, color, className = "", title, z
   const vb = zoom ? `${Math.max(0, Math.min(400 - side, cx - side / 2))} ${Math.max(0, Math.min(400 - side, cy - side / 2 + 6))} ${side} ${side}` : "0 0 400 400";
   return (
     <svg viewBox={vb} className={className} role="img" aria-label={title ?? design.title}>
-      <image href={`/shapes/basic/${g}-${c}.svg`} width="400" height="400" />
-      <g transform={`translate(${z.x * 400} ${z.y * 400}) scale(${k})`}>
+      <image href={photo ? assetUrl(photo) : `/shapes/basic/${g}-${c}.svg`} width="400" height="400" preserveAspectRatio="xMidYMid slice" />
+      {/* trên ảnh thật: chữ hoà vào vải như in thật (nhân màu trên áo sáng, cộng sáng trên áo tối) */}
+      <g transform={`translate(${z.x * 400} ${z.y * 400}) scale(${k})`} style={photo ? { mixBlendMode: dark ? "screen" : "multiply" } : undefined}>
         {layers.map((l) => (l.type === "text" ? <Text key={n++} l={l} id={`${design.slug}-${n}`} /> : null))}
       </g>
     </svg>
