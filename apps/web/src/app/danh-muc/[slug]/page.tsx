@@ -46,7 +46,7 @@ export default async function CategoryPage({ params, searchParams }: { params: P
           <span className="text-ink">{cat.name}</span>
         )}
       </nav>
-      <h1 className="mt-1 text-2xl font-black md:text-3xl">
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%] mt-1">
         {activeSub?.name ?? cat.name}
         {query.q && <span className="text-ink/50"> · “{query.q}”</span>}
         {query.mau && <span className="text-ink/50"> · màu {query.mau}</span>}

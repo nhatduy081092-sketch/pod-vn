@@ -62,7 +62,7 @@ export function OrderLookup({ initialCode = "", justPlaced = false }: { initialC
         e.preventDefault();
         void lookup(code, phone);
       }}
-      className="mx-auto mt-6 max-w-md rounded-lg border border-line bg-white p-5 shadow-stack"
+      className="mx-auto mt-6 max-w-md rounded-2xl border-2 border-ink/10 bg-white p-5 shadow-stack"
     >
       <label className="block">
         <span className="label">Mã đơn hàng</span>
@@ -100,7 +100,7 @@ function OrderDetails({ order, justPlaced }: { order: OrderView; justPlaced: boo
       )}
 
       {qr && (
-        <section className="grid items-center gap-4 rounded-lg border border-line bg-white p-4 sm:grid-cols-[220px_1fr]">
+        <section className="grid items-center gap-4 rounded-2xl border-2 border-ink/10 bg-white p-4 sm:grid-cols-[220px_1fr]">
           <img src={qr} alt={`Mã VietQR thanh toán đơn ${order.code}`} className="mx-auto w-[220px]" />
           <div className="text-sm">
             <h3 className="text-base font-black">Chuyển khoản để xác nhận đơn</h3>
@@ -116,7 +116,7 @@ function OrderDetails({ order, justPlaced }: { order: OrderView; justPlaced: boo
         </section>
       )}
 
-      <section className="rounded-lg border border-line bg-white p-4">
+      <section className="rounded-2xl border-2 border-ink/10 bg-white p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="font-black">Đơn {order.code}</h3>
           <span className="text-xs text-ink/60">{formatDateTimeVN(order.createdAt)}</span>

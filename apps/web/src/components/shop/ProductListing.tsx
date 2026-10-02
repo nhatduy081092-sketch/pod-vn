@@ -56,7 +56,7 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
   const panel = (
     <div className="space-y-6">
       <div>
-        <p className="mb-2 text-xs font-extrabold uppercase tracking-wider text-ink/50">Bộ sưu tập</p>
+        <p className="mb-2 text-sm font-bold text-ink/60">Bộ sưu tập</p>
         <ul className="space-y-0.5">
           {COLLECTIONS.map((c) => (
             <li key={c.v}>
@@ -74,7 +74,7 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
       </div>
       {groups.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-extrabold uppercase tracking-wider text-ink/50">{mode === "category" ? "Nhóm sản phẩm" : "Danh mục"}</p>
+          <p className="mb-2 text-sm font-bold text-ink/60">{mode === "category" ? "Nhóm sản phẩm" : "Danh mục"}</p>
           <ul className="space-y-0.5">
             {mode === "category" && (
               <li>
@@ -98,7 +98,7 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
         </div>
       )}
       <div>
-        <p className="mb-2 text-xs font-extrabold uppercase tracking-wider text-ink/50">Giá</p>
+        <p className="mb-2 text-sm font-bold text-ink/60">Giá</p>
         <ul className="space-y-0.5">
           {PRICE_FILTERS.map((f) => (
             <li key={f.v}>
@@ -213,7 +213,7 @@ function PageLink({ href, label, active }: { href: string; label: string; active
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`flex h-9 min-w-9 items-center justify-center rounded-md border-2 px-2.5 text-sm font-bold ${active ? "border-navy bg-navy text-white" : "border-ink/15 bg-white hover:border-navy"}`}
+      className={`flex h-10 min-w-10 items-center justify-center rounded-full border-2 px-3 text-sm font-bold transition ${active ? "border-ink bg-ink text-white" : "border-ink/15 bg-white hover:border-ink"}`}
     >
       {label}
     </Link>
@@ -224,7 +224,7 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
   return (
     <Link
       href={href}
-      className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-semibold ${active ? "border-navy bg-navy text-white" : "border-ink/15 bg-white text-ink/80"}`}
+      className={`shrink-0 whitespace-nowrap rounded-full border-2 px-3.5 py-1.5 text-[13px] font-bold transition ${active ? "border-ink bg-ink text-white" : "border-ink/15 bg-white text-ink hover:border-ink"}`}
     >
       {children}
     </Link>

@@ -52,7 +52,7 @@ export function CartView({ threshold = 0, freeThreshold = 0 }: { threshold?: num
       </div>
     )}
     <div className="mt-5 grid gap-6 md:grid-cols-[1fr_340px]">
-      <ul className="divide-y divide-ink/10 rounded-lg border border-line bg-white">
+      <ul className="divide-y divide-ink/10 rounded-2xl border-2 border-ink/10 bg-white">
         {cart.items.map((i) => {
           const unit = cart.unitPrice(i);
           return (

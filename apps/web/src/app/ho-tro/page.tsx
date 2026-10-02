@@ -20,7 +20,7 @@ export default async function HelpPage({ searchParams }: { searchParams: SP }) {
   return (
     <div className="container-site py-6 md:py-12">
       <div className="rounded-2xl border border-line bg-brand p-5 shadow-hard md:p-10">
-        <h1 className="text-2xl font-black md:text-4xl">Chúng tôi có thể giúp gì?</h1>
+        <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">Chúng tôi có thể giúp gì?</h1>
         <form action="/ho-tro" className="mt-4 flex max-w-xl gap-2">
           <input name="q" defaultValue={q} className="input flex-1 bg-white" placeholder="VD: file in, đổi trả, VietQR…" aria-label="Tìm bài hướng dẫn" />
           {dm && <input type="hidden" name="dm" value={dm} />}

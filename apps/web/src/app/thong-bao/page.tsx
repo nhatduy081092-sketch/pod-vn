@@ -10,7 +10,7 @@ export default async function NoticesPage() {
   const notices = await getNotices();
   return (
     <div className="container-site max-w-3xl py-6 md:py-12">
-      <h1 className="text-2xl font-black md:text-4xl">Thông báo</h1>
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">Thông báo</h1>
       <p className="mt-1 text-sm text-ink/60">Lịch nghỉ sản xuất, thay đổi vận chuyển và chương trình đang áp dụng.</p>
       {notices.length ? (
         <ul className="mt-6 space-y-4">

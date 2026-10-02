@@ -8,7 +8,7 @@ export default async function CheckoutPage() {
   const s = await getSettings();
   return (
     <div className="container-site py-6 md:py-10">
-      <h1 className="text-2xl font-black md:text-3xl">Thông tin đặt hàng</h1>
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">Thông tin đặt hàng</h1>
       <CheckoutForm shipping={s.shipping} />
     </div>
   );

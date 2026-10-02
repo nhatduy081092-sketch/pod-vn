@@ -37,7 +37,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   return (
     <form onSubmit={submit} noValidate className="mx-auto w-full max-w-sm space-y-3 rounded-xl border border-line bg-white p-5 shadow-hard">
-      <h1 className="text-2xl font-black">{mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}</h1>
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">{mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}</h1>
       <p className="text-sm text-ink/70">{mode === "login" ? "Xem đơn hàng, thiết kế đã lưu và đặt lại nhanh." : "Lưu thiết kế, xem lại đơn, đặt lại chỉ với 1 lần bấm."}</p>
       {mode === "register" && (
         <label className="block">

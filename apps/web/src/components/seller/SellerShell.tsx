@@ -65,7 +65,7 @@ export function SellerShell({ children }: { children: ReactNode }) {
   if (denied)
     return (
       <div className="container-site max-w-xl py-12 text-center">
-        <h1 className="text-2xl font-black">Khu seller</h1>
+        <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">Khu seller</h1>
         <p className="mt-2 text-ink/70">{denied}</p>
         <Link href="/tai-khoan/seller" className="btn-primary mt-4 inline-flex px-5">
           Đăng ký / xem trạng thái seller

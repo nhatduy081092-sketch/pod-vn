@@ -113,7 +113,7 @@ export function SellerOrders() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto text-xl font-black md:text-2xl">Đơn dropship {data ? `(${data.total})` : ""}</h1>
+        <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%] mr-auto">Đơn dropship {data ? `(${data.total})` : ""}</h1>
         <Link href="/seller/nhap-csv" className="btn-outline h-10 px-4">
           Nhập CSV
         </Link>
@@ -500,7 +500,7 @@ export function SellerCsvImport() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-black md:text-2xl">Nhập đơn hàng loạt (CSV)</h1>
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">Nhập đơn hàng loạt (CSV)</h1>
       <Box>
         <ol className="list-decimal space-y-1 pl-5 text-sm">
           <li>
@@ -594,7 +594,7 @@ export function SellerPayments() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto text-xl font-black md:text-2xl">Thanh toán gộp</h1>
+        <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%] mr-auto">Thanh toán gộp</h1>
         <Link href="/seller/don?pay=unpaid" className="btn-primary px-4 py-2">
           + Chọn đơn để thanh toán
         </Link>

@@ -75,7 +75,7 @@ export function SellerApi() {
   const base = `${SITE_URL}/api/v1`;
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-black md:text-2xl">Open API & Webhook</h1>
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">Open API & Webhook</h1>
 
       <Box>
         <h2 className="font-extrabold">API key</h2>
@@ -256,7 +256,7 @@ export function SellerSettings() {
 
   return (
     <Box className="max-w-3xl">
-      <h1 className="text-xl font-black">Thương hiệu & hồ sơ</h1>
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">Thương hiệu & hồ sơ</h1>
       <p className="text-sm text-ink/60">Đơn bật &quot;đóng gói thương hiệu của tôi&quot; sẽ dùng tên và nhãn này trên túi/phiếu gửi, không in tên xưởng.</p>
       <form onSubmit={save} className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="block">

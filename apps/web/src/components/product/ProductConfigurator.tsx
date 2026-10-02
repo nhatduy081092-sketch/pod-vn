@@ -138,7 +138,7 @@ export function ProductConfigurator({
     <div className="grid gap-6 md:grid-cols-2 md:gap-10">
       {/* Cột trái: ảnh */}
       <div className="md:sticky md:top-20 md:self-start">
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-line bg-white">
+        <div className="relative aspect-square w-full overflow-hidden rounded-2xl border-2 border-ink/10 bg-white">
           <img src={assetUrl(gallery[imgIdx] ?? gallery[0])} alt={product.name} className="h-full w-full object-contain" />
           {design && imgIdx < design.files.length && (
             <span className="absolute left-2 top-2 rounded bg-ink px-2 py-0.5 text-[11px] font-bold text-brand-badge">Thiết kế của bạn · {design.files[imgIdx]?.name}</span>
@@ -153,7 +153,7 @@ export function ProductConfigurator({
       {/* Cột phải: tuỳ chọn */}
       <div>
         <p className="text-sm font-semibold text-brand-dark">{product.category.name}</p>
-        <h1 className="mt-1 text-xl font-black leading-snug md:text-3xl">{product.name}</h1>
+        <h1 className="font-display text-[clamp(24px,2.8vw,36px)] font-extrabold leading-[1.08] tracking-[-0.02em] [font-stretch:88%] mt-1">{product.name}</h1>
         <div className="mt-3 flex flex-wrap items-baseline gap-2">
           <span className="text-3xl font-black">{formatVND(unit)}</span>
           {compareAt && compareAt > unit && <span className="text-sm text-ink/50 line-through">{formatVND(compareAt)}</span>}
@@ -212,7 +212,7 @@ export function ProductConfigurator({
         </div>
 
         <div className="mt-5">
-          <VariantPicker variants={product.variants} color={sel.color} size={sel.size} onChange={setSel} hideSize={mode === "team"} sizeGuide={hasSizeGuide} step={{ color: "2. Màu", size: "2. Size" }} />
+          <VariantPicker variants={product.variants} color={sel.color} size={sel.size} onChange={setSel} hideSize={mode === "team"} sizeGuide={hasSizeGuide} step={{ color: "2. Màu", size: "3. Size" }} />
         </div>
 
         {mode === "single" && teamFields.length > 0 && (
@@ -227,7 +227,7 @@ export function ProductConfigurator({
         <section className="mt-5">
           {mode === "single" ? (
             <>
-              <h2 className="label">3. Số lượng</h2>
+              <h2 className="label">4. Số lượng</h2>
               <div className="flex items-center gap-3">
                 <div className="flex items-center overflow-hidden rounded-md border border-line">
                   <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Giảm">

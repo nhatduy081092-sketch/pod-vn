@@ -32,7 +32,7 @@ export default async function HelpArticlePage({ params }: { params: Params }) {
           </>
         )}
       </nav>
-      <h1 className="mb-1 mt-2 text-2xl font-black md:text-4xl">{a.title}</h1>
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%] mb-1 mt-2">{a.title}</h1>
       <p className="mb-6 text-xs text-ink/50">Cập nhật {formatDateVN(a.updatedAt)}</p>
       <ContentRenderer content={a.content} />
       {a.related.length > 0 && (

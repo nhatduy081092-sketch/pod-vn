@@ -127,7 +127,7 @@ export function SellerTemplates() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="mr-auto text-xl font-black md:text-2xl">Mẫu sản phẩm</h1>
+        <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%] mr-auto">Mẫu sản phẩm</h1>
         <input className="input h-10 w-48" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm mã / tên" aria-label="Tìm mẫu" />
         <button type="button" onClick={() => setPicking(true)} className="btn-primary h-10 px-4">
           + Tạo mẫu
@@ -282,7 +282,7 @@ export function SellerTemplateForm() {
 
   return (
     <Box className="max-w-3xl">
-      <h1 className="text-xl font-black">{editId ? "Cập nhật mẫu" : "Lưu mẫu sản phẩm"}</h1>
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">{editId ? "Cập nhật mẫu" : "Lưu mẫu sản phẩm"}</h1>
       <div className="mt-3 flex flex-wrap gap-2">
         {stash.design.files.map((file) => (
           <figure key={file.area} className="w-28 text-center">

@@ -50,7 +50,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
         <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
           <div>
             <p className="text-sm text-ink/60">Xin chào,</p>
-            <h1 className="text-2xl font-black md:text-3xl">{me.name}</h1>
+            <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">{me.name}</h1>
           </div>
           <div className="flex gap-2">
             {me.seller?.status === "APPROVED" && (

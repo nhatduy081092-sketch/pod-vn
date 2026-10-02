@@ -27,7 +27,7 @@ export function QuoteProduct({
       </div>
       <div>
         <span className="inline-block rounded-full bg-navy px-3 py-1 text-[11px] font-extrabold tracking-wider text-white">{brand.name.toUpperCase()} · DOANH NGHIỆP</span>
-        <h1 className="mt-2 text-xl font-black leading-snug md:text-3xl">{product.name}</h1>
+        <h1 className="font-display text-[clamp(24px,2.8vw,36px)] font-extrabold leading-[1.08] tracking-[-0.02em] [font-stretch:88%] mt-2">{product.name}</h1>
         {product.priceFrom ? (
           <p className="mt-2 flex flex-wrap items-baseline gap-x-2">
             <span className="text-sm font-bold text-ink/70">Giá tham khảo từ</span>

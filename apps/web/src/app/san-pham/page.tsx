@@ -31,7 +31,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: SP 
         </Link>{" "}
         / <span className="text-ink">{params.q ? "Tìm kiếm" : "Tất cả sản phẩm"}</span>
       </nav>
-      <h1 className="mb-4 mt-1 text-2xl font-black md:text-3xl">{params.q ? <>Kết quả cho “{params.q}”</> : "Tất cả sản phẩm"}</h1>
+      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%] mb-4 mt-1">{params.q ? <>Kết quả cho “{params.q}”</> : "Tất cả sản phẩm"}</h1>
       <ProductListing basePath="/san-pham" data={data} params={params} facets={facets} mode="all" />
     </div>
   );
