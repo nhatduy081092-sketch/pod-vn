@@ -184,3 +184,15 @@ export const IconCalendar = (p: P) => (
     <path d="M3 10h18M8 3v4M16 3v4" />
   </svg>
 );
+export const IconShare = (p: P) => (
+  <svg viewBox="0 0 24 24" {...base} {...p}>
+    <path d="M12 3v12M7 8l5-5 5 5" />
+    <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+  </svg>
+);
+export const IconQuote = (p: P) => (
+  <svg viewBox="0 0 24 24" {...base} {...p}>
+    <path d="M4 5h16v11H9l-5 4V5Z" />
+    <path d="M8 9h8M8 12h5" />
+  </svg>
+);

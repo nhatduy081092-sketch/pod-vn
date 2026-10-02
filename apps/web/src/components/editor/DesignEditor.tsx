@@ -29,7 +29,8 @@ import {
   type TextLayer,
 } from "@pod/shared";
 import type { PrintArea, ProductDetail } from "@/lib/types";
-import { IconCalendar, IconClose, IconCopy, IconEye, IconGrid, IconLayers, IconLock, IconPalette, IconRedo, IconSave, IconText, IconTrash, IconUndo, IconUpload } from "../ui/icons";
+import { IconCalendar, IconClose, IconCopy, IconEye, IconGrid, IconLayers, IconLock, IconPalette, IconRedo, IconSave, IconShare, IconText, IconTrash, IconUndo, IconUpload } from "../ui/icons";
+import { PhraseIdeas } from "./PhraseIdeas";
 import { Stage } from "./Stage";
 import { canvasSrc, imgSize, loadImage, measureText, type ImageCache, type MockupAssets } from "./render";
 import { ensureFonts, GOOGLE_FONTS_HREF } from "./fonts";
@@ -108,7 +109,17 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const dragSnap = useRef<DesignJson | null>(null);
   const [areaKey, setAreaKey] = useState(areas[0]?.key ?? "");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [tool, setTool] = useState<Tool>("upload");
+  const [tool, setToolState] = useState<Tool>("upload");
+  // điện thoại: khung thiết kế ghim trên, bảng chỉnh bên dưới -> đổi công cụ thì cuộn bảng lên ngay dưới khung
+  const rootRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const setTool = useCallback((t: Tool) => {
+    setToolState(t);
+    if (typeof window !== "undefined" && window.innerWidth < 1024)
+      requestAnimationFrame(() => panelRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
+  }, []);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -597,7 +608,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     <button
       type="button"
       onClick={onClick ?? (() => setTool(t))}
-      className={`flex min-w-[58px] flex-1 flex-col items-center gap-1 rounded-lg px-1.5 py-2 text-[11px] font-bold lg:flex-none ${tool === t ? "bg-brand text-ink" : "text-ink/70 hover:bg-cream"}`}
+      className={`flex min-w-[54px] flex-1 flex-col items-center gap-1 rounded-xl border-2 px-1 py-1.5 text-[11px] font-bold transition lg:flex-none lg:py-2 ${tool === t ? "border-ink bg-sun text-ink shadow-sticker-sm" : "border-transparent text-ink/70 hover:bg-surface"}`}
       aria-pressed={tool === t}
     >
       <Icon className="h-5 w-5" />
@@ -612,18 +623,61 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   );
   const otherAreas = areas.filter((a) => a.key !== area.key);
 
+  /* ---------- chia sẻ / tải ảnh xem trước (gửi Zalo, Facebook cho bạn bè xem) ---------- */
+  async function shareSnapshot() {
+    setError("");
+    try {
+      setBusy("Đang tạo ảnh xem trước…");
+      await ensureFonts(ad.layers);
+      const blob = await renderPreview(area, ad, images, assets[area.key] ?? (await loadAreaAssets(area)), 1080, { garmentColor: color?.hex });
+      const file = new File([blob], `yala-thiet-ke-${product.slug}.jpg`, { type: "image/jpeg" });
+      const text = `Thiết kế ${product.name} của mình trên YALA Studio`;
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (nav.share && nav.canShare?.({ files: [file] })) {
+        await nav.share({ files: [file], title: "YALA Studio", text });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        setNotice("✓ Đã tải ảnh xem trước – gửi cho bạn bè qua Zalo, Facebook…");
+      }
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") setError((e as Error).message || "Không tạo được ảnh xem trước");
+    } finally {
+      setBusy("");
+    }
+  }
+
+  // đo chiều cao thanh trên + khung thiết kế -> biến CSS cho vị trí ghim & điểm cuộn bảng chỉnh (điện thoại)
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") return;
+    const measure = () => {
+      root.style.setProperty("--studio-head", `${headRef.current?.offsetHeight ?? 56}px`);
+      root.style.setProperty("--studio-stage", `${stageRef.current?.offsetHeight ?? 0}px`);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (headRef.current) ro.observe(headRef.current);
+    if (stageRef.current) ro.observe(stageRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#fafafa] pb-24 lg:pb-8">
+    <div ref={rootRef} className="min-h-screen bg-surface pb-40 lg:pb-8">
       <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />
       {/* Thanh trên */}
-      <div className="sticky top-0 z-30 border-b border-ink/10 bg-white">
+      <div ref={headRef} className="sticky top-0 z-30 border-b-2 border-ink bg-white">
         <div className="mx-auto flex h-14 max-w-[1320px] items-center gap-1.5 px-3 md:px-5">
           <Link href={returnTo} className="rounded-md p-1.5 hover:bg-cream" aria-label="Quay lại">
             <IconClose className="h-5 w-5" />
           </Link>
           <div className="min-w-0 flex-1">
             <button type="button" onClick={() => setSwitcher(true)} className="flex max-w-full items-center gap-1 text-left" title="Đổi sản phẩm">
-              <span className="truncate text-sm font-extrabold md:text-base">{product.name}</span>
+              <span className="truncate font-display text-[15px] font-extrabold md:text-lg">{product.name}</span>
               <span className="shrink-0 rounded border border-ink/20 px-1 text-[10px] font-bold text-ink/60">Đổi ▾</span>
             </button>
             <p className="text-[11px] text-ink/60">{mode === "seller" ? "Thiết kế mẫu seller" : "YALA Studio"} · tự lưu nháp</p>
@@ -640,6 +694,9 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           <button type="button" onClick={toggleFullscreen} className="hidden rounded-md p-2 text-sm font-bold hover:bg-cream md:block" aria-label={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
             {fullscreen ? "⤡" : "⤢"}
           </button>
+          <button type="button" onClick={() => void shareSnapshot()} disabled={!!busy} className="flex items-center gap-1 rounded-md p-2 text-sm font-bold hover:bg-cream md:border-2 md:border-ink/15 md:px-3 md:py-1.5" aria-label="Chia sẻ ảnh thiết kế" title="Tải / chia sẻ ảnh xem trước">
+            <IconShare className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Chia sẻ</span>
+          </button>
           <button type="button" onClick={() => setOverview(true)} className="flex items-center gap-1 rounded-md p-2 text-sm font-bold hover:bg-cream md:border-2 md:border-ink/15 md:px-3 md:py-1.5" aria-label="Xem tổng thể">
             <IconEye className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Xem</span>
           </button>
@@ -648,7 +705,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               <IconSave className="h-4 w-4" /> Lưu
             </button>
           )}
-          <button type="button" onClick={() => finish()} disabled={!!busy} className="btn hidden border-ink bg-brand px-4 py-2 text-sm text-ink disabled:opacity-60 lg:inline-flex">
+          <button type="button" onClick={() => finish()} disabled={!!busy} className="btn-primary hidden px-5 py-2 text-sm disabled:opacity-60 lg:inline-flex">
             Hoàn tất
           </button>
         </div>
@@ -730,7 +787,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
       <div className="mx-auto grid max-w-[1320px] grid-cols-[minmax(0,1fr)] gap-4 px-3 pt-3 md:px-5 lg:grid-cols-[88px_minmax(0,1fr)_340px] lg:pt-5">
         {/* Công cụ (desktop: cột trái, mobile: dưới khung) */}
-        <nav className="order-2 flex gap-1 rounded-xl border border-ink/10 bg-white p-1 lg:order-1 lg:h-fit lg:flex-col" aria-label="Công cụ">
+        <nav
+          className="order-2 flex gap-1 bg-white p-1.5 max-lg:fixed max-lg:inset-x-0 max-lg:bottom-[68px] max-lg:z-30 max-lg:border-t max-lg:border-ink/10 max-lg:pb-1 lg:order-1 lg:h-fit lg:flex-col lg:rounded-2xl lg:border-2 lg:border-ink/10"
+          aria-label="Công cụ"
+        >
           {toolBtn("upload", "Tải ảnh", IconUpload)}
           {toolBtn("library", "Mẫu", IconGrid)}
           {toolBtn("text", "Chữ", IconText, () => (selected?.type === "text" ? setTool("text") : addText()))}
@@ -739,9 +799,13 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           {toolBtn("calendar", "Lịch", IconCalendar)}
         </nav>
 
-        <div className="order-1 mx-auto w-full max-w-[640px] lg:order-2">
+        <div
+          ref={stageRef}
+          className="order-1 mx-auto w-full max-w-[640px] self-start max-lg:sticky max-lg:top-[var(--studio-head,56px)] max-lg:z-20 max-lg:-mx-3 max-lg:w-[calc(100%+1.5rem)] max-lg:max-w-none max-lg:border-b-2 max-lg:border-ink/10 max-lg:bg-surface max-lg:px-3 max-lg:pb-2 lg:order-2"
+        >
+          <div className="mx-auto max-lg:max-w-[min(100%,42svh)]">
           {(area.tips || (area.bleedMm ?? 0) > 0) && (
-            <details className="mb-2 rounded-lg border border-navy/20 bg-navy-light px-3 py-2 text-xs text-navy-dark" open={!!area.tips}>
+            <details className="mb-2 rounded-lg border-2 border-ink/10 bg-white px-3 py-2 text-xs text-ink/80 max-lg:hidden" open={!!area.tips}>
               <summary className="cursor-pointer font-bold">💡 Gợi ý thiết kế cho {area.name.toLowerCase()}</summary>
               <ul className="mt-1 list-disc space-y-0.5 pl-4">
                 {area.tips && <li className="whitespace-pre-line">{area.tips}</li>}
@@ -765,7 +829,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             onSelect={(id) => {
               setSelectedId(id);
               const l = ad.layers.find((x) => x.id === id);
-              if (l && tool !== "layers") setTool(l.type === "text" ? "text" : "upload");
+              if (l && tool !== "layers") setToolState(l.type === "text" ? "text" : "upload");
             }}
             onChangeLayer={patchLayer}
             onCommit={endDrag}
@@ -792,15 +856,17 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           </div>
           )}
           {area.warp === "cylinder" && <p className="mt-2 text-center text-[11px] text-ink/60">Dải in cuộn quanh thân – ảnh nhỏ ở góc là mặt trước khi nhìn thẳng.</p>}
-          <p className="mt-1 text-center text-[11px] text-ink/55">Kéo để di chuyển · kéo góc để đổi cỡ · nút tròn để xoay · lăn chuột để phóng to/thu nhỏ · điện thoại: 2 ngón</p>
+          <p className="mt-1 hidden text-center text-[11px] text-ink/55 lg:block">Kéo để di chuyển · kéo góc để đổi cỡ · nút tròn để xoay · lăn chuột để phóng to/thu nhỏ</p>
+          </div>
         </div>
 
         {/* Bảng thuộc tính */}
-        <aside className="order-3 space-y-3 rounded-xl border border-ink/10 bg-white p-4 lg:h-fit">
+        <aside ref={panelRef} className="order-3 scroll-mt-[calc(var(--studio-head,56px)+var(--studio-stage,0px)+8px)] space-y-3 rounded-2xl border-2 border-ink/10 bg-white p-4 lg:h-fit">
           {tool === "upload" && (
             <section className="space-y-3">
-              <button type="button" onClick={openUpload} disabled={!!busy} className="btn w-full border-dashed border-ink/40 bg-cream py-3 text-sm">
-                <IconUpload className="h-5 w-5" /> Tải ảnh lên (PNG, JPG, WEBP · tối đa 10 ảnh)
+              <button type="button" onClick={openUpload} disabled={!!busy} className="flex w-full flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-ink/40 bg-surface px-3 py-4 text-sm font-bold transition hover:border-ink hover:bg-sun/40">
+                <IconUpload className="h-6 w-6" /> Tải ảnh lên
+                <span className="text-[11px] font-medium text-ink/60">PNG, JPG, WEBP · chọn tối đa 10 ảnh</span>
               </button>
               {askAgree && !agreed && (
                 <div className="rounded-lg border-2 border-ink/15 bg-white p-3 text-xs leading-relaxed">
@@ -869,9 +935,14 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
           {tool === "text" && (
             <section className="space-y-3">
-              <button type="button" onClick={addText} className="btn w-full border-ink bg-cream py-2.5 text-sm">
+              <button type="button" onClick={addText} className="btn-outline w-full py-2.5 text-sm">
                 <IconText className="h-5 w-5" /> Thêm chữ mới
               </button>
+              <PhraseIdeas
+                hasTextSelected={selected?.type === "text" && !selected.field}
+                onReplace={(text) => selected?.type === "text" && patchSelected({ text })}
+                onAddDesign={(d) => addTemplate(d.template, d.title)}
+              />
               <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
                 <button type="button" className="btn-sm" onClick={() => addField("name")}>
                   + Ô tên thành viên
@@ -1146,13 +1217,13 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       </div>
 
       {/* Nút hoàn tất cố định trên mobile */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-ink/10 bg-white p-3 lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex h-[68px] items-center gap-2 border-t-2 border-ink bg-white px-3 pb-[env(safe-area-inset-bottom)] lg:hidden">
         {mode === "customer" && (
-          <button type="button" onClick={() => setSaveDlg({ name: savedName || product.name })} className="btn border-ink/20 bg-white px-3 py-3 sm:hidden" aria-label="Lưu thiết kế">
+          <button type="button" onClick={() => setSaveDlg({ name: savedName || product.name })} className="btn-outline px-3 py-2.5" aria-label="Lưu thiết kế">
             <IconSave className="h-5 w-5" />
           </button>
         )}
-        <button type="button" onClick={() => finish()} disabled={!!busy} className="btn flex-1 border-ink bg-brand py-3 text-ink disabled:opacity-60">
+        <button type="button" onClick={() => finish()} disabled={!!busy} className="btn-primary flex-1 py-3 text-[15px] disabled:opacity-60">
           Hoàn tất thiết kế{used.length ? ` (${used.length} mặt)` : ""}
         </button>
       </div>
