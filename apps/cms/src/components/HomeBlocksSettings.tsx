@@ -230,7 +230,7 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
         <Toggle label="Chỉ hiện sản phẩm có ảnh thật" checked={s.media.hide2d} onChange={(v) => set("media", { hide2d: v })} />
         <p className="text-sm text-neutral-600">
           Phôi trơn đã có ảnh thật: <b>{Object.keys(s.media.blanks).length}</b>/30
-          {Object.keys(s.media.blanks).length < 30 && " – chạy trên VPS: bash deploy/ai-photos.sh (cần GEMINI_API_KEY)"}
+          {Object.keys(s.media.blanks).length < 30 && " – tải ảnh lên tại menu Ảnh thật AI → Phôi trơn"}
         </p>
       </Card>
 

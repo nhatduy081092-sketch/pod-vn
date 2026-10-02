@@ -14,52 +14,30 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { prisma } from "@pod/db";
-import { readdirSync } from "node:fs";
 import { mergeLanding } from "@pod/shared";
 import { aiPhotoEnabled, aiPhotoModel, buildPrompt, generateAiPhoto, type AiPhotoStyle } from "../lib/ai-photo";
 import { saveBuffer } from "../lib/upload";
+import { applyBlankPhotos, BASIC_DIR, blankKeys, blankPrompt } from "../lib/blank-photos";
 
 const args = process.argv.slice(2);
 const DRY = args.includes("--dry");
 const KEEP_2D = args.includes("--keep-2d");
 const style = (args.find((a) => a.startsWith("--style="))?.split("=")[1] ?? "studio") as AiPhotoStyle;
 const SRC_DIR = resolve(process.cwd(), "assets/mock-src");
-const BASIC_DIR = resolve(process.cwd(), "assets/basic-src");
 const ONLY = args.find((a) => a.startsWith("--only="))?.split("=")[1] ?? ""; // blanks | products
 const PRICE = /pro/.test(aiPhotoModel()) ? 0.134 : /lite/.test(aiPhotoModel()) ? 0.034 : 0.067;
 
 const mockKey = (u?: string) => /^\/mock\/([\w-]+)\.svg$/.exec(u ?? "")?.[1];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-const GARMENT_EN: Record<string, string> = {
-  tshirt: "relaxed-fit short-sleeve crew-neck cotton T-shirt",
-  longsleeve: "relaxed-fit long-sleeve crew-neck cotton T-shirt",
-  sweater: "crew-neck cotton fleece sweatshirt with ribbed cuffs and hem",
-  hoodie: "cotton fleece pullover hoodie with drawstrings and kangaroo pocket",
-  jogger: "cotton fleece jogger sweatpants with elastic waist and cuffs",
-  tote: "natural canvas tote bag with two shoulder straps",
-};
-const COLOR_EN: Record<string, string> = { trang: "white", den: "black", kem: "cream / off-white", xam: "heather grey", navy: "navy blue" };
-
-function blankPrompt(g: string, c: string) {
-  return (
-    `The input image is a flat 2D illustration of a plain ${COLOR_EN[c] ?? c} ${GARMENT_EN[g] ?? g}. ` +
-    `Recreate it as a photorealistic e-commerce photo of the SAME plain ${COLOR_EN[c] ?? c} ${GARMENT_EN[g] ?? g}, ` +
-    "ghost-mannequin style for clothing (no person), front view. " +
-    "CRITICAL: keep exactly the same framing as the input – the product must occupy the same position and the same size inside the square, centered, same silhouette and proportions. " +
-    "Realistic fabric texture, seams, stitching and soft natural folds, soft even studio lighting, seamless warm light grey (#f4f2ef) background with a soft shadow under the product. " +
-    "The product is completely blank: no print, no graphics, no text, no logo, no labels, no tags, no hanger. Square 1:1."
-  );
-}
-
 /** Bước 1: phôi trơn ảnh thật -> lưu vào Cài đặt (media.blanks) + gắn cho YALA Everyday & mockup Studio */
 async function blanks() {
-  const files = existsSync(BASIC_DIR) ? readdirSync(BASIC_DIR).filter((f) => /^[a-z]+-[a-z-]+\.jpg$/.test(f)) : [];
+  const keys = blankKeys();
   const row = await prisma.setting.findUnique({ where: { key: "landing" } });
   const cur = mergeLanding(row?.value);
   const done = { ...cur.media.blanks };
-  const todo = files.map((f) => f.replace(/\.jpg$/, "")).filter((k) => !done[k]);
-  console.log(`[Phôi trơn] ${todo.length}/${files.length} ảnh cần tạo · ước tính ~${(todo.length * PRICE).toFixed(2)} USD`);
+  const todo = keys.filter((k) => !done[k]);
+  console.log(`[Phôi trơn] ${todo.length}/${keys.length} ảnh cần tạo · ước tính ~${(todo.length * PRICE).toFixed(2)} USD`);
   if (!DRY) {
     let i = 0;
     const worker = async () => {
@@ -94,23 +72,7 @@ async function blanks() {
     };
     await Promise.all([worker(), worker()]);
   }
-  // gắn ảnh thật cho sản phẩm đang dùng phôi vẽ /shapes/basic/<dáng>-<màu>.svg + mockup vùng in /shapes/basic/<dáng>.svg
-  const basicKey = (u: string) => /^\/shapes\/basic\/([a-z]+-[a-z-]+)\.svg$/.exec(u)?.[1];
-  const prods = await prisma.product.findMany({ where: { images: { isEmpty: false } }, select: { id: true, name: true, images: true } });
-  let swapped = 0;
-  for (const p of prods) {
-    if (!p.images.some((u) => basicKey(u))) continue;
-    const images = p.images.map((u) => (basicKey(u) && done[basicKey(u)!] ? done[basicKey(u)!]! : u));
-    if (images.join() === p.images.join()) continue;
-    if (!DRY) await prisma.product.update({ where: { id: p.id }, data: { images } });
-    swapped++;
-  }
-  let areas = 0;
-  for (const g of Object.keys(GARMENT_EN)) {
-    const photo = done[`${g}-trang`] ?? done[`${g}-kem`];
-    if (!photo) continue;
-    if (!DRY) areas += (await prisma.printArea.updateMany({ where: { mockupImage: `/shapes/basic/${g}.svg` }, data: { mockupImage: photo } })).count;
-  }
+  const { swapped, areas } = await applyBlankPhotos(done, { dry: DRY });
   console.log(`[Phôi trơn] gắn ảnh thật cho ${swapped} sản phẩm, ${areas} mockup vùng in`);
 }
 

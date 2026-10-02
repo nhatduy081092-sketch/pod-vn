@@ -332,3 +332,26 @@ export async function templateFromDesignAction(input: { savedDesignId: string; a
     return { id: r.id };
   }, ["/design-library"], false);
 }
+
+/* ---------- Ảnh thật phôi trơn ---------- */
+export async function setBlankPhotoAction(key: string, url: string | null): Promise<{ ok: true; swapped: number; areas: number } | { ok: false; error: string }> {
+  try {
+    const r = await adminFetch<{ swapped: number; areas: number }>(`/blanks/${encodeURIComponent(key)}`, { method: "PUT", body: JSON.stringify({ url }) });
+    revalidatePath("/ai-photos");
+    await revalidateWeb();
+    return { ok: true, ...r };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+export async function aiBlankPhotoAction(key: string): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  try {
+    const r = await adminFetch<{ url: string }>(`/blanks/${encodeURIComponent(key)}/ai`, { method: "POST" });
+    revalidatePath("/ai-photos");
+    await revalidateWeb();
+    return { ok: true, url: r.url };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}

@@ -44,6 +44,9 @@ import { uniqueSlug } from "../lib/slug";
 import { saveBuffer, saveUpload } from "../lib/upload";
 import { aiPhotoEnabled, aiPhotoModel, buildPrompt, generateAiPhoto, type AiPhotoStyle } from "../lib/ai-photo";
 import { listPages } from "../lib/pages";
+import { BASIC_DIR, blankKeys, blankPrompt, COLOR_VI, GARMENT_VI, setBlankPhoto } from "../lib/blank-photos";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { importOemCatalog } from "../lib/oem-import";
 import { applyB2BPricing } from "../lib/b2b-pricing";
 import { exportPriceSheet, importPriceSheet } from "../lib/price-sheet";
@@ -130,6 +133,38 @@ adminRoutes.post("/ai-photo", async (c) => {
   // tiền tố "ai-" -> web tự gắn nhãn "Ảnh minh hoạ" (isAiImage) cho tới khi thay bằng ảnh/mockup thật
   const saved = await saveBuffer(out, "ai-");
   return c.json({ ...saved, style, model: aiPhotoModel() }, 201);
+});
+
+/* ---------- Ảnh thật phôi trơn (Studio, mẫu có sẵn, YALA Everyday) ---------- */
+adminRoutes.get("/blanks", async (c) => {
+  const blanks = (await getLanding(true)).media.blanks;
+  const items = blankKeys().map((key) => {
+    const [g = "", ...rest] = key.split("-");
+    const color = rest.join("-");
+    return { key, label: `${GARMENT_VI[g] ?? g} · ${COLOR_VI[color] ?? color}`, photo: blanks[key] ?? "", prompt: blankPrompt(g, color) };
+  });
+  return c.json({ items, aiEnabled: aiPhotoEnabled() });
+});
+
+const blankSchema = z.object({ url: z.string().trim().max(500).regex(/^(\/uploads\/|https:\/\/)/, "Ảnh không hợp lệ").nullable() });
+adminRoutes.put("/blanks/:key", async (c) => {
+  const { url } = blankSchema.parse(await c.req.json());
+  const key = c.req.param("key");
+  if (!blankKeys().includes(key)) throw notFound("Không có phôi này");
+  const r = await setBlankPhoto(key, url);
+  return c.json({ swapped: r.swapped, areas: r.areas });
+});
+
+/** tạo ảnh thật cho 1 phôi bằng Gemini (cần GEMINI_API_KEY + project đã bật thanh toán) */
+adminRoutes.post("/blanks/:key/ai", async (c) => {
+  const key = c.req.param("key");
+  if (!blankKeys().includes(key)) throw notFound("Không có phôi này");
+  const [g = "", ...rest] = key.split("-");
+  const src = await readFile(resolve(BASIC_DIR, `${key}.jpg`));
+  const out = await generateAiPhoto(src, "image/jpeg", blankPrompt(g, rest.join("-")));
+  const { url } = await saveBuffer(out, "ai-");
+  const r = await setBlankPhoto(key, url);
+  return c.json({ url, swapped: r.swapped, areas: r.areas }, 201);
 });
 
 /** Đổi danh sách ảnh của 1 sản phẩm (duyệt ảnh AI, sắp xếp ảnh) */
