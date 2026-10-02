@@ -93,6 +93,9 @@ function apiError(status: number, json: Record<string, unknown>): HTTPException 
   console.error(`[ai-photo] Gemini ${status}: ${msg.slice(0, 300)}`);
   if (status === 400 && /api key/i.test(msg)) return new HTTPException(400, { message: "GEMINI_API_KEY không hợp lệ – kiểm tra lại trong .env.production" });
   if (status === 401 || status === 403) return new HTTPException(400, { message: "Google từ chối API key (chưa bật Gemini API hoặc chưa gắn thanh toán)" });
+  // "limit: 0 … Free Tier" = project chưa gắn thanh toán -> chờ bao lâu cũng không chạy, dừng hẳn
+  if (status === 429 && /limit:\s*0\b/i.test(msg) && /free tier/i.test(msg))
+    return new HTTPException(400, { message: "Project Google của API key đang ở gói Free – model tạo ảnh cần bật thanh toán (Billing). Vào aistudio.google.com/apikey → Set up billing, rồi chạy lại" });
   if (status === 429) return new HTTPException(429, { message: "Vượt giới hạn Google AI (quota) – đợi 1 phút rồi thử lại" });
   if (status === 404) return new HTTPException(400, { message: `Model ${aiPhotoModel()} không tồn tại/không được phép – đổi GEMINI_IMAGE_MODEL` });
   return new HTTPException(502, { message: `Google AI lỗi ${status}${msg ? `: ${msg.slice(0, 160)}` : ""}` });
