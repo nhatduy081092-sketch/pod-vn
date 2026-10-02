@@ -1,4 +1,4 @@
-import { applyTemplate, BASIC_COLORS, GARMENT_ZONE, type ColorKey, type GarmentKey, type ReadyDesign, type TextLayer } from "@pod/shared";
+import { applyTemplate, BASIC_COLORS, GARMENT_ZONE, readyDesignInColor, type ColorKey, type GarmentKey, type ReadyDesign, type TextLayer } from "@pod/shared";
 import { getSettings } from "@/lib/api";
 import { assetUrl } from "@/lib/config";
 
@@ -7,9 +7,11 @@ import { assetUrl } from "@/lib/config";
  * Cùng quy tắc với YALA Studio: mẫu co giãn vào vùng in ngực, (x, y) = tâm lớp, cỡ chữ theo mm.
  * Chữ cong ước lượng độ rộng (0,56 × cỡ chữ / ký tự) – đủ gần để xem trước; file in thật do Studio vẽ.
  */
-export async function DesignPreview({ design, garment, color, className = "", title, zoom = true }: { design: ReadyDesign; garment?: GarmentKey; color?: ColorKey; className?: string; title?: string; /** cận ngực áo (như ảnh chụp sản phẩm) thay vì cả áo */ zoom?: boolean }) {
+export async function DesignPreview({ design: base, garment, color, className = "", title, zoom = true }: { design: ReadyDesign; garment?: GarmentKey; color?: ColorKey; className?: string; title?: string; /** cận ngực áo (như ảnh chụp sản phẩm) thay vì cả áo */ zoom?: boolean }) {
+  const c = color ?? base.color;
+  // xem trên màu áo khác -> màu chữ tính lại cho dễ đọc
+  const design = readyDesignInColor(base, c);
   const g = garment ?? design.garment;
-  const c = color ?? design.color;
   // ảnh thật của phôi trơn (AI tạo, cùng khung hình với phôi vẽ) – chưa có thì dùng phôi vẽ
   const photo = (await getSettings()).media.blanks[`${g}-${c}`];
   const dark = BASIC_COLORS[c as ColorKey]?.dark ?? false;

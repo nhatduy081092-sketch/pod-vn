@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { DESIGN_VERSION, findReadyDesign, type DesignJson } from "@pod/shared";
+import { BASIC_COLORS, DESIGN_VERSION, findReadyDesign, readyDesignInColor, type ColorKey, type DesignJson } from "@pod/shared";
 import type { ProductDetail } from "@/lib/types";
 import { DesignEditor } from "./DesignEditor";
 import { readAttached } from "./storage";
@@ -33,7 +33,10 @@ export function EditorLoader({ product, mode, savedId, templateId, presetSlug, i
           return;
         }
         // mẫu có sẵn (/bo-suu-tap): đặt mẫu vào mặt trước, chữ đo lại theo font thật
-        const preset = mode === "customer" && presetSlug ? findReadyDesign(presetSlug) : undefined;
+        const found = mode === "customer" && presetSlug ? findReadyDesign(presetSlug) : undefined;
+        // khách chọn màu áo khác màu gợi ý -> tính lại màu chữ cho dễ đọc trên áo đó
+        const colorKey = (Object.keys(BASIC_COLORS) as ColorKey[]).find((k) => BASIC_COLORS[k].name === initialColor);
+        const preset = found && colorKey ? readyDesignInColor(found, colorKey) : found;
         if (preset) {
           const area = product.printAreas.find((a) => a.key === "front") ?? product.printAreas[0];
           if (area) {
@@ -56,7 +59,7 @@ export function EditorLoader({ product, mode, savedId, templateId, presetSlug, i
     return () => {
       alive = false;
     };
-  }, [product.id, savedId, templateId, presetSlug, mode]);
+  }, [product.id, savedId, templateId, presetSlug, mode, initialColor]);
 
   return (
     // phủ toàn màn hình, che header/footer của website để có chỗ thiết kế

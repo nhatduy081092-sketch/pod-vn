@@ -171,8 +171,132 @@ function build(slug: string, s: Spec, accent: string, defGarment: GarmentKey, de
 }
 
 function C(slug: string, name: string, blurb: string, tint: string, accent: string, garment: GarmentKey, color: ColorKey, specs: Spec[]): DesignCollection {
-  return { slug, name, blurb, tint, designs: specs.map((s, i) => build(slug, s, accent, garment, color, i)) };
+  // mẫu bổ sung nối tiếp sau -> mã mẫu cũ (slug-1…4) giữ nguyên
+  const all = [...specs, ...(EXTRA[slug] ?? [])];
+  all.forEach((s, i) => SPECS.set(`${slug}-${i + 1}`, { slug, s, accent, garment, color, i }));
+  return { slug, name, blurb, tint, designs: all.map((s, i) => build(slug, s, accent, garment, color, i)) };
 }
+
+const SPECS = new Map<string, { slug: string; s: Spec; accent: string; garment: GarmentKey; color: ColorKey; i: number }>();
+
+/** Mẫu có sẵn trên màu áo khác: tính lại màu chữ (chữ sáng trên áo tối, chữ tối trên áo sáng) */
+export function readyDesignInColor(d: ReadyDesign, color: ColorKey): ReadyDesign {
+  if (color === d.color) return d;
+  const x = SPECS.get(d.slug);
+  if (!x) return d;
+  const s = [...x.s] as Spec;
+  s[6] = color;
+  return build(x.slug, s, x.accent, x.garment, x.color, x.i);
+}
+
+/** Mẫu bổ sung (đợt 2) – câu chữ do YALA viết */
+const EXTRA: Record<string, Spec[]> = {
+  "mua-thu-ha-noi": [
+    ["Phố cũ heo may", "lobster", "Hà Nội", "Phố cũ\nheo may", "mặc thêm áo nhé", "sweater", "navy"],
+    ["Trà đá vỉa hè", "stack", "Trà đá\nvỉa hè", "một nghìn câu chuyện", "", "tshirt", "kem"],
+  ],
+  "chuyen-phong-gym": [
+    ["Đẩy tạ không đẩy deadline", "note", "Đẩy tạ\nkhông đẩy\ndeadline", "— buổi tối", "", "tshirt", "den"],
+    ["Ngực to vai rộng", "badge", "Team ngực", "Push day", "vai rộng tim to", "hoodie", "den"],
+  ],
+  pickleball: [
+    ["Nghiện pickle", "stackO", "Nghiện\npickleball", "chữa không khỏi", "", "tshirt", "trang"],
+    ["Đánh đôi sống lâu", "script", "Mixed doubles", "Đánh đôi\nsống lâu", "hẹn sân 5h", "tshirt", "kem"],
+  ],
+  "ca-phe-tra-sua": [
+    ["Cà phê sữa đá", "badge", "Sài Gòn", "Sữa đá", "ít ngọt nhiều đá", "tshirt", "trang"],
+    ["Năng lượng caffeine", "stack", "Chạy bằng\ncaffeine", "pin còn 10%", "", "tshirt", "den"],
+  ],
+  "doi-game-thu": [
+    ["Rank gì cũng được", "note", "Rank gì\ncũng được\nmiễn vui", "— gg wp", "", "tshirt", "den"],
+    ["Đang trong trận", "stackO", "Đang\ntrong trận", "gọi sau 30 phút", "", "hoodie", "xam"],
+  ],
+  "dan-van-phong": [
+    ["Họp xong rồi làm", "note", "Họp xong\nrồi làm\n(chưa xong)", "— 17h59", "", "tshirt", "trang"],
+    ["Thứ Sáu muôn năm", "script", "Happy", "Thứ Sáu\nmuôn năm", "deadline để thứ Hai", "tshirt", "kem"],
+  ],
+  "hoang-thuong-meo-cun": [
+    ["Mẹ của boss", "badge", "Chính chủ", "Mẹ boss", "đi làm nuôi hoàng thượng", "tshirt", "trang"],
+    ["Ba của boss", "badge", "Chính chủ", "Ba boss", "xúc phân là đam mê", "tshirt", "den"],
+  ],
+  "cap-doi": [
+    ["Của em", "pacifico", "Chính chủ", "Của em", "đã có chủ", "tshirt", "trang"],
+    ["Một nửa", "stack", "Một nửa\nđáng yêu", "nửa kia đứng bên cạnh", "", "tshirt", "den"],
+  ],
+  "gia-dinh": [
+    ["Team mẹ", "stack", "Team\nmẹ", "trưởng phòng tài chính", "", "tshirt", "trang"],
+    ["Team con", "stack", "Team\ncon", "phó phòng ăn vặt", "", "tshirt", "trang"],
+  ],
+  "viet-nam-du-lich": [
+    ["Hội An lên đèn", "lobster", "Quảng Nam", "Hội An\nlên đèn", "phố cổ về đêm", "tshirt", "kem"],
+    ["Sa Pa mù sương", "script", "Lào Cai", "Sa Pa\nmù sương", "săn mây 5h sáng", "sweater", "xam"],
+  ],
+  "cham-ngon-tich-cuc": [
+    ["Từ từ rồi sẽ tới", "note", "Từ từ\nrồi sẽ tới", "— không vội", "", "tshirt", "kem"],
+    ["Hôm nay ổn", "badge", "Nhắc nhẹ", "Hôm nay ổn", "mai còn ổn hơn", "tshirt", "trang"],
+  ],
+  "tet-li-xi": [
+    ["Năm mới phát tài", "badge", "Xuân 2027", "Phát tài", "an khang thịnh vượng", "tshirt", "trang"],
+    ["Đừng hỏi lương", "note", "Tết này\nđừng hỏi lương\nhỏi lì xì thôi", "", "", "tshirt", "kem"],
+  ],
+  "hoc-sinh-sinh-vien": [
+    ["Qua môn là được", "stack", "Qua môn\nlà được", "điểm số chỉ là con số", "", "tshirt", "trang"],
+    ["Lớp mình nhất", "badge", "Niên khoá 2026", "Lớp mình", "là nhất", "tshirt", "navy"],
+  ],
+  "chay-bo": [
+    ["Chạy vì trà sữa", "note", "Chạy để\nuống trà sữa", "— 5km = 1 ly", "", "tshirt", "den"],
+    ["Về đích là thắng", "stackO", "Về đích\nlà thắng", "không quan trọng pace", "", "tshirt", "trang"],
+  ],
+  foodie: [
+    ["Ăn là chính", "stack", "Ăn\nlà chính", "đi chơi là phụ", "", "tshirt", "kem"],
+    ["Bún đậu mắm tôm", "badge", "Hà Nội", "Bún đậu", "chấm mắm tôm mới chuẩn", "tshirt", "trang"],
+  ],
+  "nghe-nghiep": [
+    ["Kế toán bình tĩnh", "note", "Kế toán\nluôn bình tĩnh\n(trừ cuối tháng)", "", "", "tshirt", "trang"],
+    ["Designer sửa lần cuối", "stack", "Sửa lần\ncuối nha", "lần thứ 12", "", "tshirt", "den"],
+  ],
+  karaoke: [
+    ["Mic là của tôi", "badge", "Phòng VIP", "Giữ mic", "không nhường ai", "tshirt", "den"],
+    ["Một bài nữa thôi", "script", "Karaoke", "Một bài\nnữa thôi", "rồi về ngủ", "tshirt", "kem"],
+  ],
+  "mua-he-bien": [
+    ["Đi biển đi", "pacifico", "Summer", "Đi biển đi", "nắng đẹp mà", "tshirt", "trang"],
+    ["Da đen vì nắng", "note", "Da đen\nvì nắng\nkhông vì ai", "", "", "tshirt", "kem"],
+  ],
+  "tam-trang": [
+    ["Đừng làm phiền", "stackO", "Đừng\nlàm phiền", "đang sạc năng lượng", "", "tshirt", "den"],
+    ["Ổn mà", "note", "Ổn mà\n(thật ra không)", "", "", "tshirt", "xam"],
+  ],
+  "tu-hao-viet-nam": [
+    ["Người Việt dùng hàng Việt", "badge", "Made in Việt Nam", "Hàng Việt", "chất lượng thật", "tshirt", "trang"],
+    ["Phở là số một", "stack", "Phở\nlà số một", "bánh mì số hai", "", "tshirt", "kem"],
+  ],
+  "toi-gian": [
+    ["Nhẹ nhàng", "pocket", "nhẹ nhàng", "be kind", "", "tshirt", "trang"],
+    ["Ở nhà", "pocket", "ở nhà", "weekend mode", "", "sweater", "kem"],
+  ],
+  "team-building": [
+    ["Phòng marketing", "stackO", "Phòng\nmarketing", "ý tưởng không giới hạn", "", "tshirt", "trang"],
+    ["Đi tour cùng nhau", "script", "Company trip", "Đi đâu\ncũng cùng nhau", "sửa tên công ty", "tshirt", "kem"],
+  ],
+  "ban-than": [
+    ["Bạn thân lâu năm", "badge", "Từ hồi cấp ba", "Bạn thân", "đến hết đời", "tshirt", "trang"],
+    ["Hội độc thân vui vẻ", "stack", "Hội độc thân\nvui vẻ", "tuyển thành viên", "", "tshirt", "den"],
+  ],
+  "tui-tote": [
+    ["Đi học vui", "script", "Túi đi học", "Đi học\nvui ghê", "đựng sách & bánh", "tote", "kem"],
+    ["Cà phê sáng", "stack", "Cà phê\nsáng", "đi đâu cũng mang", "", "tote", "den"],
+  ],
+};
+
+/** Nhóm bộ sưu tập để duyệt nhanh */
+export const DESIGN_GROUPS: { key: string; name: string; slugs: string[] }[] = [
+  { key: "dip-le", name: "Dịp & du lịch", slugs: ["tet-li-xi", "mua-thu-ha-noi", "mua-he-bien", "viet-nam-du-lich", "tu-hao-viet-nam"] },
+  { key: "so-thich", name: "Sở thích", slugs: ["chuyen-phong-gym", "pickleball", "chay-bo", "ca-phe-tra-sua", "doi-game-thu", "karaoke", "foodie", "hoang-thuong-meo-cun"] },
+  { key: "yeu-thuong", name: "Cặp đôi & gia đình", slugs: ["cap-doi", "gia-dinh", "ban-than"] },
+  { key: "hoc-lam", name: "Đi học, đi làm", slugs: ["hoc-sinh-sinh-vien", "dan-van-phong", "nghe-nghiep", "team-building"] },
+  { key: "tam-trang", name: "Tâm trạng & tối giản", slugs: ["tam-trang", "cham-ngon-tich-cuc", "toi-gian", "tui-tote"] },
+];
 
 /* ---------- 24 bộ sưu tập ---------- */
 export const DESIGN_COLLECTIONS: DesignCollection[] = [
