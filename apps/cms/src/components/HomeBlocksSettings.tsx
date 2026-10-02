@@ -75,6 +75,38 @@ function Card({ open, onToggle, title, hint, children }: { id: string; open: boo
 }
 
 /** Danh sách nhiều cột dạng textarea: mỗi dòng 1 mục, các cột cách nhau bằng "|" (giữ nguyên chữ đang gõ) */
+type B2BCase = LandingSettings["b2bHub"]["cases"][number];
+/** Dự án đã làm: chỉ nhập dự án thật – ảnh thành phẩm, tên dự án, khách hàng (khi được phép nêu tên), số lượng & thời gian */
+function CasesEditor({ cases, onChange }: { cases: B2BCase[]; onChange: (v: B2BCase[]) => void }) {
+  const up = (i: number, patch: Partial<B2BCase>) => onChange(cases.map((c, j) => (j === i ? { ...c, ...patch } : c)));
+  return (
+    <div className="md:col-span-2">
+      <span className="label">Dự án đã làm (trống = ẩn khối)</span>
+      <p className="mb-2 text-xs text-neutral-500">Chỉ nhập dự án thật. Tên khách hàng chỉ ghi khi khách đồng ý; không thì ghi chung (VD “Công ty công nghệ, Q.1”).</p>
+      <div className="space-y-3">
+        {cases.map((c, i) => (
+          <div key={i} className="grid gap-2 rounded border p-3 md:grid-cols-2">
+            <Field label="Tên dự án" value={c.title} onChange={(v) => up(i, { title: v })} placeholder="200 áo polo team building" />
+            <Field label="Khách hàng" value={c.client} onChange={(v) => up(i, { client: v })} placeholder="Công ty phần mềm, Q.1" />
+            <Field label="Chi tiết" value={c.detail} onChange={(v) => up(i, { detail: v })} placeholder="Polo cá sấu thêu logo · 4 ngày · giao 2 chi nhánh" wide />
+            <div className="md:col-span-2">
+              <ImageInput label="Ảnh thành phẩm" value={c.image} onChange={(v) => up(i, { image: v })} />
+            </div>
+            <button type="button" className="justify-self-start text-sm text-red-600 hover:underline" onClick={() => onChange(cases.filter((_, j) => j !== i))}>
+              Xoá dự án
+            </button>
+          </div>
+        ))}
+      </div>
+      {cases.length < 12 && (
+        <button type="button" className="btn-ghost mt-2" onClick={() => onChange([...cases, { title: "Dự án mới", client: "", detail: "", image: "" }])}>
+          + Thêm dự án
+        </button>
+      )}
+    </div>
+  );
+}
+
 function PipeLines<T>({ label, hint, rows, cols, toRow, fromRow, onChange, max = 20 }: {
   label: string;
   hint: string;
@@ -223,6 +255,27 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
             fromRow={([title, desc]) => ({ title: title!, desc: desc! })}
             onChange={(v) => set("b2bHub", { benefits: v })}
           />
+          <PipeLines
+            label="Điều kiện đặt hàng (đầu trang + khối “Rõ ràng trước khi bạn nhắn tin”)"
+            hint="Mỗi dòng: Tiêu chí | giá trị ngắn | ghi chú. 4 dòng đầu hiện ngay dưới tiêu đề trang. CHỈ ghi điều YALA làm được (VD thời gian, hoá đơn VAT)."
+            rows={s.b2bHub.terms}
+            cols={3}
+            max={8}
+            toRow={(r) => [r.label, r.value, r.note]}
+            fromRow={([label, value, note]) => (value ? { label: label!, value, note: note! } : null)}
+            onChange={(v) => set("b2bHub", { terms: v })}
+          />
+          <PipeLines
+            label="So sánh: đặt merch kiểu thông thường vs YALA"
+            hint="Mỗi dòng: Tiêu chí | kiểu thông thường | với YALA. Không nêu tên đơn vị khác (Luật Quảng cáo cấm so sánh trực tiếp). Xoá hết = ẩn bảng."
+            rows={s.b2bHub.compare}
+            cols={3}
+            max={8}
+            toRow={(r) => [r.label, r.usual, r.yala]}
+            fromRow={([label, usual, yala]) => ({ label: label!, usual: usual!, yala: yala! })}
+            onChange={(v) => set("b2bHub", { compare: v })}
+          />
+          <CasesEditor cases={s.b2bHub.cases} onChange={(v) => set("b2bHub", { cases: v })} />
         </div>
       </Card>
 

@@ -225,6 +225,18 @@ export const landingSettingsSchema = z.object({
     solutions: z.array(z.object({ key: z.string().trim().min(1).max(40), title: z.string().trim().min(1).max(80), desc: z.string().max(240), items: z.string().max(160), keywords: z.string().max(400) })).max(12),
     process: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(10),
     benefits: z.array(z.object({ title: z.string().trim().min(1).max(60), desc: z.string().max(200) })).max(12),
+    terms: z.array(z.object({ label: z.string().trim().min(1).max(40), value: z.string().trim().min(1).max(40), note: z.string().max(200) })).max(8),
+    compare: z.array(z.object({ label: z.string().trim().min(1).max(40), usual: z.string().max(80), yala: z.string().max(80) })).max(8),
+    cases: z
+      .array(
+        z.object({
+          title: z.string().trim().min(1).max(80),
+          client: z.string().max(80),
+          detail: z.string().max(160),
+          image: z.string().max(500).regex(/^(|\/uploads\/|https:\/\/)/, "Ảnh dự án không hợp lệ"),
+        }),
+      )
+      .max(12),
   }),
   media: z.object({
     hide2d: z.boolean(),

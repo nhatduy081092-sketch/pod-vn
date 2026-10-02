@@ -72,11 +72,12 @@ export default async function BusinessPage() {
                 </a>
               )}
             </div>
+            {/* điều kiện đặt hàng nói rõ ngay đầu trang – khách so sánh với đơn vị khác không cần hỏi */}
             <ul className="mt-8 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-4 border-t border-white/15 pt-6 sm:grid-cols-4">
-              {settings.b2b.stats.map((s) => (
+              {(hub.terms.length ? hub.terms.slice(0, 4).map((t) => ({ value: t.value, label: t.label })) : settings.b2b.stats).map((s) => (
                 <li key={s.label}>
-                  <p className="whitespace-nowrap text-xl font-bold text-white md:text-2xl">{s.value}</p>
-                  <p className="mt-0.5 text-xs leading-snug text-white/60">{s.label}</p>
+                  <p className="text-lg font-bold leading-tight text-white md:text-xl">{s.value}</p>
+                  <p className="mt-1 text-xs leading-snug text-white/60">{s.label}</p>
                 </li>
               ))}
             </ul>
@@ -90,19 +91,74 @@ export default async function BusinessPage() {
       {/* Mục lục nhanh */}
       <nav className="sticky top-12 z-30 border-b border-line bg-white/95 backdrop-blur md:top-16 lg:top-[108px]" aria-label="Trong trang này">
         <div className="container-site no-scrollbar flex h-11 items-center gap-6 overflow-x-auto text-sm font-medium">
-          {[
-            ["#nganh-hang", "Ngành hàng"],
-            ["#giai-phap", "Giải pháp theo dịp"],
-            ["#quy-trinh", "Quy trình"],
-            ["#vi-sao", "Vì sao chọn YALA"],
-            ["#bao-gia", "Nhận báo giá"],
-          ].map(([h, l]) => (
+          {(
+            [
+              hub.terms.length ? ["#dieu-kien", "Điều kiện đặt hàng"] : null,
+              ["#nganh-hang", "Ngành hàng"],
+              ["#giai-phap", "Giải pháp theo dịp"],
+              hub.cases.length ? ["#du-an", "Dự án đã làm"] : null,
+              ["#quy-trinh", "Quy trình"],
+              ["#vi-sao", "Vì sao chọn YALA"],
+              ["#bao-gia", "Nhận báo giá"],
+            ].filter(Boolean) as [string, string][]
+          ).map(([h, l]) => (
             <a key={h} href={h} className={`shrink-0 whitespace-nowrap ${h === "#bao-gia" ? "font-semibold text-brand" : "text-ink/75 hover:text-ink"}`}>
               {l}
             </a>
           ))}
         </div>
       </nav>
+
+      {/* Điều kiện đặt hàng + so sánh cách đặt */}
+      {hub.terms.length > 0 && (
+        <section id="dieu-kien" className="scroll-mt-32 py-12 md:py-16">
+          <div className="container-site">
+            <p className="eyebrow">Điều kiện đặt hàng</p>
+            <h2 className="h-section mt-1.5">Rõ ràng trước khi bạn nhắn tin</h2>
+            <ul className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+              {hub.terms.map((t, i) => (
+                <li key={t.label} className={`rounded-2xl border-2 border-ink p-4 shadow-sticker-sm md:p-5 ${pastel(i)}`}>
+                  <p className="text-[12px] font-semibold uppercase tracking-wide text-ink/60 md:text-[13px]">{t.label}</p>
+                  <p className="mt-1 font-display text-[clamp(20px,2.4vw,30px)] font-extrabold leading-[1.05] tracking-[-0.015em] [font-stretch:90%]">{t.value}</p>
+                  {t.note && <p className="mt-2 text-[13px] leading-snug text-ink/75 md:text-sm">{t.note}</p>}
+                </li>
+              ))}
+            </ul>
+
+            {hub.compare.length > 0 && (
+              <div className="mt-10 overflow-hidden rounded-2xl border-2 border-ink">
+                <div className="grid grid-cols-[1fr_1fr] bg-ink text-[13px] font-semibold text-white md:grid-cols-[0.8fr_1fr_1fr] md:text-sm">
+                  <span className="hidden px-5 py-3 md:block" />
+                  <span className="px-4 py-3 text-white/70 md:px-5">Đặt merch kiểu thông thường</span>
+                  <span className="bg-brand px-4 py-3 md:px-5">Đặt với YALA</span>
+                </div>
+                <ul>
+                  {hub.compare.map((c) => (
+                    <li key={c.label} className="grid grid-cols-[1fr_1fr] border-t border-ink/10 text-[14px] md:grid-cols-[0.8fr_1fr_1fr] md:text-[15px]">
+                      <span className="col-span-2 bg-surface px-4 pb-1 pt-3 text-[12px] font-semibold uppercase tracking-wide text-muted md:col-span-1 md:bg-transparent md:px-5 md:py-4 md:text-[13px]">{c.label}</span>
+                      <span className="px-4 py-3 text-muted md:px-5 md:py-4">{c.usual}</span>
+                      <span className="flex gap-2 bg-brand-light px-4 py-3 font-semibold text-ink md:px-5 md:py-4">
+                        <svg viewBox="0 0 24 24" className="mt-[3px] h-4 w-4 shrink-0 text-brand" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="m5 12 5 5L20 7" />
+                        </svg>
+                        {c.yala}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/doanh-nghiep/san-pham" className="btn-primary px-6 py-3">
+                Xem sản phẩm & giá
+              </Link>
+              <a href="#bao-gia" className="btn-outline px-6 py-3">
+                Gửi yêu cầu báo giá
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Ngành hàng */}
       <section id="nganh-hang" className="scroll-mt-32 py-12 md:py-16">
@@ -171,6 +227,32 @@ export default async function BusinessPage() {
           </ul>
         </div>
       </section>
+
+      {/* Dự án đã làm – chỉ hiện khi có dự án thật nhập trong CMS */}
+      {hub.cases.length > 0 && (
+        <section id="du-an" className="scroll-mt-32 py-12 md:py-16">
+          <div className="container-site">
+            <p className="eyebrow">Dự án đã làm</p>
+            <h2 className="h-section mt-1.5">Thành phẩm thật, giao thật</h2>
+            <ul className="mt-7 grid gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
+              {hub.cases.map((c) => (
+                <li key={c.title} className="overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sticker-sm">
+                  {c.image && (
+                    <div className="aspect-[4/3] overflow-hidden border-b-2 border-ink bg-surface">
+                      <img src={assetUrl(c.image)} alt={c.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                  <div className="p-4 md:p-5">
+                    {c.client && <p className="text-[13px] font-semibold text-brand">{c.client}</p>}
+                    <h3 className="mt-0.5 text-base font-semibold leading-snug md:text-lg">{c.title}</h3>
+                    {c.detail && <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{c.detail}</p>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* Quy trình */}
       <section id="quy-trinh" className="scroll-mt-32 py-12 md:py-16">

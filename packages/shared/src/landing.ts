@@ -68,6 +68,12 @@ export type LandingSettings = {
     solutions: { key: string; title: string; desc: string; items: string; keywords: string }[];
     process: { title: string; desc: string }[];
     benefits: { title: string; desc: string }[];
+    /** Điều kiện đặt hàng nói rõ trước khi khách liên hệ (MOQ, mockup, giá, thời gian, hoá đơn, giao hàng) */
+    terms: { label: string; value: string; note: string }[];
+    /** So sánh cách đặt merch thông thường vs đặt với YALA (không nêu tên đơn vị khác) */
+    compare: { label: string; usual: string; yala: string }[];
+    /** Dự án đã làm – CHỈ nhập dự án thật (ảnh thành phẩm, số lượng, thời gian); trống = ẩn khối */
+    cases: { title: string; client: string; detail: string; image: string }[];
   };
   /**
    * Báo giá doanh nghiệp: đơn nhỏ mua online, từ ngưỡng số lượng -> gợi ý (hoặc bắt buộc) gửi yêu cầu báo giá.
@@ -201,6 +207,13 @@ const LEGACY_B2B_STATS = [
   { value: "60 ngày", label: "lưu kho miễn phí, giao theo đợt" },
 ];
 const LEGACY_B2B_CLIENTS = ["Saigon Co.op", "ShopeeFood", "Vietnam Airlines", "BIDV", "Samsung", "7-Eleven", "VNG", "Acecook", "Schneider Electric", "GHN"];
+/** Câu chữ mặc định cũ của trang Doanh nghiệp / thẻ Doanh nghiệp – còn nguyên trong DB thì dùng câu định vị mới */
+const LEGACY_HUB_TEXT = {
+  eyebrow: "YALA cho doanh nghiệp",
+  title: "Merchandise & quà tặng doanh nghiệp in logo theo yêu cầu",
+  subtitle: "Một đầu mối cho áo, túi, bình, sổ, hộp quà… Tư vấn theo ngân sách, thiết kế mockup miễn phí, sản xuất và giao tận nơi.",
+};
+const LEGACY_BUSINESS_POINTS = ["Quà Tết, welcome kit, quà sự kiện, đồng phục", "In – thêu – khắc logo theo nhận diện thương hiệu", "Tư vấn & thiết kế mockup miễn phí"];
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 export const DEFAULT_LANDING: LandingSettings = {
@@ -273,7 +286,7 @@ export const DEFAULT_LANDING: LandingSettings = {
     business: {
       label: "Doanh nghiệp",
       title: "Merchandise & quà tặng doanh nghiệp",
-      points: ["Quà Tết, welcome kit, quà sự kiện, đồng phục", "In – thêu – khắc logo theo nhận diện thương hiệu", "Tư vấn & thiết kế mockup miễn phí"],
+      points: ["Quà Tết, welcome kit, quà sự kiện, đồng phục", "In – thêu – khắc logo theo nhận diện thương hiệu", "Từ 1 chiếc · mockup & giá ngay · có hoá đơn VAT"],
       ctaLabel: "Xem giải pháp doanh nghiệp",
       href: "/doanh-nghiep",
       secondaryLabel: "Nhận báo giá",
@@ -303,9 +316,9 @@ export const DEFAULT_LANDING: LandingSettings = {
   b2bQuote: { threshold: 50, enforce: false, salesZalo: "", salesName: "", responseTime: "Phản hồi trong 2 giờ làm việc" },
   b2bPricing: DEFAULT_B2B_PRICING,
   b2bHub: {
-    eyebrow: "YALA cho doanh nghiệp",
-    title: "Merchandise & quà tặng doanh nghiệp in logo theo yêu cầu",
-    subtitle: "Một đầu mối cho áo, túi, bình, sổ, hộp quà… Tư vấn theo ngân sách, thiết kế mockup miễn phí, sản xuất và giao tận nơi.",
+    eyebrow: "YALA cho team & doanh nghiệp",
+    title: "Merch & đồng phục cho team – từ 1 chiếc, thấy mockup và giá ngay",
+    subtitle: "Áo, túi, bình, sổ, hộp quà in logo. Đơn nhỏ đặt online, giao nhanh; đơn lớn hoặc nhiều món nhận báo giá & mockup miễn phí.",
     industries: [
       { name: "Đồng phục & may mặc", slug: "dong-phuc-may-mac", blurb: "Áo thun, polo, áo khoác, đồng phục sự kiện" },
       { name: "Balo, túi & phụ kiện", slug: "balo-tui-phu-kien", blurb: "Balo laptop, túi tote, túi rút, túi thể thao" },
@@ -341,6 +354,22 @@ export const DEFAULT_LANDING: LandingSettings = {
       { title: "Đóng gói quà theo yêu cầu", desc: "Hộp, túi, thiệp in lời chúc – sẵn sàng để trao tặng." },
       { title: "Giao toàn quốc", desc: "Giao một điểm hoặc chia nhiều chi nhánh theo danh sách." },
     ],
+    terms: [
+      { label: "Số lượng tối thiểu", value: "Từ 1 sản phẩm", note: "Áo, túi in theo thiết kế. Quà tặng khác theo số lượng tối thiểu ghi trên từng sản phẩm." },
+      { label: "Mockup", value: "Xem ngay, miễn phí", note: "Tự xem logo trên sản phẩm bằng YALA Studio, hoặc YALA làm mockup giúp trước khi báo giá." },
+      { label: "Giá", value: "Hiện ngay trên web", note: "Đơn lớn, nhiều món hoặc cần đóng hộp: báo giá chi tiết theo ngân sách." },
+      { label: "Thời gian", value: "2–4 ngày", note: "Sản xuất đơn áo in đặt online. Quà tặng số lượng lớn: báo theo từng dự án." },
+      { label: "Hoá đơn", value: "Có hoá đơn VAT", note: "Xuất hoá đơn điện tử cho doanh nghiệp." },
+      { label: "Giao hàng", value: "Toàn quốc", note: "Giao một điểm hoặc chia nhiều chi nhánh theo danh sách." },
+    ],
+    compare: [
+      { label: "Số lượng tối thiểu", usual: "Thường 30–500 sản phẩm", yala: "Từ 1 sản phẩm" },
+      { label: "Xem mẫu", usual: "Chờ gửi mockup qua Zalo, email", yala: "Xem ngay logo trên sản phẩm" },
+      { label: "Giá", usual: "Nhắn tin, chờ báo giá", yala: "Hiện ngay; đơn lớn có báo giá riêng" },
+      { label: "Thời gian", usual: "Thường 7–15 ngày trở lên", yala: "2–4 ngày cho đơn áo in" },
+      { label: "Đặt hàng", usual: "Qua tin nhắn, dễ sót thông tin", yala: "Đặt online hoặc gửi giỏ báo giá" },
+    ],
+    cases: [],
   },
   slogan: {
     enabled: true,
@@ -530,12 +559,20 @@ export function mergeLanding(value: unknown): LandingSettings {
       ...d.positioning,
       ...v.positioning,
       personal: { ...d.positioning.personal, ...v.positioning?.personal },
-      business: { ...d.positioning.business, ...v.positioning?.business },
+      business: {
+        ...d.positioning.business,
+        ...v.positioning?.business,
+        points:
+          v.positioning?.business?.points && !sameJson(v.positioning.business.points, LEGACY_BUSINESS_POINTS) ? v.positioning.business.points : d.positioning.business.points,
+      },
       services: v.positioning?.services?.length ? v.positioning.services : d.positioning.services,
     },
     b2bHub: {
       ...d.b2bHub,
       ...v.b2bHub,
+      eyebrow: !v.b2bHub?.eyebrow || v.b2bHub.eyebrow === LEGACY_HUB_TEXT.eyebrow ? d.b2bHub.eyebrow : v.b2bHub.eyebrow,
+      title: !v.b2bHub?.title || v.b2bHub.title === LEGACY_HUB_TEXT.title ? d.b2bHub.title : v.b2bHub.title,
+      subtitle: !v.b2bHub?.subtitle || v.b2bHub.subtitle === LEGACY_HUB_TEXT.subtitle ? d.b2bHub.subtitle : v.b2bHub.subtitle,
       industries: v.b2bHub?.industries?.length ? v.b2bHub.industries : d.b2bHub.industries,
       // dữ liệu cũ chưa có từ khoá -> lấy từ khoá mặc định theo mã giải pháp
       solutions: v.b2bHub?.solutions?.length
@@ -543,6 +580,9 @@ export function mergeLanding(value: unknown): LandingSettings {
         : d.b2bHub.solutions,
       process: v.b2bHub?.process?.length ? v.b2bHub.process : d.b2bHub.process,
       benefits: v.b2bHub?.benefits?.length ? v.b2bHub.benefits : d.b2bHub.benefits,
+      terms: v.b2bHub?.terms?.length ? v.b2bHub.terms : d.b2bHub.terms,
+      compare: v.b2bHub?.compare?.length ? v.b2bHub.compare : d.b2bHub.compare,
+      cases: v.b2bHub?.cases ?? d.b2bHub.cases,
     },
     b2bQuote: { ...d.b2bQuote, ...v.b2bQuote },
     media: { ...d.media, ...v.media, blanks: { ...v.media?.blanks } },
