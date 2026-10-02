@@ -5,7 +5,11 @@ import { getFacets, getProducts, getSettings } from "@/lib/api";
 import { shortPriceLabel } from "@/lib/config";
 import type { ProductCardData } from "@/lib/types";
 import { Img } from "@/components/ui/Img";
-import { IconArrow, IconEye, IconImage, IconLayers, IconPalette, IconSave, IconSparkle, IconText, IconUsers } from "@/components/ui/icons";
+import { IconEye, IconGrid, IconImage, IconLayers, IconPalette, IconSparkle, IconText, IconUsers } from "@/components/ui/icons";
+import { findReadyDesign, READY_DESIGNS } from "@pod/shared";
+import { DesignPreview } from "@/components/designs/DesignPreview";
+import { DesignFonts } from "@/components/designs/DesignFonts";
+import { pastel, tiltOf } from "@/lib/pastel";
 
 export const revalidate = 60;
 
@@ -21,16 +25,10 @@ export async function generateMetadata(): Promise<Metadata> {
 const FEATURES = [
   { icon: IconImage, title: "Tải ảnh của bạn", desc: "Kéo thả, xoay, phóng to. Tự cảnh báo khi ảnh không đủ nét để in." },
   { icon: IconText, title: "Chữ nghệ thuật", desc: "Nhiều font tiếng Việt, kiểu chữ có sẵn, uốn cong, viền, giãn chữ." },
-  { icon: IconLayers, title: "Sticker & mẫu có sẵn", desc: "Thư viện hình và mẫu thiết kế – chọn là dùng, sửa lại theo ý." },
+  { icon: IconGrid, title: "Mẫu có sẵn & gợi ý chữ", desc: "Thư viện hình, mẫu chữ tiếng Việt theo chủ đề – chọn là dùng." },
   { icon: IconPalette, title: "Đổi màu áo tức thì", desc: "Xem thiết kế trên từng màu áo trước khi quyết định." },
   { icon: IconUsers, title: "In tên & số từng người", desc: "Đồng phục lớp, team, công ty: mỗi áo một tên, một số – chung 1 đơn." },
-  { icon: IconEye, title: "Xem trước mọi mặt in", desc: "Trước, sau, tay áo… trên ảnh sản phẩm thật. Tự lưu nháp khi đang làm." },
-];
-
-const HOW = [
-  { title: "Chọn sản phẩm", desc: "Áo, hoodie, túi, phụ kiện – chọn mẫu bên dưới." },
-  { title: "Thiết kế trong YALA Studio", desc: "Thêm ảnh, chữ, sticker; căn chỉnh và xem trước." },
-  { title: "Đặt hàng", desc: "Chọn màu, size, số lượng – thanh toán COD hoặc VietQR. Xưởng in đúng file bạn thiết kế." },
+  { icon: IconEye, title: "Xem trước & chia sẻ", desc: "Xem mọi mặt in trên sản phẩm, tải ảnh gửi bạn bè góp ý." },
 ];
 
 export default async function StudioPage({ searchParams }: { searchParams: Search }) {
@@ -46,7 +44,6 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
   const total = list?.total ?? 0;
   const pages = list ? Math.max(1, Math.ceil(list.total / list.pageSize)) : 1;
   const cats = facets.categories.filter((c) => c.count > 0);
-  const heroProduct = items.find((p) => p.images[0]);
   const brand = settings.brand.name;
   const zalo = settings.brand.zalo ? `https://zalo.me/${settings.brand.zalo.replace(/\D/g, "")}` : "";
   const qs = (next: { cat?: string; page?: number }) => {
@@ -57,101 +54,102 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
     return `/thiet-ke${s ? `?${s}` : ""}#chon-san-pham`;
   };
 
+  const demo = [findReadyDesign("chuyen-phong-gym-1"), findReadyDesign("cap-doi-1"), findReadyDesign("tet-li-xi-1")].filter((d): d is NonNullable<typeof d> => !!d);
+
   return (
     <>
+      <DesignFonts designs={demo} />
       {/* ---------- Hero ---------- */}
-      <section className="overflow-hidden bg-cream">
-        <div className="container-site grid items-center gap-8 py-8 md:grid-cols-[1.05fr_1fr] md:py-14">
-          <div>
-            <p className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1 text-xs font-extrabold tracking-wide shadow-hard">
-              <IconSparkle className="h-3.5 w-3.5 text-accent" aria-hidden /> {brand.toUpperCase()} STUDIO
-            </p>
-            <h1 className="mt-4 text-[clamp(30px,6.2vw,56px)] font-black leading-[1.05] tracking-tight text-ink">
-              Áo của bạn,
-              <br />
-              <span className="relative inline-block">
-                <span className="relative z-10">ý tưởng của bạn.</span>
-                <span className="absolute inset-x-0 bottom-[0.08em] z-0 h-[0.32em] -rotate-1 bg-brand" aria-hidden />
-              </span>
+      <section className="relative overflow-hidden bg-white">
+        <div className="pointer-events-none absolute -left-[8%] bottom-0 hidden h-[70%] w-[45%] bg-sun md:block [clip-path:polygon(0_0,72%_0,100%_100%,0_100%)]" aria-hidden />
+        <div className="container-site relative grid items-center gap-10 pb-14 pt-8 md:grid-cols-[1fr_1.05fr] md:pb-20 md:pt-14">
+          <div className="relative">
+            <span className="chip-sticker -rotate-2 bg-brand text-white">{brand} Studio</span>
+            <h1 className="mt-5 font-display text-[clamp(44px,6.6vw,84px)] font-extrabold leading-[0.92] tracking-[-0.035em] [font-stretch:86%]">
+              <span className="block">Tự thiết kế.</span>
+              <span className="block">In từ 1 chiếc.</span>
             </h1>
-            <p className="mt-4 max-w-[520px] text-[15px] leading-relaxed text-ink/75 md:text-base">
-              Tự thiết kế ngay trên điện thoại hoặc máy tính – không cần biết Photoshop. Xem trước trên sản phẩm thật, in từ 1 chiếc, giao toàn quốc.
+            <p className="mt-5 max-w-[32rem] text-[16px] leading-relaxed text-ink/75 md:text-lg">
+              Ngay trên điện thoại hoặc máy tính, không cần biết Photoshop. Thêm ảnh, chữ, mẫu có sẵn – xem trước trên sản phẩm, đặt in trong vài phút.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#chon-san-pham" className="btn-primary px-6 py-3 text-base">
-                Bắt đầu thiết kế <IconArrow className="h-5 w-5" />
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a href="#chon-san-pham" className="btn-primary px-7 py-3.5 text-base">
+                Chọn sản phẩm để thiết kế
               </a>
-              <a href="#dong-phuc" className="btn-outline px-5 py-3 text-base">
-                Đồng phục in tên &amp; số
-              </a>
+              <Link href="/bo-suu-tap" className="btn-outline px-7 py-3.5 text-base">
+                Dùng mẫu có sẵn
+              </Link>
             </div>
-            <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5 text-[13px] font-semibold text-ink/70">
-              <li>✓ Miễn phí dùng công cụ</li>
-              <li>✓ In từ 1 chiếc</li>
-              <li>✓ COD toàn quốc</li>
+            <ul className="mt-6 flex flex-wrap gap-2 text-[13px] font-bold">
+              {["Miễn phí dùng công cụ", "Tự lưu nháp", "COD toàn quốc"].map((t, i) => (
+                <li key={t} className={`chip-sticker shadow-none ${pastel(i + 1)}`}>
+                  {t}
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Mô phỏng giao diện Studio */}
-          <div className="relative mx-auto w-full max-w-[480px]" aria-hidden>
-            <div className="rounded-[14px] border border-line bg-white shadow-soft">
-              <div className="flex h-9 items-center justify-between border-b border-line px-3">
-                <span className="flex gap-1.5">
-                  <span className="h-3 w-3 rounded-full border border-line bg-white" />
-                  <span className="h-3 w-3 rounded-full border border-line bg-brand-badge" />
-                  <span className="h-3 w-3 rounded-full border border-line bg-brand-dark" />
-                </span>
-                <span className="text-[11px] font-extrabold">{brand} Studio · Mặt trước</span>
-                <span className="rounded bg-ink px-1.5 py-0.5 text-[10px] font-extrabold text-brand-badge">Đặt in</span>
+          {/* Mô phỏng Studio: khung sticker + áo mẫu + thanh công cụ */}
+          <div className="relative mx-auto w-full max-w-[520px]" aria-hidden>
+            <div className="sticker tilt overflow-hidden bg-white shadow-sticker-lg" style={{ ["--r" as string]: "1.5deg" }}>
+              <div className="flex h-11 items-center gap-2 border-b-2 border-ink px-3">
+                <span className="font-display text-[15px] font-extrabold">Áo thun · Mặt trước</span>
+                <span className="ml-auto rounded-full border-2 border-ink bg-brand px-3 py-0.5 text-[12px] font-bold text-white">Hoàn tất</span>
               </div>
-              <div className="grid grid-cols-[52px_1fr]">
-                <div className="flex flex-col items-center gap-2 border-r border-line py-3">
-                  {[IconImage, IconText, IconLayers, IconPalette, IconSave].map((I, i) => (
-                    <span key={i} className={`flex h-9 w-9 items-center justify-center rounded-md border-2 ${i === 1 ? "border-ink bg-brand-badge" : "border-transparent"}`}>
+              <div className="grid grid-cols-[56px_1fr]">
+                <div className="flex flex-col items-center gap-2 border-r-2 border-ink/10 py-3">
+                  {[IconImage, IconGrid, IconText, IconPalette, IconLayers].map((I, i) => (
+                    <span key={i} className={`grid h-10 w-10 place-items-center rounded-xl border-2 ${i === 2 ? "border-ink bg-sun" : "border-transparent"}`}>
                       <I className="h-5 w-5" />
                     </span>
                   ))}
                 </div>
-                <div className="relative aspect-square bg-[#f4f4f5]">
-                  {heroProduct ? (
-                    <Img src={heroProduct.images[0]} alt="" sizes="(min-width:768px) 420px, 80vw" className="object-contain p-4" priority />
-                  ) : (
-                    <img src="/mock/tee-geo-night.svg" alt="" className="absolute inset-0 h-full w-full object-contain p-6" />
-                  )}
-                  <div className="absolute left-1/2 top-[30%] flex h-[42%] w-[34%] -translate-x-1/2 flex-col items-center justify-center rounded border-2 border-dashed border-accent bg-white/70 text-center backdrop-blur-[1px]">
-                    <span className="text-[clamp(11px,2.6vw,15px)] font-black uppercase leading-none tracking-tight text-ink">Tên của bạn</span>
-                    <span className="mt-1 text-[clamp(28px,7vw,46px)] font-black leading-none text-accent [-webkit-text-stroke:1.5px_#1d1d1f]">10</span>
-                  </div>
+                <div className="relative aspect-square bg-surface">
+                  {demo[0] && <DesignPreview design={demo[0]} className="absolute inset-0 h-full w-full" />}
+                  <span className="absolute left-[30%] top-[33%] h-[34%] w-[40%] rounded border-2 border-dashed border-brand" />
                 </div>
               </div>
-              <div className="flex items-center gap-2 border-t border-line px-3 py-2">
-                {["#ffffff", "#1d1d1f", "#1C4D99", "#e11d48", "#16a34a", "#FFA415"].map((c) => (
-                  <span key={c} className="h-5 w-5 rounded-full border border-line" style={{ backgroundColor: c }} />
+              <div className="flex items-center gap-2 border-t-2 border-ink/10 px-3 py-2.5">
+                {["#f7f6f2", "#1f1f22", "#ece2cf", "#a7a9ad", "#233049"].map((c, i) => (
+                  <span key={c} className={`h-6 w-6 rounded-full border-2 ${i === 1 ? "border-ink ring-2 ring-brand" : "border-ink/20"}`} style={{ backgroundColor: c }} />
                 ))}
-                <span className="ml-auto text-[11px] font-bold text-ink/60">Màu áo</span>
+                <span className="ml-auto text-[12px] font-bold text-ink/60">Đổi màu áo</span>
               </div>
             </div>
-            <IconSparkle className="absolute -right-2 -top-4 h-9 w-9 text-brand-badge drop-shadow-soft" />
+            {demo.slice(1).map((d, i) => (
+              <span
+                key={d.slug}
+                className={`pop-in absolute w-[34%] ${i === 0 ? "-left-[8%] top-[52%]" : "-right-[6%] -top-[6%]"}`}
+                style={{ ["--r" as string]: i === 0 ? "-8deg" : "7deg", animationDelay: `${300 + i * 200}ms` }}
+              >
+                <span className={`float-${i === 0 ? "a" : "b"} sticker block aspect-square overflow-hidden ${pastel(i + 2)}`}>
+                  <DesignPreview design={d} className="h-full w-full" />
+                </span>
+              </span>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ---------- Tính năng ---------- */}
-      <section className="border-y border-line bg-white py-10 md:py-14" aria-labelledby="studio-features">
+      {/* ---------- 3 cách bắt đầu ---------- */}
+      <section className="py-12 md:py-16" aria-label="Cách bắt đầu">
         <div className="container-site">
-          <h2 id="studio-features" className="text-center text-[clamp(22px,4vw,34px)] font-black tracking-tight">
-            Mọi thứ để có chiếc áo “chỉ mình có”
-          </h2>
-          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <li key={f.title} className="flex gap-3 rounded-xl border-2 border-ink/10 p-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-line bg-brand-badge">
-                  <f.icon className="h-5 w-5" aria-hidden />
-                </span>
-                <div>
-                  <h3 className="font-extrabold">{f.title}</h3>
-                  <p className="mt-0.5 text-sm leading-relaxed text-ink/70">{f.desc}</p>
-                </div>
+          <h2 className="h-section">Bắt đầu theo cách của bạn</h2>
+          <ul className="mt-8 grid gap-5 md:grid-cols-3">
+            {[
+              { t: "Có sẵn ảnh, logo", d: "Chọn sản phẩm, tải ảnh lên, kéo thả & xoá nền ngay trong Studio.", href: "#chon-san-pham", cta: "Chọn sản phẩm", Icon: IconImage },
+              { t: "Chưa có ý tưởng", d: `${READY_DESIGNS.length} mẫu chữ tiếng Việt theo chủ đề – chọn mẫu rồi sửa chữ theo ý.`, href: "/bo-suu-tap", cta: "Xem mẫu có sẵn", Icon: IconGrid },
+              { t: "Áo nhóm, đồng phục", d: "Mỗi áo một tên, một số – nhập danh sách, đặt chung 1 đơn.", href: "#dong-phuc", cta: "Xem cách làm", Icon: IconUsers },
+            ].map((x, i) => (
+              <li key={x.t} data-reveal="pop" style={{ ["--d" as string]: `${i * 80}ms` }}>
+                <a href={x.href} className={`sticker tilt hover-wiggle flex h-full flex-col p-6 ${pastel(i)}`} style={{ ["--r" as string]: `${tiltOf(i)}deg` }}>
+                  <span className="grid h-12 w-12 place-items-center rounded-xl border-2 border-ink bg-white">
+                    <x.Icon className="h-6 w-6" />
+                  </span>
+                  <h3 className="mt-4 font-display text-2xl font-extrabold leading-tight">{x.t}</h3>
+                  <p className="mt-1.5 flex-1 text-[15px] leading-relaxed text-ink/80">{x.d}</p>
+                  <span className="mt-4 text-sm font-bold underline decoration-2 underline-offset-4">{x.cta}</span>
+                </a>
               </li>
             ))}
           </ul>
@@ -159,30 +157,26 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
       </section>
 
       {/* ---------- Chọn sản phẩm ---------- */}
-      <section id="chon-san-pham" className="scroll-mt-28 bg-cream py-10 md:py-14">
+      <section id="chon-san-pham" className="scroll-mt-28 border-y-2 border-ink bg-surface py-12 md:py-16">
         <div className="container-site">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-[clamp(22px,4vw,34px)] font-black tracking-tight">Chọn sản phẩm để bắt đầu</h2>
-              <p className="mt-1 text-sm text-ink/65">{total > 0 ? `${total} sản phẩm tự thiết kế được` : "Đang cập nhật sản phẩm"}</p>
-            </div>
-          </div>
+          <h2 className="h-section">Chọn sản phẩm để thiết kế</h2>
+          <p className="mt-2 text-[15px] text-ink/70">{total > 0 ? `${total} sản phẩm tự thiết kế được` : "Đang cập nhật sản phẩm"}</p>
 
           {cats.length > 1 && (
-            <nav className="no-scrollbar -mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1" aria-label="Lọc theo danh mục">
+            <nav className="no-scrollbar -mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-2" aria-label="Lọc theo danh mục">
               <Chip href={qs({})} active={!category}>
                 Tất cả
               </Chip>
               {cats.map((c) => (
                 <Chip key={c.slug} href={qs({ cat: c.slug })} active={category === c.slug}>
-                  {c.name} <span className="text-ink/45">{c.count}</span>
+                  {c.name} <span className="opacity-50">{c.count}</span>
                 </Chip>
               ))}
             </nav>
           )}
 
           {items.length ? (
-            <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
+            <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 md:gap-x-5 lg:grid-cols-4">
               {items.map((p, i) => (
                 <li key={p.id}>
                   <StudioCard p={p} priority={i < 4} />
@@ -190,21 +184,19 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
               ))}
             </ul>
           ) : (
-            <p className="mt-8 rounded-xl border-2 border-dashed border-ink/20 bg-white p-8 text-center text-ink/60">
-              Chưa có sản phẩm trong mục này. <Link href="/san-pham" className="font-bold text-navy underline">Xem tất cả sản phẩm</Link>
+            <p className="mt-8 rounded-2xl border-2 border-dashed border-ink/20 bg-white p-8 text-center text-ink/60">
+              Chưa có sản phẩm trong mục này. <Link href="/san-pham" className="font-bold underline">Xem tất cả sản phẩm</Link>
             </p>
           )}
 
           {pages > 1 && (
-            <nav className="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label="Phân trang">
+            <nav className="mt-10 flex flex-wrap items-center justify-center gap-2" aria-label="Phân trang">
               {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
                 <Link
                   key={n}
                   href={qs({ cat: category, page: n })}
                   aria-current={n === page ? "page" : undefined}
-                  className={`flex h-10 min-w-10 items-center justify-center rounded-md border-2 px-2 text-sm font-extrabold ${
-                    n === page ? "border-ink bg-ink text-white" : "border-ink/15 bg-white hover:border-ink"
-                  }`}
+                  className={`grid h-10 min-w-10 place-items-center rounded-full border-2 px-3 text-sm font-bold ${n === page ? "border-ink bg-ink text-white" : "border-ink/15 bg-white hover:border-ink"}`}
                 >
                   {n}
                 </Link>
@@ -214,73 +206,68 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
         </div>
       </section>
 
-      {/* ---------- 3 bước ---------- */}
-      <section className="bg-white py-10 md:py-14" aria-labelledby="studio-how">
+      {/* ---------- Tính năng ---------- */}
+      <section className="py-12 md:py-16" aria-labelledby="studio-features" data-reveal>
         <div className="container-site">
-          <h2 id="studio-how" className="text-center text-[clamp(22px,4vw,34px)] font-black tracking-tight">
-            3 bước là xong
+          <h2 id="studio-features" className="h-section">
+            Mọi thứ để có món đồ “chỉ mình có”
           </h2>
-          <ol className="mt-8 grid gap-4 md:grid-cols-3">
-            {HOW.map((h, i) => (
-              <li key={h.title} className="relative rounded-xl border border-line bg-cream p-5 pt-7 shadow-hard">
-                <span className="absolute -top-4 left-4 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-brand-badge text-sm font-black">
-                  {i + 1}
+          <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 lg:grid-cols-6">
+            {FEATURES.map((f, i) => (
+              <li key={f.title}>
+                <span className={`sticker inline-grid h-12 w-12 place-items-center rounded-xl shadow-sticker-sm ${pastel(i)}`}>
+                  <f.icon className="h-6 w-6" aria-hidden />
                 </span>
-                <h3 className="font-extrabold">{h.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-ink/70">{h.desc}</p>
+                <h3 className="mt-3 font-display text-[17px] font-bold leading-tight">{f.title}</h3>
+                <p className="mt-1 text-[13px] leading-relaxed text-ink/65 md:text-sm">{f.desc}</p>
               </li>
             ))}
-          </ol>
+          </ul>
         </div>
       </section>
 
       {/* ---------- Đồng phục in tên & số ---------- */}
-      <section id="dong-phuc" className="scroll-mt-28 bg-navy-dark py-10 text-white md:py-14">
-        <div className="container-site grid items-center gap-8 md:grid-cols-2">
+      <section id="dong-phuc" className="scroll-mt-28 border-y-2 border-ink bg-ink py-14 text-white md:py-20">
+        <div className="container-site grid items-center gap-10 md:grid-cols-2">
           <div>
-            <p className="text-xs font-extrabold tracking-widest text-accent">ĐỒNG PHỤC NHÓM</p>
-            <h2 className="mt-2 text-[clamp(22px,4vw,34px)] font-black leading-tight tracking-tight">Mỗi áo một tên, một số – đặt chung 1 đơn</h2>
-            <ol className="mt-5 space-y-3 text-[15px] text-white/85">
-              <li>
-                <b className="text-white">1.</b> Trong Studio, thêm chữ và bấm <b className="text-brand-badge">“Tên”</b> hoặc <b className="text-brand-badge">“Số”</b> để biến nó thành ô điền riêng.
-              </li>
-              <li>
-                <b className="text-white">2.</b> Ở trang sản phẩm, nhập danh sách thành viên: tên, số, size từng người.
-              </li>
-              <li>
-                <b className="text-white">3.</b> Xem trước từng chiếc áo – xưởng in đúng tên, đúng số cho từng người.
-              </li>
+            <span className="chip-sticker -rotate-2 bg-sun text-ink">Đồng phục nhóm</span>
+            <h2 className="mt-4 font-display text-[clamp(32px,4.2vw,54px)] font-extrabold leading-[1.0] tracking-[-0.02em] [font-stretch:86%]">Mỗi áo một tên, một số – đặt chung 1 đơn</h2>
+            <ol className="mt-6 space-y-3 text-[15px] text-white/85">
+              {[
+                <>Trong Studio, thêm chữ rồi chọn <b className="text-sun">Tên thành viên</b> hoặc <b className="text-sun">Số áo</b>.</>,
+                <>Ở trang sản phẩm, nhập danh sách: tên, số, size từng người (hoặc tải file Excel).</>,
+                <>Xem trước từng chiếc – xưởng in đúng tên, đúng số cho từng người.</>,
+              ].map((t, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 border-white bg-brand font-display font-extrabold">{i + 1}</span>
+                  <span className="pt-1">{t}</span>
+                </li>
+              ))}
             </ol>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#chon-san-pham" className="btn border-white bg-accent text-white shadow-[3px_3px_0_#fff]">
-                Chọn áo đồng phục <IconArrow className="h-4 w-4" />
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a href="#chon-san-pham" className="btn-primary px-6 py-3">
+                Chọn áo đồng phục
               </a>
               {zalo && (
-                <a href={zalo} target="_blank" rel="noopener noreferrer" className="btn border-white bg-transparent text-white hover:bg-white/10">
+                <a href={zalo} target="_blank" rel="noopener noreferrer" className="btn border-white bg-transparent px-6 py-3 text-white hover:bg-white hover:text-ink">
                   Cần tư vấn? Nhắn Zalo
                 </a>
               )}
             </div>
           </div>
-          <ul className="grid grid-cols-3 gap-3" aria-hidden>
+          <ul className="grid grid-cols-3 gap-4" aria-hidden>
             {[
-              ["MINH", "7"],
-              ["LAN", "10"],
-              ["HÙNG", "23"],
-            ].map(([n, no], i) => (
-              <li key={n} className={`rounded-xl border-2 border-white/80 bg-white p-2 text-ink ${i === 1 ? "-translate-y-3" : ""}`}>
+              ["MINH", "7", "#E4570B"],
+              ["LAN", "10", "#8FD3FF"],
+              ["HÙNG", "23", "#A6E58A"],
+            ].map(([n, no, bg], i) => (
+              <li key={n} className="sticker tilt bg-white p-2 text-ink" style={{ ["--r" as string]: `${[-4, 2, 5][i]}deg` }}>
                 <svg viewBox="0 0 100 100" className="w-full">
-                  <path
-                    d="M30 14 12 24l8 16 8-4v52h44V36l8 4 8-16-18-10h-12a8 8 0 0 1-16 0H30Z"
-                    fill={["#1C4D99", "#F88125", "#1d1d1f"][i]}
-                    stroke="#1d1d1f"
-                    strokeWidth="2.5"
-                    strokeLinejoin="round"
-                  />
-                  <text x="50" y="45" textAnchor="middle" fontSize="10" fontWeight="900" fill="#fff" fontFamily="inherit">
+                  <path d="M30 14 12 24l8 16 8-4v52h44V36l8 4 8-16-18-10h-12a8 8 0 0 1-16 0H30Z" fill={bg} stroke="#1d1d1f" strokeWidth="2.5" strokeLinejoin="round" />
+                  <text x="50" y="45" textAnchor="middle" fontSize="10" fontWeight="800" fill="#1d1d1f" fontFamily="inherit">
                     {n}
                   </text>
-                  <text x="50" y="74" textAnchor="middle" fontSize="26" fontWeight="900" fill="#FFE44D" fontFamily="inherit">
+                  <text x="50" y="76" textAnchor="middle" fontSize="28" fontWeight="800" fill="#fff" stroke="#1d1d1f" strokeWidth="1.5" paintOrder="stroke" fontFamily="inherit">
                     {no}
                   </text>
                 </svg>
@@ -291,24 +278,24 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
       </section>
 
       {/* ---------- Hỏi nhanh ---------- */}
-      <section className="bg-white py-10 md:py-14" aria-labelledby="studio-faq">
+      <section className="py-12 md:py-16" aria-labelledby="studio-faq">
         <div className="container-site max-w-[820px]">
-          <h2 id="studio-faq" className="text-center text-[clamp(22px,4vw,30px)] font-black tracking-tight">
+          <h2 id="studio-faq" className="h-section">
             Hỏi nhanh
           </h2>
-          <div className="mt-6 divide-y-2 divide-ink/10 rounded-xl border-2 border-ink/10">
+          <div className="mt-7 space-y-3">
             {[
-              ["Ảnh thế nào thì in đẹp?", "Ảnh càng lớn càng nét. Studio tự báo khi ảnh chưa đủ độ phân giải cho kích thước in. Logo nên dùng PNG nền trong suốt."],
-              ["Thiết kế có bị mất khi đóng trang?", "Không. Studio tự lưu nháp trên máy của bạn, mở lại là làm tiếp."],
+              ["Ảnh thế nào thì in đẹp?", "Ảnh càng lớn càng nét. Studio tự báo khi ảnh chưa đủ độ phân giải cho kích thước in. Logo nên dùng PNG nền trong suốt, hoặc bấm Xoá nền ngay trong Studio."],
+              ["Thiết kế có bị mất khi đóng trang?", "Không. Studio tự lưu nháp trên máy của bạn, mở lại là làm tiếp. Đăng nhập để lưu vào tài khoản và mở trên máy khác."],
               ["Sản phẩm in có giống bản xem trước?", "Xưởng in đúng file từ thiết kế của bạn. Màu thực tế có thể chênh nhẹ so với màn hình tuỳ chất liệu."],
-              ["Không tự thiết kế được thì sao?", "Nhắn Zalo cho chúng tôi kèm ý tưởng hoặc ảnh – đội ngũ sẽ hỗ trợ lên mẫu."],
+              ["Không tự thiết kế được thì sao?", "Nhắn Zalo kèm ý tưởng hoặc ảnh – đội ngũ YALA hỗ trợ lên mẫu."],
             ].map(([q, a]) => (
-              <details key={q} className="group px-4 py-3">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-extrabold">
+              <details key={q} className="group rounded-2xl border-2 border-ink bg-white px-5 py-4 shadow-sticker-sm open:bg-peach">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-display text-[17px] font-bold">
                   {q}
-                  <span className="text-xl leading-none transition group-open:rotate-45">+</span>
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-ink text-lg leading-none transition group-open:rotate-45">+</span>
                 </summary>
-                <p className="mt-2 text-sm leading-relaxed text-ink/70">{a}</p>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink/75">{a}</p>
               </details>
             ))}
           </div>
@@ -324,9 +311,7 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
       href={href}
       scroll={false}
       aria-current={active ? "true" : undefined}
-      className={`shrink-0 whitespace-nowrap rounded-full border-2 px-3.5 py-1.5 text-sm font-bold transition ${
-        active ? "border-ink bg-ink text-white" : "border-ink/15 bg-white hover:border-ink"
-      }`}
+      className={`shrink-0 whitespace-nowrap rounded-full border-2 px-4 py-2 text-sm font-bold transition ${active ? "border-ink bg-ink text-white" : "border-ink bg-white hover:bg-sun"}`}
     >
       {children}
     </Link>
@@ -335,25 +320,20 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
 
 function StudioCard({ p, priority }: { p: ProductCardData; priority: boolean }) {
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-white transition hover:-translate-y-0.5 hover:shadow-hard">
-      <Link href={`/thiet-ke/${p.slug}`} className="relative block aspect-square bg-[#f6f6f7]">
-        <Img src={p.images[0]} alt={p.name} priority={priority} sizes="(min-width:1024px) 280px, (min-width:640px) 30vw, 46vw" className="object-contain p-2 transition duration-300 group-hover:scale-105" />
-        <span className="absolute left-2 top-2 rounded-full bg-ink px-2 py-0.5 text-[10px] font-extrabold text-brand-badge md:text-[11px]">{p.category.name}</span>
+    <div className="group flex h-full flex-col">
+      <Link href={`/thiet-ke/${p.slug}`} className="relative block aspect-square overflow-hidden rounded-2xl border-2 border-transparent bg-white transition-[transform,box-shadow,border-color] duration-200 group-hover:-translate-y-1 group-hover:border-ink group-hover:shadow-sticker">
+        <Img src={p.images[0]} alt={p.name} priority={priority} sizes="(min-width:1024px) 280px, (min-width:640px) 30vw, 46vw" className="object-contain p-[6%] transition duration-300 group-hover:scale-105" />
+        <span className="absolute left-2.5 top-2.5 rounded-lg border-2 border-ink bg-sun px-2 py-0.5 text-[11px] font-bold">{p.category.name}</span>
       </Link>
-      <div className="flex flex-1 flex-col p-2.5 md:p-3">
-        <h3 className="line-clamp-2 min-h-[2.6em] text-[12.5px] font-bold leading-[1.3] md:text-sm">
-          <Link href={`/san-pham/${p.slug}`} className="hover:underline">
-            {p.name}
-          </Link>
-        </h3>
-        <p className="mt-1 text-[15px] font-black md:text-base">{shortPriceLabel(p, formatVND)}</p>
-        <Link
-          href={`/thiet-ke/${p.slug}`}
-          className="mt-2 flex items-center justify-center gap-1.5 rounded-lg border border-line bg-brand-badge py-2 text-[13px] font-extrabold transition group-hover:bg-brand md:text-sm"
-        >
-          <IconSparkle className="h-3.5 w-3.5" aria-hidden /> Thiết kế ngay
+      <h3 className="mt-3 line-clamp-2 min-h-[2.6em] text-[13px] font-medium leading-[1.3] md:text-[15px]">
+        <Link href={`/san-pham/${p.slug}`} className="hover:underline">
+          {p.name}
         </Link>
-      </div>
+      </h3>
+      <p className="mt-1 text-[15px] font-semibold md:text-base">{shortPriceLabel(p, formatVND)}</p>
+      <Link href={`/thiet-ke/${p.slug}`} className="btn-primary mt-auto w-full py-2 text-[13px] md:text-sm">
+        <IconSparkle className="h-3.5 w-3.5" aria-hidden /> Thiết kế ngay
+      </Link>
     </div>
   );
 }
