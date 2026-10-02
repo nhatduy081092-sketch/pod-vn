@@ -19,7 +19,7 @@ import { B2BSection } from "@/components/landing/B2BSection";
 export const revalidate = 60;
 
 /**
- * Trang chủ YALA (gọn ~9 khối): dải slogan → hero cắt dán → dải chủ đề → 2 lối vào → mẫu có sẵn → bán chạy
+ * Trang chủ YALA (gọn ~9 khối): dải slogan → 2 lối vào (làm hero) → dải chủ đề → mẫu có sẵn → bán chạy
  * → bạn vừa xem → từ ảnh thành áo (kèm các bước) → doanh nghiệp → đánh giá → cam kết.
  * Khách từng vào khu Doanh nghiệp: khối doanh nghiệp tự lên ngay sau hero (CSS theo html[data-lane], không nháy).
  */
@@ -44,7 +44,10 @@ export default async function HomePage() {
     <div className="home-flow flex flex-col">
       <div className="flow-top">
         <SloganRibbon data={settings.slogan} />
-        {settings.heroPlay.enabled ? (
+        {/* Đầu trang = 2 lối vào Cá nhân | Doanh nghiệp. Tắt khối này trong CMS -> dùng hero cắt dán / slider / hero cũ */}
+        {settings.positioning.enabled ? (
+          <Lanes data={settings.positioning} b2bPhotos={b2bPhotos} hero />
+        ) : settings.heroPlay.enabled ? (
           <HeroPlay data={settings.heroPlay} categories={retailCats} />
         ) : slides.length ? (
           <HeroSlider slides={slides} intervalMs={settings.slides.intervalMs} />
@@ -53,7 +56,6 @@ export default async function HomePage() {
         )}
         <TopicRibbon />
       </div>
-      <Lanes data={settings.positioning} b2bPhotos={b2bPhotos} />
       {settings.collections.enabled && <CollectionGrid title={settings.collections.title} />}
       <BestSellers title={settings.sectionTitles.bestSellers} items={bestSellers} />
       <RecentlyViewed />

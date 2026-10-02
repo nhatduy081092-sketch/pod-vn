@@ -9,14 +9,35 @@ import { PhotoCollage } from "../b2b/PhotoCollage";
  * YALA là ai + 2 lối vào Cá nhân | Doanh nghiệp (thẻ sticker) + các dịch vụ dạng nhãn.
  * Khách từng vào khu Doanh nghiệp -> thẻ Doanh nghiệp tự lên trước (CSS theo html[data-lane]).
  */
-export function Lanes({ data, b2bPhotos = [] }: { data: LandingSettings["positioning"]; /** ảnh thật sản phẩm doanh nghiệp (khi chưa đặt ảnh riêng cho lối Doanh nghiệp) */ b2bPhotos?: { src: string; alt: string }[] }) {
+export function Lanes({
+  data,
+  b2bPhotos = [],
+  hero = false,
+}: {
+  data: LandingSettings["positioning"];
+  /** ảnh thật sản phẩm doanh nghiệp (khi chưa đặt ảnh riêng cho lối Doanh nghiệp) */
+  b2bPhotos?: { src: string; alt: string }[];
+  /** đặt ở đầu trang chủ: tiêu đề là h1, ảnh tải ngay (LCP), không chờ hiệu ứng cuộn */
+  hero?: boolean;
+}) {
   if (!data.enabled) return null;
+  const Title = hero ? "h1" : "h2";
   return (
-    <section className="py-12 md:py-20" aria-label="YALA làm gì" data-reveal>
+    <section className={hero ? "pb-10 pt-8 md:pb-14 md:pt-12" : "py-12 md:py-20"} aria-label="YALA làm gì" {...(hero ? {} : { "data-reveal": "" })}>
       <div className="container-site">
-        {data.statement && <h2 className="h-section max-w-4xl [text-wrap:balance]">{data.statement}</h2>}
+        {data.statement && (
+          <Title
+            className={
+              hero
+                ? "max-w-5xl font-display text-[clamp(30px,3.9vw,54px)] font-extrabold leading-[1.02] tracking-[-0.025em] [font-stretch:88%] [text-wrap:balance]"
+                : "h-section max-w-4xl [text-wrap:balance]"
+            }
+          >
+            {data.statement}
+          </Title>
+        )}
         <div className="mt-8 grid gap-6 md:mt-10 md:grid-cols-2 md:gap-8">
-          <LaneCard lane={data.personal} tone="light" className="lane-personal" tilt={-1} />
+          <LaneCard lane={data.personal} tone="light" className="lane-personal" tilt={-1} eager={hero} />
           <LaneCard lane={data.business} tone="dark" className="lane-business" tilt={1} photos={b2bPhotos} />
         </div>
         {data.services.length > 0 && (
@@ -35,7 +56,7 @@ export function Lanes({ data, b2bPhotos = [] }: { data: LandingSettings["positio
   );
 }
 
-function LaneCard({ lane, tone, className, tilt, photos = [] }: { lane: Lane; tone: "light" | "dark"; className: string; tilt: number; photos?: { src: string; alt: string }[] }) {
+function LaneCard({ lane, tone, className, tilt, photos = [], eager = false }: { lane: Lane; tone: "light" | "dark"; className: string; tilt: number; photos?: { src: string; alt: string }[]; eager?: boolean }) {
   const dark = tone === "dark";
   return (
     <article
@@ -44,7 +65,7 @@ function LaneCard({ lane, tone, className, tilt, photos = [] }: { lane: Lane; to
     >
       <div className={`relative aspect-[16/10] overflow-hidden border-b-2 border-ink ${dark ? "bg-peach" : "bg-white"}`}>
         {lane.image ? (
-          <img src={assetUrl(lane.image)} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "60% 30%" }} />
+          <img src={assetUrl(lane.image)} alt="" loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "auto"} decoding="async" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "60% 30%" }} />
         ) : photos.length >= 4 ? (
           <PhotoCollage images={photos} row className="absolute inset-0 h-full w-full content-center" />
         ) : (

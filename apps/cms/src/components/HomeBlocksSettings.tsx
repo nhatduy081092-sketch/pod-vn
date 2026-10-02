@@ -151,7 +151,7 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
 
   return (
     <div className="space-y-4">
-      <Card {...cardProps("positioning")} title="Định vị + 2 lối vào (Cá nhân | Doanh nghiệp)" hint="Ngay dưới slogan: 1 câu YALA làm gì, 2 thẻ lối vào và hàng dịch vụ.">
+      <Card {...cardProps("positioning")} title="Định vị + 2 lối vào (Cá nhân | Doanh nghiệp)" hint="Phần ĐẦU trang chủ (ngay dưới slogan): câu định vị (tiêu đề chính h1), 2 thẻ lối vào và hàng dịch vụ.">
         <Toggle label="Hiển thị" checked={s.positioning.enabled} onChange={(v) => set("positioning", { enabled: v })} />
         <Field label="Câu định vị" value={s.positioning.statement} onChange={(v) => set("positioning", { statement: v })} wide />
         <div className="grid gap-3 lg:grid-cols-2">
@@ -234,7 +234,7 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
         </p>
       </Card>
 
-      <Card {...cardProps("heroPlay")} title="Hero cắt dán (đầu trang chủ)" hint="Chữ lớn + ảnh thật + 3 áo chữ mẫu có sẵn + nhãn chủ đề trôi. Tắt = dùng banner slider bên dưới.">
+      <Card {...cardProps("heroPlay")} title="Hero cắt dán (dự phòng)" hint="Chỉ hiện khi TẮT khối “Định vị + 2 lối vào” (khối đó đang làm phần đầu trang chủ). Tắt cả hai = dùng banner slider bên dưới.">
         <Toggle label="Hiển thị hero cắt dán" checked={s.heroPlay.enabled} onChange={(v) => set("heroPlay", { enabled: v })} />
         <div className="grid gap-2 md:grid-cols-2">
           <Field label="Tiêu đề (mỗi câu kết thúc bằng dấu chấm = 1 dòng)" value={s.heroPlay.title} onChange={(v) => set("heroPlay", { title: v })} wide />

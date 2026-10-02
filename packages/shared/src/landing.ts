@@ -210,7 +210,7 @@ export const DEFAULT_LANDING: LandingSettings = {
     hotline: "0971808330",
     zalo: "0971808330",
     messengerUrl: "https://m.me/oemgroupvn",
-    email: "b2b@oemgroup.vn",
+    email: "contact@yala.vn",
     address: "39 Nguyễn Văn Đậu, Phường Bình Lợi Trung, TP. Hồ Chí Minh",
     companyName: "Công ty Cổ phần OEM",
     taxCode: "0317199345",

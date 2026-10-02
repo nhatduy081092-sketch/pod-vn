@@ -12,6 +12,11 @@ const UPDATES: { flag: string; brand: Record<string, string>; note: string }[] =
     brand: { hotline: "0971808330", zalo: "0971808330", address: "39 Nguyễn Văn Đậu, Phường Bình Lợi Trung, TP. Hồ Chí Minh" },
     note: "Hotline/Zalo 0971808330 + địa chỉ 39 Nguyễn Văn Đậu",
   },
+  {
+    flag: "update:brand-email:2026-10-02",
+    brand: { email: "contact@yala.vn" },
+    note: "Email liên hệ contact@yala.vn",
+  },
 ];
 
 async function revalidateWeb() {
