@@ -15,7 +15,7 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { prisma } from "@pod/db";
 import { mergeLanding } from "@pod/shared";
-import { aiPhotoEnabled, aiPhotoModel, buildPrompt, generateAiPhoto, type AiPhotoStyle } from "../lib/ai-photo";
+import { aiPhotoBudget, aiPhotoEnabled, aiPhotoModel, aiPhotoSpent, aiPhotoUnitPrice, buildPrompt, generateAiPhoto, type AiPhotoStyle } from "../lib/ai-photo";
 import { saveBuffer } from "../lib/upload";
 import { applyBlankPhotos, BASIC_DIR, blankKeys, blankPrompt } from "../lib/blank-photos";
 
@@ -25,13 +25,14 @@ const KEEP_2D = args.includes("--keep-2d");
 const style = (args.find((a) => a.startsWith("--style="))?.split("=")[1] ?? "studio") as AiPhotoStyle;
 const SRC_DIR = resolve(process.cwd(), "assets/mock-src");
 const ONLY = args.find((a) => a.startsWith("--only="))?.split("=")[1] ?? ""; // blanks | products
-const PRICE = /pro/.test(aiPhotoModel()) ? 0.134 : /lite/.test(aiPhotoModel()) ? 0.034 : 0.067;
+const PRICE = aiPhotoUnitPrice();
 
 const mockKey = (u?: string) => /^\/mock\/([\w-]+)\.svg$/.exec(u ?? "")?.[1];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /** Bước 1: phôi trơn ảnh thật -> lưu vào Cài đặt (media.blanks) + gắn cho YALA Everyday & mockup Studio */
 async function blanks() {
+  let stopErr: unknown = null;
   const keys = blankKeys();
   const row = await prisma.setting.findUnique({ where: { key: "landing" } });
   const cur = mergeLanding(row?.value);
@@ -70,15 +71,22 @@ async function blanks() {
         }
       }
     };
-    await Promise.all([worker(), worker()]);
+    // lỗi dừng hẳn (sai key, chạm hạn mức…) vẫn gắn những ảnh đã tạo xong trước khi dừng
+    stopErr = await Promise.all([worker(), worker()]).then(() => null, (e: unknown) => e);
   }
   const { swapped, areas } = await applyBlankPhotos(done, { dry: DRY });
+  if (stopErr) {
+    console.log(`[Phôi trơn] gắn ảnh thật cho ${swapped} sản phẩm, ${areas} mockup vùng in (dừng giữa chừng)`);
+    throw stopErr;
+  }
   console.log(`[Phôi trơn] gắn ảnh thật cho ${swapped} sản phẩm, ${areas} mockup vùng in`);
 }
 
 async function main() {
   if (!["studio", "flatlay", "model"].includes(style)) throw new Error(`--style phải là studio | flatlay | model`);
   if (!DRY && !aiPhotoEnabled()) throw new Error("Chưa có GEMINI_API_KEY trong .env.production");
+  const spent = await aiPhotoSpent();
+  console.log(`Hạn mức chi AI: ${aiPhotoBudget()} USD · đã dùng ~${spent.toFixed(2)} USD · còn ~${Math.max(0, aiPhotoBudget() - spent).toFixed(2)} USD (~${Math.floor(Math.max(0, aiPhotoBudget() - spent) / PRICE)} ảnh)`);
   if (ONLY !== "products") await blanks();
   if (ONLY === "blanks") return revalidate();
 
@@ -135,7 +143,7 @@ async function main() {
 
   await revalidate();
 
-  console.log(`Xong: ${ok} ảnh mới (~${(ok * PRICE).toFixed(2)} USD)${failed.length ? ` · lỗi ${failed.length}: chạy lại lệnh để thử tiếp` : ""}`);
+  console.log(`Xong: ${ok} ảnh mới (~${(ok * PRICE).toFixed(2)} USD) · tổng đã dùng ~${(await aiPhotoSpent()).toFixed(2)}/${aiPhotoBudget()} USD${failed.length ? ` · lỗi ${failed.length}: chạy lại lệnh để thử tiếp` : ""}`);
 }
 
 /** làm mới cache web để ảnh mới hiện ngay */

@@ -42,7 +42,7 @@ import { rateLimit } from "../lib/rate-limit";
 import { getLanding, invalidateLanding } from "../lib/settings";
 import { uniqueSlug } from "../lib/slug";
 import { saveBuffer, saveUpload } from "../lib/upload";
-import { aiPhotoEnabled, aiPhotoModel, buildPrompt, generateAiPhoto, type AiPhotoStyle } from "../lib/ai-photo";
+import { aiPhotoBudget, aiPhotoEnabled, aiPhotoModel, aiPhotoSpent, aiPhotoUnitPrice, buildPrompt, generateAiPhoto, type AiPhotoStyle } from "../lib/ai-photo";
 import { listPages } from "../lib/pages";
 import { BASIC_DIR, blankKeys, blankPrompt, COLOR_VI, GARMENT_VI, setBlankPhoto } from "../lib/blank-photos";
 import { readFile } from "node:fs/promises";
@@ -113,7 +113,7 @@ adminRoutes.post("/uploads", async (c) => {
 });
 
 /* ---------- Ảnh thật bằng AI (Gemini) ---------- */
-adminRoutes.get("/ai-photo/config", (c) => c.json({ enabled: aiPhotoEnabled(), model: aiPhotoModel() }));
+adminRoutes.get("/ai-photo/config", async (c) => c.json({ enabled: aiPhotoEnabled(), model: aiPhotoModel(), budget: aiPhotoBudget(), spent: await aiPhotoSpent(), unit: aiPhotoUnitPrice() }));
 
 /** Ảnh 2D của sản phẩm (CMS đã chuyển SVG -> PNG) + kiểu ảnh -> ảnh chụp thật, lưu vào /uploads (CHƯA gắn vào sản phẩm) */
 adminRoutes.post("/ai-photo", async (c) => {

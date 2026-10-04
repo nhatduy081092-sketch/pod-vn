@@ -1,4 +1,5 @@
 import { HTTPException } from "hono/http-exception";
+import { prisma } from "@pod/db";
 
 /**
  * Ảnh thật bằng AI (Google Gemini – "Nano Banana"): biến ảnh sản phẩm vẽ 2D thành ảnh chụp.
@@ -9,6 +10,45 @@ import { HTTPException } from "hono/http-exception";
 const KEY = () => process.env.GEMINI_API_KEY?.trim() ?? "";
 export const aiPhotoModel = () => process.env.GEMINI_IMAGE_MODEL?.trim() || "gemini-3.1-flash-lite-image";
 export const aiPhotoEnabled = () => KEY().length > 0;
+
+/* ---------- Hạn mức chi tiêu (chặn cứng phía YALA, cộng dồn mọi lần chạy) ---------- */
+/** Giá ước tính 1 ảnh 1K (USD) theo model, đã cộng ~15% dự phòng cho token ảnh đầu vào */
+export const aiPhotoUnitPrice = () => {
+  const m = aiPhotoModel();
+  return /pro/.test(m) ? 0.155 : /lite/.test(m) ? 0.04 : 0.078;
+};
+/** Hạn mức tổng (USD) – AI_PHOTO_BUDGET_USD trong .env.production, mặc định 3 */
+export const aiPhotoBudget = () => {
+  const n = Number(process.env.AI_PHOTO_BUDGET_USD);
+  return Number.isFinite(n) && n >= 0 && process.env.AI_PHOTO_BUDGET_USD?.trim() ? n : 3;
+};
+const SPEND_KEY = "ai-photo:spend";
+let reserved = 0; // đang gọi dở trong tiến trình này (2 luồng song song)
+
+export async function aiPhotoSpent(): Promise<number> {
+  const row = await prisma.setting.findUnique({ where: { key: SPEND_KEY } });
+  return Number((row?.value as { usd?: number } | null)?.usd ?? 0);
+}
+
+/** Giữ chỗ 1 ảnh trong hạn mức; vượt -> lỗi 400 (lệnh chạy hàng loạt sẽ dừng hẳn) */
+async function reserve(): Promise<number> {
+  const unit = aiPhotoUnitPrice();
+  const spent = await aiPhotoSpent();
+  if (spent + reserved + unit > aiPhotoBudget() + 1e-9) {
+    throw new HTTPException(400, {
+      message: `Đã chạm hạn mức chi AI ${aiPhotoBudget()} USD (đã dùng ~${spent.toFixed(2)} USD). Tăng AI_PHOTO_BUDGET_USD trong .env.production nếu muốn tạo thêm.`,
+    });
+  }
+  reserved += unit;
+  return unit;
+}
+async function commit(unit: number, ok: boolean) {
+  reserved = Math.max(0, reserved - unit);
+  if (!ok) return;
+  const usd = Math.round(((await aiPhotoSpent()) + unit) * 1000) / 1000;
+  const value = { usd, at: new Date().toISOString() };
+  await prisma.setting.upsert({ where: { key: SPEND_KEY }, update: { value }, create: { key: SPEND_KEY, value } });
+}
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
 const TIMEOUT_MS = 100_000; // < proxy_read_timeout 120s của Nginx
@@ -107,6 +147,18 @@ function apiError(status: number, json: Record<string, unknown>): HTTPException 
  */
 export async function generateAiPhoto(source: Buffer, sourceMime: string, prompt: string): Promise<Buffer> {
   if (!aiPhotoEnabled()) throw new HTTPException(400, { message: "Chưa cấu hình GEMINI_API_KEY trong .env.production" });
+  const unit = await reserve();
+  let ok = false;
+  try {
+    const out = await callGemini(source, sourceMime, prompt);
+    ok = true;
+    return out;
+  } finally {
+    await commit(unit, ok);
+  }
+}
+
+async function callGemini(source: Buffer, sourceMime: string, prompt: string): Promise<Buffer> {
   const model = aiPhotoModel();
   const b64 = source.toString("base64");
 
