@@ -274,8 +274,8 @@ async function listingWhere(query: Record<string, string>, omit: "sub" | "catego
     // mau=Đen: sản phẩm có phân loại màu đó (không phân biệt hoa thường)
     ...(query.mau ? { variants: { some: { isActive: true, color: { equals: query.mau.trim().slice(0, 40), mode: "insensitive" as const } } } } : {}),
     // tìm kiếm, bộ lọc doanh nghiệp, ảnh thật: đều có thể dùng AND -> gộp bằng AND riêng, không ghi đè nhau
-    // trang chọn phôi của Studio (thiet-ke=1) vẫn hiện phôi vẽ – khung thiết kế cần chúng
-    AND: [await resolveSearch(query.q), await b2bWhere(query), query["thiet-ke"] === "1" ? {} : await realPhotoWhere()],
+    // thiet-ke=1 (bảng giá phôi, link nội bộ) vẫn lấy cả phôi vẽ; thêm anh-that=1 (trang /thiet-ke) -> chỉ sản phẩm ảnh thật
+    AND: [await resolveSearch(query.q), await b2bWhere(query), query["thiet-ke"] === "1" && query["anh-that"] !== "1" ? {} : await realPhotoWhere()],
   };
 }
 

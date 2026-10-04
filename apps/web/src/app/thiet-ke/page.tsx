@@ -37,8 +37,9 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
   const page = Math.max(1, Number(sp.page) || 1);
   const [settings, list, facets] = await Promise.all([
     getSettings(),
-    getProducts({ "thiet-ke": "1", category, page: String(page), pageSize: "24" }).catch(() => null),
-    getFacets({ "thiet-ke": "1" }),
+    // chỉ sản phẩm có ảnh thật (theo Cài đặt → Hình ảnh); phôi YALA Everyday tự hiện lại khi có ảnh phôi thật
+    getProducts({ "thiet-ke": "1", "anh-that": "1", category, page: String(page), pageSize: "24" }).catch(() => null),
+    getFacets({ "thiet-ke": "1", "anh-that": "1" }),
   ]);
   const items = list?.items ?? [];
   const total = list?.total ?? 0;
@@ -55,6 +56,10 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
   };
 
   const demo = [findReadyDesign("chuyen-phong-gym-1"), findReadyDesign("cap-doi-1"), findReadyDesign("tet-li-xi-1")].filter((d): d is NonNullable<typeof d> => !!d);
+  // chưa có ảnh phôi thật -> hero dùng ảnh chụp thật (không dùng hình vẽ áo)
+  const blanks = settings.media.blanks;
+  const photoHero = !(blanks["tshirt-trang"] && blanks["tshirt-den"]);
+  const HERO_PHOTOS = ["/showcase/hoodie.webp", "/showcase/the-thao.webp"];
 
   return (
     <>
@@ -105,13 +110,23 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
                   ))}
                 </div>
                 <div className="relative aspect-square bg-surface">
-                  {demo[0] && <DesignPreview design={demo[0]} className="absolute inset-0 h-full w-full" />}
-                  <span className="absolute left-[30%] top-[33%] h-[34%] w-[40%] rounded border-2 border-dashed border-brand" />
+                  {photoHero ? (
+                    <>
+                      <img src="/showcase/ao-thun.webp" alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "34% 30%" }} fetchPriority="high" />
+                      <span className="absolute left-[37%] top-[47%] h-[24%] w-[25%] rounded border-2 border-dashed border-brand bg-white/10" />
+                      <span className="absolute left-[37%] top-[40%] rounded bg-brand px-1.5 py-0.5 text-[10px] font-bold text-white">Vùng in</span>
+                    </>
+                  ) : (
+                    <>
+                      {demo[0] && <DesignPreview design={demo[0]} className="absolute inset-0 h-full w-full" />}
+                      <span className="absolute left-[30%] top-[33%] h-[34%] w-[40%] rounded border-2 border-dashed border-brand" />
+                    </>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2 border-t-2 border-ink/10 px-3 py-2.5">
                 {["#f7f6f2", "#1f1f22", "#ece2cf", "#a7a9ad", "#233049"].map((c, i) => (
-                  <span key={c} className={`h-6 w-6 rounded-full border-2 ${i === 1 ? "border-ink ring-2 ring-brand" : "border-ink/20"}`} style={{ backgroundColor: c }} />
+                  <span key={c} className={`h-6 w-6 rounded-full border-2 ${i === (photoHero ? 0 : 1) ? "border-ink ring-2 ring-brand" : "border-ink/20"}`} style={{ backgroundColor: c }} />
                 ))}
                 <span className="ml-auto text-[12px] font-bold text-ink/60">Đổi màu áo</span>
               </div>
@@ -123,7 +138,11 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
                 style={{ ["--r" as string]: i === 0 ? "-8deg" : "7deg", animationDelay: `${300 + i * 200}ms` }}
               >
                 <span className={`float-${i === 0 ? "a" : "b"} sticker block aspect-square overflow-hidden ${pastel(i + 2)}`}>
-                  <DesignPreview design={d} className="h-full w-full" />
+                  {photoHero ? (
+                    <img src={HERO_PHOTOS[i]} alt="" loading="lazy" className="h-full w-full object-cover" style={{ objectPosition: i === 0 ? "30% 40%" : "40% 35%" }} />
+                  ) : (
+                    <DesignPreview design={d} className="h-full w-full" />
+                  )}
                 </span>
               </span>
             ))}
