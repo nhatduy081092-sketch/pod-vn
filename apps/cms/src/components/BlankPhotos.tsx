@@ -105,7 +105,7 @@ export function BlankPhotos({ items: initial, aiEnabled }: { items: BlankItem[];
             <b>Tạo miễn phí bằng Gemini trên web</b>: bấm <i>Ảnh mẫu</i> để tải hình vẽ, bấm <i>Chép lệnh AI</i> → mở aistudio.google.com (hoặc gemini.google.com), đính kèm ảnh mẫu + dán lệnh → tải ảnh kết quả về → <i>Tải ảnh lên</i>. Nếu ảnh có logo ✦ của Gemini ở góc, cắt bỏ trước khi tải lên.
           </li>
           <li>
-            <b>Tự động bằng API</b>: nút <i>Tạo bằng AI</i> (~0,034 USD/ảnh) – cần GEMINI_API_KEY và project Google đã bật thanh toán. {aiEnabled ? "Key đã cấu hình." : "Chưa có key trên máy chủ."}
+            <b>Tự động bằng API</b>: nút <i>Tạo bằng AI</i> (~0,02–0,04 USD/ảnh) – cần OPENAI_API_KEY (hoặc GEMINI_API_KEY) trên máy chủ. {aiEnabled ? "Key đã cấu hình." : "Chưa có key trên máy chủ."}
           </li>
         </ol>
         <p className="mt-2 text-neutral-500">Giữ áo đúng vị trí & kích thước như ảnh mẫu để vùng in trong Studio khớp với áo.</p>

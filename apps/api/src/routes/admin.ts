@@ -155,7 +155,7 @@ adminRoutes.put("/blanks/:key", async (c) => {
   return c.json({ swapped: r.swapped, areas: r.areas });
 });
 
-/** tạo ảnh thật cho 1 phôi bằng Gemini (cần GEMINI_API_KEY + project đã bật thanh toán) */
+/** tạo ảnh thật cho 1 phôi bằng AI (OpenAI hoặc Gemini – xem lib/ai-photo) */
 adminRoutes.post("/blanks/:key/ai", async (c) => {
   const key = c.req.param("key");
   if (!blankKeys().includes(key)) throw notFound("Không có phôi này");

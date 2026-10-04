@@ -13,7 +13,7 @@ const STYLES: { v: Style; label: string; hint: string }[] = [
   { v: "model", label: "Người mẫu mặc", hint: "Ảnh lifestyle – soát kỹ tay, mặt, hoạ tiết" },
 ];
 /** Giá tham khảo 1 ảnh 1K (USD) theo model – ai.google.dev/gemini-api/docs/pricing (9/2026) */
-const priceOf = (model: string) => (/pro/.test(model) ? 0.134 : /lite/.test(model) ? 0.034 : 0.067);
+const priceOf = (model: string) => (/mini/.test(model) ? 0.03 : /gpt-image/.test(model) ? 0.11 : /pro/.test(model) ? 0.134 : /lite/.test(model) ? 0.034 : 0.067);
 const is2D = (u?: string) => !!u && (/\.svg($|\?)/i.test(u) || u.startsWith("/mock/"));
 
 /** Ảnh sản phẩm (SVG 2D / ảnh) -> PNG 1024px nền trắng để gửi AI */
@@ -113,10 +113,10 @@ export function AiPhotoStudio({ products: initial, enabled, model }: { products:
         <p className="font-bold">Chưa bật tạo ảnh AI</p>
         <ol className="list-decimal space-y-1.5 pl-5">
           <li>
-            Tạo API key tại <b>aistudio.google.com/apikey</b> (đăng nhập Google → Create API key). Gắn thanh toán cho project để dùng model tạo ảnh.
+            Tạo API key tại <b>platform.openai.com/api-keys</b> và nạp tối thiểu 5 USD tại Settings → Billing (tắt Auto recharge).
           </li>
           <li>
-            Trên VPS thêm vào <code>/opt/yala/.env.production</code>: <code>GEMINI_API_KEY=&quot;…&quot;</code>
+            Trên VPS thêm vào <code>/opt/yala/.env.production</code>: <code>OPENAI_API_KEY=&quot;sk-…&quot;</code>
           </li>
           <li>
             Chạy lại: <code>cd /opt/yala && bash deploy/deploy.sh --force</code> rồi mở lại trang này.

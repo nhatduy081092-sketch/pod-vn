@@ -84,7 +84,7 @@ async function blanks() {
 
 async function main() {
   if (!["studio", "flatlay", "model"].includes(style)) throw new Error(`--style phải là studio | flatlay | model`);
-  if (!DRY && !aiPhotoEnabled()) throw new Error("Chưa có GEMINI_API_KEY trong .env.production");
+  if (!DRY && !aiPhotoEnabled()) throw new Error("Chưa có OPENAI_API_KEY (hoặc GEMINI_API_KEY) trong .env.production");
   const spent = await aiPhotoSpent();
   console.log(`Hạn mức chi AI: ${aiPhotoBudget()} USD · đã dùng ~${spent.toFixed(2)} USD · còn ~${Math.max(0, aiPhotoBudget() - spent).toFixed(2)} USD (~${Math.floor(Math.max(0, aiPhotoBudget() - spent) / PRICE)} ảnh)`);
   if (ONLY !== "products") await blanks();

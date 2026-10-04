@@ -8,13 +8,35 @@ import { prisma } from "@pod/db";
  * Ảnh AI luôn có watermark ẩn SynthID của Google.
  */
 const KEY = () => process.env.GEMINI_API_KEY?.trim() ?? "";
-export const aiPhotoModel = () => process.env.GEMINI_IMAGE_MODEL?.trim() || "gemini-3.1-flash-lite-image";
-export const aiPhotoEnabled = () => KEY().length > 0;
+const OPENAI_KEY = () => process.env.OPENAI_API_KEY?.trim() ?? "";
+/**
+ * Nhà cung cấp: AI_IMAGE_PROVIDER = openai | gemini. Để trống -> có OPENAI_API_KEY thì dùng OpenAI, không thì Gemini.
+ * OpenAI (gpt-image, /v1/images/edits): nạp trước tối thiểu 5 USD; Gemini (VN): bắt nạp trước ~800.000đ.
+ */
+export const aiPhotoProvider = (): "openai" | "gemini" => {
+  const p = process.env.AI_IMAGE_PROVIDER?.trim().toLowerCase();
+  if (p === "openai" || p === "gemini") return p;
+  return OPENAI_KEY() ? "openai" : "gemini";
+};
+export const aiPhotoModel = () =>
+  aiPhotoProvider() === "openai"
+    ? process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-1-mini"
+    : process.env.GEMINI_IMAGE_MODEL?.trim() || "gemini-3.1-flash-lite-image";
+/** chất lượng ảnh OpenAI: low | medium | high (mặc định medium – đủ đẹp cho ảnh sản phẩm 1024px) */
+const openaiQuality = () => (["low", "medium", "high"].includes(process.env.OPENAI_IMAGE_QUALITY?.trim() ?? "") ? process.env.OPENAI_IMAGE_QUALITY!.trim() : "medium");
+export const aiPhotoEnabled = () => (aiPhotoProvider() === "openai" ? OPENAI_KEY() : KEY()).length > 0;
+const KEY_NAME = () => (aiPhotoProvider() === "openai" ? "OPENAI_API_KEY" : "GEMINI_API_KEY");
 
 /* ---------- Hạn mức chi tiêu (chặn cứng phía YALA, cộng dồn mọi lần chạy) ---------- */
 /** Giá ước tính 1 ảnh 1K (USD) theo model, đã cộng ~15% dự phòng cho token ảnh đầu vào */
 export const aiPhotoUnitPrice = () => {
   const m = aiPhotoModel();
+  if (aiPhotoProvider() === "openai") {
+    // giá ảnh ra 1024px (low/medium/high) + ảnh đầu vào & input_fidelity cao, đã cộng dự phòng
+    const q = openaiQuality();
+    if (/mini/.test(m)) return q === "high" ? 0.07 : q === "low" ? 0.012 : 0.03;
+    return q === "high" ? 0.26 : q === "low" ? 0.02 : 0.11;
+  }
   return /pro/.test(m) ? 0.155 : /lite/.test(m) ? 0.04 : 0.078;
 };
 /** Hạn mức tổng (USD) – AI_PHOTO_BUDGET_USD trong .env.production, mặc định 3 */
@@ -146,11 +168,11 @@ function apiError(status: number, json: Record<string, unknown>): HTTPException 
  * Thử API "interactions" (tài liệu hiện hành) trước, không được thì dùng generateContent (API cũ vẫn chạy).
  */
 export async function generateAiPhoto(source: Buffer, sourceMime: string, prompt: string): Promise<Buffer> {
-  if (!aiPhotoEnabled()) throw new HTTPException(400, { message: "Chưa cấu hình GEMINI_API_KEY trong .env.production" });
+  if (!aiPhotoEnabled()) throw new HTTPException(400, { message: `Chưa cấu hình ${KEY_NAME()} trong .env.production` });
   const unit = await reserve();
   let ok = false;
   try {
-    const out = await callGemini(source, sourceMime, prompt);
+    const out = aiPhotoProvider() === "openai" ? await callOpenAI(source, sourceMime, prompt) : await callGemini(source, sourceMime, prompt);
     ok = true;
     return out;
   } finally {
@@ -186,4 +208,49 @@ async function callGemini(source: Buffer, sourceMime: string, prompt: string): P
     throw new HTTPException(422, { message: `AI không trả về ảnh${why ? `: ${why}` : " (có thể bị bộ lọc an toàn chặn) – thử kiểu ảnh khác"}` });
   }
   return Buffer.from(img.data, "base64");
+}
+
+/* ---------- OpenAI gpt-image: POST /v1/images/edits (ảnh nguồn + lời nhắc -> ảnh mới, giữ bố cục) ---------- */
+async function callOpenAI(source: Buffer, sourceMime: string, prompt: string, fidelity = true): Promise<Buffer> {
+  const model = aiPhotoModel();
+  const fd = new FormData();
+  fd.append("model", model);
+  fd.append("prompt", prompt);
+  fd.append("image", new Blob([new Uint8Array(source)], { type: sourceMime }), sourceMime === "image/png" ? "source.png" : sourceMime === "image/webp" ? "source.webp" : "source.jpg");
+  fd.append("size", "1024x1024");
+  fd.append("quality", openaiQuality());
+  fd.append("output_format", "jpeg");
+  fd.append("n", "1");
+  // giữ sát ảnh nguồn (khung hình, dáng áo) – gpt-image-2 bỏ qua tham số này
+  if (fidelity && !/^gpt-image-2(-|$)/.test(model)) fd.append("input_fidelity", "high");
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch("https://api.openai.com/v1/images/edits", { method: "POST", headers: { Authorization: `Bearer ${OPENAI_KEY()}` }, body: fd, signal: ctrl.signal });
+  } catch (e) {
+    if ((e as Error).name === "AbortError") throw new HTTPException(504, { message: "AI tạo ảnh quá lâu (> 100 giây) – thử lại" });
+    throw new HTTPException(502, { message: "Không kết nối được OpenAI – kiểm tra mạng VPS" });
+  } finally {
+    clearTimeout(timer);
+  }
+  const json = (await res.json().catch(() => ({}))) as { data?: { b64_json?: string }[]; error?: { message?: string; code?: string; type?: string } };
+  if (!res.ok) {
+    const msg = String(json.error?.message ?? "");
+    const code = String(json.error?.code ?? json.error?.type ?? "");
+    console.error(`[ai-photo] OpenAI ${res.status} ${code}: ${msg.slice(0, 300)}`);
+    // model không hỗ trợ input_fidelity -> gửi lại không có tham số này
+    if (res.status === 400 && fidelity && /input_fidelity/i.test(msg)) return callOpenAI(source, sourceMime, prompt, false);
+    if (res.status === 401) throw new HTTPException(400, { message: "OPENAI_API_KEY không hợp lệ – kiểm tra lại trong .env.production" });
+    if (code === "insufficient_quota" || /quota|billing/i.test(msg)) throw new HTTPException(400, { message: "Tài khoản OpenAI hết tiền hoặc chưa nạp – vào platform.openai.com/settings/organization/billing nạp thêm" });
+    if (res.status === 403 && /verif/i.test(msg)) throw new HTTPException(400, { message: "OpenAI yêu cầu xác minh tổ chức để dùng model ảnh này – đổi OPENAI_IMAGE_MODEL hoặc xác minh tại platform.openai.com/settings/organization/general" });
+    if (res.status === 404) throw new HTTPException(400, { message: `Model ${model} không tồn tại/không được phép – đổi OPENAI_IMAGE_MODEL` });
+    if (res.status === 429) throw new HTTPException(429, { message: "Vượt giới hạn OpenAI (rate limit) – đợi 1 phút rồi thử lại" });
+    if (res.status === 400 && /safety|moderation/i.test(msg)) throw new HTTPException(422, { message: "OpenAI từ chối ảnh/lời nhắc (bộ lọc an toàn) – thử kiểu ảnh khác" });
+    throw new HTTPException(502, { message: `OpenAI lỗi ${res.status}${msg ? `: ${msg.slice(0, 160)}` : ""}` });
+  }
+  const b64 = json.data?.[0]?.b64_json;
+  if (!b64) throw new HTTPException(422, { message: "OpenAI không trả về ảnh – thử lại" });
+  return Buffer.from(b64, "base64");
 }
