@@ -13,6 +13,7 @@ import { DesignCard, useAttachedDesign } from "./DesignCard";
 import { SaleCountdown } from "./SaleCountdown";
 import { TeamPreview } from "./TeamPreview";
 import { AddToQuote } from "../b2b/AddToQuote";
+import { takeGroupRoster } from "@/lib/group";
 
 export function ProductConfigurator({
   product,
@@ -85,6 +86,17 @@ export function ProductConfigurator({
     if (teamFields.length) setMode("team");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [design?.updatedAt]);
+
+  // từ trang gom đơn nhóm (/nhom/<mã>): danh sách thành viên có sẵn -> đặt đồng phục ngay
+  const [groupCode, setGroupCode] = useState("");
+  useEffect(() => {
+    const g = takeGroupRoster(product.id);
+    if (!g?.rows.length) return;
+    setMode("team");
+    setRoster(g.rows);
+    setGroupCode(g.code);
+    setNote((n) => n || `Gom đơn nhóm /nhom/${g.code}`);
+  }, [product.id]);
 
   useEffect(() => {
     track.viewItem({ id: product.id, name: product.name, price: product.basePrice, quantity: 1 });
@@ -218,6 +230,14 @@ export function ProductConfigurator({
         {mode === "single" && teamFields.length > 0 && (
           <p className="mt-4 rounded-lg bg-navy-light px-3 py-2 text-sm text-navy-dark">
             Thiết kế có ô <b>tên/số áo</b> – chọn <b>Đồng phục nhóm</b> để nhập tên, số từng người (đặt 1 áo cũng được).
+          </p>
+        )}
+        {mode === "team" && groupCode && (
+          <p className="mt-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
+            ✓ Đã lấy {roster.length} áo từ danh sách nhóm. Kiểm tra lại tên/size rồi thêm vào giỏ.{" "}
+            <a href={`/nhom/${groupCode}`} className="font-bold underline">
+              Quay lại nhóm
+            </a>
           </p>
         )}
         {mode === "team" && <TeamOrderPanel sizes={teamSizes} productSlug={product.slug} rows={roster} onChange={setRoster} />}

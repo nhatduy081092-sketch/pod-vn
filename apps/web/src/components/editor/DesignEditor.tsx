@@ -50,6 +50,7 @@ import { OrderSheet } from "./OrderSheet";
 import { CalendarPanel } from "./CalendarPanel";
 import { buildCollage, CollagePanel, coverCrop, polaroidCard, type Collage, type Photo } from "./CollagePanel";
 import { artify, type ArtStyle } from "./artFilters";
+import { createGroup } from "@/lib/group";
 
 type Props = {
   product: ProductDetail;
@@ -792,8 +793,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         attachDesign(product.id, out, color?.name);
         clearDraft(product.id);
         setBusy("");
-        // có giá bán + phân loại, không phải đồng phục in tên/số -> đặt ngay theo size trong editor
-        if (!designFields(out.json).length && product.basePrice > 0 && product.variants.length) setOrderOut(out);
+        // có giá bán + phân loại -> đặt ngay trong editor (thiết kế có ô tên/số: gom danh sách nhóm)
+        if (product.basePrice > 0 && product.variants.length) setOrderOut(out);
         else router.push(returnTo);
       }
     } catch (e) {
@@ -1530,6 +1531,11 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           initialSize={size}
           onProductPage={() => router.push(returnTo)}
           onClose={() => setOrderOut(null)}
+          team={designFields(orderOut.json).length > 0}
+          onGroup={async () => {
+            const code = await createGroup({ productId: product.id, color: color?.name ?? "", design: orderOut });
+            router.push(`/nhom/${code}`);
+          }}
         />
       )}
 

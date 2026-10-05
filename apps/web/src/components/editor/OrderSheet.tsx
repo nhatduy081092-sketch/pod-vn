@@ -19,6 +19,8 @@ export function OrderSheet({
   initialSize,
   onProductPage,
   onClose,
+  team = false,
+  onGroup,
 }: {
   product: ProductDetail;
   design: OrderDesign;
@@ -26,6 +28,10 @@ export function OrderSheet({
   initialSize?: string | null;
   onProductPage: () => void;
   onClose: () => void;
+  /** thiết kế có ô tên/số: mỗi áo in riêng -> gom danh sách nhóm thay vì chọn số lượng theo size */
+  team?: boolean;
+  /** tạo link gom đơn nhóm (mỗi người tự ghi tên/size) */
+  onGroup?: () => Promise<void>;
 }) {
   const cart = useCart();
   const router = useRouter();
@@ -38,6 +44,23 @@ export function OrderSheet({
   });
   const [added, setAdded] = useState(false);
   const [error, setError] = useState("");
+  const [grouping, setGrouping] = useState(false);
+  async function group() {
+    if (!onGroup) return;
+    setError("");
+    setGrouping(true);
+    try {
+      await onGroup();
+    } catch (e) {
+      setError((e as Error).message);
+      setGrouping(false);
+    }
+  }
+  const groupBtn = (primary: boolean) => (
+    <button type="button" disabled={grouping} onClick={() => void group()} className={primary ? "btn w-full border-ink bg-ink py-3 text-[15px] text-white disabled:opacity-60" : "font-bold text-ink underline disabled:opacity-60"}>
+      {grouping ? "Đang tạo link…" : primary ? "Tạo link gom đơn nhóm" : "tạo link gom đơn"}
+    </button>
+  );
 
   const total = Object.values(qty).reduce((s, n) => s + n, 0);
   const areaExtras = areaExtraPrice(product.printAreas, design.files.map((f) => f.area));
@@ -103,7 +126,7 @@ export function OrderSheet({
         ) : (
           <>
             <h2 id="order-title" className="text-lg font-black leading-tight">
-              Đặt ngay
+              {team ? "Đặt áo nhóm" : "Đặt ngay"}
             </h2>
             <p className="truncate text-sm text-ink/70">
               {product.name} · {design.files.length} mặt in · xưởng in đúng file thiết kế
@@ -119,77 +142,93 @@ export function OrderSheet({
               </div>
             )}
 
-            {colors.length > 1 && (
-              <div className="mt-4">
-                <p className="text-xs font-bold text-ink/70">Màu: {color}</p>
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {colors.map((c) => {
-                    const h = product.variants.find((v) => v.color === c)?.colorHex;
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => {
-                          setColor(c);
-                          setQty({});
-                        }}
-                        className={`flex items-center gap-1 rounded-full border-2 px-2 py-0.5 text-xs font-bold ${color === c ? "border-ink bg-brand" : "border-ink/15"}`}
-                      >
-                        {h && /^#[0-9a-f]{6}$/i.test(h) && <span className="h-3.5 w-3.5 rounded-full border border-ink/20" style={{ background: h }} />}
-                        {c}
-                      </button>
-                    );
-                  })}
-                </div>
-                {hex && <p className="mt-1 text-[11px] text-ink/55">Ảnh xem trước được tạo với màu đã chọn trong công cụ thiết kế.</p>}
+            {team ? (
+              <div className="mt-4 space-y-2">
+                <p className="rounded-lg bg-navy-light px-3 py-2 text-sm text-navy-dark">
+                  Thiết kế có ô <b>tên / số áo</b> – mỗi áo in riêng cho từng người. Gửi link cho cả nhóm, mỗi người tự ghi tên, số và chọn size; bạn xem danh sách rồi đặt 1 đơn.
+                </p>
+                {groupBtn(true)}
+                <button type="button" className="btn w-full border-ink/20 bg-white py-2.5 text-sm" onClick={onProductPage}>
+                  Tự nhập danh sách (Excel / dán)
+                </button>
+                {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
               </div>
+            ) : (
+              <>
+              {colors.length > 1 && (
+                <div className="mt-4">
+                  <p className="text-xs font-bold text-ink/70">Màu: {color}</p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {colors.map((c) => {
+                      const h = product.variants.find((v) => v.color === c)?.colorHex;
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => {
+                            setColor(c);
+                            setQty({});
+                          }}
+                          className={`flex items-center gap-1 rounded-full border-2 px-2 py-0.5 text-xs font-bold ${color === c ? "border-ink bg-brand" : "border-ink/15"}`}
+                        >
+                          {h && /^#[0-9a-f]{6}$/i.test(h) && <span className="h-3.5 w-3.5 rounded-full border border-ink/20" style={{ background: h }} />}
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {hex && <p className="mt-1 text-[11px] text-ink/55">Ảnh xem trước được tạo với màu đã chọn trong công cụ thiết kế.</p>}
+                </div>
+              )}
+
+              <div className="mt-4">
+                <p className="text-xs font-bold text-ink/70">Số lượng theo size</p>
+                <ul className="mt-1 divide-y divide-ink/10 rounded-lg border border-ink/10">
+                  {variants.map((v) => (
+                    <li key={v.id} className="flex items-center gap-2 px-3 py-1.5 text-sm">
+                      <span className="w-24 truncate font-bold">{v.size || "Free size"}</span>
+                      <span className="flex-1 text-xs text-ink/60">
+                        {formatVND(unit(v.priceDelta))}
+                        {v.priceDelta ? ` (+${formatVND(v.priceDelta)})` : ""}
+                      </span>
+                      <div className="flex items-center">
+                        <button type="button" className="h-8 w-8 rounded-l-md border border-ink/20 font-bold" onClick={() => setQty((q) => ({ ...q, [v.size]: Math.max(0, (q[v.size] ?? 0) - 1) }))} aria-label={`Bớt ${v.size}`}>
+                          −
+                        </button>
+                        <input
+                          inputMode="numeric"
+                          value={qty[v.size] ?? 0}
+                          onChange={(e) => setQty((q) => ({ ...q, [v.size]: Math.min(9999, Math.max(0, Number(e.target.value.replace(/\D/g, "")) || 0)) }))}
+                          className="h-8 w-12 border-y border-ink/20 text-center text-sm font-bold"
+                          aria-label={`Số lượng ${v.size}`}
+                        />
+                        <button type="button" className="h-8 w-8 rounded-r-md border border-ink/20 font-bold" onClick={() => setQty((q) => ({ ...q, [v.size]: (q[v.size] ?? 0) + 1 }))} aria-label={`Thêm ${v.size}`}>
+                          +
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-3 flex items-baseline justify-between">
+                <span className="text-sm text-ink/70">
+                  {total} sản phẩm{unit(0) < linePrice({ product: priceSrc, totalQty: 1, areaExtras }) ? " · đã áp giá sỉ" : ""}
+                </span>
+                <span className="text-xl font-black">{formatVND(sum)}</span>
+              </div>
+              {error && <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button type="button" className="btn border-ink/20 bg-white px-2 text-sm" onClick={() => add()}>
+                  Thêm vào giỏ
+                </button>
+                <button type="button" className="btn border-ink bg-brand px-2 text-sm" onClick={() => add(true)}>
+                  Mua ngay
+                </button>
+              </div>
+                {onGroup && <p className="mt-3 text-center text-xs text-ink/65">Đặt chung cho lớp, nhóm bạn, công ty? Mỗi người tự chọn size: {groupBtn(false)}</p>}
+              </>
             )}
-
-            <div className="mt-4">
-              <p className="text-xs font-bold text-ink/70">Số lượng theo size</p>
-              <ul className="mt-1 divide-y divide-ink/10 rounded-lg border border-ink/10">
-                {variants.map((v) => (
-                  <li key={v.id} className="flex items-center gap-2 px-3 py-1.5 text-sm">
-                    <span className="w-24 truncate font-bold">{v.size || "Free size"}</span>
-                    <span className="flex-1 text-xs text-ink/60">
-                      {formatVND(unit(v.priceDelta))}
-                      {v.priceDelta ? ` (+${formatVND(v.priceDelta)})` : ""}
-                    </span>
-                    <div className="flex items-center">
-                      <button type="button" className="h-8 w-8 rounded-l-md border border-ink/20 font-bold" onClick={() => setQty((q) => ({ ...q, [v.size]: Math.max(0, (q[v.size] ?? 0) - 1) }))} aria-label={`Bớt ${v.size}`}>
-                        −
-                      </button>
-                      <input
-                        inputMode="numeric"
-                        value={qty[v.size] ?? 0}
-                        onChange={(e) => setQty((q) => ({ ...q, [v.size]: Math.min(9999, Math.max(0, Number(e.target.value.replace(/\D/g, "")) || 0)) }))}
-                        className="h-8 w-12 border-y border-ink/20 text-center text-sm font-bold"
-                        aria-label={`Số lượng ${v.size}`}
-                      />
-                      <button type="button" className="h-8 w-8 rounded-r-md border border-ink/20 font-bold" onClick={() => setQty((q) => ({ ...q, [v.size]: (q[v.size] ?? 0) + 1 }))} aria-label={`Thêm ${v.size}`}>
-                        +
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-sm text-ink/70">
-                {total} sản phẩm{unit(0) < linePrice({ product: priceSrc, totalQty: 1, areaExtras }) ? " · đã áp giá sỉ" : ""}
-              </span>
-              <span className="text-xl font-black">{formatVND(sum)}</span>
-            </div>
-            {error && <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button type="button" className="btn border-ink/20 bg-white px-2 text-sm" onClick={() => add()}>
-                Thêm vào giỏ
-              </button>
-              <button type="button" className="btn border-ink bg-brand px-2 text-sm" onClick={() => add(true)}>
-                Mua ngay
-              </button>
-            </div>
             <div className="mt-2 flex justify-center gap-4 text-xs text-ink/60">
               <button type="button" className="underline" onClick={onClose}>
                 Quay lại chỉnh thiết kế

@@ -20,3 +20,4 @@ export * from "./showcase";
 export * from "./ready-designs";
 export * from "./campaigns";
 export * from "./brand-logo";
+export * from "./group-order";

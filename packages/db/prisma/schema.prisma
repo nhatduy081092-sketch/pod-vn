@@ -127,6 +127,7 @@ model Product {
   variants       ProductVariant[]
   printAreas     PrintArea[]
   savedDesigns   SavedDesign[]
+  groupOrders    GroupOrder[]
   sellerProducts SellerProduct[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -546,4 +547,48 @@ model ProductDailyStat {
 
   @@id([productId, day])
   @@index([day])
+}
+
+/// ================== Gom đơn nhóm qua link ==================
+
+/// Trưởng nhóm tạo link từ thiết kế đã hoàn tất -> thành viên mở link tự ghi tên/số/size -> trưởng nhóm đặt 1 đơn
+model GroupOrder {
+  id        String        @id @default(cuid())
+  /// mã ngắn trên link /nhom/<code>
+  code      String        @unique
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  title     String        @default("")
+  color     String        @default("")
+  /// OrderDesign (json + file in + ảnh xem trước)
+  design    Json
+  /// sha256 của khoá quản lý (chỉ trưởng nhóm có, nằm trong link quản lý)
+  adminHash String
+  /// hạn chót ghi danh (YYYY-MM-DD, trống = không hạn)
+  deadline  String        @default("")
+  closed    Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  members   GroupMember[]
+
+  @@index([createdAt])
+}
+
+model GroupMember {
+  id        String     @id @default(cuid())
+  group     GroupOrder @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String
+  /// tên người đặt (hiện trong danh sách nhóm)
+  person    String
+  /// tên / số in trên áo (khi thiết kế có ô tên/số)
+  printName String     @default("")
+  number    String     @default("")
+  size      String
+  qty       Int        @default(1)
+  note      String     @default("")
+  /// sha256 của khoá sửa (lưu trên máy thành viên)
+  editHash  String
+  createdAt DateTime   @default(now())
+
+  @@index([groupId, createdAt])
 }

@@ -14,6 +14,7 @@ import { checkoutRoutes } from "./routes/checkout";
 import { accountRoutes } from "./routes/account";
 import { sellerRoutes } from "./routes/seller";
 import { v1Routes } from "./routes/v1";
+import { groupRoutes } from "./routes/groups";
 import { backfillSearchText } from "./lib/search";
 import { ensureStarterCatalog } from "./lib/starter-catalog";
 import { applySettingsUpdates } from "./lib/settings-updates";
@@ -29,7 +30,7 @@ app.use(
   cors({
     origin: env.corsOrigins,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "X-Group-Key", "X-Member-Key"],
     maxAge: 86400,
   }),
 );
@@ -73,6 +74,7 @@ app.get("/api/health", health);
 
 app.route("/api", publicRoutes);
 app.route("/api", checkoutRoutes);
+app.route("/api", groupRoutes);
 app.route("/api/account", accountRoutes);
 app.route("/api/seller", sellerRoutes);
 app.route("/api/v1", v1Routes);
