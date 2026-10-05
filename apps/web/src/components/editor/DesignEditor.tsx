@@ -1,5 +1,5 @@
 "use client";
-import { contrastRatio, luminance, readableOn } from "@pod/shared";
+import { contrastRatio, garmentOfProduct, luminance, pickModel, readableOn, type ModelPhoto } from "@pod/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -51,6 +51,7 @@ import { CalendarPanel } from "./CalendarPanel";
 import { buildCollage, CollagePanel, coverCrop, polaroidCard, type Collage, type Photo } from "./CollagePanel";
 import { artify, type ArtStyle } from "./artFilters";
 import { createGroup } from "@/lib/group";
+import { ModelPreview } from "./ModelPreview";
 
 type Props = {
   product: ProductDetail;
@@ -62,6 +63,8 @@ type Props = {
   /** màu phân loại đang chọn ở trang sản phẩm (tên màu) */
   initialColor?: string | null;
   returnTo: string;
+  /** ảnh người mẫu mặc áo trơn (CMS) – "Xem trên người mẫu" */
+  models?: Record<string, ModelPhoto>;
 };
 
 type Tool = "upload" | "collage" | "library" | "text" | "bg" | "layers" | "calendar";
@@ -161,7 +164,7 @@ function garmentColors(product: ProductDetail) {
   return [...seen].map(([name, hex]) => ({ name, hex }));
 }
 
-export function DesignEditor({ product, mode, initial, savedId, savedName, templateId, initialColor, returnTo }: Props) {
+export function DesignEditor({ product, mode, initial, savedId, savedName, templateId, initialColor, returnTo, models }: Props) {
   const router = useRouter();
   const areas = product.printAreas;
   const colors = garmentColors(product);
@@ -208,7 +211,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const clipboard = useRef<DesignLayer | null>(null);
   const [switcher, setSwitcher] = useState(false);
   /** Cách xem khung chỉnh: mặc định bản phẳng với cốc/bình (mặt cong), còn lại trên ảnh sản phẩm */
-  const [viewPref, setViewPref] = useState<Record<string, "flat" | "mockup">>({});
+  const [viewPref, setViewPref] = useState<Record<string, "flat" | "mockup" | "model">>({});
   const [orderOut, setOrderOut] = useState<import("@pod/shared").OrderDesign | null>(null);
   const images = useRef<ImageCache>(new Map()).current;
   const [assets, setAssets] = useState<Record<string, MockupAssets>>({});
@@ -221,7 +224,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const fields = designFields(design);
   const sized = areaForSize(area, size);
   // mặt cong (cốc/bình) luôn chỉnh trên bản phẳng trải dài, ảnh nhỏ góc khung hiện dáng cong
-  const view = area.warp ? "flat" : (viewPref[area.key] ?? "mockup");
+  // người mẫu: chỉ mặt in đầu tiên (ngực áo / mặt túi), sản phẩm đoán được dáng và đã có ảnh trong CMS
+  const model = area.key === areas[0]?.key && !area.warp ? pickModel(models, garmentOfProduct(product), !!color?.hex && luminance(color.hex) < 0.35) : null;
+  const pref = viewPref[area.key] ?? "mockup";
+  const view = area.warp ? "flat" : pref === "model" && !model ? "mockup" : pref;
   const dpiScale = sizeScale(area, sized);
   /** nền chữ thực tế của 1 mặt: màu nền in > màu áo > trắng */
   const surfaceOf = (key: string) => designRef.current.areas[key]?.bg ?? (color?.hex && !areas.find((a) => a.key === key)?.warp ? color.hex : "#ffffff");
@@ -1090,6 +1096,9 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               </ul>
             </details>
           )}
+          {view === "model" && model ? (
+            <ModelPreview model={model} area={area} design={ad} images={images} version={version} />
+          ) : (
           <Stage
             area={area}
             design={ad}
@@ -1099,7 +1108,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             selectedId={selectedId}
             garmentColor={color?.hex}
             dpiScale={dpiScale}
-            view={view}
+            view={view === "model" ? "mockup" : view}
             sizeLabel={size ? `${sized.widthMm / 10}×${sized.heightMm / 10} cm · size ${size}` : undefined}
             onSelect={(id) => {
               setSelectedId(id);
@@ -1109,13 +1118,15 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             onChangeLayer={patchLayer}
             onCommit={endDrag}
           />
+          )}
           {!area.warp && (
           <div className="mt-2 flex justify-center gap-1 text-[11px] font-bold" role="radiogroup" aria-label="Cách xem">
             {(
               [
                 ["mockup", "Trên sản phẩm"],
                 ["flat", "Bản phẳng"],
-              ] as const
+                ...(model ? [["model", "Người mẫu"]] : []),
+              ] as ["mockup" | "flat" | "model", string][]
             ).map(([v, label]) => (
               <button
                 key={v}

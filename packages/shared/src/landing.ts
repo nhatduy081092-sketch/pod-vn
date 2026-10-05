@@ -1,3 +1,4 @@
+import { DEFAULT_MODELS, type ModelPhoto } from "./models";
 import type { Audience } from "./constants";
 import { DEFAULT_CAMPAIGNS, type Campaign } from "./campaigns";
 import { DEFAULT_SHIPPING, mergeShipping, type ShippingConfig } from "./shipping";
@@ -85,7 +86,7 @@ export type LandingSettings = {
    * Hình ảnh: hide2d = ẩn sản phẩm chỉ có ảnh vẽ 2D khỏi trang chủ, danh mục, gợi ý (vẫn vào được bằng link trực tiếp).
    * blanks = ảnh thật của phôi trơn theo "dáng-màu" (VD "tshirt-den") do AI tạo – dùng cho ảnh xem trước mẫu chữ & YALA Everyday.
    */
-  media: { hide2d: boolean; blanks: Record<string, string> };
+  media: { hide2d: boolean; blanks: Record<string, string>; models: Record<string, ModelPhoto> };
   /** Chiến dịch theo dịp – trang /dip/<slug> (xem campaigns.ts) */
   campaigns: Campaign[];
   /** Cách tính giá cho sản phẩm nhập từ nguồn (nhà cung cấp) */
@@ -303,7 +304,7 @@ export const DEFAULT_LANDING: LandingSettings = {
       { title: "Đồng phục", desc: "Đồng phục công ty, lớp, đội nhóm – in tên & số từng người", href: "/danh-muc/ao-thun" },
     ],
   },
-  media: { hide2d: true, blanks: {} },
+  media: { hide2d: true, blanks: {}, models: DEFAULT_MODELS },
   campaigns: DEFAULT_CAMPAIGNS,
   heroPlay: {
     enabled: true,
@@ -589,7 +590,7 @@ export function mergeLanding(value: unknown): LandingSettings {
       cases: v.b2bHub?.cases ?? d.b2bHub.cases,
     },
     b2bQuote: { ...d.b2bQuote, ...v.b2bQuote },
-    media: { ...d.media, ...v.media, blanks: { ...v.media?.blanks } },
+    media: { ...d.media, ...v.media, blanks: { ...v.media?.blanks }, models: { ...d.media.models, ...v.media?.models } },
     // chiến dịch đã lưu giữ nguyên; chiến dịch mặc định mới (slug chưa có) tự thêm vào
     campaigns: v.campaigns
       ? [...v.campaigns.map((c) => ({ ...(d.campaigns.find((x) => x.slug === c.slug) ?? d.campaigns[0]!), ...c })), ...d.campaigns.filter((x) => !v.campaigns!.some((c) => c.slug === x.slug))]

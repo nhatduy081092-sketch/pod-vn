@@ -345,6 +345,17 @@ export async function setBlankPhotoAction(key: string, url: string | null): Prom
   }
 }
 
+export async function setModelPhotoAction(key: string, model: { photo: string | null; x: number; y: number; w: number; h: number }): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await adminFetch(`/models/${encodeURIComponent(key)}`, { method: "PUT", body: JSON.stringify(model) });
+    revalidatePath("/ai-photos");
+    await revalidateWeb();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 export async function aiBlankPhotoAction(key: string): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   try {
     const r = await adminFetch<{ url: string }>(`/blanks/${encodeURIComponent(key)}/ai`, { method: "POST" });

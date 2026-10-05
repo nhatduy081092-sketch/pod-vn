@@ -96,13 +96,13 @@ export function BlankPhotos({ items: initial, aiEnabled }: { items: BlankItem[];
         Ảnh ở đây thay hình vẽ áo trong trình thiết kế (YALA Studio), ảnh xem trước mọi mẫu có sẵn và ảnh sản phẩm YALA Everyday. Ưu tiên làm <b>Áo thun Trắng</b> và <b>Áo thun Đen</b> trước.
       </p>
       <details className="mt-3 rounded-lg border bg-neutral-50 p-3 text-sm">
-        <summary className="cursor-pointer font-medium">3 cách có ảnh thật (không bắt buộc thẻ thanh toán)</summary>
+        <summary className="cursor-pointer font-medium">3 cách có ảnh thật</summary>
         <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-neutral-700">
           <li>
             <b>Tự chụp áo trơn thật</b> (tốt nhất): áo phẳng mặt trước, nền sáng trơn, áo nằm giữa khung và chiếm ~80% chiều cao giống ảnh mẫu. Bấm <i>Tải ảnh lên</i> – hệ thống tự cắt vuông.
           </li>
           <li>
-            <b>Tạo miễn phí bằng Gemini trên web</b>: bấm <i>Ảnh mẫu</i> để tải hình vẽ, bấm <i>Chép lệnh AI</i> → mở aistudio.google.com (hoặc gemini.google.com), đính kèm ảnh mẫu + dán lệnh → tải ảnh kết quả về → <i>Tải ảnh lên</i>. Nếu ảnh có logo ✦ của Gemini ở góc, cắt bỏ trước khi tải lên.
+            <b>Tạo bằng ChatGPT (gói Plus)</b>: bấm <i>Ảnh mẫu</i> để tải hình vẽ, bấm <i>Chép lệnh AI</i> → mở chatgpt.com, đính kèm ảnh mẫu + dán lệnh, thêm câu “Keep the exact same framing and size as the attached image” → tải ảnh kết quả về → <i>Tải ảnh lên</i>. Ảnh dọc thì bảo ChatGPT “make it square 1:1”.
           </li>
           <li>
             <b>Tự động bằng API</b>: nút <i>Tạo bằng AI</i> (~0,02–0,04 USD/ảnh) – cần OPENAI_API_KEY (hoặc GEMINI_API_KEY) trên máy chủ. {aiEnabled ? "Key đã cấu hình." : "Chưa có key trên máy chủ."}

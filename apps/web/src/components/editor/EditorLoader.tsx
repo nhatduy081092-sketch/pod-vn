@@ -1,4 +1,5 @@
 "use client";
+import type { ModelPhoto } from "@pod/shared";
 import { useEffect, useState } from "react";
 import { BASIC_COLORS, DESIGN_VERSION, findReadyDesign, readyDesignInColor, type ColorKey, type DesignJson } from "@pod/shared";
 import type { ProductDetail } from "@/lib/types";
@@ -7,10 +8,10 @@ import { readAttached } from "./storage";
 import { templateLayers } from "./LibraryPanel";
 import { ensureFonts } from "./fonts";
 
-type Props = { product: ProductDetail; mode: "customer" | "seller"; savedId: string | null; templateId: string | null; presetSlug?: string | null; initialColor?: string | null; returnTo: string };
+type Props = { product: ProductDetail; mode: "customer" | "seller"; savedId: string | null; templateId: string | null; presetSlug?: string | null; initialColor?: string | null; returnTo: string; models?: Record<string, ModelPhoto> };
 
 /** Nạp thiết kế ban đầu: thiết kế đã lưu (tài khoản) / mẫu seller / thiết kế đang gắn ở trang sản phẩm */
-export function EditorLoader({ product, mode, savedId, templateId, presetSlug, initialColor, returnTo }: Props) {
+export function EditorLoader({ product, mode, savedId, templateId, presetSlug, initialColor, returnTo, models }: Props) {
   const [state, setState] = useState<{ ready: boolean; initial: DesignJson | null; name?: string; error?: string }>({ ready: false, initial: null });
 
   useEffect(() => {
@@ -71,7 +72,7 @@ export function EditorLoader({ product, mode, savedId, templateId, presetSlug, i
       ) : (
         <>
           {state.error && <p className="mx-auto mt-3 max-w-xl rounded-lg bg-amber-50 px-3 py-2 text-center text-sm text-amber-800">{state.error} – đang mở thiết kế mới.</p>}
-          <DesignEditor product={product} mode={mode} initial={state.initial} savedId={state.error ? null : savedId} savedName={state.name} templateId={templateId} initialColor={initialColor ?? readAttached(product.id)?.color} returnTo={returnTo} />
+          <DesignEditor product={product} mode={mode} initial={state.initial} savedId={state.error ? null : savedId} savedName={state.name} templateId={templateId} initialColor={initialColor ?? readAttached(product.id)?.color} returnTo={returnTo} models={models} />
         </>
       )}
     </div>

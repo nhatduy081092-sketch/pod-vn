@@ -1,3 +1,4 @@
+import { modelPhotoSchema } from "./models";
 import { z } from "zod";
 import { AUDIENCES, ORDER_STATUSES, PAYMENT_METHODS, PAYMENT_STATUSES, PRINT_MODES } from "./constants";
 import { PROVINCES, isValidVNPhone, normalizePhone } from "./vn";
@@ -267,6 +268,7 @@ export const landingSettingsSchema = z.object({
   media: z.object({
     hide2d: z.boolean(),
     blanks: z.record(z.string().regex(/^[a-z-]{2,40}$/), z.string().max(500)),
+    models: z.record(z.string().regex(/^[a-z-]{2,40}$/), modelPhotoSchema).default({}),
   }),
   heroPlay: z.object({
     enabled: z.boolean(),

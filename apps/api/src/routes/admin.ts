@@ -31,6 +31,8 @@ import {
   designAssetUpsertSchema,
   designJsonSchema,
   designTemplateSchema,
+  MODEL_SLOTS,
+  modelPrompt,
 } from "@pod/shared";
 import { z } from "zod";
 import { hashPassword } from "@pod/db/password";
@@ -154,6 +156,34 @@ adminRoutes.put("/blanks/:key", async (c) => {
   if (!blankKeys().includes(key)) throw notFound("Không có phôi này");
   const r = await setBlankPhoto(key, url);
   return c.json({ swapped: r.swapped, areas: r.areas });
+});
+
+/* ---------- Ảnh người mẫu mặc áo trơn ("Xem trên người mẫu" trong Studio) ---------- */
+adminRoutes.get("/models", async (c) => {
+  const models = (await getLanding(true)).media.models;
+  return c.json({ items: MODEL_SLOTS.map((m) => ({ ...m, model: models[m.key]?.photo ? models[m.key] : null, prompt: modelPrompt(m.garment, m.color) })) });
+});
+
+const modelPutSchema = z.object({
+  photo: z.string().trim().max(500).regex(/^(\/uploads\/|https:\/\/)/, "Ảnh không hợp lệ").nullable(),
+  x: z.number().min(0).max(1).default(0.3),
+  y: z.number().min(0).max(1).default(0.3),
+  w: z.number().min(0.02).max(1).default(0.4),
+  h: z.number().min(0.02).max(1).default(0.4),
+});
+adminRoutes.put("/models/:key", async (c) => {
+  const key = c.req.param("key");
+  if (!MODEL_SLOTS.some((m) => m.key === key)) throw notFound("Không có ô người mẫu này");
+  const input = modelPutSchema.parse(await c.req.json());
+  const row = await prisma.setting.findUnique({ where: { key: "landing" } });
+  const cur = mergeLanding(row?.value);
+  const models = { ...cur.media.models };
+  // xoá = lưu ảnh rỗng (để ảnh mặc định không tự quay lại)
+  models[key] = { photo: input.photo ?? "", x: input.x, y: input.y, w: Math.min(input.w, 1 - input.x), h: Math.min(input.h, 1 - input.y) };
+  const value = { ...cur, media: { ...cur.media, models } };
+  await prisma.setting.upsert({ where: { key: "landing" }, update: { value }, create: { key: "landing", value } });
+  invalidateLanding();
+  return c.json({ model: models[key]?.photo ? models[key] : null });
 });
 
 /** tạo ảnh thật cho 1 phôi bằng AI (OpenAI hoặc Gemini – xem lib/ai-photo) */
