@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { areaExtraPrice, formatVND, linePrice, type OrderDesign } from "@pod/shared";
 import { useCart } from "@/lib/cart";
 import { assetUrl } from "@/lib/config";
@@ -27,6 +28,7 @@ export function OrderSheet({
   onClose: () => void;
 }) {
   const cart = useCart();
+  const router = useRouter();
   const colors = useMemo(() => [...new Set(product.variants.map((v) => v.color))], [product.variants]);
   const [color, setColor] = useState(initialColor && colors.includes(initialColor) ? initialColor : (colors[0] ?? ""));
   const variants = product.variants.filter((v) => v.color === color);
@@ -44,7 +46,7 @@ export function OrderSheet({
   const sum = variants.reduce((s, v) => s + (qty[v.size] ?? 0) * unit(v.priceDelta), 0);
   const hex = product.variants.find((v) => v.color === color && /^#[0-9a-f]{6}$/i.test(v.colorHex))?.colorHex;
 
-  function add() {
+  function add(buyNow = false) {
     setError("");
     if (!total) return setError("Nhập số lượng ít nhất 1 size");
     if (total < product.minQty) return setError(`Đặt tối thiểu ${product.minQty} sản phẩm`);
@@ -76,6 +78,7 @@ export function OrderSheet({
       });
     }
     track.addToCart({ id: product.id, name: product.name, price: unit(0), quantity: total });
+    if (buyNow) return router.push("/thanh-toan");
     setAdded(true);
   }
 
@@ -99,16 +102,22 @@ export function OrderSheet({
           </>
         ) : (
           <>
-            <div className="flex gap-3">
-              {design.files[0] && <img src={assetUrl(design.files[0].previewUrl)} alt="" className="h-20 w-20 shrink-0 rounded-lg border border-ink/10 object-contain" />}
-              <div className="min-w-0">
-                <h2 id="order-title" className="text-lg font-black leading-tight">
-                  Đặt ngay
-                </h2>
-                <p className="truncate text-sm text-ink/70">{product.name}</p>
-                <p className="text-xs text-ink/55">{design.files.length} mặt in · xưởng in đúng file thiết kế</p>
+            <h2 id="order-title" className="text-lg font-black leading-tight">
+              Đặt ngay
+            </h2>
+            <p className="truncate text-sm text-ink/70">
+              {product.name} · {design.files.length} mặt in · xưởng in đúng file thiết kế
+            </p>
+            {design.files.length > 0 && (
+              <div className="no-scrollbar -mx-1 mt-3 flex snap-x gap-2 overflow-x-auto px-1">
+                {design.files.map((f) => (
+                  <figure key={f.area} className={`shrink-0 snap-center ${design.files.length > 1 ? "w-[78%]" : "w-full"}`}>
+                    <img src={assetUrl(f.previewUrl)} alt={`Xem trước ${f.name}`} className="mx-auto aspect-square max-h-[34vh] w-full rounded-xl border border-ink/10 bg-surface object-contain" />
+                    {design.files.length > 1 && <figcaption className="mt-0.5 text-center text-[11px] font-bold text-ink/60">{f.name}</figcaption>}
+                  </figure>
+                ))}
               </div>
-            </div>
+            )}
 
             {colors.length > 1 && (
               <div className="mt-4">
@@ -174,16 +183,21 @@ export function OrderSheet({
             </div>
             {error && <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button type="button" className="btn border-ink/20 bg-white px-2 text-sm" onClick={onProductPage}>
-                Trang sản phẩm
-              </button>
-              <button type="button" className="btn border-ink bg-brand px-2 text-sm" onClick={add}>
+              <button type="button" className="btn border-ink/20 bg-white px-2 text-sm" onClick={() => add()}>
                 Thêm vào giỏ
               </button>
+              <button type="button" className="btn border-ink bg-brand px-2 text-sm" onClick={() => add(true)}>
+                Mua ngay
+              </button>
             </div>
-            <button type="button" className="mt-2 w-full text-center text-xs text-ink/60 underline" onClick={onClose}>
-              Quay lại chỉnh thiết kế
-            </button>
+            <div className="mt-2 flex justify-center gap-4 text-xs text-ink/60">
+              <button type="button" className="underline" onClick={onClose}>
+                Quay lại chỉnh thiết kế
+              </button>
+              <button type="button" className="underline" onClick={onProductPage}>
+                Trang sản phẩm
+              </button>
+            </div>
           </>
         )}
       </div>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { IMAGE_MASK_LABEL, IMAGE_MASKS, TILE_MODE_LABEL, TILE_MODES, type ImageCrop, type ImageLayer, type ImageMask, type TileMode } from "@pod/shared";
 import type { PrintArea } from "@/lib/types";
 import { CropModal } from "./CropModal";
+import { ART_STYLES, type ArtStyle } from "./artFilters";
 import { Slider } from "./ui";
 
 type Props = {
@@ -13,6 +14,10 @@ type Props = {
   onEnd: () => void;
   onRemoveBg: () => void;
   onRestore: () => void;
+  /** đổi sang ảnh khác, giữ nguyên khung (vị trí, cỡ, mặt nạ) */
+  onReplace: () => void;
+  /** biến ảnh thành tranh vẽ */
+  onArt: (s: ArtStyle) => void;
   bgSupported: boolean;
 };
 
@@ -43,7 +48,7 @@ function TileIcon({ mode }: { mode: TileMode }) {
   );
 }
 
-export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onRestore, bgSupported }: Props) {
+export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onRestore, onReplace, onArt, bgSupported }: Props) {
   const [crop, setCrop] = useState(false);
   const W = area.widthMm;
   const H = area.heightMm;
@@ -89,7 +94,10 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
 
       <div>
         <p className="mb-1 text-[11px] font-semibold text-ink/60">Chỉnh ảnh</p>
-        <div className="grid grid-cols-2 gap-1 text-[11px] font-bold">
+        <div className="grid grid-cols-3 gap-1 text-[11px] font-bold">
+          <button type="button" className="btn-sm" onClick={onReplace} title="Đổi sang ảnh khác, giữ nguyên vị trí và kích thước">
+            ⇄ Thay ảnh
+          </button>
           <button type="button" className="btn-sm" onClick={() => setCrop(true)}>
             ✂ Cắt ảnh{l.crop ? " ✓" : ""}
           </button>
@@ -103,6 +111,19 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
             </button>
           )}
         </div>
+      </div>
+
+      <div>
+        <p className="mb-1 text-[11px] font-semibold text-ink/60">Biến thành tranh vẽ</p>
+        <div className="grid grid-cols-5 gap-1" role="group" aria-label="Kiểu tranh">
+          {ART_STYLES.map((a) => (
+            <button key={a.id} type="button" onClick={() => onArt(a.id)} title={a.hint} className="flex flex-col items-center gap-0.5 rounded-md border-2 border-ink/15 px-0.5 py-1 text-[10px] font-bold leading-tight hover:border-ink">
+              <ArtIcon id={a.id} />
+              {a.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-[10px] text-ink/55">Xử lý ngay trên máy bạn, miễn phí. Ảnh chân dung nên “Xoá nền” trước. Bấm “Ảnh gốc” để trả lại.</p>
       </div>
 
       <div>
@@ -183,5 +204,25 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
 
       {crop && <CropModal src={l.src} natW={l.natW} natH={l.natH} initial={l.crop} onApply={applyCrop} onClose={() => setCrop(false)} />}
     </div>
+  );
+}
+
+/** Biểu tượng nhỏ cho từng kiểu tranh */
+function ArtIcon({ id }: { id: ArtStyle }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      {id === "line" && <path d="M5 18c2-6 4-10 7-10s3 5 7 2M8 6c1 1 2 1 3 0" />}
+      {id === "sketch" && <path d="M4 19l3-1 11-11-2-2L5 16zM6 20h13" strokeDasharray="2 1.5" />}
+      {id === "stencil" && <path d="M6 18c0-5 3-9 6-9s6 4 6 9z" fill="currentColor" />}
+      {id === "halftone" && [6, 12, 18].flatMap((x, i) => [6, 12, 18].map((y, j) => <circle key={`${i}${j}`} cx={x} cy={y} r={0.6 + (i + j) * 0.45} fill="currentColor" stroke="none" />))}
+      {id === "cartoon" && (
+        <>
+          <circle cx="12" cy="12" r="8" fill="#FDBA74" />
+          <circle cx="9.5" cy="10.5" r="1" fill="currentColor" />
+          <circle cx="14.5" cy="10.5" r="1" fill="currentColor" />
+          <path d="M9 14.5c1.6 1.4 4.4 1.4 6 0" />
+        </>
+      )}
+    </svg>
   );
 }

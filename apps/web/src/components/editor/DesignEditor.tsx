@@ -1,5 +1,5 @@
 "use client";
-import { luminance } from "@pod/shared";
+import { contrastRatio, luminance, readableOn } from "@pod/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -30,7 +30,7 @@ import {
   type TextLayer,
 } from "@pod/shared";
 import type { PrintArea, ProductDetail } from "@/lib/types";
-import { IconCalendar, IconClose, IconCopy, IconEye, IconGrid, IconLayers, IconLock, IconPalette, IconRedo, IconSave, IconShare, IconText, IconTrash, IconUndo, IconUpload } from "../ui/icons";
+import { IconCalendar, IconClose, IconCopy, IconEye, IconGrid, IconImage, IconLayers, IconLock, IconPalette, IconRedo, IconSave, IconShare, IconText, IconTrash, IconUndo, IconUpload } from "../ui/icons";
 import { PhraseIdeas } from "./PhraseIdeas";
 import { Stage } from "./Stage";
 import { canvasSrc, imgSize, loadImage, measureText, type ImageCache, type MockupAssets } from "./render";
@@ -48,6 +48,8 @@ import { ShortcutsModal } from "./ShortcutsModal";
 import { ProductSwitcher } from "./ProductSwitcher";
 import { OrderSheet } from "./OrderSheet";
 import { CalendarPanel } from "./CalendarPanel";
+import { buildCollage, CollagePanel, coverCrop, polaroidCard, type Collage, type Photo } from "./CollagePanel";
+import { artify, type ArtStyle } from "./artFilters";
 
 type Props = {
   product: ProductDetail;
@@ -61,7 +63,7 @@ type Props = {
   returnTo: string;
 };
 
-type Tool = "upload" | "library" | "text" | "bg" | "layers" | "calendar";
+type Tool = "upload" | "collage" | "library" | "text" | "bg" | "layers" | "calendar";
 type Upload = { src: string; natW: number; natH: number; name: string };
 
 const uid = () => `l${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -88,6 +90,65 @@ function sizeOptions(product: ProductDetail): { list: string[]; largest: string 
     return s(y).widthMm * s(y).heightMm - s(x).widthMm * s(x).heightMm;
   })[0]!;
   return { list, largest };
+}
+
+/** Chữ rộng hơn vùng in -> thu nhỏ cỡ chữ cho vừa (92% bề ngang) và kéo tâm vào trong; null = không cần đổi */
+function fitTextInArea(l: TextLayer, area: { widthMm: number; heightMm: number }): Partial<TextLayer> | null {
+  let cur = l;
+  const maxW = area.widthMm * 0.92;
+  const width = (x: TextLayer) => {
+    const b = layerBounds(x);
+    return b.right - b.left;
+  };
+  // câu dài 1 dòng sắp bị thu nhỏ quá nhiều -> tự xuống dòng ở giữa câu cho cân đối
+  const words = cur.text.trim().split(/\s+/);
+  if (width(cur) / maxW > 1.6 && !cur.field && !cur.curve && !cur.text.includes("\n") && words.length >= 3) {
+    let bestI = 1;
+    let bestD = Infinity;
+    for (let i = 1; i < words.length; i++) {
+      const d = Math.abs(words.slice(0, i).join(" ").length - words.slice(i).join(" ").length);
+      if (d < bestD) [bestI, bestD] = [i, d];
+    }
+    const next = { ...cur, text: `${words.slice(0, bestI).join(" ")}\n${words.slice(bestI).join(" ")}` };
+    cur = { ...next, ...measureText(next) };
+  }
+  const bw = width(cur);
+  if (bw > maxW && !cur.field) {
+    const f = maxW / bw;
+    const next = { ...cur, fontSize: Math.max(1, Math.round(cur.fontSize * f * 10) / 10), stroke: cur.stroke ? { ...cur.stroke, width: cur.stroke.width * f } : undefined };
+    cur = { ...next, ...measureText(next) };
+  }
+  const b = layerBounds(cur);
+  let x = cur.x;
+  if (b.right - b.left <= area.widthMm) {
+    if (b.left < 0) x -= b.left;
+    else if (b.right > area.widthMm) x -= b.right - area.widthMm;
+  }
+  if (cur === l && x === l.x) return null;
+  return { text: cur.text, fontSize: cur.fontSize, stroke: cur.stroke, w: cur.w, h: cur.h, x };
+}
+
+/** Chỗ trống để đặt lớp mới (ít đè lên lớp có sẵn nhất): giữa → dưới → trên → các góc */
+function freeSpot(layers: DesignLayer[], area: { widthMm: number; heightMm: number }, w: number, h: number): { x: number; y: number } {
+  const W = area.widthMm;
+  const H = area.heightMm;
+  const boxes = layers
+    .filter((l) => !(l.type === "image" && l.tile))
+    .map((l) => layerBounds(l))
+    .filter((b) => !(b.left <= 1 && b.top <= 1 && b.right >= W - 1 && b.bottom >= H - 1));
+  if (!boxes.length) return { x: W / 2, y: H / 2 };
+  const clamp = (v: number, half: number, max: number) => Math.min(Math.max(v, half + max * 0.04), max - half - max * 0.04);
+  const cands: [number, number][] = [
+    [0.5, 0.5], [0.5, 0.78], [0.5, 0.22], [0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75], [0.25, 0.5], [0.75, 0.5],
+  ];
+  let best = { x: W / 2, y: H / 2, o: Infinity };
+  for (const [fx, fy] of cands) {
+    const x = clamp(fx * W, w / 2, W);
+    const y = clamp(fy * H, h / 2, H);
+    const o = boxes.reduce((s, b) => s + Math.max(0, Math.min(b.right, x + w / 2) - Math.max(b.left, x - w / 2)) * Math.max(0, Math.min(b.bottom, y + h / 2) - Math.max(b.top, y - h / 2)), 0);
+    if (o < best.o - 1) best = { x, y, o };
+  }
+  return { x: best.x, y: best.y };
 }
 
 const AGREE_KEY = "yala-upload-agree";
@@ -133,7 +194,12 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const sizes = useMemo(() => sizeOptions(product), [product]);
   const [size, setSize] = useState<string | null>(sizes.largest);
   const [agreed, setAgreed] = useState(false);
-  const [askAgree, setAskAgree] = useState(false);
+  /** chưa đồng ý cam kết tải ảnh: việc cần làm sau khi đồng ý */
+  const [askAgree, setAskAgree] = useState<null | "upload" | "collage" | "replace">(null);
+  const collageRef = useRef<HTMLInputElement>(null);
+  const replaceRef = useRef<HTMLInputElement>(null);
+  const [collage, setCollage] = useState<Collage | null>(null);
+  const cardRef = useRef<Promise<Photo> | null>(null);
   const [bgSupported, setBgSupported] = useState(false);
   const [galleryKey, setGalleryKey] = useState(0);
   const [showKeys, setShowKeys] = useState(false);
@@ -156,6 +222,11 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   // mặt cong (cốc/bình) luôn chỉnh trên bản phẳng trải dài, ảnh nhỏ góc khung hiện dáng cong
   const view = area.warp ? "flat" : (viewPref[area.key] ?? "mockup");
   const dpiScale = sizeScale(area, sized);
+  /** nền chữ thực tế của 1 mặt: màu nền in > màu áo > trắng */
+  const surfaceOf = (key: string) => designRef.current.areas[key]?.bg ?? (color?.hex && !areas.find((a) => a.key === key)?.warp ? color.hex : "#ffffff");
+  /** chữ gần trùng màu nền (khó đọc khi in) */
+  const lowContrast = (l: DesignLayer, key: string) => l.type === "text" && contrastRatio(l.color, surfaceOf(key)) < 1.8 && !(l.stroke && l.stroke.width > 0 && contrastRatio(l.stroke.color, surfaceOf(key)) >= 1.8);
+  const [contrastFix, setContrastFix] = useState(0);
 
   useEffect(() => {
     const on = () => setFullscreen(!!document.fullscreenElement);
@@ -307,40 +378,138 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     return { id: uid(), type: "image", src: u.src, natW: u.natW, natH: u.natH, x: a.widthMm / 2, y: a.heightMm / 2, w: u.natW * s, h: u.natH * s, rotation: 0, opacity: 1 };
   }
 
+  /** Kiểm tra + tải 1 ảnh lên, lưu vào "Ảnh của tôi"; lỗi -> báo và trả null */
+  async function uploadOne(f: File, label = `Đang tải "${f.name}"…`): Promise<Upload | null> {
+    if (!["image/png", "image/jpeg", "image/webp"].includes(f.type)) {
+      setError("Chỉ nhận ảnh PNG, JPG hoặc WEBP");
+      return null;
+    }
+    if (f.size > UPLOAD_MAX_BYTES) {
+      setError(`Ảnh tối đa ${Math.round(UPLOAD_MAX_BYTES / 1024 / 1024)}MB`);
+      return null;
+    }
+    setBusy(label);
+    try {
+      const local = URL.createObjectURL(f);
+      const img = await loadImage(local);
+      const { w, h } = imgSize(img);
+      if (w > UPLOAD_MAX_SIDE_PX || h > UPLOAD_MAX_SIDE_PX) {
+        setError(`Ảnh "${f.name}" quá lớn (${w}×${h}px) – tối đa ${UPLOAD_MAX_SIDE_PX.toLocaleString("vi-VN")}px mỗi cạnh`);
+        return null;
+      }
+      const src = await uploadBlob(f, f.name, "design");
+      images.set(src, img);
+      const u = { src, natW: w, natH: h, name: f.name };
+      setUploads((p) => [u, ...p.filter((x) => x.src !== src)]);
+      void saveToGallery({ url: src, name: f.name, natW: w, natH: h }).then((ok) => ok && setGalleryKey((k) => k + 1));
+      return u;
+    } catch (e) {
+      setError((e as Error).message);
+      return null;
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function onFiles(files: FileList | null) {
     setError("");
-    const list = Array.from(files ?? []).slice(0, 10);
-    for (const f of list) {
-      if (!["image/png", "image/jpeg", "image/webp"].includes(f.type)) {
-        setError("Chỉ nhận ảnh PNG, JPG hoặc WEBP");
-        continue;
-      }
-      if (f.size > UPLOAD_MAX_BYTES) {
-        setError(`Ảnh tối đa ${Math.round(UPLOAD_MAX_BYTES / 1024 / 1024)}MB`);
-        continue;
-      }
-      setBusy(`Đang tải "${f.name}"…`);
+    for (const f of Array.from(files ?? []).slice(0, 10)) {
+      const u = await uploadOne(f);
+      if (u) addLayer(imageLayer(u));
+    }
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  /* ---------- khung ghép ảnh ---------- */
+  function pickCollage(c: Collage) {
+    setCollage(c);
+    if (!agreed) return setAskAgree("collage");
+    collageRef.current?.click();
+  }
+
+  async function onCollageFiles(files: FileList | null) {
+    const c = collage;
+    // FileList là danh sách "sống": chép ra trước khi xoá giá trị ô chọn file
+    const picked = Array.from(files ?? []);
+    if (collageRef.current) collageRef.current.value = "";
+    if (!c || !picked.length) return;
+    setError("");
+    const list = picked.slice(0, c.cells.length);
+    const photos: Photo[] = [];
+    for (const [i, f] of list.entries()) {
+      const u = await uploadOne(f, `Đang tải ảnh ${i + 1}/${list.length}…`);
+      if (u) photos.push(u);
+    }
+    if (!photos.length) return;
+    let card: Photo | null = null;
+    if (c.cells.some((x) => x.card)) {
       try {
-        const local = URL.createObjectURL(f);
-        const img = await loadImage(local);
-        const { w, h } = imgSize(img);
-        if (w > UPLOAD_MAX_SIDE_PX || h > UPLOAD_MAX_SIDE_PX) {
-          setError(`Ảnh "${f.name}" quá lớn (${w}×${h}px) – tối đa ${UPLOAD_MAX_SIDE_PX.toLocaleString("vi-VN")}px mỗi cạnh`);
-          continue;
-        }
-        const src = await uploadBlob(f, f.name, "design");
-        images.set(src, img);
-        const u = { src, natW: w, natH: h, name: f.name };
-        setUploads((p) => [u, ...p.filter((x) => x.src !== src)]);
-        addLayer(imageLayer(u));
-        void saveToGallery({ url: src, name: f.name, natW: w, natH: h }).then((ok) => ok && setGalleryKey((k) => k + 1));
+        setBusy("Đang dựng khung…");
+        cardRef.current ??= (async () => {
+          const src = await uploadBlob(await polaroidCard(), "khung-polaroid.png", "design");
+          images.set(src, await loadImage(src));
+          return { src, natW: 2400, natH: 2880 };
+        })();
+        card = await cardRef.current;
       } catch (e) {
+        cardRef.current = null;
         setError((e as Error).message);
       } finally {
         setBusy("");
       }
     }
-    if (fileRef.current) fileRef.current.value = "";
+    const ls = buildCollage(c, area, photos, card, readableOn(surfaceOf(area.key)), uid);
+    addLayers(ls);
+    setNotice(
+      photos.length < c.cells.length
+        ? `Đã ghép ${photos.length}/${c.cells.length} ảnh – ô còn lại dùng tạm ảnh đầu: bấm vào ô đó → “Thay ảnh”.`
+        : "✓ Đã ghép ảnh. Bấm vào chữ để sửa tên/ngày, bấm ảnh → “Cắt ảnh” để chỉnh khuôn mặt.",
+    );
+    void ensureFonts(ls).then(() => {
+      const ids = new Set(ls.map((l) => l.id));
+      const cur = designRef.current;
+      const a = cur.areas[area.key];
+      if (!a) return;
+      apply({ ...cur, areas: { ...cur.areas, [area.key]: { ...a, layers: a.layers.map((l) => (ids.has(l.id) && l.type === "text" ? { ...l, ...measureText(l) } : l)) } } }, false);
+    });
+  }
+
+  /* ---------- thay ảnh giữ nguyên khung (ô ghép ảnh, ảnh đã căn chỉnh) ---------- */
+  function openReplace() {
+    if (!agreed) return setAskAgree("replace");
+    replaceRef.current?.click();
+  }
+  async function onReplaceFile(files: FileList | null) {
+    const f = files?.[0];
+    if (replaceRef.current) replaceRef.current.value = "";
+    if (!f || !selected || selected.type !== "image") return;
+    const l = selected;
+    setError("");
+    const u = await uploadOne(f);
+    if (!u) return;
+    patchLayer(l.id, { src: u.src, natW: u.natW, natH: u.natH, crop: coverCrop(u.natW, u.natH, l.w, l.h), origSrc: undefined } as Partial<DesignLayer>, true);
+  }
+
+  /* ---------- biến ảnh thành tranh vẽ (chạy trên máy khách) ---------- */
+  async function applyArt(style: ArtStyle) {
+    if (!selected || selected.type !== "image") return;
+    const l = selected;
+    setError("");
+    try {
+      setBusy("Đang vẽ lại ảnh…");
+      const img = images.get(l.src) ?? (await loadImage(l.src));
+      const ink = readableOn(surfaceOf(area.key));
+      const out = await artify(img, style, ink);
+      setBusy("Đang lưu tranh…");
+      const src = await uploadBlob(out.blob, `tranh-${style}.png`, "design");
+      images.set(src, await loadImage(src));
+      patchLayer(l.id, { src, natW: out.w, natH: out.h, origSrc: l.origSrc ?? l.src } as Partial<DesignLayer>, true);
+      setNotice("✓ Đã biến ảnh thành tranh. Bấm “Ảnh gốc” để trả lại.");
+    } catch (e) {
+      setError(`Không xử lý được ảnh: ${(e as Error).message}`);
+    } finally {
+      setBusy("");
+    }
   }
 
   function textLayer(p: Partial<TextLayer> = {}): TextLayer {
@@ -365,7 +534,9 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
   function addTemplate(data: DesignTemplateData, name: string) {
     setError("");
-    const ls = templateLayers(data, area, uid);
+    // mẫu chữ tối trên áo tối (hoặc ngược lại) -> tự đổi sang màu dễ đọc
+    const surface = ad.bg ?? data.bg ?? (color?.hex && !area.warp ? color.hex : "#ffffff");
+    const ls = templateLayers(data, area, uid).map((l) => (l.type === "text" && contrastRatio(l.color, surface) < 1.8 ? { ...l, color: readableOn(surface) } : l));
     addLayers(ls);
     if (data.bg && !ad.bg) updateArea((a) => ({ ...a, bg: data.bg }));
     setNotice(`Đã thêm mẫu "${name}" – bấm vào chữ để sửa nội dung.`);
@@ -379,18 +550,50 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     });
   }
 
-  function addClipart(a: DesignAssetView) {
-    const u = { src: a.imageUrl, natW: a.natW, natH: a.natH, name: a.name };
-    const l = imageLayer(u);
-    const s = Math.min((area.widthMm * 0.45) / u.natW, (area.heightMm * 0.45) / u.natH);
-    addLayer({ ...l, w: u.natW * s, h: u.natH * s });
+  async function addClipart(a: DesignAssetView) {
+    setError("");
+    let u = { src: a.imageUrl, natW: a.natW, natH: a.natH, name: a.name };
+    // hình từ bộ dựng sẵn (CDN, thường là SVG): vẽ ra PNG 2000px rồi lưu về YALA -> đặt hàng hợp lệ, in nét ở mọi cỡ
+    if (/^https?:\/\//.test(a.imageUrl)) {
+      try {
+        setBusy("Đang thêm hình…");
+        const img = await loadImage(a.imageUrl);
+        const { w, h } = imgSize(img);
+        const k = 2000 / Math.max(w, h);
+        const c = document.createElement("canvas");
+        c.width = Math.round(w * k);
+        c.height = Math.round(h * k);
+        c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+        const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/png"));
+        if (!blob) throw new Error("Không xử lý được hình");
+        const src = await uploadBlob(blob, `${a.name.slice(0, 40) || "hinh"}.png`, "design");
+        images.set(src, await loadImage(src));
+        u = { src, natW: c.width, natH: c.height, name: a.name };
+      } catch (e) {
+        setError(`Không thêm được hình: ${(e as Error).message}`);
+        return;
+      } finally {
+        setBusy("");
+      }
+    }
+    const crowded = ad.layers.length > 0;
+    const s = Math.min((area.widthMm * (crowded ? 0.3 : 0.45)) / u.natW, (area.heightMm * (crowded ? 0.3 : 0.45)) / u.natH);
+    const w = u.natW * s;
+    const h = u.natH * s;
+    addLayer({ ...imageLayer(u), ...freeSpot(ad.layers, area, w, h), w, h });
   }
 
   const patchSelected = (patch: Partial<DesignLayer>) => {
     if (!selected) return;
     let p = patch;
     if (selected.type === "text" && ["text", "font", "fontSize", "bold", "italic", "lineHeight", "stroke", "letterSpacing", "curve"].some((k) => k in patch)) {
-      p = { ...patch, ...measureText({ ...selected, ...(patch as Partial<TextLayer>) }) };
+      const next = { ...selected, ...(patch as Partial<TextLayer>) };
+      p = { ...patch, ...measureText(next) };
+      // gõ chữ dài hơn -> tự thu nhỏ cho vừa vùng in (không tự phóng to), rồi kéo tâm vào trong
+      if (("text" in patch || "font" in patch || "letterSpacing" in patch || "bold" in patch) && !("fontSize" in patch)) {
+        const fitted = fitTextInArea({ ...next, ...p } as TextLayer, area);
+        if (fitted !== null) p = { ...p, ...fitted };
+      }
     }
     patchLayer(selected.id, p, true);
   };
@@ -470,17 +673,45 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
   function restoreOriginal() {
     if (!selected || selected.type !== "image" || !selected.origSrc) return;
-    patchLayer(selected.id, { src: selected.origSrc, origSrc: undefined } as Partial<DesignLayer>, true);
+    const img = images.get(selected.origSrc);
+    const size = img ? imgSize(img) : null;
+    patchLayer(selected.id, { src: selected.origSrc, origSrc: undefined, ...(size ? { natW: size.w, natH: size.h } : {}) } as Partial<DesignLayer>, true);
+  }
+
+  /** Đổi màu áo: chữ nào gần trùng màu áo mới -> mời đổi màu chữ 1 chạm */
+  function pickColor(c: { name: string; hex: string }) {
+    setColor(c);
+    const n = areas.reduce((s, a) => s + (designRef.current.areas[a.key]?.bg || a.warp ? 0 : (designRef.current.areas[a.key]?.layers ?? []).filter((l) => l.type === "text" && contrastRatio(l.color, c.hex) < 1.8).length), 0);
+    setContrastFix(n);
+  }
+
+  /** Đổi mọi chữ khó đọc sang trắng / mực đen theo nền (giữ nguyên chữ đã đủ tương phản) */
+  function fixContrast() {
+    const cur = designRef.current;
+    const next = { ...cur, areas: { ...cur.areas } };
+    for (const a of areas) {
+      const d = cur.areas[a.key];
+      if (!d) continue;
+      const bg = surfaceOf(a.key);
+      next.areas[a.key] = { ...d, layers: d.layers.map((l) => (lowContrast(l, a.key) && l.type === "text" ? { ...l, color: readableOn(bg) } : l)) };
+    }
+    apply(next, true);
+    setContrastFix(0);
+    setNotice("✓ Đã đổi màu chữ cho dễ đọc trên nền mới.");
   }
 
   /** Kiểm tra theo size đang chọn (vùng in theo size + nội dung đã co giãn) */
   function report() {
     const scaled = Object.fromEntries(areas.map((a) => [a.key, scaleAreaDesign(design.areas[a.key] ?? { bg: null, layers: [] }, a, areaForSize(a, size))]));
-    return designReport({ areas: scaled }, areas.map((a) => areaForSize(a, size)));
+    const rep = designReport({ areas: scaled }, areas.map((a) => areaForSize(a, size)));
+    for (const a of areas)
+      for (const l of design.areas[a.key]?.layers ?? [])
+        if (l.type === "text" && lowContrast(l, a.key)) rep.push({ area: a.key, areaName: a.name, level: "warn", message: `Chữ "${l.text.slice(0, 20)}" gần trùng màu ${design.areas[a.key]?.bg ? "nền" : "áo"} – in ra khó đọc` });
+    return rep;
   }
 
   function openUpload() {
-    if (!agreed) return setAskAgree(true);
+    if (!agreed) return setAskAgree("upload");
     fileRef.current?.click();
   }
 
@@ -607,6 +838,31 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     l.type === "text" ? (l.field ? `Ô ${DESIGN_FIELDS[l.field].toLowerCase()} (theo danh sách)` : `Chữ: ${l.text.slice(0, 18)}`) : l.tile ? "Ảnh lặp họa tiết" : "Ảnh";
 
   /* ---------- giao diện ---------- */
+  const agreeBox = (
+                <div className="rounded-lg border-2 border-ink/15 bg-white p-3 text-xs leading-relaxed">
+                  <p className="font-bold">Cam kết khi tải ảnh lên</p>
+                  <p className="mt-1 text-ink/75">
+                    Tôi có quyền sử dụng hình ảnh, chữ, logo tải lên; không vi phạm bản quyền, nhãn hiệu, hình ảnh cá nhân của người khác và không chứa nội dung trái pháp luật. Đơn vi phạm sẽ bị từ chối in.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn mt-2 w-full border-ink bg-brand py-2 text-xs"
+                    onClick={() => {
+                      const next = askAgree;
+                      setAgreed(true);
+                      setAskAgree(null);
+                      try {
+                        localStorage.setItem(AGREE_KEY, "1");
+                      } catch {
+                        /* ignore */
+                      }
+                      (next === "collage" ? collageRef : next === "replace" ? replaceRef : fileRef).current?.click();
+                    }}
+                  >
+                    Tôi đồng ý – chọn ảnh
+                  </button>
+                </div>
+  );
   const toolBtn = (t: Tool, label: string, Icon: typeof IconText, onClick?: () => void) => (
     <button
       type="button"
@@ -755,7 +1011,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         )}
       </div>
 
-      {(notice || fields.length > 0) && (
+      {(notice || fields.length > 0 || contrastFix > 0) && (
         <div className="mx-auto mt-3 max-w-[1320px] space-y-2 px-3 text-sm md:px-5">
           {notice && (
             <div className="flex items-center justify-between gap-2">
@@ -780,6 +1036,19 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               </button>
             </div>
           )}
+          {contrastFix > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-amber-900">
+              <span className="flex-1">
+                {contrastFix} lớp chữ gần trùng màu áo {color?.name} – in ra sẽ khó đọc.
+              </span>
+              <button type="button" className="rounded-md border-2 border-ink bg-white px-2.5 py-1 text-xs font-bold" onClick={fixContrast}>
+                Đổi màu chữ cho hợp áo
+              </button>
+              <button type="button" onClick={() => setContrastFix(0)} aria-label="Bỏ qua" className="p-1">
+                <IconClose className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           {fields.length > 0 && (
             <p className="rounded-lg bg-navy-light px-3 py-2 text-navy-dark">
               👕 Thiết kế có ô <b>{fields.map((f) => DESIGN_FIELDS[f]).join(" + ")}</b>: khi đặt hàng chọn <b>Đồng phục nhóm</b> và tải danh sách – mỗi áo in đúng tên/số của từng người.
@@ -795,6 +1064,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           aria-label="Công cụ"
         >
           {toolBtn("upload", "Tải ảnh", IconUpload)}
+          {toolBtn("collage", "Ghép ảnh", IconImage)}
           {toolBtn("library", "Mẫu", IconGrid)}
           {toolBtn("text", "Chữ", IconText, () => (selected?.type === "text" ? setTool("text") : addText()))}
           {toolBtn("bg", colors.length > 1 ? "Màu" : "Màu nền", IconPalette)}
@@ -872,30 +1142,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 <IconUpload className="h-6 w-6" /> Tải ảnh lên
                 <span className="text-[11px] font-medium text-ink/60">PNG, JPG, WEBP · chọn tối đa 10 ảnh</span>
               </button>
-              {askAgree && !agreed && (
-                <div className="rounded-lg border-2 border-ink/15 bg-white p-3 text-xs leading-relaxed">
-                  <p className="font-bold">Cam kết khi tải ảnh lên</p>
-                  <p className="mt-1 text-ink/75">
-                    Tôi có quyền sử dụng hình ảnh, chữ, logo tải lên; không vi phạm bản quyền, nhãn hiệu, hình ảnh cá nhân của người khác và không chứa nội dung trái pháp luật. Đơn vi phạm sẽ bị từ chối in.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn mt-2 w-full border-ink bg-brand py-2 text-xs"
-                    onClick={() => {
-                      setAgreed(true);
-                      setAskAgree(false);
-                      try {
-                        localStorage.setItem(AGREE_KEY, "1");
-                      } catch {
-                        /* ignore */
-                      }
-                      fileRef.current?.click();
-                    }}
-                  >
-                    Tôi đồng ý – chọn ảnh
-                  </button>
-                </div>
-              )}
+              {askAgree && !agreed && agreeBox}
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple className="hidden" onChange={(e) => void onFiles(e.target.files)} />
               <p className="text-[11px] text-ink/60">
                 Logo nên dùng PNG nền trong suốt (hoặc bấm “Xoá nền”). Mặt này in tốt nhất với ảnh ≥ {area.dpi} DPI ở kích thước thật ({sized.widthMm / 10}×{sized.heightMm / 10} cm ≈{" "}
@@ -915,13 +1162,24 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                   onEnd={endDrag}
                   onRemoveBg={() => void removeBg()}
                   onRestore={restoreOriginal}
+                  onReplace={openReplace}
+                  onArt={(st) => void applyArt(st)}
                   bgSupported={bgSupported}
                 />
               )}
             </section>
           )}
 
-          {tool === "library" && <LibraryPanel onTemplate={addTemplate} onClipart={addClipart} garmentDark={!!color?.hex && luminance(color.hex) < 0.35} />}
+          {tool === "collage" && (
+            <>
+              <CollagePanel onPick={pickCollage} busy={!!busy} />
+              {askAgree && !agreed && agreeBox}
+            </>
+          )}
+          <input ref={collageRef} type="file" accept="image/png,image/jpeg,image/webp" multiple className="hidden" onChange={(e) => void onCollageFiles(e.target.files)} />
+          <input ref={replaceRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => void onReplaceFile(e.target.files)} />
+
+          {tool === "library" && <LibraryPanel onTemplate={addTemplate} onClipart={(a) => void addClipart(a)} garmentDark={!!color?.hex && luminance(color.hex) < 0.35} />}
 
           {tool === "calendar" && (
             <CalendarPanel
@@ -1009,6 +1267,14 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                     (v) => `${v} mm`,
                   )}
                   <ColorPicker label="Màu chữ" value={selected.color} onChange={(c) => c && patchSelected({ color: c })} />
+                  {lowContrast(selected, area.key) && (
+                    <p className="flex items-center gap-2 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900">
+                      <span className="flex-1">Màu chữ gần trùng màu {ad.bg ? "nền" : "áo"} – khó đọc khi in.</span>
+                      <button type="button" className="shrink-0 rounded border-2 border-ink bg-white px-2 py-0.5 font-bold" onClick={() => patchSelected({ color: readableOn(surfaceOf(area.key)) })}>
+                        Đổi sang {readableOn(surfaceOf(area.key)) === "#ffffff" ? "trắng" : "đen"}
+                      </button>
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-1.5 text-xs font-bold">
                     <button type="button" className={`btn-sm ${selected.bold ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ bold: !selected.bold })}>
                       Đậm
@@ -1086,7 +1352,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                         role="radio"
                         aria-checked={color?.name === c.name}
                         title={c.name}
-                        onClick={() => setColor(c)}
+                        onClick={() => pickColor(c)}
                         className={`h-8 w-8 rounded-full border-2 ${color?.name === c.name ? "border-ink ring-2 ring-brand" : "border-ink/20"}`}
                         style={{ background: c.hex }}
                         aria-label={c.name}

@@ -10,6 +10,7 @@ import {
   DESIGN_GROUPS,
   readyDesignInColor,
   removeVietnameseTones,
+  seasonalCollectionOrder,
   TEXT_PRESETS,
   type AssetShape,
   type DesignAssetView,
@@ -55,10 +56,10 @@ function loadPack(id: PackId): Promise<DesignAssetView[]> {
   return p;
 }
 
-/** Mẫu chữ có sẵn (trang Mẫu có sẵn) dùng ngay trong Studio – dịp lễ lên đầu, tự đổi màu chữ theo màu áo */
-const READY_ORDER = DESIGN_GROUPS.flatMap((g) => g.slugs);
+/** Mẫu chữ có sẵn (trang Mẫu có sẵn) dùng ngay trong Studio – dịp đang tới lên đầu, tự đổi màu chữ theo màu áo */
 function readyTemplates(garmentDark: boolean) {
-  const cols = [...DESIGN_COLLECTIONS].sort((a, b) => (READY_ORDER.indexOf(a.slug) + 1 || 99) - (READY_ORDER.indexOf(b.slug) + 1 || 99));
+  const order = seasonalCollectionOrder([...DESIGN_GROUPS.flatMap((g) => g.slugs), ...DESIGN_COLLECTIONS.map((c) => c.slug)]);
+  const cols = [...DESIGN_COLLECTIONS].sort((a, b) => (order.indexOf(a.slug) + 1 || 99) - (order.indexOf(b.slug) + 1 || 99));
   return cols.flatMap((c) =>
     c.designs.map((d) => {
       const fit = BASIC_COLORS[d.color].dark === garmentDark ? d : readyDesignInColor(d, garmentDark ? "den" : "trang");
@@ -109,6 +110,30 @@ function PresetThumb({ data }: { data: DesignTemplateData }) {
   return <canvas ref={ref} className="aspect-square w-full" aria-hidden />;
 }
 
+/**
+ * Điểm khớp tìm kiếm theo TỪ (không theo chuỗi con): "hoa" khớp "hoa sữa" chứ không khớp "hoạt động".
+ * Trùng cả dấu > trùng không dấu > đầu từ (từ khoá ≥4 ký tự). Khớp ở tên nặng gấp đôi khớp ở chủ đề/thẻ.
+ * Mọi từ khoá phải khớp ở đâu đó.
+ */
+function matchScore(fields: [string, number][], toks: string[]): number {
+  const prepared = fields.map(([text, weight]) => {
+    const words = text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+    return { weight, words, plain: words.map((w) => removeVietnameseTones(w)) };
+  });
+  let score = 0;
+  for (const t of toks) {
+    const tp = removeVietnameseTones(t);
+    let best = 0;
+    for (const f of prepared) {
+      const s = f.words.includes(t) ? 5 : f.plain.includes(tp) ? 3 : tp.length >= 4 && f.plain.some((w) => w.startsWith(tp)) ? 1 : 0;
+      best = Math.max(best, s * f.weight);
+    }
+    if (!best) return 0;
+    score += best;
+  }
+  return score;
+}
+
 type Props = {
   onTemplate: (data: DesignTemplateData, name: string) => void;
   onClipart: (a: DesignAssetView) => void;
@@ -132,7 +157,6 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
     if (!data) void loadAssets().then(setData);
   }, [data]);
 
-  const norm = (s: string) => removeVietnameseTones(s).toLowerCase();
   const templates = useMemo(() => {
     const builtIn = TEXT_PRESETS.map((p) => ({ id: p.id, name: p.name, category: p.category, data: p.data, image: "" }));
     const cms = (data?.templates ?? []).filter((t) => t.data).map((t) => ({ id: t.id, name: t.name, category: t.category || "Mẫu thiết kế", data: t.data!, image: t.imageUrl }));
@@ -153,13 +177,16 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
   const clipart = activeSrc ? (pack ?? []) : cmsClipart;
   const list = tab === "templates" ? templates : clipart.map((c) => ({ ...c, image: c.imageUrl }));
   const cats = [...new Set(list.map((x) => x.category).filter(Boolean))];
-  const k = norm(q.trim());
-  const shown = list.filter(
-    (x) =>
-      (!cat || x.category === cat) &&
-      (!shape || ("natW" in x && x.natW > 0 && assetShape(x.natW, x.natH) === shape)) &&
-      (!k || norm(`${x.name} ${x.category} ${"tags" in x ? (x.tags ?? "") : ""}`).includes(k)),
-  );
+  const shown = useMemo(() => {
+    const base = list.filter((x) => (!cat || x.category === cat) && (!shape || ("natW" in x && x.natW > 0 && assetShape(x.natW, x.natH) === shape)));
+    const toks = q.trim().toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+    if (!toks.length) return base;
+    return base
+      .map((x, i) => ({ x, i, s: matchScore([[x.name, 2], [`${x.category} ${"tags" in x ? (x.tags ?? "") : ""}`, 1]], toks) }))
+      .filter((r) => r.s > 0)
+      .sort((a, b) => b.s - a.s || a.i - b.i)
+      .map((r) => r.x);
+  }, [list, cat, shape, q]);
 
   return (
     <section className="space-y-2.5">

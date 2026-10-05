@@ -88,3 +88,12 @@ export function rankColors(rows: { productId: string; color: string; colorHex: s
 export function pickShowcaseColors(real: ShowcaseColor[] | undefined, configured: ShowcaseColor[], auto: boolean): ShowcaseColor[] {
   return auto && real && real.length >= 2 ? real : configured;
 }
+
+/** Tỉ lệ tương phản WCAG giữa 2 màu hex (1 = trùng màu, 21 = đen/trắng) */
+export function contrastRatio(a: string, b: string): number {
+  const la = luminance(a);
+  const lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+/** Màu chữ dễ đọc trên nền (trắng hoặc mực đen) */
+export const readableOn = (bg: string) => (luminance(bg) < 0.35 ? "#ffffff" : "#1d1d1f");

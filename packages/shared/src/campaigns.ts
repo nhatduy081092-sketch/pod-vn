@@ -178,3 +178,21 @@ export const DEFAULT_CAMPAIGNS: Campaign[] = [
     faq: [{ q: "Bao giờ là quá muộn để đặt quà Tết?", a: "Đơn lẻ: trước hạn chót trên trang. Đơn doanh nghiệp: nên gửi yêu cầu trước giữa tháng 1 để kịp sản xuất." }],
   },
 ];
+
+/**
+ * Thứ tự bộ sưu tập mẫu chữ theo mùa: dịp đang chạy (kết thúc sớm nhất trước) → dịp sắp tới trong `aheadDays` ngày
+ * → các bộ còn lại theo `base`; bộ của dịp đã qua / còn xa xuống cuối. Dùng cho Studio (Mẫu, Gợi ý câu chữ).
+ */
+export function seasonalCollectionOrder(base: string[], campaigns: Campaign[] = DEFAULT_CAMPAIGNS, now = new Date(), aheadDays = 30): string[] {
+  const live = liveCampaigns(campaigns, now).flatMap((c) => c.collections);
+  const soon = campaigns
+    .filter((c) => c.enabled && !campaignLive(c, now) && vnDayStart(c.startsAt) > now && vnDayStart(c.startsAt).getTime() - now.getTime() < aheadDays * 864e5)
+    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+    .flatMap((c) => c.collections);
+  // bộ chỉ dành cho dịp lễ (không dùng quanh năm): dịp chưa tới/đã qua thì xuống cuối
+  const evergreen = new Set(["cap-doi", "gia-dinh", "ban-than", "hoc-sinh-sinh-vien", "doi-game-thu"]);
+  const seasonal = new Set(campaigns.flatMap((c) => c.collections).filter((s) => !evergreen.has(s)));
+  const first = [...new Set([...live, ...soon])];
+  const rest = base.filter((s) => !first.includes(s));
+  return [...first, ...rest.filter((s) => !seasonal.has(s)), ...rest.filter((s) => seasonal.has(s))];
+}
