@@ -187,7 +187,10 @@ publicRoutes.get("/products", async (c) => {
         ? [{ sortPrice: { sort: "desc", nulls: "last" } }, { sortOrder: "asc" }, { id: "asc" }]
         : sort === "newest"
           ? [{ createdAt: "desc" }, { id: "asc" }]
-          : [{ sortOrder: "asc" }, { id: "asc" }];
+          : sort === "danh-muc"
+            ? // theo thứ tự danh mục (may mặc, túi… lên trước) – trang chọn sản phẩm của Studio
+              [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { id: "asc" }]
+            : [{ sortOrder: "asc" }, { id: "asc" }];
   if (sort === "ban-chay" || c.req.query("bo-suu-tap") === "ban-chay") {
     // xếp theo điểm phổ biến: lấy id (tối đa 3000) -> sắp xếp -> cắt trang
     const [rows, scores] = await Promise.all([prisma.product.findMany({ where, select: { id: true, sortOrder: true }, take: 3000 }), popularityScores()]);

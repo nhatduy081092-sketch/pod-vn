@@ -38,7 +38,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
   const [settings, list, facets] = await Promise.all([
     getSettings(),
     // chỉ sản phẩm có ảnh thật (theo Cài đặt → Hình ảnh); phôi YALA Everyday tự hiện lại khi có ảnh phôi thật
-    getProducts({ "thiet-ke": "1", "anh-that": "1", category, page: String(page), pageSize: "24" }).catch(() => null),
+    getProducts({ "thiet-ke": "1", "anh-that": "1", sort: "danh-muc", category, page: String(page), pageSize: "24" }).catch(() => null),
     getFacets({ "thiet-ke": "1", "anh-that": "1" }),
   ]);
   const items = list?.items ?? [];
