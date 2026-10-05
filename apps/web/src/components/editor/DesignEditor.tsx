@@ -1,4 +1,5 @@
 "use client";
+import { luminance } from "@pod/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -103,6 +104,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const areas = product.printAreas;
   const colors = garmentColors(product);
   const [color, setColor] = useState(() => colors.find((c) => c.name === initialColor) ?? colors[0] ?? null);
+  // công cụ Lịch chỉ cho sản phẩm lịch (mặt m01…m12 hoặc tên có "lịch")
+  const isCalendar = product.printAreas.some((a) => /^m\d{2}$/.test(a.key)) || /lịch/i.test(product.name);
   const [design, setDesign] = useState<DesignJson>(() => normalize(initial, product));
   const [past, setPast] = useState<DesignJson[]>([]);
   const [future, setFuture] = useState<DesignJson[]>([]);
@@ -796,16 +799,17 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           {toolBtn("text", "Chữ", IconText, () => (selected?.type === "text" ? setTool("text") : addText()))}
           {toolBtn("bg", colors.length > 1 ? "Màu" : "Màu nền", IconPalette)}
           {toolBtn("layers", `Lớp (${ad.layers.length})`, IconLayers)}
-          {toolBtn("calendar", "Lịch", IconCalendar)}
+          {isCalendar && toolBtn("calendar", "Lịch", IconCalendar)}
         </nav>
 
         <div
           ref={stageRef}
           className="order-1 mx-auto w-full max-w-[640px] self-start max-lg:sticky max-lg:top-[var(--studio-head,56px)] max-lg:z-20 max-lg:-mx-3 max-lg:w-[calc(100%+1.5rem)] max-lg:max-w-none max-lg:border-b-2 max-lg:border-ink/10 max-lg:bg-surface max-lg:px-3 max-lg:pb-2 lg:order-2"
         >
-          <div className="mx-auto max-lg:max-w-[min(100%,42svh)]">
+          {/* desktop: khung vừa chiều cao màn hình (không phải cuộn mới thấy hết áo) */}
+          <div className="mx-auto max-lg:max-w-[min(100%,42svh)] lg:max-w-[min(100%,calc(100svh-150px))]">
           {(area.tips || (area.bleedMm ?? 0) > 0) && (
-            <details className="mb-2 rounded-lg border-2 border-ink/10 bg-white px-3 py-2 text-xs text-ink/80 max-lg:hidden" open={!!area.tips}>
+            <details className="mb-2 rounded-lg border-2 border-ink/10 bg-white px-3 py-2 text-xs text-ink/80 max-lg:hidden">
               <summary className="cursor-pointer font-bold">💡 Gợi ý thiết kế cho {area.name.toLowerCase()}</summary>
               <ul className="mt-1 list-disc space-y-0.5 pl-4">
                 {area.tips && <li className="whitespace-pre-line">{area.tips}</li>}
@@ -917,7 +921,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             </section>
           )}
 
-          {tool === "library" && <LibraryPanel onTemplate={addTemplate} onClipart={addClipart} />}
+          {tool === "library" && <LibraryPanel onTemplate={addTemplate} onClipart={addClipart} garmentDark={!!color?.hex && luminance(color.hex) < 0.35} />}
 
           {tool === "calendar" && (
             <CalendarPanel

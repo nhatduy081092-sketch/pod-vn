@@ -189,7 +189,8 @@ publicRoutes.get("/products", async (c) => {
           ? [{ createdAt: "desc" }, { id: "asc" }]
           : sort === "danh-muc"
             ? // theo thứ tự danh mục (may mặc, túi… lên trước) – trang chọn sản phẩm của Studio
-              [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { id: "asc" }]
+              // đặt được từ ít chiếc lên trước (khách lẻ), rồi theo danh mục
+              [{ minQty: "asc" }, { category: { sortOrder: "asc" } }, { sortOrder: "asc" }, { id: "asc" }]
             : [{ sortOrder: "asc" }, { id: "asc" }];
   if (sort === "ban-chay" || c.req.query("bo-suu-tap") === "ban-chay") {
     // xếp theo điểm phổ biến: lấy id (tối đa 3000) -> sắp xếp -> cắt trang

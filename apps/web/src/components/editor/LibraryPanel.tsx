@@ -1,11 +1,71 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { applyTemplate, ASSET_SHAPE_LABEL, ASSET_SHAPES, assetShape, removeVietnameseTones, TEXT_PRESETS, type AssetShape, type DesignAssetView, type DesignLayer, type DesignTemplateData } from "@pod/shared";
+import {
+  applyTemplate,
+  ASSET_SHAPE_LABEL,
+  ASSET_SHAPES,
+  assetShape,
+  BASIC_COLORS,
+  DESIGN_COLLECTIONS,
+  DESIGN_GROUPS,
+  readyDesignInColor,
+  removeVietnameseTones,
+  TEXT_PRESETS,
+  type AssetShape,
+  type DesignAssetView,
+  type DesignLayer,
+  type DesignTemplateData,
+} from "@pod/shared";
 import { assetUrl } from "@/lib/config";
 import { createCanvas, drawArea, measureText, type ImageCache } from "./render";
 import { ensureFonts } from "./fonts";
 
 type Tab = "templates" | "clipart";
+
+/* ---------- Bộ hình dựng sẵn (giấy phép MIT) – tải từ CDN, không cần nhập vào CMS ---------- */
+type Pack = { id: string; title: string; repo: string; commit: string; items: [string, string, string, string][] };
+const PACKS = [
+  { id: "fluent-emoji", label: "Emoji màu" },
+  { id: "tabler-icons", label: "Biểu tượng nét" },
+] as const;
+type PackId = (typeof PACKS)[number]["id"];
+const packCache = new Map<string, Promise<DesignAssetView[]>>();
+const encPath = (p: string) => p.split("/").map(encodeURIComponent).join("/");
+function loadPack(id: PackId): Promise<DesignAssetView[]> {
+  let p = packCache.get(id);
+  if (!p) {
+    p = fetch(`/packs/${id}.json`)
+      .then((r) => (r.ok ? (r.json() as Promise<Pack>) : null))
+      .then((pk) =>
+        (pk?.items ?? []).map(([path, name, category, tags], i) => ({
+          id: `${id}:${i}`,
+          kind: "CLIPART" as DesignAssetView["kind"],
+          name,
+          category,
+          tags,
+          imageUrl: `https://cdn.jsdelivr.net/gh/${pk!.repo}@${pk!.commit}/${encPath(path)}`,
+          natW: 512,
+          natH: 512,
+          data: null,
+        })),
+      )
+      .catch(() => []);
+    packCache.set(id, p);
+  }
+  return p;
+}
+
+/** Mẫu chữ có sẵn (trang Mẫu có sẵn) dùng ngay trong Studio – dịp lễ lên đầu, tự đổi màu chữ theo màu áo */
+const READY_ORDER = DESIGN_GROUPS.flatMap((g) => g.slugs);
+function readyTemplates(garmentDark: boolean) {
+  const cols = [...DESIGN_COLLECTIONS].sort((a, b) => (READY_ORDER.indexOf(a.slug) + 1 || 99) - (READY_ORDER.indexOf(b.slug) + 1 || 99));
+  return cols.flatMap((c) =>
+    c.designs.map((d) => {
+      const fit = BASIC_COLORS[d.color].dark === garmentDark ? d : readyDesignInColor(d, garmentDark ? "den" : "trang");
+      return { id: `rd:${d.slug}`, name: d.title, category: c.name, data: fit.template, image: "" };
+    }),
+  );
+}
 
 let cache: { templates: DesignAssetView[]; clipart: DesignAssetView[] } | null = null;
 async function loadAssets() {
@@ -52,17 +112,22 @@ function PresetThumb({ data }: { data: DesignTemplateData }) {
 type Props = {
   onTemplate: (data: DesignTemplateData, name: string) => void;
   onClipart: (a: DesignAssetView) => void;
+  /** áo màu tối -> mẫu chữ đổi sang chữ sáng */
+  garmentDark?: boolean;
 };
 
 /** Thư viện: mẫu chữ dựng sẵn + mẫu thiết kế + hình minh hoạ (quản lý trong CMS) */
-export function LibraryPanel({ onTemplate, onClipart }: Props) {
+export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Props) {
   const [tab, setTab] = useState<Tab>("templates");
   const [data, setData] = useState<{ templates: DesignAssetView[]; clipart: DesignAssetView[] } | null>(cache);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
   const [shape, setShape] = useState<AssetShape | "">("");
-  const [limit, setLimit] = useState(90);
-  useEffect(() => setLimit(90), [tab, cat, shape, q]);
+  const [limit, setLimit] = useState(60);
+  // nguồn hình minh hoạ: "" = thư viện YALA (CMS), hoặc 1 bộ dựng sẵn
+  const [src, setSrc] = useState<"" | PackId>("");
+  const [pack, setPack] = useState<DesignAssetView[] | null>(null);
+  useEffect(() => setLimit(60), [tab, cat, shape, q, src]);
   useEffect(() => {
     if (!data) void loadAssets().then(setData);
   }, [data]);
@@ -71,9 +136,22 @@ export function LibraryPanel({ onTemplate, onClipart }: Props) {
   const templates = useMemo(() => {
     const builtIn = TEXT_PRESETS.map((p) => ({ id: p.id, name: p.name, category: p.category, data: p.data, image: "" }));
     const cms = (data?.templates ?? []).filter((t) => t.data).map((t) => ({ id: t.id, name: t.name, category: t.category || "Mẫu thiết kế", data: t.data!, image: t.imageUrl }));
-    return [...cms, ...builtIn];
-  }, [data]);
-  const list = tab === "templates" ? templates : (data?.clipart ?? []).map((c) => ({ ...c, image: c.imageUrl }));
+    return [...cms, ...readyTemplates(garmentDark), ...builtIn];
+  }, [data, garmentDark]);
+  // thư viện YALA trống -> mở sẵn bộ Emoji màu
+  const cmsClipart = data?.clipart ?? [];
+  const activeSrc: "" | PackId = src || (data && !cmsClipart.length ? "fluent-emoji" : "");
+  useEffect(() => {
+    if (tab !== "clipart" || !activeSrc) return;
+    setPack(null);
+    let alive = true;
+    void loadPack(activeSrc).then((l) => alive && setPack(l));
+    return () => {
+      alive = false;
+    };
+  }, [tab, activeSrc]);
+  const clipart = activeSrc ? (pack ?? []) : cmsClipart;
+  const list = tab === "templates" ? templates : clipart.map((c) => ({ ...c, image: c.imageUrl }));
   const cats = [...new Set(list.map((x) => x.category).filter(Boolean))];
   const k = norm(q.trim());
   const shown = list.filter(
@@ -107,8 +185,36 @@ export function LibraryPanel({ onTemplate, onClipart }: Props) {
           </button>
         ))}
       </div>
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm: sinh nhật, đội bóng, hoa…" className="w-full rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm focus:border-ink focus:outline-none" aria-label="Tìm trong thư viện" />
-      {cats.length > 1 && (
+      {tab === "clipart" && (
+        <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="Nguồn hình">
+          {[...(cmsClipart.length ? [{ id: "" as const, label: `Thư viện YALA (${cmsClipart.length})` }] : []), ...PACKS].map((p) => (
+            <button
+              key={p.id || "cms"}
+              type="button"
+              role="radio"
+              aria-checked={activeSrc === p.id}
+              onClick={() => {
+                setSrc(p.id);
+                setCat("");
+              }}
+              className={`rounded-full border-2 px-2.5 py-0.5 text-[11px] font-bold ${activeSrc === p.id ? "border-ink bg-sun" : "border-ink/15"}`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tab === "clipart" ? "Tìm: tim, hoa, bánh, mèo, ngôi sao…" : "Tìm: 20/10, cặp đôi, sinh nhật, gym…"} className="w-full rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm focus:border-ink focus:outline-none" aria-label="Tìm trong thư viện" />
+      {cats.length > 10 ? (
+        <select value={cat} onChange={(e) => setCat(e.target.value)} className="w-full rounded-md border-2 border-ink/15 bg-white px-2 py-1.5 text-sm font-semibold focus:border-ink focus:outline-none" aria-label="Chủ đề">
+          <option value="">Tất cả chủ đề ({list.length})</option>
+          {cats.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      ) : cats.length > 1 && (
         <div className="no-scrollbar -mx-1 flex gap-1 overflow-x-auto px-1">
           {["", ...cats].map((c) => (
             <button key={c || "all"} type="button" onClick={() => setCat(c)} className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${cat === c ? "border-ink bg-ink text-white" : "border-ink/20"}`}>
@@ -134,7 +240,7 @@ export function LibraryPanel({ onTemplate, onClipart }: Props) {
           ))}
         </div>
       )}
-      {!data && tab === "clipart" ? (
+      {(!data && tab === "clipart") || (tab === "clipart" && activeSrc && !pack) ? (
         <p className="text-xs text-ink/60">Đang tải…</p>
       ) : !shown.length ? (
         <p className="text-xs text-ink/60">{tab === "clipart" && !list.length ? "Thư viện hình đang được cập nhật. Bạn có thể tải ảnh của mình ở mục Tải ảnh." : "Không có kết quả phù hợp."}</p>
@@ -156,11 +262,14 @@ export function LibraryPanel({ onTemplate, onClipart }: Props) {
         </ul>
       )}
       {shown.length > limit && (
-        <button type="button" onClick={() => setLimit((l) => l + 90)} className="btn-sm w-full text-xs font-bold">
+        <button type="button" onClick={() => setLimit((l) => l + 60)} className="btn-sm w-full text-xs font-bold">
           Xem thêm ({shown.length - limit})
         </button>
       )}
-      <p className="text-[11px] text-ink/55">Bấm để thêm vào mặt đang chọn, sau đó sửa chữ, màu, vị trí tuỳ ý.</p>
+      <p className="text-[11px] text-ink/55">
+        Bấm để thêm vào mặt đang chọn, sau đó sửa chữ, màu, vị trí tuỳ ý.
+        {tab === "clipart" && activeSrc && " Bộ hình mã nguồn mở (MIT) – dùng in thương mại được."}
+      </p>
     </section>
   );
 }
