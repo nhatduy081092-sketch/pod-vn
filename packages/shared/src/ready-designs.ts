@@ -291,14 +291,15 @@ const EXTRA: Record<string, Spec[]> = {
 
 /** Nhóm bộ sưu tập để duyệt nhanh */
 export const DESIGN_GROUPS: { key: string; name: string; slugs: string[] }[] = [
-  { key: "dip-le", name: "Dịp & du lịch", slugs: ["tet-li-xi", "mua-thu-ha-noi", "mua-he-bien", "viet-nam-du-lich", "tu-hao-viet-nam"] },
+  { key: "mua-le", name: "Dịp lễ sắp tới", slugs: ["20-10", "halloween", "20-11", "noel", "tet-li-xi"] },
+  { key: "dip-le", name: "Mùa & du lịch", slugs: ["mua-thu-ha-noi", "mua-he-bien", "viet-nam-du-lich", "tu-hao-viet-nam"] },
   { key: "so-thich", name: "Sở thích", slugs: ["chuyen-phong-gym", "pickleball", "chay-bo", "ca-phe-tra-sua", "doi-game-thu", "karaoke", "foodie", "hoang-thuong-meo-cun"] },
   { key: "yeu-thuong", name: "Cặp đôi & gia đình", slugs: ["cap-doi", "gia-dinh", "ban-than"] },
   { key: "hoc-lam", name: "Đi học, đi làm", slugs: ["hoc-sinh-sinh-vien", "dan-van-phong", "nghe-nghiep", "team-building"] },
   { key: "tam-trang", name: "Tâm trạng & tối giản", slugs: ["tam-trang", "cham-ngon-tich-cuc", "toi-gian", "tui-tote"] },
 ];
 
-/* ---------- 24 bộ sưu tập ---------- */
+/* ---------- 28 bộ sưu tập ---------- */
 export const DESIGN_COLLECTIONS: DesignCollection[] = [
   C("mua-thu-ha-noi", "Mùa thu Hà Nội", "Gió heo may, cốm xanh, hoa sữa – mặc ấm mà vẫn thơ.", "#efe4d2", "#b45309", "sweater", "kem", [
     ["Hà Nội mùa thu", "script", "Tháng Mười", "Hà Nội\nmùa thu", "gió heo may về rồi"],
@@ -443,6 +444,39 @@ export const DESIGN_COLLECTIONS: DesignCollection[] = [
     ["Đựng cả thế giới", "script", "Túi của em", "Đựng cả\nthế giới", "trừ người yêu cũ"],
     ["Sách và cà phê", "note", "Sách\nvà cà phê", "— đủ cho một ngày", "", "tote", "kem"],
     ["Không túi nilon", "badge", "Sống xanh", "No nilon", "cảm ơn bạn", "tote", "den"],
+  ]),
+  /* ---------- Dịp lễ theo mùa (trang /dip/...) ---------- */
+  C("20-10", "20/10 – Tặng mẹ, tặng nàng", "Lời chúc in lên áo, mặc cả năm vẫn nhớ.", "#ffe4ec", "#e11d74", "tshirt", "trang", [
+    ["Mẹ là số một", "badge", "20 tháng 10", "Mẹ là", "số một của con", "tshirt", "trang"],
+    ["Nàng thơ của anh", "lobster", "Tặng em", "Nàng thơ\ncủa anh", "20.10.2026", "tshirt", "trang"],
+    ["Phụ nữ là để yêu", "script", "Ngày Phụ nữ Việt Nam", "Phụ nữ\nlà để yêu", "không phải để hiểu", "tshirt", "kem"],
+    ["Chị em văn phòng", "stack", "Chị em\nvăn phòng", "xinh từ thứ Hai", "", "tshirt", "trang"],
+    ["Hôm nay em là nhất", "note", "Hôm nay\nem là nhất\n(ngày nào cũng vậy)", "— 20/10", "", "sweater", "kem"],
+    ["Mẹ đảm con ngoan", "badge", "Nhà mình", "Mẹ đảm", "con ngoan bố chiều", "tshirt", "kem"],
+  ]),
+  C("halloween", "Halloween", "Ma mị vừa đủ, vui là chính.", "#ffe8d6", "#ff7a1a", "tshirt", "den", [
+    ["Cho kẹo hay bị ghẹo", "stack", "Cho kẹo\nhay bị ghẹo", "trick or treat", "", "tshirt", "den"],
+    ["Ma cũng sợ deadline", "note", "Ma cũng sợ\ndeadline", "— đêm 31/10", "", "tshirt", "den"],
+    ["Không cần hoá trang", "badge", "Halloween 2026", "Mặt mộc", "là đủ đáng sợ", "tshirt", "den"],
+    ["Hội săn kẹo", "stackO", "Hội\nsăn kẹo", "team bí ngô", "", "hoodie", "den"],
+    ["Ma nữ dễ thương", "lobster", "Đêm 31/10", "Ma nữ\ndễ thương", "đừng sợ nha", "tshirt", "trang"],
+    ["Bí ngô thức khuya", "script", "Halloween", "Bí ngô\nthức khuya", "ngủ trưa bù", "sweater", "xam"],
+  ]),
+  C("20-11", "20/11 – Tri ân thầy cô", "Một lời cảm ơn in lên áo lớp, nhớ mãi.", "#e3f1ff", "#2563eb", "tshirt", "trang", [
+    ["Cảm ơn thầy cô", "script", "20 tháng 11", "Cảm ơn\nthầy cô", "đã kiên nhẫn với lớp mình", "tshirt", "trang"],
+    ["Lớp mình biết ơn", "stack", "Lớp mình\nbiết ơn", "ngày nhà giáo 20/11", "", "tshirt", "trang"],
+    ["Thầy cô là nhất", "badge", "Ngày Nhà giáo", "Thầy cô", "là nhất", "tshirt", "navy"],
+    ["Một chữ cũng là thầy", "note", "Một chữ\ncũng là thầy", "— nửa chữ cũng là thầy", "", "tshirt", "kem"],
+    ["Học trò cưng", "lobster", "Danh hiệu", "Học trò\ncưng", "của cô chủ nhiệm", "tshirt", "trang"],
+    ["Hẹn gặp lại", "stackO", "Hẹn gặp lại\nmái trường", "khoá 2026", "", "hoodie", "xam"],
+  ]),
+  C("noel", "Giáng sinh", "Áo đôi, áo gia đình, áo len mùa lễ.", "#fbe0dc", "#b91c1c", "sweater", "trang", [
+    ["Merry Christmas", "lobster", "Giáng sinh 2026", "Merry\nChristmas", "an lành & ấm áp", "sweater", "trang"],
+    ["Đợi ông già Noel", "note", "Đang đợi\nông già Noel", "— ngoan cả năm rồi", "", "tshirt", "trang"],
+    ["Noel có đôi", "badge", "Mùa đông 2026", "Noel", "có đôi", "sweater", "den"],
+    ["Tuần lộc chính hiệu", "stack", "Tuần lộc\nchính hiệu", "kéo xe chở quà", "", "hoodie", "den"],
+    ["Gia đình mùa lễ", "script", "Family Christmas", "Nhà mình\nđón Noel", "24.12.2026", "sweater", "kem"],
+    ["Ấm áp mùa đông", "pacifico", "Winter", "Ấm áp\nmùa đông", "", "sweater", "navy"],
   ]),
 ];
 

@@ -15,6 +15,7 @@ import {
   productPriceBulkSchema,
   productUpsertSchema,
   sortPriceOf,
+  vnDayEnd,
   testimonialUpsertSchema,
   variantsSaveSchema,
   printAreasSaveSchema,
@@ -51,7 +52,7 @@ import { importOemCatalog } from "../lib/oem-import";
 import { applyB2BPricing } from "../lib/b2b-pricing";
 import { exportPriceSheet, importPriceSheet } from "../lib/price-sheet";
 import { cmsLink, postWebhook, webhookConfigured } from "../lib/quote-dispatch";
-import { searchFields, searchWhere } from "../lib/search";
+import { phraseWhere, searchFields, searchWhere } from "../lib/search";
 import { HTTPException } from "hono/http-exception";
 
 export const adminRoutes = new Hono<{ Variables: { admin: AdminClaims } }>();
@@ -412,6 +413,34 @@ adminRoutes.patch("/orders/:id", async (c) => {
     void emitOrderEvent(order.id, ev).catch(() => undefined);
   }
   return c.json(order);
+});
+
+/* ---------- Chiến dịch theo dịp: áp / gỡ giá ưu đãi cho sản phẩm trong các tab ---------- */
+adminRoutes.post("/campaigns/:slug/sale", async (c) => {
+  const { mode } = z.object({ mode: z.enum(["apply", "clear"]) }).parse(await c.req.json());
+  const camp = (await getLanding(true)).campaigns.find((x) => x.slug === c.req.param("slug"));
+  if (!camp) throw notFound("Không có chiến dịch này – lưu cài đặt trước");
+  const endsAt = vnDayEnd(camp.endsAt);
+  if (mode === "clear") {
+    const r = await prisma.product.updateMany({ where: { saleEndsAt: endsAt }, data: { salePrice: null, saleEndsAt: null } });
+    return c.json({ count: r.count });
+  }
+  const pct = camp.discountPercent;
+  if (!(pct > 0)) throw badRequest("Nhập % ưu đãi (lớn hơn 0) và lưu cài đặt trước");
+  const ors: Prisma.ProductWhereInput[] = camp.tabs.map((t) => {
+    const kws = t.q.split(",").map((k) => phraseWhere(k)).filter((w): w is Prisma.ProductWhereInput => !!w);
+    return { ...(t.category ? { category: { slug: t.category } } : {}), ...(kws.length ? { OR: kws } : {}) };
+  });
+  if (!ors.length) throw badRequest("Chiến dịch chưa có tab sản phẩm");
+  const prods = await prisma.product.findMany({ where: { isActive: true, basePrice: { gt: 0 }, OR: ors }, select: { id: true, basePrice: true } });
+  let count = 0;
+  for (const p of prods) {
+    const sale = Math.round((p.basePrice * (100 - pct)) / 100 / 1000) * 1000;
+    if (sale <= 0 || sale >= p.basePrice) continue;
+    await prisma.product.update({ where: { id: p.id }, data: { salePrice: sale, saleEndsAt: endsAt } });
+    count++;
+  }
+  return c.json({ count });
 });
 
 /* ---------- Settings (landing) ---------- */

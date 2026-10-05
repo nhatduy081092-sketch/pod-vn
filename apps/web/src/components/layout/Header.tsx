@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { luminance } from "@pod/shared";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/lib/cart";
@@ -17,9 +18,11 @@ type Props = {
   /** Nhóm ngành B2B + giải pháp theo dịp (settings.b2bHub) cho mega menu "Doanh nghiệp" */
   industries?: Lite[];
   solutions?: { key: string; title: string }[];
+  /** chiến dịch theo dịp đang chạy -> mục nổi bật trên menu */
+  campaign?: { slug: string; name: string; accent: string } | null;
 };
 
-export function Header({ brandName, logoUrl, categories, hotline, industries = [], solutions = [] }: Props) {
+export function Header({ brandName, logoUrl, categories, hotline, industries = [], solutions = [], campaign = null }: Props) {
   const [open, setOpen] = useState(false);
   const [mega, setMega] = useState(false);
   // danh mục bán lẻ (Cá nhân) = bỏ các danh mục thuộc ngành hàng doanh nghiệp
@@ -113,6 +116,15 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
         <div className="container-site flex h-11 items-center gap-6 text-sm font-medium">
           <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-7 overflow-x-auto">
             <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-muted">Cá nhân</span>
+            {campaign && (
+              <Link
+                href={`/dip/${campaign.slug}`}
+                className="shrink-0 whitespace-nowrap rounded-full border-2 border-ink px-3 py-0.5 text-[13px] font-bold shadow-sticker-sm transition hover:-translate-y-0.5"
+                style={{ backgroundColor: campaign.accent, color: luminance(campaign.accent) > 0.45 ? "#1d1d1f" : "#ffffff" }}
+              >
+                Quà {campaign.name}
+              </Link>
+            )}
             <Link href="/bo-suu-tap" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/bo-suu-tap") ? "text-brand" : "text-ink"}`}>
               Mẫu có sẵn
             </Link>
@@ -207,6 +219,11 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
             <Link href="/" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Trang chủ
             </Link>
+            {campaign && (
+              <Link href={`/dip/${campaign.slug}`} className="mt-1 block rounded-lg px-3 py-2.5" style={{ backgroundColor: campaign.accent, color: luminance(campaign.accent) > 0.45 ? "#1d1d1f" : "#ffffff" }}>
+                Quà {campaign.name} – xem ngay
+              </Link>
+            )}
             <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Cá nhân</p>
             <Link href="/bo-suu-tap" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Mẫu có sẵn theo chủ đề

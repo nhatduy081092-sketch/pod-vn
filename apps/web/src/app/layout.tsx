@@ -7,6 +7,8 @@ import { getCategories, getNotices, getPages, getSettings } from "@/lib/api";
 import { SITE_URL } from "@/lib/config";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CampaignBar } from "@/components/campaign/CampaignBar";
+import { liveCampaigns } from "@pod/shared";
 import { FloatingContact } from "@/components/layout/FloatingContact";
 import { Analytics } from "@/components/layout/Analytics";
 import { TopBar } from "@/components/layout/TopBar";
@@ -48,6 +50,8 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [settings, categories, pages, notices] = await Promise.all([getSettings(), getCategories(), getPages(), getNotices()]);
+  // chiến dịch theo dịp đang chạy (gần nhất) -> thanh thông báo + mục nổi bật trên menu
+  const campaign = liveCampaigns(settings.campaigns)[0] ?? null;
   return (
     <html lang="vi" className={`${font.variable} ${display.variable}`} suppressHydrationWarning>
       <head>
@@ -60,6 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <CartProvider>
         <QuoteListProvider>
           <NoticeBanner notices={notices} />
+          {campaign && <CampaignBar c={campaign} />}
           <TopBar brand={settings.brand} />
           <Header
             brandName={settings.brand.name}
@@ -68,6 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             hotline={settings.brand.hotline}
             industries={settings.b2bHub.industries}
             solutions={settings.b2bHub.solutions}
+            campaign={campaign ? { slug: campaign.slug, name: campaign.name, accent: campaign.accent } : null}
           />
           <main className="min-h-[60vh]">{children}</main>
           <Footer brand={settings.brand} categories={categories} pages={pages} />

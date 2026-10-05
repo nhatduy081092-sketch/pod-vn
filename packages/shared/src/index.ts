@@ -18,4 +18,5 @@ export * from "./product-types";
 export * from "./seasons";
 export * from "./showcase";
 export * from "./ready-designs";
+export * from "./campaigns";
 export * from "./brand-logo";

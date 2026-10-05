@@ -238,6 +238,32 @@ export const landingSettingsSchema = z.object({
       )
       .max(12),
   }),
+  campaigns: z
+    .array(
+      z.object({
+        slug: z.string().trim().regex(/^[a-z0-9-]{2,40}$/, "Mã chiến dịch: chữ thường, số, gạch ngang"),
+        enabled: z.boolean(),
+        name: z.string().trim().min(1).max(30),
+        eyebrow: z.string().max(80),
+        title: z.string().trim().min(1).max(120),
+        subtitle: z.string().max(300),
+        startsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày dạng YYYY-MM-DD"),
+        endsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày dạng YYYY-MM-DD"),
+        deadline: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày dạng YYYY-MM-DD"), z.literal("")]),
+        discountPercent: z.number().int().min(0).max(70),
+        bg: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        dark: z.boolean(),
+        heroImage: z.string().max(500),
+        ribbon: z.array(z.string().trim().min(1).max(40)).max(8),
+        collections: z.array(z.string().trim().max(60)).max(6),
+        tabs: z.array(z.object({ label: z.string().trim().min(1).max(40), category: z.string().max(120), q: z.string().max(200) })).max(6),
+        b2bTitle: z.string().max(100),
+        b2bText: z.string().max(300),
+        faq: z.array(z.object({ q: z.string().trim().min(1).max(160), a: z.string().max(500) })).max(8),
+      }),
+    )
+    .max(20),
   media: z.object({
     hide2d: z.boolean(),
     blanks: z.record(z.string().regex(/^[a-z-]{2,40}$/), z.string().max(500)),

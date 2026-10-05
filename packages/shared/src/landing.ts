@@ -1,4 +1,5 @@
 import type { Audience } from "./constants";
+import { DEFAULT_CAMPAIGNS, type Campaign } from "./campaigns";
 import { DEFAULT_SHIPPING, mergeShipping, type ShippingConfig } from "./shipping";
 import { DEFAULT_B2B_PRICING, type B2BPricing } from "./pricing";
 
@@ -85,6 +86,8 @@ export type LandingSettings = {
    * blanks = ảnh thật của phôi trơn theo "dáng-màu" (VD "tshirt-den") do AI tạo – dùng cho ảnh xem trước mẫu chữ & YALA Everyday.
    */
   media: { hide2d: boolean; blanks: Record<string, string> };
+  /** Chiến dịch theo dịp – trang /dip/<slug> (xem campaigns.ts) */
+  campaigns: Campaign[];
   /** Cách tính giá cho sản phẩm nhập từ nguồn (nhà cung cấp) */
   b2bPricing: B2BPricing;
   /**
@@ -301,6 +304,7 @@ export const DEFAULT_LANDING: LandingSettings = {
     ],
   },
   media: { hide2d: true, blanks: {} },
+  campaigns: DEFAULT_CAMPAIGNS,
   heroPlay: {
     enabled: true,
     title: "Áo in chữ của riêng bạn. Từ 1 chiếc.",
@@ -586,6 +590,10 @@ export function mergeLanding(value: unknown): LandingSettings {
     },
     b2bQuote: { ...d.b2bQuote, ...v.b2bQuote },
     media: { ...d.media, ...v.media, blanks: { ...v.media?.blanks } },
+    // chiến dịch đã lưu giữ nguyên; chiến dịch mặc định mới (slug chưa có) tự thêm vào
+    campaigns: v.campaigns
+      ? [...v.campaigns.map((c) => ({ ...(d.campaigns.find((x) => x.slug === c.slug) ?? d.campaigns[0]!), ...c })), ...d.campaigns.filter((x) => !v.campaigns!.some((c) => c.slug === x.slug))]
+      : d.campaigns,
     heroPlay: {
       ...d.heroPlay,
       ...v.heroPlay,

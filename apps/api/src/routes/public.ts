@@ -278,8 +278,19 @@ async function listingWhere(query: Record<string, string>, omit: "sub" | "catego
     ...(query.mau ? { variants: { some: { isActive: true, color: { equals: query.mau.trim().slice(0, 40), mode: "insensitive" as const } } } } : {}),
     // tìm kiếm, bộ lọc doanh nghiệp, ảnh thật: đều có thể dùng AND -> gộp bằng AND riêng, không ghi đè nhau
     // thiet-ke=1 (bảng giá phôi, link nội bộ) vẫn lấy cả phôi vẽ; thêm anh-that=1 (trang /thiet-ke) -> chỉ sản phẩm ảnh thật
-    AND: [await resolveSearch(query.q), await b2bWhere(query), query["thiet-ke"] === "1" && query["anh-that"] !== "1" ? {} : await realPhotoWhere()],
+    AND: [await resolveSearch(query.q), await b2bWhere(query), kwWhere(query.kw), query["thiet-ke"] === "1" && query["anh-that"] !== "1" ? {} : await realPhotoWhere()],
   };
+}
+
+/** kw=cụm 1, cụm 2…: khớp BẤT KỲ cụm nào (tab sản phẩm của trang chiến dịch /dip/...) */
+function kwWhere(kw?: string): Prisma.ProductWhereInput {
+  if (!kw) return {};
+  const ors = kw
+    .slice(0, 400)
+    .split(",")
+    .map((k) => phraseWhere(k))
+    .filter((w): w is Prisma.ProductWhereInput => !!w);
+  return ors.length ? { OR: ors } : {};
 }
 
 /**

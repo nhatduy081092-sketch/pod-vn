@@ -4,6 +4,7 @@ import { DEFAULT_LANDING, type HeroSlide, type Lane, type LandingSettings, type 
 import { ImageInput } from "./ImageInput";
 import { B2BPricingCard } from "./B2BPricingCard";
 import { QuoteRoutingCard } from "./QuoteRoutingCard";
+import { CampaignsCard } from "./CampaignsCard";
 
 type S = LandingSettings;
 type Props = { value: S; onChange: (fn: (prev: S) => S) => void };
@@ -277,6 +278,10 @@ export function HomeBlocksSettings({ value: s, onChange }: Props) {
           />
           <CasesEditor cases={s.b2bHub.cases} onChange={(v) => set("b2bHub", { cases: v })} />
         </div>
+      </Card>
+
+      <Card {...cardProps("campaigns")} title="Chiến dịch theo dịp (/dip/...)" hint="20/10, Halloween, 20/11, Noel, Tết… – banner, đếm ngược hạn chót, mẫu chữ, tab sản phẩm, giá ưu đãi.">
+        <CampaignsCard value={s} onChange={onChange} />
       </Card>
 
       <Card {...cardProps("media")} title="Hình ảnh (chỉ hiện ảnh thật)" hint="Ẩn sản phẩm chỉ có ảnh vẽ 2D khỏi trang chủ, danh mục, tìm kiếm, gợi ý. Ảnh phôi trơn thật do lệnh AI tạo (deploy/ai-photos.sh).">

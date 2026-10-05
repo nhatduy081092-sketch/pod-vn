@@ -16,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/doanh-nghiep/san-pham`, changeFrequency: "daily", priority: 0.8 },
     ...settings.b2bHub.industries.map((i) => ({ url: `${SITE_URL}/doanh-nghiep/san-pham?nganh=${i.slug}`, changeFrequency: "weekly" as const, priority: 0.7 })),
     ...settings.b2bHub.solutions.map((x) => ({ url: `${SITE_URL}/doanh-nghiep/san-pham?dip=${x.key}`, changeFrequency: "weekly" as const, priority: 0.7 })),
+    ...settings.campaigns.filter((c) => c.enabled).map((c) => ({ url: `${SITE_URL}/dip/${c.slug}`, changeFrequency: "daily" as const, priority: 0.85 })),
     ...DESIGN_COLLECTIONS.map((c) => ({ url: `${SITE_URL}/bo-suu-tap/${c.slug}`, changeFrequency: "weekly" as const, priority: 0.6 })),
     ...cats.map((c) => ({ url: `${SITE_URL}/danh-muc/${c.slug}`, changeFrequency: "weekly" as const, priority: 0.7 })),
     ...pages.map((p) => ({ url: `${SITE_URL}/trang/${p.slug}`, changeFrequency: "monthly" as const, priority: 0.3 })),

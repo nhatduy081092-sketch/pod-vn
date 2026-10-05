@@ -355,3 +355,14 @@ export async function aiBlankPhotoAction(key: string): Promise<{ ok: true; url: 
     return { ok: false, error: (e as Error).message };
   }
 }
+
+/* ---------- Chiến dịch theo dịp ---------- */
+export async function campaignSaleAction(slug: string, mode: "apply" | "clear"): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
+  try {
+    const r = await adminFetch<{ count: number }>(`/campaigns/${encodeURIComponent(slug)}/sale`, { method: "POST", body: JSON.stringify({ mode }) });
+    await revalidateWeb();
+    return { ok: true, count: r.count };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
