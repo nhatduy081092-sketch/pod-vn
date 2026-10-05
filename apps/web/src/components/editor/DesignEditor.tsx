@@ -685,6 +685,34 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     patchLayer(selected.id, { src: selected.origSrc, origSrc: undefined, ...(size ? { natW: size.w, natH: size.h } : {}) } as Partial<DesignLayer>, true);
   }
 
+  /**
+   * Cốc/bình in 2 bên: tay cầm nằm ở 2 mép dải in, 2 mặt nhìn thấy khi cầm tay phải/trái ở 1/4 và 3/4 dải.
+   * Gom thiết kế hiện tại (thu nhỏ nếu rộng hơn nửa dải) rồi đặt 1 bản ở mỗi bên.
+   */
+  function printBothSides() {
+    const W = area.widthMm;
+    const body = ad.layers.filter((l) => !(l.type === "image" && l.tile));
+    if (!body.length) return;
+    if ((ad.layers.length - body.length) + body.length * 2 > DESIGN_LIMITS.layersPerArea) return setError(`Tối đa ${DESIGN_LIMITS.layersPerArea} lớp mỗi mặt`);
+    const bs = body.map((l) => layerBounds(l));
+    const left = Math.min(...bs.map((b) => b.left));
+    const right = Math.max(...bs.map((b) => b.right));
+    const top = Math.min(...bs.map((b) => b.top));
+    const bottom = Math.max(...bs.map((b) => b.bottom));
+    const cx = (left + right) / 2;
+    const cy = (top + bottom) / 2;
+    const f = Math.min(1, (W / 2) * 0.9 / Math.max(1, right - left));
+    const place = (l: DesignLayer, at: number): DesignLayer => {
+      const base = { ...l, id: uid(), x: at + (l.x - cx) * f, y: cy + (l.y - cy) * f, w: l.w * f, h: l.h * f, locked: false };
+      if (l.type !== "text") return base as DesignLayer;
+      const t = { ...(base as TextLayer), fontSize: Math.max(1, l.fontSize * f), stroke: l.stroke ? { ...l.stroke, width: l.stroke.width * f } : undefined };
+      return { ...t, ...measureText(t) };
+    };
+    updateArea((a) => ({ ...a, layers: [...a.layers.filter((l) => l.type === "image" && l.tile), ...body.map((l) => place(l, W / 4)), ...body.map((l) => place(l, (3 * W) / 4))] }));
+    setSelectedId(null);
+    setNotice("✓ Đã in 2 bên – cầm tay trái hay tay phải đều thấy. Bấm “Xem” để xoay thử.");
+  }
+
   /** Đổi màu áo: chữ nào gần trùng màu áo mới -> mời đổi màu chữ 1 chạm */
   function pickColor(c: { name: string; hex: string }) {
     setColor(c);
@@ -1141,7 +1169,20 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             ))}
           </div>
           )}
-          {area.warp === "cylinder" && <p className="mt-2 text-center text-[11px] text-ink/60">Dải in cuộn quanh thân – ảnh nhỏ ở góc là mặt trước khi nhìn thẳng.</p>}
+          {area.warp === "cylinder" && (
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-center text-[11px] text-ink/60">
+              <span>Dải in cuộn quanh thân – ảnh nhỏ ở góc là mặt trước khi nhìn thẳng.</span>
+              {ad.layers.length > 0 && (
+                <button
+                  type="button"
+                  className="rounded-full border-2 border-ink/20 bg-white px-2.5 py-0.5 font-bold text-ink hover:border-ink"
+                  onClick={printBothSides}
+                >
+                  ⟲ In 2 bên
+                </button>
+              )}
+            </div>
+          )}
           <p className="mt-1 hidden text-center text-[11px] text-ink/55 lg:block">Kéo để di chuyển · kéo góc để đổi cỡ · nút tròn để xoay · lăn chuột để phóng to/thu nhỏ</p>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { personalizeArea, type DesignJson } from "@pod/shared";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { personalizeArea, type AreaDesign, type DesignJson } from "@pod/shared";
 import type { PrintArea } from "@/lib/types";
 import { IconClose } from "../ui/icons";
 import { canvasToBlob, createCanvas, drawMockup, type ImageCache, type MockupAssets } from "./render";
@@ -32,6 +32,17 @@ async function prepare(areas: PrintArea[], design: DesignJson, images: ImageCach
   return out;
 }
 
+/**
+ * Cốc/bình: xoay dải in để xem mặt bên (dịch mọi lớp theo chiều ngang, lớp vắt qua mép dải được nhân bản sang phía bên kia
+ * như khi cuộn quanh thân thật).
+ */
+function rotateWrap(ad: AreaDesign, widthMm: number, shiftMm: number): AreaDesign {
+  if (!shiftMm) return ad;
+  return { ...ad, layers: ad.layers.flatMap((l) => [-widthMm, 0, widthMm].map((o) => ({ ...l, x: l.x + shiftMm + o }))) };
+}
+
+type View = { id: string; area: PrintArea; assets: MockupAssets; label: string; shift: number };
+
 /** Xem tất cả mặt cùng lúc + tải ảnh ghép / chia sẻ (Zalo, Messenger qua menu chia sẻ của điện thoại) */
 export function OverviewModal({ productName, areas, design, images, garmentColor, colorName, sample, onClose }: Props) {
   const [items, setItems] = useState<{ area: PrintArea; assets: MockupAssets }[] | null>(null);
@@ -53,19 +64,34 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
   }, []);
 
   const adOf = (key: string) => personalizeArea(design.areas[key] ?? { bg: null, layers: [] }, sample ?? null);
+  // cốc/bình: thêm 2 góc nhìn xoay trái/phải
+  const views = useMemo<View[]>(
+    () =>
+      (items ?? []).flatMap((it) =>
+        it.area.warp === "cylinder"
+          ? [
+              { ...it, id: `${it.area.key}:l`, label: `${it.area.name} · bên trái`, shift: it.area.widthMm / 3 },
+              { ...it, id: it.area.key, label: `${it.area.name} · chính diện`, shift: 0 },
+              { ...it, id: `${it.area.key}:r`, label: `${it.area.name} · bên phải`, shift: -it.area.widthMm / 3 },
+            ]
+          : [{ ...it, id: it.area.key, label: it.area.name, shift: 0 }],
+      ),
+    [items],
+  );
+  const adView = (v: View) => rotateWrap(adOf(v.area.key), v.area.widthMm, v.shift);
 
   useEffect(() => {
     if (!items) return;
-    for (const it of items) {
-      const c = refs.current[it.area.key];
+    for (const v of views) {
+      const c = refs.current[v.id];
       if (!c) continue;
       const px = 520;
       c.width = px;
       c.height = px;
-      drawMockup(c.getContext("2d")!, px, px, it.area, adOf(it.area.key), it.assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45 });
+      drawMockup(c.getContext("2d")!, px, px, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, garmentColor]);
+  }, [views, garmentColor]);
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -77,8 +103,8 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
   async function compose(): Promise<File> {
     if (!items) throw new Error("Đang tải");
     const cell = 800;
-    const cols = Math.min(items.length, 3);
-    const rows = Math.ceil(items.length / cols);
+    const cols = Math.min(views.length, 3);
+    const rows = Math.ceil(views.length / cols);
     const head = 90;
     const c = createCanvas(cols * cell, rows * cell + head);
     const ctx = c.getContext("2d")!;
@@ -91,15 +117,15 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
     ctx.font = `400 22px "Be Vietnam Pro", sans-serif`;
     ctx.fillStyle = "#6b7280";
     ctx.fillText([colorName, "Ảnh xem trước thiết kế – màu thực tế có thể chênh nhẹ"].filter(Boolean).join(" · "), 32, head - 18);
-    items.forEach((it, i) => {
+    views.forEach((v, i) => {
       const x = (i % cols) * cell;
       const y = head + Math.floor(i / cols) * cell;
       const sub = createCanvas(cell, cell);
-      drawMockup(sub.getContext("2d")!, cell, cell, it.area, adOf(it.area.key), it.assets, images, { background: "#ffffff", padding: cell * 0.05, garmentColor, shading: 0.45 });
+      drawMockup(sub.getContext("2d")!, cell, cell, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: cell * 0.05, garmentColor, shading: 0.45 });
       ctx.drawImage(sub, x, y);
       ctx.fillStyle = "#1d1d1f";
       ctx.font = `600 24px "Be Vietnam Pro", sans-serif`;
-      ctx.fillText(it.area.name, x + 24, y + 30);
+      ctx.fillText(v.label, x + 24, y + 30);
       sub.width = sub.height = 0;
     });
     const blob = await canvasToBlob(c, "image/jpeg", 0.9);
@@ -160,11 +186,11 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
           {!items ? (
             <p className="py-10 text-center text-sm text-ink/60">Đang dựng ảnh xem trước…</p>
           ) : (
-            <ul className={`grid gap-3 ${shown.length > 1 ? "grid-cols-2 md:grid-cols-3" : "mx-auto max-w-md grid-cols-1"}`}>
-              {items.map((it) => (
-                <li key={it.area.key} className="overflow-hidden rounded-lg border border-ink/10">
-                  <canvas ref={(el) => void (refs.current[it.area.key] = el)} className="aspect-square w-full" aria-label={`Xem trước ${it.area.name}`} />
-                  <p className="border-t border-ink/10 px-2 py-1 text-xs font-bold">{it.area.name}</p>
+            <ul className={`grid gap-3 ${views.length > 1 ? "grid-cols-2 md:grid-cols-3" : "mx-auto max-w-md grid-cols-1"}`}>
+              {views.map((v) => (
+                <li key={v.id} className="overflow-hidden rounded-lg border border-ink/10">
+                  <canvas ref={(el) => void (refs.current[v.id] = el)} className="aspect-square w-full" aria-label={`Xem trước ${v.label}`} />
+                  <p className="border-t border-ink/10 px-2 py-1 text-xs font-bold">{v.label}</p>
                 </li>
               ))}
             </ul>
