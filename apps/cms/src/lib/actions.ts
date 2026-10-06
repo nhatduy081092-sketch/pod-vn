@@ -74,6 +74,7 @@ export async function uploadImageAction(fd: FormData): Promise<{ ok: true; url: 
     if (!(file instanceof File)) return { ok: false, error: "Thiếu file" };
     const body = new FormData();
     body.append("file", file);
+    if (fd.get("ai") === "1") body.append("ai", "1");
     const r = await adminFetch<{ url: string }>("/uploads", { method: "POST", body });
     return { ok: true, url: r.url };
   } catch (e) {

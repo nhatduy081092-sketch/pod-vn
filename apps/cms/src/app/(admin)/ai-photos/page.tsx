@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/ui";
 import { AiPhotoStudio, type AiProduct } from "@/components/AiPhotoStudio";
 import { BlankPhotos, type BlankItem } from "@/components/BlankPhotos";
 import { ModelPhotos, type ModelItem } from "@/components/ModelPhotos";
+import { ChatGptPhotoStudio, type GptProduct } from "@/components/ChatGptPhotoStudio";
 
 export const metadata = { title: "Ảnh thật AI" };
 
@@ -11,9 +12,13 @@ export default async function AiPhotosPage() {
   const blanks = await adminFetch<{ items: BlankItem[]; aiEnabled: boolean }>("/blanks").catch(() => ({ items: [] as BlankItem[], aiEnabled: false }));
   const models = await adminFetch<{ items: ModelItem[] }>("/models").catch(() => ({ items: [] as ModelItem[] }));
   const items: AiProduct[] = [];
-  for (let page = 1; page <= 10; page++) {
-    const r = await adminFetch<{ items: (AiProduct & { category?: { name: string } })[]; total: number; pageSize: number }>(`/products?page=${page}&pageSize=100`);
-    items.push(...r.items.map((p) => ({ id: p.id, name: p.name, slug: p.slug, images: p.images, isActive: p.isActive, categoryName: p.category?.name ?? "" })));
+  const gpt: GptProduct[] = [];
+  for (let page = 1; page <= 12; page++) {
+    const r = await adminFetch<{ items: (AiProduct & { category?: { name: string; slug?: string }; material?: string; externalId?: string | null })[]; total: number; pageSize: number }>(`/products?page=${page}&pageSize=100`);
+    for (const p of r.items) {
+      items.push({ id: p.id, name: p.name, slug: p.slug, images: p.images, isActive: p.isActive, categoryName: p.category?.name ?? "" });
+      gpt.push({ id: p.id, name: p.name, slug: p.slug, images: p.images, isActive: p.isActive, categoryName: p.category?.name ?? "", categorySlug: p.category?.slug ?? "", material: p.material ?? "", source: !!p.externalId?.startsWith("oem:") });
+    }
     if (page * r.pageSize >= r.total) break;
   }
   return (
@@ -27,6 +32,7 @@ export default async function AiPhotosPage() {
       )}
       {blanks.items.length > 0 && <BlankPhotos items={blanks.items} aiEnabled={blanks.aiEnabled} />}
       {models.items.length > 0 && <ModelPhotos items={models.items} />}
+      <ChatGptPhotoStudio products={gpt} />
       <AiPhotoStudio products={items} enabled={config.enabled} model={config.model} />
     </>
   );

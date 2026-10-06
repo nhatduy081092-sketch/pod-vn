@@ -112,6 +112,13 @@ adminRoutes.get("/stats", async (c) => {
 /* ---------- Upload ---------- */
 adminRoutes.post("/uploads", async (c) => {
   const body = await c.req.parseBody();
+  // ai=1: ảnh tạo bằng AI (ChatGPT…) -> tiền tố "ai-" để web gắn nhãn "Ảnh minh hoạ"
+  if (body["ai"] === "1") {
+    const f = body["file"];
+    if (!(f instanceof File)) throw badRequest("Thiếu file (field 'file')");
+    if (f.size > 15 * 1024 * 1024) throw badRequest("Ảnh tối đa 15MB");
+    return c.json(await saveBuffer(Buffer.from(await f.arrayBuffer()), "ai-"), 201);
+  }
   return c.json(await saveUpload(body["file"]), 201);
 });
 
@@ -271,7 +278,7 @@ adminRoutes.get("/products", async (c) => {
       orderBy: [{ category: { sortOrder: "asc" } }, { sortOrder: "asc" }],
       skip,
       take,
-      include: { category: { select: { name: true } } },
+      include: { category: { select: { name: true, slug: true } } },
     }),
     prisma.product.count({ where }),
   ]);
