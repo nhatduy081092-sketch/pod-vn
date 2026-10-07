@@ -1,6 +1,7 @@
 import { prisma } from "@pod/db";
 import { mergeLanding } from "@pod/shared";
 import { invalidateLanding } from "./settings";
+import { applyBlankPhotos } from "./blank-photos";
 
 /**
  * Cập nhật cài đặt theo yêu cầu của chủ shop, chạy 1 lần khi API khởi động (đánh dấu bằng Setting).
@@ -33,8 +34,38 @@ async function revalidateWeb() {
   }
 }
 
+/**
+ * Ảnh thật phôi trơn (6 dáng × 6 màu, nền trong suốt) đi kèm bản web: /blanks/<dáng>-<màu>.webp.
+ * Chỉ điền ô CHƯA có ảnh (ảnh chủ shop tải lên CMS được giữ nguyên), rồi gắn vào sản phẩm + khung Studio.
+ */
+const BLANK_FLAG = "update:blank-photos:2026-10-07";
+const BLANK_GARMENTS = ["tshirt", "longsleeve", "sweater", "hoodie", "jogger", "tote"];
+const BLANK_COLORS = ["trang", "den", "kem", "xam", "navy", "hong"];
+
+async function applyBundledBlanks(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: BLANK_FLAG } })) return false;
+  const row = await prisma.setting.findUnique({ where: { key: "landing" } });
+  const cur = mergeLanding(row?.value);
+  const blanks = { ...cur.media.blanks };
+  let n = 0;
+  for (const g of BLANK_GARMENTS)
+    for (const c of BLANK_COLORS) {
+      const key = `${g}-${c}`;
+      if (blanks[key]) continue;
+      blanks[key] = `/blanks/${key}.webp`;
+      n++;
+    }
+  const value = { ...cur, media: { ...cur.media, blanks } };
+  await prisma.setting.upsert({ where: { key: "landing" }, update: { value }, create: { key: "landing", value } });
+  invalidateLanding();
+  const r = await applyBlankPhotos(blanks);
+  await prisma.setting.create({ data: { key: BLANK_FLAG, value: { at: new Date().toISOString(), filled: n, ...r } } });
+  console.log(`[settings] ảnh phôi trơn: điền ${n} ô, đổi ảnh ${r.swapped} sản phẩm, ${r.areas} khung Studio`);
+  return true;
+}
+
 export async function applySettingsUpdates() {
-  let changed = false;
+  let changed = await applyBundledBlanks();
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });

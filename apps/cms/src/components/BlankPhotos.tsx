@@ -1,11 +1,12 @@
 "use client";
 import { useRef, useState } from "react";
 import { aiBlankPhotoAction, setBlankPhotoAction, uploadImageAction } from "@/lib/actions";
-import { assetUrl } from "@/lib/config";
+import { assetUrl, WEB_URL } from "@/lib/config";
 
 export type BlankItem = { key: string; label: string; photo: string; prompt: string };
 
-/** Ảnh tải lên -> cắt vuông giữa khung + 1200px JPG (đồng bộ khung với mockup Studio, bỏ EXIF/GPS) */
+/** Ảnh tải lên -> cắt vuông giữa khung, 1200px (đồng bộ khung với mockup Studio, bỏ EXIF/GPS).
+ *  Ảnh nền trong suốt (PNG/WebP) giữ nguyên trong suốt -> Studio đổi được màu áo theo lựa chọn của khách. */
 async function normalize(file: File): Promise<File> {
   const url = URL.createObjectURL(file);
   try {
@@ -17,16 +18,24 @@ async function normalize(file: File): Promise<File> {
     const c = document.createElement("canvas");
     c.width = c.height = S;
     const ctx = c.getContext("2d")!;
-    ctx.fillStyle = "#f4f2ef";
-    ctx.fillRect(0, 0, S, S);
     ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, S, S);
-    const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/jpeg", 0.9));
+    const corner = ctx.getImageData(0, 0, 4, 4).data;
+    const alpha = file.type !== "image/jpeg" && corner[3]! < 250;
+    if (!alpha) {
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.fillStyle = "#f4f2ef";
+      ctx.fillRect(0, 0, S, S);
+    }
+    const blob = await new Promise<Blob | null>((r) => c.toBlob(r, alpha ? "image/png" : "image/jpeg", 0.9));
     if (!blob) throw new Error("Không xử lý được ảnh");
-    return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", { type: "image/jpeg" });
+    return new File([blob], file.name.replace(/\.\w+$/, "") + (alpha ? ".png" : ".jpg"), { type: alpha ? "image/png" : "image/jpeg" });
   } finally {
     URL.revokeObjectURL(url);
   }
 }
+
+/** ảnh dựng sẵn nằm ở web (/blanks/…), ảnh tải lên ở /uploads */
+const photoSrc = (p: string) => (p.startsWith("/blanks/") ? `${WEB_URL}${p}` : assetUrl(p));
 
 export function BlankPhotos({ items: initial, aiEnabled }: { items: BlankItem[]; aiEnabled: boolean }) {
   const [items, setItems] = useState(initial);
@@ -133,7 +142,7 @@ function BlankCard({ item, busy, msg, copied, aiEnabled, onUpload, onAi, onRemov
   return (
     <div className={`overflow-hidden rounded-lg border ${item.photo ? "border-green-300" : ""}`}>
       <div className="relative aspect-square bg-[#f4f2ef]">
-        <img src={item.photo ? assetUrl(item.photo) : src} alt={item.label} className="h-full w-full object-cover" loading="lazy" />
+        <img src={item.photo ? photoSrc(item.photo) : src} alt={item.label} className="h-full w-full object-cover" loading="lazy" />
         <span className={`absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${item.photo ? "bg-green-600 text-white" : "bg-white/90 text-neutral-600"}`}>{item.photo ? "Ảnh thật" : "Hình vẽ"}</span>
         {busy && <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-xs font-medium">{busy}</div>}
       </div>

@@ -95,4 +95,5 @@ export const MOCK_SHAPES = {
 export type MockShape = keyof typeof MOCK_SHAPES;
 
 /** Ảnh sản phẩm do AI tạo (CMS → Ảnh thật AI, file /uploads/ai-…) -> hiện nhãn "Ảnh minh hoạ" trên web */
-export const isAiImage = (url?: string | null) => !!url && /\/uploads\/ai-[^/]*$/.test(url.split("?")[0]!);
+/** Ảnh tạo bằng AI (gắn nhãn "Ảnh minh hoạ"): /uploads/ai-* và ảnh phôi trơn dựng sẵn /blanks/* */
+export const isAiImage = (url?: string | null) => !!url && /(\/uploads\/ai-[^/]*|\/blanks\/[^/]+)$/.test(url.split("?")[0]!);
