@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { areaExtraPrice, designFields, displayCompareAt, formatVND, isAiImage, linePrice, saleActive, TEAM_SIZE_LABEL, type RosterRow } from "@pod/shared";
+import { areaExtraPrice, BASIC_COLORS, designFields, displayCompareAt, formatVND, isAiImage, linePrice, saleActive, TEAM_SIZE_LABEL, type ColorKey, type RosterRow } from "@pod/shared";
 import { useCart } from "@/lib/cart";
 import { assetUrl } from "@/lib/config";
 import { track } from "@/lib/track";
@@ -63,7 +63,19 @@ export function ProductConfigurator({
   const teamTotal = roster.reduce((s, r) => s + unit + (sizeDeltas[r.size] ?? 0), 0);
 
   // Ảnh bên trái: ảnh xem trước thiết kế (nếu có) rồi đến ảnh sản phẩm
-  const gallery = useMemo(() => [...(design?.files.map((f) => f.previewUrl) ?? []), ...product.images].slice(0, 10), [design, product.images]);
+  // phôi YALA Everyday (ảnh /blanks/<dáng>-<màu>.webp): đổi màu -> ảnh chính đổi theo màu đang chọn
+  const colorPhoto = useMemo(() => {
+    const g = product.images.map((u) => /\/blanks\/([a-z]+)-[a-z-]+\.webp$/.exec(u)?.[1]).find(Boolean);
+    const key = (Object.keys(BASIC_COLORS) as ColorKey[]).find((k) => BASIC_COLORS[k].name === sel.color);
+    return g && key ? `/blanks/${g}-${key}.webp` : null;
+  }, [product.images, sel.color]);
+  const gallery = useMemo(
+    () => [...new Set([...(design?.files.map((f) => f.previewUrl) ?? []), ...(colorPhoto ? [colorPhoto] : []), ...product.images])].slice(0, 10),
+    [design, product.images, colorPhoto],
+  );
+  useEffect(() => {
+    if (colorPhoto && !design) setImgIdx(0);
+  }, [colorPhoto, design]);
   useEffect(() => setImgIdx(0), [design?.updatedAt]);
   // ?mau=Đen (từ khối "Dòng sản phẩm" / trang danh mục) -> chọn sẵn màu đó. Đọc ở client để trang vẫn tĩnh (ISR).
   useEffect(() => {

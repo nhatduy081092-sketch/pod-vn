@@ -272,7 +272,7 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
       ) : !shown.length ? (
         <p className="text-xs text-ink/60">{tab === "clipart" && !list.length ? "Thư viện hình đang được cập nhật. Bạn có thể tải ảnh của mình ở mục Tải ảnh." : "Không có kết quả phù hợp."}</p>
       ) : (
-        <ul className="grid max-h-[46vh] grid-cols-3 gap-1.5 overflow-y-auto pr-0.5 lg:max-h-[52vh]">
+        <ul className="grid grid-cols-3 gap-1.5 pr-0.5 sm:grid-cols-4 lg:max-h-[52vh] lg:grid-cols-3 lg:overflow-y-auto">
           {shown.slice(0, limit).map((x) => (
             <li key={x.id}>
               <button

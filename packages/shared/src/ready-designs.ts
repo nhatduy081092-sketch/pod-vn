@@ -8,7 +8,16 @@ import { luminance } from "./showcase";
  */
 
 export type GarmentKey = "tshirt" | "longsleeve" | "sweater" | "hoodie" | "tote";
-export type ColorKey = "trang" | "den" | "kem" | "xam" | "navy";
+export type ColorKey = "trang" | "den" | "kem" | "xam" | "navy" | "hong";
+
+/** Màu đang bán theo dáng (khớp phân loại màu sản phẩm YALA Everyday) – màu đầu = màu mặc định */
+export const GARMENT_COLORS: Record<GarmentKey, ColorKey[]> = {
+  tshirt: ["trang", "den", "kem", "xam", "navy", "hong"],
+  longsleeve: ["trang", "den", "kem", "xam", "navy", "hong"],
+  sweater: ["kem", "trang", "den", "xam", "navy", "hong"],
+  hoodie: ["den", "trang", "kem", "xam", "navy", "hong"],
+  tote: ["kem", "den"],
+};
 
 /** Màu phôi (khớp phân loại màu của sản phẩm YALA Everyday) */
 export const BASIC_COLORS: Record<ColorKey, { name: string; hex: string; dark: boolean }> = {
@@ -17,6 +26,7 @@ export const BASIC_COLORS: Record<ColorKey, { name: string; hex: string; dark: b
   kem: { name: "Kem", hex: "#ece2cf", dark: false },
   xam: { name: "Xám", hex: "#a7a9ad", dark: false },
   navy: { name: "Navy", hex: "#233049", dark: true },
+  hong: { name: "Hồng", hex: "#efc2c8", dark: false },
 };
 
 /** Phôi -> slug sản phẩm YALA Everyday (tạo tự động ở API: starter-catalog) */

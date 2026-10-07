@@ -186,7 +186,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const setTool = useCallback((t: Tool) => {
     setToolState(t);
     if (typeof window !== "undefined" && window.innerWidth < 1024)
-      requestAnimationFrame(() => panelRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
+      requestAnimationFrame(() => panelRef.current?.scrollTo({ top: 0 }));
   }, []);
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [busy, setBusy] = useState("");
@@ -234,6 +234,13 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   /** chữ gần trùng màu nền (khó đọc khi in) */
   const lowContrast = (l: DesignLayer, key: string) => l.type === "text" && contrastRatio(l.color, surfaceOf(key)) < 1.8 && !(l.stroke && l.stroke.width > 0 && contrastRatio(l.stroke.color, surfaceOf(key)) >= 1.8);
   const [contrastFix, setContrastFix] = useState(0);
+
+  // thông báo tự ẩn sau 6 giây (điện thoại: nhường chỗ cho bảng chỉnh) – trừ thông báo có nút "Bắt đầu lại"
+  useEffect(() => {
+    if (!notice || notice.startsWith("Đã mở lại")) return;
+    const t = setTimeout(() => setNotice(""), 6000);
+    return () => clearTimeout(t);
+  }, [notice]);
 
   useEffect(() => {
     const on = () => setFullscreen(!!document.fullscreenElement);
@@ -961,10 +968,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   }, []);
 
   return (
-    <div ref={rootRef} className="min-h-screen bg-surface pb-40 lg:pb-8">
+    <div ref={rootRef} className="min-h-screen bg-surface lg:pb-8 max-lg:flex max-lg:h-[100svh] max-lg:min-h-0 max-lg:flex-col max-lg:overflow-hidden">
       <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />
       {/* Thanh trên */}
-      <div ref={headRef} className="sticky top-0 z-30 border-b-2 border-ink bg-white">
+      <div ref={headRef} className="sticky top-0 z-30 border-b-2 border-ink bg-white max-lg:flex-none">
         <div className="mx-auto flex h-14 max-w-[1320px] items-center gap-1.5 px-3 md:px-5">
           <Link href={returnTo} className="rounded-md p-1.5 hover:bg-cream" aria-label="Quay lại">
             <IconClose className="h-5 w-5" />
@@ -999,7 +1006,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               <IconSave className="h-4 w-4" /> Lưu
             </button>
           )}
-          <button type="button" onClick={() => finish()} disabled={!!busy} className="btn-primary hidden px-5 py-2 text-sm disabled:opacity-60 lg:inline-flex">
+          <button type="button" onClick={() => finish()} disabled={!!busy} className="btn-primary ml-0.5 shrink-0 px-3 py-1.5 text-[13px] disabled:opacity-60 lg:px-5 lg:py-2 lg:text-sm">
             Hoàn tất
           </button>
         </div>
@@ -1047,7 +1054,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       </div>
 
       {(notice || fields.length > 0 || contrastFix > 0) && (
-        <div className="mx-auto mt-3 max-w-[1320px] space-y-2 px-3 text-sm md:px-5">
+        <div className="mx-auto mt-3 max-w-[1320px] space-y-2 px-3 text-sm md:px-5 max-lg:mt-1.5 max-lg:w-full max-lg:flex-none max-lg:space-y-1 max-lg:text-xs">
           {notice && (
             <div className="flex items-center justify-between gap-2">
               <p className="flex-1 rounded-lg bg-green-50 px-3 py-2 text-green-800">
@@ -1092,10 +1099,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         </div>
       )}
 
-      <div className="mx-auto grid max-w-[1320px] grid-cols-[minmax(0,1fr)] gap-4 px-3 pt-3 md:px-5 lg:grid-cols-[88px_minmax(0,1fr)_340px] lg:pt-5">
+      <div className="mx-auto grid max-w-[1320px] grid-cols-[minmax(0,1fr)] gap-4 px-3 pt-3 md:px-5 lg:grid-cols-[88px_minmax(0,1fr)_340px] lg:pt-5 max-lg:flex max-lg:min-h-0 max-lg:w-full max-lg:flex-1 max-lg:flex-col max-lg:gap-0 max-lg:px-0 max-lg:pt-1">
         {/* Công cụ (desktop: cột trái, mobile: dưới khung) */}
         <nav
-          className="order-2 flex gap-1 bg-white p-1.5 max-lg:fixed max-lg:inset-x-0 max-lg:bottom-[68px] max-lg:z-30 max-lg:border-t max-lg:border-ink/10 max-lg:pb-1 lg:order-1 lg:h-fit lg:flex-col lg:rounded-2xl lg:border-2 lg:border-ink/10"
+          className="order-3 flex gap-1 bg-white p-1.5 max-lg:flex-none max-lg:border-t-2 max-lg:border-ink max-lg:pb-[max(6px,env(safe-area-inset-bottom))] lg:order-1 lg:h-fit lg:flex-col lg:rounded-2xl lg:border-2 lg:border-ink/10"
           aria-label="Công cụ"
         >
           {toolBtn("upload", "Tải ảnh", IconUpload)}
@@ -1109,10 +1116,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
         <div
           ref={stageRef}
-          className="order-1 mx-auto w-full max-w-[640px] self-start max-lg:sticky max-lg:top-[var(--studio-head,56px)] max-lg:z-20 max-lg:-mx-3 max-lg:w-[calc(100%+1.5rem)] max-lg:max-w-none max-lg:border-b-2 max-lg:border-ink/10 max-lg:bg-surface max-lg:px-3 max-lg:pb-2 lg:order-2"
+          className="order-1 mx-auto w-full max-w-[640px] self-start max-lg:flex-none max-lg:max-w-none max-lg:border-b-2 max-lg:border-ink/10 max-lg:bg-surface max-lg:px-3 max-lg:pb-1.5 lg:order-2"
         >
           {/* desktop: khung vừa chiều cao màn hình (không phải cuộn mới thấy hết áo) */}
-          <div className="mx-auto max-lg:max-w-[min(100%,42svh)] lg:max-w-[min(100%,calc(100svh-150px))]">
+          <div className="mx-auto max-lg:max-w-[min(100%,36svh)] lg:max-w-[min(100%,calc(100svh-150px))]">
           {(area.tips || (area.bleedMm ?? 0) > 0) && (
             <details className="mb-2 rounded-lg border-2 border-ink/10 bg-white px-3 py-2 text-xs text-ink/80 max-lg:hidden">
               <summary className="cursor-pointer font-bold">💡 Gợi ý thiết kế cho {area.name.toLowerCase()}</summary>
@@ -1148,7 +1155,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           />
           )}
           {!area.warp && (
-          <div className="mt-2 flex justify-center gap-1 text-[11px] font-bold" role="radiogroup" aria-label="Cách xem">
+          <div className="relative z-10 mt-2 flex justify-center gap-1 text-[11px] font-bold max-lg:-mt-8 max-lg:justify-start max-lg:pl-2" role="radiogroup" aria-label="Cách xem">
             {(
               [
                 ["mockup", "Trên sản phẩm"],
@@ -1188,9 +1195,9 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         </div>
 
         {/* Bảng thuộc tính */}
-        <aside ref={panelRef} className="order-3 scroll-mt-[calc(var(--studio-head,56px)+var(--studio-stage,0px)+8px)] space-y-3 rounded-2xl border-2 border-ink/10 bg-white p-4 lg:h-fit">
+        <aside ref={panelRef} className="order-2 space-y-3 rounded-2xl border-2 border-ink/10 bg-white p-4 lg:order-3 lg:h-fit max-lg:min-h-0 max-lg:flex-1 max-lg:overscroll-contain max-lg:overflow-y-auto max-lg:rounded-none max-lg:border-0 max-lg:px-3 max-lg:pb-6 max-lg:pt-3">
           {tool === "upload" && (
-            <section className="space-y-3">
+            <section className="flex flex-col gap-3">
               <button type="button" onClick={openUpload} disabled={!!busy} className="flex w-full flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-ink/40 bg-surface px-3 py-4 text-sm font-bold transition hover:border-ink hover:bg-sun/40">
                 <IconUpload className="h-6 w-6" /> Tải ảnh lên
                 <span className="text-[11px] font-medium text-ink/60">PNG, JPG, WEBP · chọn tối đa 10 ảnh</span>
@@ -1208,6 +1215,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 loginHref={`/dang-nhap?next=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : returnTo)}`}
               />
               {selected?.type === "image" && (
+                <div className="order-first [&>div]:border-t-0 [&>div]:pt-0">
                 <ImagePanel
                   layer={selected}
                   area={area}
@@ -1219,6 +1227,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                   onArt={(st) => void applyArt(st)}
                   bgSupported={bgSupported}
                 />
+                </div>
               )}
             </section>
           )}
@@ -1250,12 +1259,152 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
           {tool === "text" && (
             <section className="space-y-3">
+              {selected?.type === "text" ? (
+                <>
+                <div className="space-y-2.5">
+                    <div className="flex flex-wrap gap-1 text-[11px] font-bold" role="radiogroup" aria-label="Loại nội dung">
+                      {(
+                        [
+                          [undefined, "Chữ cố định"],
+                          ["name", "Tên thành viên"],
+                          ["number", "Số áo"],
+                        ] as const
+                      ).map(([f, label]) => (
+                        <button
+                          key={label}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected.field === f}
+                          onClick={() => patchSelected({ field: f, ...(f && selected.field !== f ? { text: FIELD_SAMPLE[f] } : {}) })}
+                          className={`rounded-full border-2 px-2 py-0.5 ${selected.field === f ? "border-ink bg-brand" : "border-ink/15"}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={selected.text}
+                      maxLength={DESIGN_LIMITS.textLength}
+                      rows={selected.field ? 1 : 3}
+                      onChange={(e) => e.target.value && patchSelected({ text: e.target.value })}
+                      className="w-full rounded-md border-2 border-ink/15 px-3 py-2 text-sm focus:border-ink focus:outline-none"
+                      aria-label="Nội dung chữ"
+                    />
+                    {selected.field && <p className="-mt-1.5 text-[11px] text-ink/60">Chữ mẫu để canh vị trí – khi in thay bằng {DESIGN_FIELDS[selected.field].toLowerCase()} từng người trong danh sách.</p>}
+                    <select
+                      value={selected.font}
+                      onChange={(e) => patchSelected({ font: e.target.value as TextLayer["font"] })}
+                      className="w-full rounded-md border-2 border-ink/15 px-3 py-2 text-sm"
+                      style={{ fontFamily: `"${selected.font}"` }}
+                      aria-label="Font chữ"
+                    >
+                      {DESIGN_FONTS.map((f) => (
+                        <option key={f.family} value={f.family} style={{ fontFamily: `"${f.family}"` }}>
+                          {f.label}
+                        </option>
+                      ))}
+                    </select>
+                    {slider(
+                      "Cỡ chữ",
+                      selected.fontSize,
+                      3,
+                      Math.max(20, Math.round(area.heightMm * 0.6)),
+                      0.5,
+                      (fontSize) => patchLayer(selected.id, { fontSize, ...measureText({ ...selected, fontSize }) } as Partial<DesignLayer>, false),
+                      (v) => `${v} mm`,
+                    )}
+                    <ColorPicker label="Màu chữ" value={selected.color} onChange={(c) => c && patchSelected({ color: c })} />
+                    {lowContrast(selected, area.key) && (
+                      <p className="flex items-center gap-2 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900">
+                        <span className="flex-1">Màu chữ gần trùng màu {ad.bg ? "nền" : "áo"} – khó đọc khi in.</span>
+                        <button type="button" className="shrink-0 rounded border-2 border-ink bg-white px-2 py-0.5 font-bold" onClick={() => patchSelected({ color: readableOn(surfaceOf(area.key)) })}>
+                          Đổi sang {readableOn(surfaceOf(area.key)) === "#ffffff" ? "trắng" : "đen"}
+                        </button>
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5 text-xs font-bold">
+                      <button type="button" className={`btn-sm ${selected.bold ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ bold: !selected.bold })}>
+                        Đậm
+                      </button>
+                      <button type="button" className={`btn-sm italic ${selected.italic ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ italic: !selected.italic })}>
+                        Nghiêng
+                      </button>
+                      {!selected.curve &&
+                        (["left", "center", "right"] as const).map((a) => (
+                          <button key={a} type="button" className={`btn-sm ${selected.align === a ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ align: a })}>
+                            {a === "left" ? "Trái" : a === "center" ? "Giữa" : "Phải"}
+                          </button>
+                        ))}
+                    </div>
+                    {slider(
+                      "Uốn cong",
+                      selected.curve ?? 0,
+                      -100,
+                      100,
+                      1,
+                      (curve) => patchLayer(selected.id, { curve: curve || undefined, ...measureText({ ...selected, curve }) } as Partial<DesignLayer>, false),
+                      (v) => (v === 0 ? "thẳng" : v > 0 ? `vòng cung lên ${v}` : `cong xuống ${-v}`),
+                    )}
+                    {slider(
+                      "Giãn chữ",
+                      Math.round((selected.letterSpacing ?? 0) * 100),
+                      -10,
+                      100,
+                      1,
+                      (v) => patchLayer(selected.id, { letterSpacing: v / 100 || undefined, ...measureText({ ...selected, letterSpacing: v / 100 }) } as Partial<DesignLayer>, false),
+                      (v) => `${v}%`,
+                    )}
+                    <div className="flex items-center gap-2 text-xs font-semibold">
+                      <span className="shrink-0">Viền chữ</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={3}
+                        step={0.1}
+                        value={selected.stroke?.width ?? 0}
+                        onChange={(e) => {
+                          const width = Number(e.target.value);
+                          patchSelected({ stroke: width > 0 ? { color: selected.stroke?.color ?? "#ffffff", width } : undefined });
+                        }}
+                        className="w-full accent-[#E4570B]"
+                        aria-label="Độ dày viền chữ"
+                      />
+                      <input
+                        type="color"
+                        value={selected.stroke?.color ?? "#ffffff"}
+                        onChange={(e) => patchSelected({ stroke: { color: e.target.value, width: selected.stroke?.width || 0.5 } })}
+                        className="h-7 w-9 cursor-pointer rounded border border-ink/20"
+                        aria-label="Màu viền"
+                      />
+                    </div>
+                  </div>
+    <div className="space-y-3 border-t border-ink/10 pt-3">
+              <button type="button" onClick={addText} className="btn-outline w-full py-2.5 text-sm">
+                    <IconText className="h-5 w-5" /> Thêm chữ mới
+                  </button>
+                  <PhraseIdeas
+                    hasTextSelected={selected?.type === "text" && !selected.field}
+                    onReplace={(text) => selected?.type === "text" && patchSelected({ text })}
+                    onAddDesign={(d) => addTemplate(d.template, d.title)}
+                  />
+                  <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
+                    <button type="button" className="btn-sm" onClick={() => addField("name")}>
+                      + Ô tên thành viên
+                    </button>
+                    <button type="button" className="btn-sm" onClick={() => addField("number")}>
+                      + Ô số áo
+                    </button>
+                  </div>
+    </div>
+                </>
+              ) : (
+                <>
               <button type="button" onClick={addText} className="btn-outline w-full py-2.5 text-sm">
                 <IconText className="h-5 w-5" /> Thêm chữ mới
               </button>
               <PhraseIdeas
-                hasTextSelected={selected?.type === "text" && !selected.field}
-                onReplace={(text) => selected?.type === "text" && patchSelected({ text })}
+                hasTextSelected={false}
+                onReplace={() => undefined}
                 onAddDesign={(d) => addTemplate(d.template, d.title)}
               />
               <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
@@ -1266,126 +1415,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                   + Ô số áo
                 </button>
               </div>
-              {selected?.type === "text" ? (
-                <div className="space-y-2.5">
-                  <div className="flex flex-wrap gap-1 text-[11px] font-bold" role="radiogroup" aria-label="Loại nội dung">
-                    {(
-                      [
-                        [undefined, "Chữ cố định"],
-                        ["name", "Tên thành viên"],
-                        ["number", "Số áo"],
-                      ] as const
-                    ).map(([f, label]) => (
-                      <button
-                        key={label}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected.field === f}
-                        onClick={() => patchSelected({ field: f, ...(f && selected.field !== f ? { text: FIELD_SAMPLE[f] } : {}) })}
-                        className={`rounded-full border-2 px-2 py-0.5 ${selected.field === f ? "border-ink bg-brand" : "border-ink/15"}`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  <textarea
-                    value={selected.text}
-                    maxLength={DESIGN_LIMITS.textLength}
-                    rows={selected.field ? 1 : 3}
-                    onChange={(e) => e.target.value && patchSelected({ text: e.target.value })}
-                    className="w-full rounded-md border-2 border-ink/15 px-3 py-2 text-sm focus:border-ink focus:outline-none"
-                    aria-label="Nội dung chữ"
-                  />
-                  {selected.field && <p className="-mt-1.5 text-[11px] text-ink/60">Chữ mẫu để canh vị trí – khi in thay bằng {DESIGN_FIELDS[selected.field].toLowerCase()} từng người trong danh sách.</p>}
-                  <select
-                    value={selected.font}
-                    onChange={(e) => patchSelected({ font: e.target.value as TextLayer["font"] })}
-                    className="w-full rounded-md border-2 border-ink/15 px-3 py-2 text-sm"
-                    style={{ fontFamily: `"${selected.font}"` }}
-                    aria-label="Font chữ"
-                  >
-                    {DESIGN_FONTS.map((f) => (
-                      <option key={f.family} value={f.family} style={{ fontFamily: `"${f.family}"` }}>
-                        {f.label}
-                      </option>
-                    ))}
-                  </select>
-                  {slider(
-                    "Cỡ chữ",
-                    selected.fontSize,
-                    3,
-                    Math.max(20, Math.round(area.heightMm * 0.6)),
-                    0.5,
-                    (fontSize) => patchLayer(selected.id, { fontSize, ...measureText({ ...selected, fontSize }) } as Partial<DesignLayer>, false),
-                    (v) => `${v} mm`,
-                  )}
-                  <ColorPicker label="Màu chữ" value={selected.color} onChange={(c) => c && patchSelected({ color: c })} />
-                  {lowContrast(selected, area.key) && (
-                    <p className="flex items-center gap-2 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900">
-                      <span className="flex-1">Màu chữ gần trùng màu {ad.bg ? "nền" : "áo"} – khó đọc khi in.</span>
-                      <button type="button" className="shrink-0 rounded border-2 border-ink bg-white px-2 py-0.5 font-bold" onClick={() => patchSelected({ color: readableOn(surfaceOf(area.key)) })}>
-                        Đổi sang {readableOn(surfaceOf(area.key)) === "#ffffff" ? "trắng" : "đen"}
-                      </button>
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-1.5 text-xs font-bold">
-                    <button type="button" className={`btn-sm ${selected.bold ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ bold: !selected.bold })}>
-                      Đậm
-                    </button>
-                    <button type="button" className={`btn-sm italic ${selected.italic ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ italic: !selected.italic })}>
-                      Nghiêng
-                    </button>
-                    {!selected.curve &&
-                      (["left", "center", "right"] as const).map((a) => (
-                        <button key={a} type="button" className={`btn-sm ${selected.align === a ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ align: a })}>
-                          {a === "left" ? "Trái" : a === "center" ? "Giữa" : "Phải"}
-                        </button>
-                      ))}
-                  </div>
-                  {slider(
-                    "Uốn cong",
-                    selected.curve ?? 0,
-                    -100,
-                    100,
-                    1,
-                    (curve) => patchLayer(selected.id, { curve: curve || undefined, ...measureText({ ...selected, curve }) } as Partial<DesignLayer>, false),
-                    (v) => (v === 0 ? "thẳng" : v > 0 ? `vòng cung lên ${v}` : `cong xuống ${-v}`),
-                  )}
-                  {slider(
-                    "Giãn chữ",
-                    Math.round((selected.letterSpacing ?? 0) * 100),
-                    -10,
-                    100,
-                    1,
-                    (v) => patchLayer(selected.id, { letterSpacing: v / 100 || undefined, ...measureText({ ...selected, letterSpacing: v / 100 }) } as Partial<DesignLayer>, false),
-                    (v) => `${v}%`,
-                  )}
-                  <div className="flex items-center gap-2 text-xs font-semibold">
-                    <span className="shrink-0">Viền chữ</span>
-                    <input
-                      type="range"
-                      min={0}
-                      max={3}
-                      step={0.1}
-                      value={selected.stroke?.width ?? 0}
-                      onChange={(e) => {
-                        const width = Number(e.target.value);
-                        patchSelected({ stroke: width > 0 ? { color: selected.stroke?.color ?? "#ffffff", width } : undefined });
-                      }}
-                      className="w-full accent-[#E4570B]"
-                      aria-label="Độ dày viền chữ"
-                    />
-                    <input
-                      type="color"
-                      value={selected.stroke?.color ?? "#ffffff"}
-                      onChange={(e) => patchSelected({ stroke: { color: e.target.value, width: selected.stroke?.width || 0.5 } })}
-                      className="h-7 w-9 cursor-pointer rounded border border-ink/20"
-                      aria-label="Màu viền"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-ink/60">Bấm vào chữ trên khung để sửa, hoặc thêm chữ mới / chọn mẫu chữ ở mục Mẫu. Font hỗ trợ đầy đủ dấu tiếng Việt.</p>
+                  <p className="text-xs text-ink/60">Bấm vào chữ trên khung để sửa, hoặc thêm chữ mới / chọn mẫu chữ ở mục Mẫu. Font hỗ trợ đầy đủ dấu tiếng Việt.</p>
+                </>
               )}
             </section>
           )}
@@ -1534,21 +1565,14 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               <b>Mặt có thiết kế:</b> {used.length ? used.map((k) => areas.find((a) => a.key === k)?.name).join(", ") : "chưa có"}
             </p>
             {extras > 0 && <p className="mt-1">Phụ phí in thêm mặt: <b>+{formatVND(extras)}</b>/sản phẩm</p>}
+            {mode === "customer" && (
+              <button type="button" onClick={() => setSaveDlg({ name: savedName || product.name })} className="mt-2 flex items-center gap-1 font-bold underline sm:hidden">
+                <IconSave className="h-4 w-4" /> Lưu vào tài khoản
+              </button>
+            )}
           </div>
           {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         </aside>
-      </div>
-
-      {/* Nút hoàn tất cố định trên mobile */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex h-[68px] items-center gap-2 border-t-2 border-ink bg-white px-3 pb-[env(safe-area-inset-bottom)] lg:hidden">
-        {mode === "customer" && (
-          <button type="button" onClick={() => setSaveDlg({ name: savedName || product.name })} className="btn-outline px-3 py-2.5" aria-label="Lưu thiết kế">
-            <IconSave className="h-5 w-5" />
-          </button>
-        )}
-        <button type="button" onClick={() => finish()} disabled={!!busy} className="btn-primary flex-1 py-3 text-[15px] disabled:opacity-60">
-          Hoàn tất thiết kế{used.length ? ` (${used.length} mặt)` : ""}
-        </button>
       </div>
 
       {busy && (

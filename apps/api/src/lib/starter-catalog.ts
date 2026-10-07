@@ -26,10 +26,10 @@ type Item = {
 };
 
 const ITEMS: Item[] = [
-  { key: "tshirt", slug: GARMENT_PRODUCT.tshirt.slug, name: "Áo thun Relaxed Fit YALA Everyday", price: 199000, compareAt: 259000, material: "Cotton", colors: ["trang", "den", "kem", "xam", "navy"], sizes: SIZES, weightGram: 220, description: "Áo thun form rộng vừa (relaxed fit), vai hơi rớt, mặc hằng ngày. In chữ, logo hoặc thiết kế của bạn ở ngực trước và lưng." },
-  { key: "longsleeve", slug: GARMENT_PRODUCT.longsleeve.slug, name: "Áo thun dài tay YALA Everyday", price: 229000, compareAt: 289000, material: "Cotton", colors: ["trang", "den", "kem", "navy"], sizes: SIZES, weightGram: 280, description: "Áo thun dài tay form rộng cho những ngày se lạnh. In theo thiết kế riêng từ 1 chiếc." },
-  { key: "sweater", slug: GARMENT_PRODUCT.sweater.slug, name: "Áo sweater nỉ bông YALA Everyday", price: 359000, compareAt: 449000, material: "Nỉ bông", colors: ["kem", "den", "xam", "navy"], sizes: SIZES, weightGram: 480, description: "Sweater cổ tròn nỉ bông, bo cổ – bo tay – bo gấu. Hợp in chữ ngực và logo." },
-  { key: "hoodie", slug: GARMENT_PRODUCT.hoodie.slug, name: "Áo hoodie nỉ bông YALA Everyday", price: 399000, compareAt: 499000, material: "Nỉ bông", colors: ["den", "kem", "xam", "navy"], sizes: SIZES, weightGram: 560, description: "Hoodie nỉ bông có mũ, túi trước. Mặc đi học, đi làm, đi chơi mùa lạnh." },
+  { key: "tshirt", slug: GARMENT_PRODUCT.tshirt.slug, name: "Áo thun Relaxed Fit YALA Everyday", price: 199000, compareAt: 259000, material: "Cotton", colors: ["trang", "den", "kem", "xam", "navy", "hong"], sizes: SIZES, weightGram: 220, description: "Áo thun form rộng vừa (relaxed fit), vai hơi rớt, mặc hằng ngày. In chữ, logo hoặc thiết kế của bạn ở ngực trước và lưng." },
+  { key: "longsleeve", slug: GARMENT_PRODUCT.longsleeve.slug, name: "Áo thun dài tay YALA Everyday", price: 229000, compareAt: 289000, material: "Cotton", colors: ["trang", "den", "kem", "xam", "navy", "hong"], sizes: SIZES, weightGram: 280, description: "Áo thun dài tay form rộng cho những ngày se lạnh. In theo thiết kế riêng từ 1 chiếc." },
+  { key: "sweater", slug: GARMENT_PRODUCT.sweater.slug, name: "Áo sweater nỉ bông YALA Everyday", price: 359000, compareAt: 449000, material: "Nỉ bông", colors: ["kem", "trang", "den", "xam", "navy", "hong"], sizes: SIZES, weightGram: 480, description: "Sweater cổ tròn nỉ bông, bo cổ – bo tay – bo gấu. Hợp in chữ ngực và logo." },
+  { key: "hoodie", slug: GARMENT_PRODUCT.hoodie.slug, name: "Áo hoodie nỉ bông YALA Everyday", price: 399000, compareAt: 499000, material: "Nỉ bông", colors: ["den", "trang", "kem", "xam", "navy", "hong"], sizes: SIZES, weightGram: 560, description: "Hoodie nỉ bông có mũ, túi trước. Mặc đi học, đi làm, đi chơi mùa lạnh." },
   { key: "jogger", slug: "quan-jogger-ni-bong-yala-everyday", name: "Quần jogger nỉ bông YALA Everyday", price: 349000, compareAt: 429000, material: "Nỉ bông", colors: ["den", "xam", "kem", "navy"], sizes: SIZES, weightGram: 450, description: "Quần jogger nỉ bông lưng thun, bo ống. Phối cùng hoodie/sweater thành bộ." },
   { key: "tote", slug: GARMENT_PRODUCT.tote.slug, name: "Túi tote canvas YALA Everyday", price: 129000, compareAt: 159000, material: "Canvas", colors: ["kem", "den"], sizes: [], weightGram: 200, description: "Túi vải canvas quai đeo vai – đi học, đi chợ, đi cà phê. In chữ hoặc hình 1 mặt." },
 ];
@@ -82,4 +82,29 @@ export async function ensureStarterCatalog() {
   }
   await prisma.setting.upsert({ where: { key: FLAG }, update: { value: { at: new Date().toISOString(), created } }, create: { key: FLAG, value: { at: new Date().toISOString(), created } } });
   if (created) console.log(`[starter] đã tạo ${created} sản phẩm YALA Everyday`);
+}
+
+/**
+ * Mở bán đủ 6 màu cơ bản (trắng, đen, kem, xám, navy, hồng) cho 4 dáng áo YALA Everyday đã tạo trước đó.
+ * Chỉ THÊM màu còn thiếu (giữ nguyên biến thể, SKU, giá đang có; phụ phí size copy từ màu sẵn có). Chạy 1 lần.
+ */
+const FLAG_COLORS = "starter:yala-everyday:6-colors:v1";
+export async function ensureEverydayColors() {
+  if (await prisma.setting.findUnique({ where: { key: FLAG_COLORS } })) return;
+  let added = 0;
+  for (const it of ITEMS.filter((x) => ["tshirt", "longsleeve", "sweater", "hoodie"].includes(x.key))) {
+    const p = await prisma.product.findUnique({ where: { slug: it.slug }, select: { id: true, name: true, variants: { orderBy: { sortOrder: "asc" } } } });
+    if (!p) continue;
+    const have = new Set(p.variants.map((v) => v.color));
+    const missing = it.colors.filter((k) => !have.has(BASIC_COLORS[k].name));
+    if (!missing.length) continue;
+    const current = p.variants.map((v) => ({ id: v.id, color: v.color, colorHex: v.colorHex, size: v.size, sku: v.sku, weightGram: v.weightGram, priceDelta: v.priceDelta, isActive: v.isActive }));
+    const sizes = [...new Set(p.variants.map((v) => v.size))].filter(Boolean);
+    const delta = (size: string) => p.variants.find((v) => v.size === size)?.priceDelta ?? 0;
+    const fresh = buildVariantMatrix(p.name, missing.map((k) => ({ name: BASIC_COLORS[k].name, hex: BASIC_COLORS[k].hex })), sizes.length ? sizes : it.sizes).map((v) => ({ ...v, priceDelta: delta(v.size) }));
+    await saveVariants(p.id, p.name, [...current, ...fresh]);
+    added += missing.length;
+  }
+  await prisma.setting.create({ data: { key: FLAG_COLORS, value: { at: new Date().toISOString(), added } } });
+  if (added) console.log(`[starter] YALA Everyday: mở bán thêm ${added} màu`);
 }

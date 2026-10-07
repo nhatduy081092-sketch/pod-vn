@@ -16,7 +16,7 @@ import { sellerRoutes } from "./routes/seller";
 import { v1Routes } from "./routes/v1";
 import { groupRoutes } from "./routes/groups";
 import { backfillSearchText } from "./lib/search";
-import { ensureStarterCatalog } from "./lib/starter-catalog";
+import { ensureEverydayColors, ensureStarterCatalog } from "./lib/starter-catalog";
 import { applySettingsUpdates } from "./lib/settings-updates";
 import { ensureOemCatalog } from "./lib/oem-blanks";
 import { remoteUploadUrl, storageInfo } from "./lib/upload";
@@ -100,7 +100,9 @@ const server = serve({ fetch: app.fetch, port: env.port, hostname: process.env.A
   console.log(`🚀 API chạy tại http://localhost:${info.port}`);
   console.log(`[upload] lưu ảnh: ${storageInfo.driver === "r2" ? `Cloudflare R2 → ${storageInfo.publicUrl}` : "ổ đĩa local (chỉ dùng khi dev)"}`);
   backfillSearchText().catch((e) => console.warn("[search] backfill lỗi:", (e as Error).message));
-  ensureStarterCatalog().catch((e) => console.warn("[starter] tạo YALA Everyday lỗi:", (e as Error).message));
+  ensureStarterCatalog()
+    .then(() => ensureEverydayColors())
+    .catch((e) => console.warn("[starter] tạo YALA Everyday lỗi:", (e as Error).message));
   applySettingsUpdates().catch((e) => console.warn("[settings] cập nhật lỗi:", (e as Error).message));
   ensureOemCatalog().catch((e) => console.warn("[oem] đồng bộ lần đầu lỗi:", (e as Error).message));
 });

@@ -347,7 +347,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
         {area.name} · {sizeLabel ?? `${area.widthMm / 10}×${area.heightMm / 10} cm`}
       </span>
       {(area.bleedMm ?? 0) + (area.safeMm ?? 0) > 0 && (
-        <span className="pointer-events-none absolute bottom-2 right-2 flex gap-2 rounded bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-ink/80">
+        <span className="pointer-events-none absolute bottom-2 right-2 flex gap-2 rounded bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-ink/80 max-lg:bottom-auto max-lg:top-9">
           {(area.bleedMm ?? 0) > 0 && (
             <span className="flex items-center gap-1">
               <i className="inline-block h-0.5 w-3 bg-[#e11d48]" /> đường xén
