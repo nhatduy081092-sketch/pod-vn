@@ -981,7 +981,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               <span className="truncate font-display text-[15px] font-extrabold md:text-lg">{product.name}</span>
               <span className="shrink-0 rounded border border-ink/20 px-1 text-[10px] font-bold text-ink/60">Đổi ▾</span>
             </button>
-            <p className="text-[11px] text-ink/60">{mode === "seller" ? "Thiết kế mẫu seller" : "YALA Studio"} · tự lưu nháp</p>
+            <p className="text-[11px] text-ink/60 max-sm:hidden">{mode === "seller" ? "Thiết kế mẫu seller" : "YALA Studio"} · tự lưu nháp</p>
           </div>
           <button type="button" onClick={undo} disabled={!past.length} className="rounded-md p-2 disabled:opacity-30 hover:bg-cream" aria-label="Hoàn tác">
             <IconUndo className="h-5 w-5" />
@@ -995,7 +995,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           <button type="button" onClick={toggleFullscreen} className="hidden rounded-md p-2 text-sm font-bold hover:bg-cream md:block" aria-label={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
             {fullscreen ? "⤡" : "⤢"}
           </button>
-          <button type="button" onClick={() => void shareSnapshot()} disabled={!!busy} className="flex items-center gap-1 rounded-md p-2 text-sm font-bold hover:bg-cream md:border-2 md:border-ink/15 md:px-3 md:py-1.5" aria-label="Chia sẻ ảnh thiết kế" title="Tải / chia sẻ ảnh xem trước">
+          <button type="button" onClick={() => void shareSnapshot()} disabled={!!busy} className="flex items-center gap-1 rounded-md p-2 text-sm font-bold hover:bg-cream max-sm:hidden md:border-2 md:border-ink/15 md:px-3 md:py-1.5" aria-label="Chia sẻ ảnh thiết kế" title="Tải / chia sẻ ảnh xem trước">
             <IconShare className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Chia sẻ</span>
           </button>
           <button type="button" onClick={() => setOverview(true)} className="flex items-center gap-1 rounded-md p-2 text-sm font-bold hover:bg-cream md:border-2 md:border-ink/15 md:px-3 md:py-1.5" aria-label="Xem tổng thể">
@@ -1169,7 +1169,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 role="radio"
                 aria-checked={view === v}
                 onClick={() => setViewPref((p) => ({ ...p, [area.key]: v }))}
-                className={`rounded-full border-2 px-3 py-0.5 ${view === v ? "border-ink bg-ink text-white" : "border-ink/15 bg-white"}`}
+                className={`whitespace-nowrap rounded-full border-2 px-3 py-0.5 max-lg:px-2 max-lg:text-[10px] ${view === v ? "border-ink bg-ink text-white" : "border-ink/15 bg-white"}`}
               >
                 {label}
               </button>
