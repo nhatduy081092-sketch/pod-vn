@@ -1116,10 +1116,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
         <div
           ref={stageRef}
-          className="order-1 mx-auto w-full max-w-[640px] self-start max-lg:flex-none max-lg:max-w-none max-lg:border-b-2 max-lg:border-ink/10 max-lg:bg-surface max-lg:px-3 max-lg:pb-1.5 lg:order-2"
+          className="order-1 mx-auto w-full max-w-[780px] self-start max-lg:flex-none max-lg:max-w-none max-lg:border-b-2 max-lg:border-ink/10 max-lg:bg-surface max-lg:px-3 max-lg:pb-1.5 lg:order-2"
         >
           {/* desktop: khung vừa chiều cao màn hình (không phải cuộn mới thấy hết áo) */}
-          <div className="mx-auto max-lg:max-w-[min(100%,40svh)] lg:max-w-[min(100%,calc(100svh-150px))]">
+          <div className="mx-auto max-lg:max-w-[min(100%,40svh)] lg:max-w-[min(100%,calc(100svh-140px))]">
           {(area.tips || (area.bleedMm ?? 0) > 0) && (
             <details className="mb-2 rounded-lg border-2 border-ink/10 bg-white px-3 py-2 text-xs text-ink/80 max-lg:hidden">
               <summary className="cursor-pointer font-bold">💡 Gợi ý thiết kế cho {area.name.toLowerCase()}</summary>

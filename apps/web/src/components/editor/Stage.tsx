@@ -63,9 +63,8 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
   const [size, setSize] = useState(0);
   const [pr, setPr] = useState<Rect | null>(null);
   const [guides, setGuides] = useState<{ v: number | null; h: number | null }>({ v: null, h: null });
-  /** Cận vùng in: phóng ảnh sản phẩm để vùng in chiếm phần lớn khung (mặc định trên điện thoại) */
-  const [focus, setFocus] = useState(false);
-  useEffect(() => setFocus(window.innerWidth < 1024), []);
+  /** Cận vùng in: phóng ảnh sản phẩm để vùng in chiếm phần lớn khung (mặc định bật – điện thoại & laptop) */
+  const [focus, setFocus] = useState(true);
   const drag = useRef<Drag>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
 
