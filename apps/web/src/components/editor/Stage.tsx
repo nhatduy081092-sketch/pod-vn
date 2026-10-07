@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from "react";
 import { areaGuides, DPI_LEVEL_LABEL, dpiLevel, effectiveDpi, layerBounds, type AreaDesign, type DesignLayer } from "@pod/shared";
 import type { PrintArea } from "@/lib/types";
-import { drawFlat, drawMockup, measureText, type ImageCache, type MockupAssets } from "./render";
+import { drawFlat, drawMockup, imgSize, measureText, printRectOnMockup, type ImageCache, type MockupAssets } from "./render";
 
 type Rect = { x: number; y: number; w: number; h: number; k: number };
 type Drag =
@@ -63,6 +63,9 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
   const [size, setSize] = useState(0);
   const [pr, setPr] = useState<Rect | null>(null);
   const [guides, setGuides] = useState<{ v: number | null; h: number | null }>({ v: null, h: null });
+  /** Cận vùng in: phóng ảnh sản phẩm để vùng in chiếm phần lớn khung (mặc định trên điện thoại) */
+  const [focus, setFocus] = useState(false);
+  useEffect(() => setFocus(window.innerWidth < 1024), []);
   const drag = useRef<Drag>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
 
@@ -79,16 +82,46 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
   useEffect(() => {
     const c = canvasRef.current;
     if (!c || !size) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    c.width = size * dpr;
-    c.height = size * dpr;
+    // vẽ thẳng ở độ phân giải màn hình (Retina 2–3x) -> ảnh và chữ nét, không bị phóng mờ
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const W = Math.round(size * dpr);
+    c.width = W;
+    c.height = W;
     const ctx = c.getContext("2d")!;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, W, W);
+    let dev: Rect;
+    if (view === "flat") {
+      dev = drawFlat(ctx, W, W, area, design, images, { background: "#e9e9ec", padding: W * 0.06 });
+    } else {
+      // cận vùng in: dựng ảnh sản phẩm trên khung ảo lớn hơn rồi dời để vùng in nằm giữa
+      let z = 1;
+      let ox = 0;
+      let oy = 0;
+      if (focus && assets.mockup && !area.warp) {
+        const ms = imgSize(assets.mockup);
+        const pad = W * 0.03;
+        const sc = Math.min((W - pad * 2) / ms.w, (W - pad * 2) / ms.h);
+        const mock = { w: ms.w * sc, h: ms.h * sc, x: (W - ms.w * sc) / 2, y: (W - ms.h * sc) / 2 };
+        const p0 = printRectOnMockup(area, mock);
+        // vùng in chiếm ~68% khung, phóng tối đa 2,4 lần, khung ảo không quá ~2600px (giới hạn bộ nhớ điện thoại)
+        z = Math.max(1, Math.min(2.4, (W * 0.68) / Math.max(p0.w, p0.h), 2600 / W));
+        const cx = (p0.x + p0.w / 2) * z;
+        const cy = (p0.y + p0.h / 2) * z;
+        ox = Math.max(0, Math.min(W * z - W, cx - W / 2));
+        oy = Math.max(0, Math.min(W * z - W, cy - W / 2));
+      }
+      const Z = Math.round(W * z);
+      ctx.save();
+      ctx.translate(-ox, -oy);
+      const r = drawMockup(ctx, Z, Z, area, design, assets, images, { background: "#f4f4f5", padding: Z * 0.03, garmentColor, shading: 0.45 });
+      ctx.restore();
+      dev = { ...r.printRect, x: r.printRect.x - ox, y: r.printRect.y - oy };
+    }
+    // toạ độ màn hình (CSS px) cho thao tác kéo/thả và khung chọn
+    const rr: Rect = { x: dev.x / dpr, y: dev.y / dpr, w: dev.w / dpr, h: dev.h / dpr, k: dev.k / dpr };
+    const r = { printRect: rr };
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, size, size);
-    const r =
-      view === "flat"
-        ? { printRect: drawFlat(ctx, size, size, area, design, images, { background: "#e9e9ec", padding: size * 0.06 }) }
-        : drawMockup(ctx, size, size, area, design, assets, images, { background: "#f4f4f5", padding: size * 0.03, garmentColor, shading: 0.45 });
     // viền vùng in
     ctx.save();
     ctx.setLineDash([6, 4]);
@@ -111,7 +144,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
     }
     ctx.restore();
     setPr(r.printRect);
-  }, [size, area, design, assets, images, version, garmentColor, view]);
+  }, [size, area, design, assets, images, version, garmentColor, view, focus]);
 
   // ảnh xem trước nhỏ trên sản phẩm khi đang chỉnh bản phẳng
   useEffect(() => {
@@ -328,7 +361,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
       </div>
       {dpi !== null && (
         <span
-          className={`pointer-events-none absolute bottom-2 left-2 rounded px-2 py-0.5 text-[11px] font-bold text-white ${
+          className={`pointer-events-none absolute bottom-2 left-2 rounded px-2 py-0.5 text-[11px] font-bold text-white max-lg:bottom-11 ${
             { good: "bg-green-600", ok: "bg-amber-500", low: "bg-red-600" }[dpiLevel(dpi, area.dpi)]
           }`}
         >
@@ -342,6 +375,17 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
           style={{ width: Math.round(size * 0.3), height: Math.round(size * 0.3) }}
           aria-label="Xem trước trên sản phẩm"
         />
+      )}
+      {view === "mockup" && assets.mockup && !area.warp && (
+        <button
+          type="button"
+          onClick={() => setFocus((f) => !f)}
+          className="absolute left-2 top-2 rounded-full border-2 border-ink/15 bg-white/95 px-2.5 py-0.5 text-[11px] font-bold shadow-sm hover:border-ink"
+          aria-pressed={focus}
+          title={focus ? "Xem cả sản phẩm" : "Phóng to vùng in"}
+        >
+          {focus ? "⤢ Cả áo" : "⊕ Cận vùng in"}
+        </button>
       )}
       <span className="pointer-events-none absolute right-2 top-2 rounded bg-ink/80 px-2 py-0.5 text-[11px] font-semibold text-white">
         {area.name} · {sizeLabel ?? `${area.widthMm / 10}×${area.heightMm / 10} cm`}
