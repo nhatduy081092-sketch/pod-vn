@@ -60,7 +60,10 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const miniRef = useRef<HTMLCanvasElement>(null);
+  /** bề ngang khung (CSS px) */
   const [size, setSize] = useState(0);
+  /** chiều cao khung: = bề ngang trên laptop (vuông), điện thoại khung đứng cao ~2/3 màn hình */
+  const [sizeH, setSizeH] = useState(0);
   const [pr, setPr] = useState<Rect | null>(null);
   const [guides, setGuides] = useState<{ v: number | null; h: number | null }>({ v: null, h: null });
   /** Cận vùng in: phóng ảnh sản phẩm để vùng in chiếm phần lớn khung (mặc định bật – điện thoại & laptop) */
@@ -68,30 +71,36 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
   const drag = useRef<Drag>(null);
   const pointers = useRef(new Map<number, { x: number; y: number }>());
 
-  // khung vuông theo bề ngang container
+  // kích thước khung theo container (vuông trên laptop, đứng trên điện thoại)
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setSize(Math.floor(el.clientWidth)));
+    const read = () => {
+      setSize(Math.floor(el.clientWidth));
+      setSizeH(Math.floor(el.clientHeight));
+    };
+    const ro = new ResizeObserver(read);
     ro.observe(el);
-    setSize(Math.floor(el.clientWidth));
+    read();
     return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
     const c = canvasRef.current;
-    if (!c || !size) return;
+    if (!c || !size || !sizeH) return;
     // vẽ thẳng ở độ phân giải màn hình (Retina 2–3x) -> ảnh và chữ nét, không bị phóng mờ
     const dpr = Math.min(3, window.devicePixelRatio || 1);
     const W = Math.round(size * dpr);
+    const H = Math.round(sizeH * dpr);
+    const M = Math.min(W, H);
     c.width = W;
-    c.height = W;
+    c.height = H;
     const ctx = c.getContext("2d")!;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, W, W);
+    ctx.clearRect(0, 0, W, H);
     let dev: Rect;
     if (view === "flat") {
-      dev = drawFlat(ctx, W, W, area, design, images, { background: "#e9e9ec", padding: W * 0.06 });
+      dev = drawFlat(ctx, W, H, area, design, images, { background: "#e9e9ec", padding: M * 0.06 });
     } else {
       // cận vùng in: dựng ảnh sản phẩm trên khung ảo lớn hơn rồi dời để vùng in nằm giữa
       let z = 1;
@@ -99,21 +108,22 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
       let oy = 0;
       if (focus && assets.mockup && !area.warp) {
         const ms = imgSize(assets.mockup);
-        const pad = W * 0.03;
-        const sc = Math.min((W - pad * 2) / ms.w, (W - pad * 2) / ms.h);
-        const mock = { w: ms.w * sc, h: ms.h * sc, x: (W - ms.w * sc) / 2, y: (W - ms.h * sc) / 2 };
+        const pad = M * 0.03;
+        const sc = Math.min((W - pad * 2) / ms.w, (H - pad * 2) / ms.h);
+        const mock = { w: ms.w * sc, h: ms.h * sc, x: (W - ms.w * sc) / 2, y: (H - ms.h * sc) / 2 };
         const p0 = printRectOnMockup(area, mock);
-        // vùng in chiếm ~68% khung, phóng tối đa 2,4 lần, khung ảo không quá ~2600px (giới hạn bộ nhớ điện thoại)
-        z = Math.max(1, Math.min(2.4, (W * 0.68) / Math.max(p0.w, p0.h), 2600 / W));
+        // vùng in chiếm ~72% bề ngang / 70% chiều cao khung, phóng tối đa 2,6 lần, khung ảo không quá ~2800px (giới hạn bộ nhớ điện thoại)
+        z = Math.max(1, Math.min(2.6, (W * 0.72) / p0.w, (H * 0.7) / p0.h, 2800 / Math.max(W, H)));
         const cx = (p0.x + p0.w / 2) * z;
         const cy = (p0.y + p0.h / 2) * z;
         ox = Math.max(0, Math.min(W * z - W, cx - W / 2));
-        oy = Math.max(0, Math.min(W * z - W, cy - W / 2));
+        oy = Math.max(0, Math.min(H * z - H, cy - H / 2));
       }
-      const Z = Math.round(W * z);
+      const ZW = Math.round(W * z);
+      const ZH = Math.round(H * z);
       ctx.save();
       ctx.translate(-ox, -oy);
-      const r = drawMockup(ctx, Z, Z, area, design, assets, images, { background: "#f4f4f5", padding: Z * 0.03, garmentColor, shading: 0.45 });
+      const r = drawMockup(ctx, ZW, ZH, area, design, assets, images, { background: "#f4f4f5", padding: Math.min(ZW, ZH) * 0.03, garmentColor, shading: 0.45 });
       ctx.restore();
       dev = { ...r.printRect, x: r.printRect.x - ox, y: r.printRect.y - oy };
     }
@@ -143,13 +153,13 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
     }
     ctx.restore();
     setPr(r.printRect);
-  }, [size, area, design, assets, images, version, garmentColor, view, focus]);
+  }, [size, sizeH, area, design, assets, images, version, garmentColor, view, focus]);
 
   // ảnh xem trước nhỏ trên sản phẩm khi đang chỉnh bản phẳng
   useEffect(() => {
     const c = miniRef.current;
     if (!c || view !== "flat" || !size) return;
-    const px = Math.round(size * 0.3);
+    const px = Math.round(Math.min(size, sizeH || size) * 0.3);
     const t = setTimeout(() => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       c.width = px * dpr;
@@ -159,7 +169,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
       drawMockup(ctx, px, px, area, design, assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45 });
     }, 120);
     return () => clearTimeout(t);
-  }, [size, area, design, assets, images, version, garmentColor, view]);
+  }, [size, sizeH, area, design, assets, images, version, garmentColor, view]);
 
   const pointMm = useCallback(
     (e: { clientX: number; clientY: number }) => {
@@ -309,8 +319,8 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
   const locked = !!selected?.locked;
 
   return (
-    <div ref={wrapRef} className="relative aspect-square w-full select-none overflow-hidden rounded-lg border border-line bg-[#f4f4f5]">
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" style={{ width: size, height: size }} aria-label={`Khung thiết kế – ${area.name}`} />
+    <div ref={wrapRef} className="relative aspect-square w-full select-none overflow-hidden rounded-lg border border-line bg-[#f4f4f5] max-lg:aspect-auto max-lg:h-[min(62svh,calc(100svh-250px))]">
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" style={{ width: size, height: sizeH }} aria-label={`Khung thiết kế – ${area.name}`} />
       <div
         className="absolute inset-0 touch-none"
         onPointerDown={onDown}
@@ -371,7 +381,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
         <canvas
           ref={miniRef}
           className="pointer-events-none absolute left-2 top-2 rounded-md border border-ink/15 bg-white shadow"
-          style={{ width: Math.round(size * 0.3), height: Math.round(size * 0.3) }}
+          style={{ width: Math.round(Math.min(size, sizeH || size) * 0.3), height: Math.round(Math.min(size, sizeH || size) * 0.3) }}
           aria-label="Xem trước trên sản phẩm"
         />
       )}

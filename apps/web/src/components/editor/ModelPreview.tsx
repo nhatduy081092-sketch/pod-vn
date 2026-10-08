@@ -63,7 +63,7 @@ export function ModelPreview({ model, area, design, images, version }: { model: 
 
   return (
     <div className="relative overflow-hidden rounded-2xl border-2 border-ink/10 bg-[#f4f2ef]">
-      {err ? <p className="p-10 text-center text-sm text-ink/60">Không tải được ảnh người mẫu.</p> : <canvas ref={ref} className="mx-auto block max-h-[calc(100svh-190px)] w-auto max-w-full" aria-label="Thiết kế trên người mẫu" />}
+      {err ? <p className="p-10 text-center text-sm text-ink/60">Không tải được ảnh người mẫu.</p> : <canvas ref={ref} className="mx-auto block max-h-[calc(100svh-190px)] w-auto max-w-full max-lg:max-h-[min(62svh,calc(100svh-250px))]" aria-label="Thiết kế trên người mẫu" />}
       {!img && !err && <p className="absolute inset-0 flex items-center justify-center text-sm text-ink/60">Đang tải ảnh người mẫu…</p>}
       <span className="absolute left-2 top-2 rounded bg-ink/80 px-2 py-0.5 text-[11px] font-bold text-white">Ảnh minh hoạ · chỉ xem</span>
     </div>
