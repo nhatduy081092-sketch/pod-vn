@@ -15,7 +15,13 @@ export const revalidate = 600;
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const c = findDesignCollection((await params).slug);
   if (!c) return {};
-  return { title: `Áo in chữ ${c.name} – mẫu có sẵn`, description: `${c.blurb} ${c.designs.length} mẫu, sửa chữ miễn phí, in từ 1 chiếc.`, alternates: { canonical: `/bo-suu-tap/${c.slug}` } };
+  // Đặt tên theo cách khách tìm: "[số] mẫu áo [chủ đề]" (Công thức 1 – SEO)
+  const topic = c.name.charAt(0).toLocaleLowerCase("vi") + c.name.slice(1);
+  return {
+    title: `${c.designs.length} mẫu áo ${topic} – sửa chữ, in theo nhóm`,
+    description: `${c.blurb} ${c.designs.length} mẫu áo ${topic} có sẵn: sửa chữ, đổi màu áo, thêm tên từng người, đặt in theo nhóm hoặc từ 1 chiếc.`,
+    alternates: { canonical: `/bo-suu-tap/${c.slug}` },
+  };
 }
 
 const COLOR_KEYS = Object.keys(BASIC_COLORS) as ColorKey[];

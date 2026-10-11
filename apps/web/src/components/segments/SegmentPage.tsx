@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BASIC_COLORS, formatVND, GARMENT_PRODUCT, GROUP_MIN_QTY, SEGMENTS, type Segment } from "@pod/shared";
+import { BASIC_COLORS, DESIGN_HUBS, formatVND, GARMENT_PRODUCT, GROUP_MIN_QTY, SEGMENTS, type Segment } from "@pod/shared";
 import { getProducts, getSettings } from "@/lib/api";
 import { pastel } from "@/lib/pastel";
 import { B2BQuoteForm } from "@/components/b2b/B2BQuoteForm";
@@ -121,7 +121,14 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
       <section className="py-12 md:py-16">
         <div className="container-site">
           <p className="eyebrow">Sản phẩm gợi ý</p>
-          <h2 className="h-section mt-1.5">Chọn áo, bấm để thiết kế</h2>
+          <div className="mt-1.5 flex flex-wrap items-end justify-between gap-3">
+            <h2 className="h-section">Chọn áo, bấm để thiết kế</h2>
+            {DESIGN_HUBS.filter((h) => h.segment === s.key).map((h) => (
+              <Link key={h.slug} href={`/${h.slug}`} className="text-[15px] font-semibold underline underline-offset-4 hover:text-brand-dark">
+                Xem {h.name.charAt(0).toLocaleLowerCase("vi") + h.name.slice(1)} có sẵn
+              </Link>
+            ))}
+          </div>
           <ul className="mt-7 grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
             {s.products.map((p, i) => {
               const g = GARMENT_PRODUCT[p.garment];

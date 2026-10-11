@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { getHome } from "@/lib/api";
 import type { HomeData } from "@/lib/types";
 import { SloganRibbon } from "@/components/landing/SloganRibbon";
-import { GroupHero, GroupSteps } from "@/components/landing/GroupHero";
+import { GroupHero, GroupSteps, QuickStart } from "@/components/landing/GroupHero";
 import { RecentlyViewed } from "@/components/personal/RecentlyViewed";
 import { BestSellers } from "@/components/landing/BestSellers";
 import { CollectionGrid } from "@/components/landing/CollectionGrid";
@@ -36,6 +36,7 @@ export default async function HomePage() {
         <GroupHero zalo={zalo} />
       </div>
       <GroupSteps />
+      <QuickStart />
       <B2BSection
         data={settings.b2b}
         brand={settings.brand}

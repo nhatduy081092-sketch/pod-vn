@@ -162,7 +162,55 @@ function pocket(word: string, sub: string, ink: Ink): DesignLayer[] {
   ];
 }
 
-type Recipe = "stack" | "stackO" | "script" | "pacifico" | "lobster" | "badge" | "note" | "pocket";
+/* ---------- Đồng phục nhóm: ô tên / số in riêng từng người (field) ---------- */
+
+/** Áo đội: tên đội phía trên + số áo lớn (ô số) + tên cầu thủ (ô tên) */
+function jersey(team: string, num: string, name: string, ink: Ink): DesignLayer[] {
+  const tm = team.toLocaleUpperCase("vi");
+  return [
+    t({ text: tm, font: "Oswald", fontSize: fit(tm, "Oswald", 30, 0.8, 0.08), color: ink.main, bold: true, x: W / 2, y: 52, letterSpacing: 0.08 }),
+    ...(num ? [t({ text: num, field: "number", font: "Anton", fontSize: 160, color: ink.accent, x: W / 2, y: 172 })] : []),
+    ...(name ? [t({ text: name.toLocaleUpperCase("vi"), field: "name", font: "Oswald", fontSize: 38, color: ink.main, bold: true, x: W / 2, y: 292, letterSpacing: 0.06 })] : []),
+  ];
+}
+
+/** Áo lớp: tên lớp lớn + niên khoá + tên từng bạn (ô tên, chữ viết tay) */
+function classTee(cls: string, caption: string, name: string, ink: Ink): DesignLayer[] {
+  const big = wrap(cls, 10).toLocaleUpperCase("vi");
+  const size = fit(big, "Anton", lines(big) > 1 ? 86 : 130);
+  const block = lines(big) * size * 1.02;
+  const cap = caption.toLocaleUpperCase("vi");
+  return [
+    t({ text: big, font: "Anton", fontSize: size, color: ink.main, x: W / 2, y: 130, lineHeight: 1.02 }),
+    ...(caption ? [t({ text: cap, font: "Montserrat", fontSize: fit(cap, "Montserrat", 16, 0.85, 0.2), color: ink.accent, bold: true, x: W / 2, y: 130 + block / 2 + 26, letterSpacing: 0.2 })] : []),
+    ...(name ? [t({ text: name, field: "name", font: "Pacifico", fontSize: 40, color: ink.accent, x: W / 2, y: 296 })] : []),
+  ];
+}
+
+/** Đồng phục công ty: tên công ty ngực trái (kiểu logo túi áo) + phòng ban + tên nhân viên (ô tên) */
+function corp(company: string, dept: string, name: string, ink: Ink): DesignLayer[] {
+  const size = Math.round(Math.min(26, (0.9 * 110) / (longest(company) * 0.66)));
+  const d = dept.toLocaleUpperCase("vi");
+  return [
+    t({ text: company, font: "Montserrat", fontSize: size, color: ink.main, bold: true, x: 222, y: 44 }),
+    ...(dept ? [t({ text: d, font: "Montserrat", fontSize: 8.5, color: ink.soft, bold: true, x: 222, y: 44 + size / 2 + 12, letterSpacing: 0.25 })] : []),
+    ...(name ? [t({ text: name, field: "name", font: "Be Vietnam Pro", fontSize: 13, color: ink.accent, bold: true, x: 222, y: 44 + size / 2 + 30 })] : []),
+  ];
+}
+
+/** Đồng phục công ty: tên công ty giữa ngực + khẩu hiệu + tên nhân viên (ô tên) */
+function corpCenter(company: string, slogan: string, name: string, ink: Ink): DesignLayer[] {
+  const c = wrap(company, 14);
+  const size = fit(c, "Montserrat", 56, 0.86);
+  const block = lines(c) * size * 1.1;
+  return [
+    t({ text: c, font: "Montserrat", fontSize: size, color: ink.main, bold: true, x: W / 2, y: 140, lineHeight: 1.1 }),
+    ...(slogan ? [t({ text: slogan, font: "Be Vietnam Pro", fontSize: fit(slogan, "Be Vietnam Pro", 18, 0.85), color: ink.soft, x: W / 2, y: 140 + block / 2 + 24 })] : []),
+    ...(name ? [t({ text: name.toLocaleUpperCase("vi"), field: "name", font: "Montserrat", fontSize: 22, color: ink.accent, bold: true, x: W / 2, y: 300, letterSpacing: 0.1 })] : []),
+  ];
+}
+
+type Recipe = "stack" | "stackO" | "script" | "pacifico" | "lobster" | "badge" | "note" | "pocket" | "jersey" | "classTee" | "corp" | "corpCenter";
 type Spec = [title: string, recipe: Recipe, a: string, b?: string, c?: string, garment?: GarmentKey, color?: ColorKey];
 
 function build(slug: string, s: Spec, accent: string, defGarment: GarmentKey, defColor: ColorKey, i: number): ReadyDesign {
@@ -176,6 +224,10 @@ function build(slug: string, s: Spec, accent: string, defGarment: GarmentKey, de
     : recipe === "lobster" ? scriptMid(a, b, c, ink, "Lobster")
     : recipe === "badge" ? badge(a, b, c, ink)
     : recipe === "note" ? note(a, b, ink)
+    : recipe === "jersey" ? jersey(a, b, c, ink)
+    : recipe === "classTee" ? classTee(a, b, c, ink)
+    : recipe === "corp" ? corp(a, b, c, ink)
+    : recipe === "corpCenter" ? corpCenter(a, b, c, ink)
     : pocket(a, b, ink);
   return { slug: `${slug}-${i + 1}`, title, collection: slug, garment: g, color: col, template: { srcW: W, srcH: H, bg: null, layers } };
 }
@@ -197,6 +249,13 @@ export function readyDesignInColor(d: ReadyDesign, color: ColorKey): ReadyDesign
   const s = [...x.s] as Spec;
   s[6] = color;
   return build(x.slug, s, x.accent, x.garment, x.color, x.i);
+}
+
+/** Mẫu tạo nhanh từ 1 câu chữ (trang slogan / tên đội: nút "Dùng câu này" → Studio ?chu=…) */
+export function quickTextDesign(text: string, color: ColorKey = "trang", garment: GarmentKey = "tshirt"): ReadyDesign {
+  const clean = text.replace(/\s+/g, " ").trim().slice(0, 80);
+  const ink = inkFor(BASIC_COLORS[color].dark, "#c2410c");
+  return { slug: "chu", title: clean, collection: "", garment, color, template: { srcW: W, srcH: H, bg: null, layers: bigStack(clean, "", ink) } };
 }
 
 /** Mẫu bổ sung (đợt 2) – câu chữ do YALA viết */
@@ -301,6 +360,7 @@ const EXTRA: Record<string, Spec[]> = {
 
 /** Nhóm bộ sưu tập để duyệt nhanh */
 export const DESIGN_GROUPS: { key: string; name: string; slugs: string[] }[] = [
+  { key: "dong-phuc", name: "Đồng phục nhóm (in tên từng người)", slugs: ["ao-lop", "doi-bong", "dong-phuc-cong-ty", "team-building"] },
   { key: "mua-le", name: "Dịp lễ sắp tới", slugs: ["20-10", "halloween", "20-11", "noel", "tet-li-xi"] },
   { key: "dip-le", name: "Mùa & du lịch", slugs: ["mua-thu-ha-noi", "mua-he-bien", "viet-nam-du-lich", "tu-hao-viet-nam"] },
   { key: "so-thich", name: "Sở thích", slugs: ["chuyen-phong-gym", "pickleball", "chay-bo", "ca-phe-tra-sua", "doi-game-thu", "karaoke", "foodie", "hoang-thuong-meo-cun"] },
@@ -311,6 +371,31 @@ export const DESIGN_GROUPS: { key: string; name: string; slugs: string[] }[] = [
 
 /* ---------- 28 bộ sưu tập ---------- */
 export const DESIGN_COLLECTIONS: DesignCollection[] = [
+  // Đồng phục nhóm (định vị 10/2026): ô tên/số in riêng từng người – sửa tên lớp/đội/công ty trong Studio
+  C("ao-lop", "Áo lớp & kỷ yếu", "Tên lớp, niên khoá và tên từng bạn – cả lớp chung một đơn.", "#e6eaf3", "#1d4ed8", "tshirt", "trang", [
+    ["Tên lớp & niên khoá", "classTee", "12A1", "Niên khoá 2023 – 2026", "Tên bạn"],
+    ["Mãi là một nhà", "classTee", "A1 Forever", "Mãi là một nhà", "Tên bạn", "tshirt", "navy"],
+    ["Kỷ yếu thanh xuân", "classTee", "K48", "Kỷ yếu · thanh xuân rực rỡ", "Tên bạn", "tshirt", "den"],
+    ["Họp lớp 10 năm", "classTee", "10 năm", "Họp lớp · gặp lại nhau", "Tên bạn", "tshirt", "kem"],
+    ["Số thứ tự trong lớp", "jersey", "12A1 · 2026", "26", "Tên bạn", "tshirt", "trang"],
+    ["Lớp chuyên", "classTee", "Chuyên Toán", "Niên khoá 2024 – 2027", "Tên bạn", "hoodie", "navy"],
+  ]),
+  C("doi-bong", "Đội bóng & CLB thể thao", "Tên đội, số áo và tên từng thành viên – in riêng từng áo.", "#e3ebe6", "#16a34a", "tshirt", "navy", [
+    ["Áo đội số lớn", "jersey", "FC Anh Em", "10", "Tên"],
+    ["Áo đội màu trắng", "jersey", "FC Văn Phòng", "7", "Tên", "tshirt", "trang"],
+    ["Áo đội màu đen", "jersey", "United 2026", "9", "Tên", "tshirt", "den"],
+    ["CLB chạy bộ", "classTee", "Run Club", "Chạy mỗi sáng · về đích cùng nhau", "Tên", "tshirt", "den"],
+    ["CLB pickleball", "jersey", "Pickle Club", "1", "Tên", "tshirt", "kem"],
+    ["CLB cầu lông", "classTee", "Badminton Club", "Sân 3 · 6 giờ sáng", "Tên", "tshirt", "trang"],
+  ]),
+  C("dong-phuc-cong-ty", "Đồng phục công ty", "Tên công ty ngực trái, phòng ban, tên nhân viên – gọn và chuyên nghiệp.", "#e8e8ea", "#c2410c", "tshirt", "trang", [
+    ["Logo ngực trái", "corp", "Công ty", "Since 2026", "Tên nhân viên"],
+    ["Logo ngực trái nền navy", "corp", "Công ty", "Phòng kinh doanh", "Tên nhân viên", "tshirt", "navy"],
+    ["Tên công ty giữa ngực", "corpCenter", "Tên công ty", "Tận tâm · chuyên nghiệp", "Tên nhân viên", "tshirt", "den"],
+    ["Áo sự kiện cuối năm", "corpCenter", "Year End Party", "Cùng nhau tiến xa", "", "tshirt", "trang"],
+    ["Áo khoác đồng phục", "corp", "Công ty", "Team kỹ thuật", "Tên nhân viên", "hoodie", "den"],
+    ["Đồng phục cửa hàng", "corpCenter", "Tiệm của bạn", "Xin chào · cảm ơn quý khách", "Tên nhân viên", "tshirt", "kem"],
+  ]),
   C("mua-thu-ha-noi", "Mùa thu Hà Nội", "Gió heo may, cốm xanh, hoa sữa – mặc ấm mà vẫn thơ.", "#efe4d2", "#b45309", "sweater", "kem", [
     ["Hà Nội mùa thu", "script", "Tháng Mười", "Hà Nội\nmùa thu", "gió heo may về rồi"],
     ["Cốm xanh hoa sữa", "stackO", "Cốm xanh\nhoa sữa", "Hà Nội · 10.2026", "", "hoodie", "kem"],

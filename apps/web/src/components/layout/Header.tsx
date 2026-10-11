@@ -8,7 +8,7 @@ import { IconCart, IconClose, IconMenu, IconPackage, IconSearch, IconSparkle, Ic
 import { SearchBox } from "../shop/SearchBox";
 import { Logo } from "./Logo";
 import { QuoteListBadge } from "../b2b/AddToQuote";
-import { SEGMENTS } from "@pod/shared";
+import { DESIGN_HUBS, SEGMENTS } from "@pod/shared";
 
 /** Menu chính: các nhóm khách tập thể (trừ Doanh nghiệp – có mega menu riêng) */
 const GROUP_NAV = SEGMENTS.filter((s) => s.key !== "doanh-nghiep");
@@ -236,6 +236,16 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
                 {g.key === "doanh-nghiep" ? "Doanh nghiệp" : g.name}
               </Link>
             ))}
+            <details className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between rounded-md px-3 py-2.5 hover:bg-cream">
+                Mẫu áo nhóm có sẵn <span className="text-muted transition group-open:rotate-180">▾</span>
+              </summary>
+              {DESIGN_HUBS.map((h) => (
+                <Link key={h.slug} href={`/${h.slug}`} className="block rounded-md py-2 pl-6 pr-3 text-[14px] font-medium text-ink/80 hover:bg-cream">
+                  {h.name}
+                </Link>
+              ))}
+            </details>
             <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Mua lẻ</p>
             <Link href="/bo-suu-tap" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Mẫu có sẵn theo chủ đề

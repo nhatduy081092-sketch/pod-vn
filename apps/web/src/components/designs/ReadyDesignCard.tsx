@@ -10,19 +10,19 @@ export function colorFor(garment: GarmentKey, color: ColorKey): ColorKey {
 }
 
 /** Link mở YALA Studio với mẫu đã đặt sẵn trên phôi YALA Everyday (dáng + màu áo đang xem) */
-export function readyDesignHref(d: ReadyDesign, color?: ColorKey, garment?: GarmentKey) {
+export function readyDesignHref(d: ReadyDesign, color?: ColorKey, garment?: GarmentKey, back?: string) {
   const g = garment ?? d.garment;
-  const q = new URLSearchParams({ preset: d.slug, mau: BASIC_COLORS[colorFor(g, color ?? d.color)].name, back: `/bo-suu-tap/${d.collection}` });
+  const q = new URLSearchParams({ preset: d.slug, mau: BASIC_COLORS[colorFor(g, color ?? d.color)].name, back: back ?? `/bo-suu-tap/${d.collection}` });
   return `/thiet-ke/${GARMENT_PRODUCT[g].slug}?${q.toString()}`;
 }
 
 /** Thẻ mẫu có sẵn: ảnh cận ngực, rê chuột xem cả áo + nhấc thẻ; giá theo phôi */
-export function ReadyDesignCard({ d, price, color, garment }: { d: ReadyDesign; price?: BasicPrice; /** xem mẫu trên màu áo khác */ color?: ColorKey; /** xem mẫu trên dáng khác (hoodie, túi…) */ garment?: GarmentKey }) {
+export function ReadyDesignCard({ d, price, color, garment, back }: { d: ReadyDesign; price?: BasicPrice; /** xem mẫu trên màu áo khác */ color?: ColorKey; /** xem mẫu trên dáng khác (hoodie, túi…) */ garment?: GarmentKey; /** trang quay về sau Studio */ back?: string }) {
   const off = price?.compareAtPrice && price.compareAtPrice > price.basePrice ? Math.round((1 - price.basePrice / price.compareAtPrice) * 100) : 0;
   const g = garment ?? d.garment;
   const c = colorFor(g, color ?? d.color);
   return (
-    <Link href={readyDesignHref(d, c, g)} className="group block" prefetch={false}>
+    <Link href={readyDesignHref(d, c, g, back)} className="group block" prefetch={false}>
       <div className="relative aspect-square overflow-hidden rounded-2xl border-2 border-transparent bg-surface transition-[transform,box-shadow,border-color] duration-200 [@media(hover:hover)]:group-hover:-translate-y-1 [@media(hover:hover)]:group-hover:border-ink [@media(hover:hover)]:group-hover:shadow-sticker">
         <DesignPreview design={d} color={c} garment={g} className="absolute inset-0 h-full w-full transition duration-500 [@media(hover:hover)]:group-hover:opacity-0" />
         <DesignPreview design={d} color={c} garment={g} zoom={false} className="absolute inset-0 h-full w-full opacity-0 transition duration-500 [@media(hover:hover)]:group-hover:opacity-100" />

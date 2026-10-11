@@ -1,17 +1,17 @@
 "use client";
 import type { ModelPhoto } from "@pod/shared";
 import { useEffect, useState } from "react";
-import { BASIC_COLORS, DESIGN_VERSION, findReadyDesign, readyDesignInColor, type ColorKey, type DesignJson } from "@pod/shared";
+import { BASIC_COLORS, DESIGN_VERSION, findReadyDesign, quickTextDesign, readyDesignInColor, type ColorKey, type DesignJson } from "@pod/shared";
 import type { ProductDetail } from "@/lib/types";
 import { DesignEditor } from "./DesignEditor";
 import { readAttached } from "./storage";
 import { templateLayers } from "./LibraryPanel";
 import { ensureFonts } from "./fonts";
 
-type Props = { product: ProductDetail; mode: "customer" | "seller"; savedId: string | null; templateId: string | null; presetSlug?: string | null; initialColor?: string | null; returnTo: string; models?: Record<string, ModelPhoto> };
+type Props = { product: ProductDetail; mode: "customer" | "seller"; savedId: string | null; templateId: string | null; presetSlug?: string | null; /** câu chữ có sẵn (?chu=) từ trang slogan / tên đội */ presetText?: string | null; initialColor?: string | null; returnTo: string; models?: Record<string, ModelPhoto> };
 
 /** Nạp thiết kế ban đầu: thiết kế đã lưu (tài khoản) / mẫu seller / thiết kế đang gắn ở trang sản phẩm */
-export function EditorLoader({ product, mode, savedId, templateId, presetSlug, initialColor, returnTo, models }: Props) {
+export function EditorLoader({ product, mode, savedId, templateId, presetSlug, presetText, initialColor, returnTo, models }: Props) {
   const [state, setState] = useState<{ ready: boolean; initial: DesignJson | null; name?: string; error?: string }>({ ready: false, initial: null });
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export function EditorLoader({ product, mode, savedId, templateId, presetSlug, i
         const found = mode === "customer" && presetSlug ? findReadyDesign(presetSlug) : undefined;
         // khách chọn màu áo khác màu gợi ý -> tính lại màu chữ cho dễ đọc trên áo đó
         const colorKey = (Object.keys(BASIC_COLORS) as ColorKey[]).find((k) => BASIC_COLORS[k].name === initialColor);
-        const preset = found && colorKey ? readyDesignInColor(found, colorKey) : found;
+        const preset = found && colorKey ? readyDesignInColor(found, colorKey) : (found ?? (mode === "customer" && presetText?.trim() ? quickTextDesign(presetText, colorKey ?? "trang") : undefined));
         if (preset) {
           const area = product.printAreas.find((a) => a.key === "front") ?? product.printAreas[0];
           if (area) {
@@ -60,7 +60,7 @@ export function EditorLoader({ product, mode, savedId, templateId, presetSlug, i
     return () => {
       alive = false;
     };
-  }, [product.id, savedId, templateId, presetSlug, mode, initialColor]);
+  }, [product.id, savedId, templateId, presetSlug, presetText, mode, initialColor]);
 
   return (
     // phủ toàn màn hình, che header/footer của website để có chỗ thiết kế

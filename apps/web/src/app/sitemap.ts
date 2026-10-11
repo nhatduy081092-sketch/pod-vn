@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getCategories, getHelp, getPages, getProducts, getSettings } from "@/lib/api";
-import { DESIGN_COLLECTIONS, SEGMENTS } from "@pod/shared";
+import { DESIGN_COLLECTIONS, DESIGN_HUBS, SEGMENTS } from "@pod/shared";
+import { TOOL_LINKS } from "@/components/seo/ToolLinks";
 import { SITE_URL } from "@/lib/config";
 
 export const revalidate = 3600;
@@ -13,6 +14,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/thiet-ke`, changeFrequency: "weekly", priority: 0.9 },
     { url: `${SITE_URL}/bo-suu-tap`, changeFrequency: "weekly", priority: 0.8 },
     ...SEGMENTS.map((g) => ({ url: `${SITE_URL}${g.href}`, changeFrequency: "weekly" as const, priority: 0.9 })),
+    ...DESIGN_HUBS.map((h) => ({ url: `${SITE_URL}/${h.slug}`, changeFrequency: "weekly" as const, priority: 0.85 })),
+    ...TOOL_LINKS.map((l) => ({ url: `${SITE_URL}${l.href}`, changeFrequency: "monthly" as const, priority: 0.7 })),
     { url: `${SITE_URL}/doanh-nghiep/san-pham`, changeFrequency: "daily", priority: 0.8 },
     ...settings.b2bHub.industries.map((i) => ({ url: `${SITE_URL}/doanh-nghiep/san-pham?nganh=${i.slug}`, changeFrequency: "weekly" as const, priority: 0.7 })),
     ...settings.b2bHub.solutions.map((x) => ({ url: `${SITE_URL}/doanh-nghiep/san-pham?dip=${x.key}`, changeFrequency: "weekly" as const, priority: 0.7 })),

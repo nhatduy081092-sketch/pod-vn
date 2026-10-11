@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { GARMENT_PRODUCT, GROUP_MIN_QTY, GROUP_STEPS, SEGMENTS } from "@pod/shared";
+import { DESIGN_HUBS, GARMENT_PRODUCT, GROUP_MIN_QTY, GROUP_STEPS, SEGMENTS } from "@pod/shared";
+import { TOOL_LINKS } from "../seo/ToolLinks";
 import { pastel } from "@/lib/pastel";
 import { TeamLineup } from "../group/TeamLineup";
 
@@ -95,6 +96,53 @@ export function GroupSteps() {
           <Link href="/dong-phuc-the-thao" className="btn border-white/40 bg-transparent px-6 py-3 text-white hover:border-white">
             Xem áo đội in tên số
           </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Bắt đầu nhanh: mẫu áo theo nhóm + công cụ miễn phí (liên kết nội bộ cho SEO) */
+export function QuickStart() {
+  return (
+    <section className="py-10 md:py-14" aria-labelledby="bat-dau-nhanh">
+      <div className="container-site grid gap-8 md:grid-cols-2 md:gap-12">
+        <div>
+          <h2 id="bat-dau-nhanh" className="text-xl font-bold md:text-2xl">
+            Mẫu áo nhóm có sẵn
+          </h2>
+          <p className="mt-1 text-[15px] text-muted">Sửa chữ, đổi màu áo, thêm tên từng người.</p>
+          <ul className="mt-4 divide-y divide-line border-y border-line">
+            {DESIGN_HUBS.map((h) => (
+              <li key={h.slug}>
+                <Link href={`/${h.slug}`} className="flex items-center justify-between gap-3 py-3 text-[16px] font-semibold hover:text-brand-dark">
+                  {h.name}
+                  <span aria-hidden className="text-muted">
+                    ›
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold md:text-2xl">Công cụ miễn phí</h2>
+          <p className="mt-1 text-[15px] text-muted">Cho trưởng nhóm, lớp trưởng, HR chuẩn bị đơn.</p>
+          <ul className="mt-4 divide-y divide-line border-y border-line">
+            {TOOL_LINKS.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="flex items-center justify-between gap-3 py-3 hover:text-brand-dark">
+                  <span>
+                    <span className="block text-[16px] font-semibold">{l.title}</span>
+                    <span className="block text-sm text-muted">{l.desc}</span>
+                  </span>
+                  <span aria-hidden className="text-muted">
+                    ›
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

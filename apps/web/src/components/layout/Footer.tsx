@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { SEGMENTS, type LandingSettings } from "@pod/shared";
+import { DESIGN_HUBS, SEGMENTS, type LandingSettings } from "@pod/shared";
+import { TOOL_LINKS } from "../seo/ToolLinks";
 import { Logo, YalaLogoFull } from "./Logo";
 
 const CARRIERS = ["GHN", "GHTK", "Viettel Post", "J&T Express", "Ninja Van"];
@@ -143,6 +144,17 @@ export function Footer({ brand, categories, pages }: Props) {
           </ul>
         </div>
       </div>
+      <nav className="container-site mt-8 border-t border-white/10 pt-6 text-sm" aria-label="Mẫu áo & công cụ miễn phí">
+        <ul className="flex flex-wrap gap-x-5 gap-y-2">
+          {[...DESIGN_HUBS.map((h) => ({ href: `/${h.slug}`, title: h.name })), ...TOOL_LINKS].map((l) => (
+            <li key={l.href}>
+              <Link href={l.href} className="hover:text-brand">
+                {l.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
       <p className="container-site mt-6 text-xs text-white/50">
         © {new Date().getFullYear()} {brand.name}. Bảo lưu mọi quyền.
       </p>
