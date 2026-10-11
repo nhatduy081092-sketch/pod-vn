@@ -223,7 +223,7 @@ const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringif
 export const DEFAULT_LANDING: LandingSettings = {
   brand: {
     name: "YALA",
-    tagline: "Tự thiết kế áo, túi, phụ kiện theo ý bạn ngay trên web – xem trước tức thì, in từ 1 chiếc, giao toàn quốc.",
+    tagline: "Áo nhóm, đồng phục và quà in logo theo thiết kế riêng – in tên & số từng người, cả nhóm tự ghi size, giao toàn quốc.",
     hotline: "0971808330",
     zalo: "0971808330",
     messengerUrl: "https://m.me/oemgroupvn",
@@ -518,14 +518,14 @@ export const DEFAULT_LANDING: LandingSettings = {
   ],
   whyChoose: {
     title: "Vì sao chọn YALA?",
-    text: "Chúng tôi tin rằng ai cũng xứng đáng có một chiếc áo mang dấu ấn riêng – giá hợp lý, chất lượng ổn định, giao nhanh.",
+    text: "Áo nhóm, đồng phục và quà in logo cho doanh nghiệp, CLB, lớp, hội nhóm – thiết kế online, cả nhóm tự ghi size, giá rõ theo số lượng.",
     items: [
-      { title: "Không giới hạn số lượng", desc: "In từ 1 chiếc, giá sỉ tự động khi đặt nhiều." },
+      { title: "Đơn nhóm từ 10 sản phẩm", desc: "Ít hơn 10 vẫn đặt được, tính như mua lẻ. Đơn lớn nhận báo giá riêng qua Zalo." },
       { title: "Tự thiết kế online", desc: "Ảnh, chữ, sticker, mẫu có sẵn – xem trước trên áo thật trước khi đặt." },
       { title: "Chất lượng ổn định", desc: "In chuyển nhiệt sắc nét, không bong, không phai." },
       { title: "Giao nhanh toàn quốc", desc: "Sản xuất 2–4 ngày, giao 34 tỉnh thành." },
       { title: "COD & VietQR", desc: "Nhận hàng mới trả tiền hoặc chuyển khoản quét mã." },
-      { title: "Đồng phục in tên & số", desc: "Lớp, team, công ty – mỗi người một tên, một số, đặt trong 1 đơn." },
+      { title: "In tên & số từng người", desc: "Gửi 1 link, mỗi người tự ghi tên, số, size – trưởng nhóm chốt và đặt 1 đơn." },
     ],
   },
   shipping: DEFAULT_SHIPPING,

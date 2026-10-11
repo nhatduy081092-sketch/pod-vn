@@ -26,7 +26,7 @@ type Search = Promise<{ "danh-muc"?: string; page?: string }>;
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
   const title = `${s.brand.name} Studio – Tự thiết kế áo & phụ kiện online`;
-  const description = `Tự thiết kế áo thun, hoodie, đồng phục, túi, phụ kiện ngay trên trình duyệt: thêm ảnh, chữ, sticker, in tên & số từng người, xem trước tức thì. In từ 1 chiếc, giao toàn quốc.`;
+  const description = `Tự thiết kế áo thun, hoodie, đồng phục, túi, phụ kiện ngay trên trình duyệt: thêm ảnh, chữ, sticker, in tên & số từng người, xem trước tức thì. Gửi 1 link cho cả nhóm tự ghi size. Đơn nhóm từ 10 sản phẩm, ít hơn vẫn đặt được. Giao toàn quốc.`;
   return { title: { absolute: title }, description, alternates: { canonical: "/thiet-ke" }, openGraph: { title, description } };
 }
 
@@ -81,10 +81,10 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
             <span className="chip-sticker bg-brand text-white">{brand} Studio</span>
             <h1 className="mt-5 font-display text-[clamp(34px,4.8vw,56px)] font-extrabold leading-[1.15] tracking-[-0.035em] [font-stretch:86%]">
               <span className="block">Tự thiết kế.</span>
-              <span className="block">In từ 1 chiếc.</span>
+              <span className="block">In cho cả nhóm.</span>
             </h1>
             <p className="mt-5 max-w-[32rem] text-[16px] leading-relaxed text-ink/75 md:text-lg">
-              Ngay trên điện thoại hoặc máy tính, không cần biết Photoshop. Thêm ảnh, chữ, mẫu có sẵn – xem trước trên sản phẩm, đặt in trong vài phút.
+              Ngay trên điện thoại hoặc máy tính, không cần biết Photoshop. Thêm ảnh, chữ, mẫu có sẵn, tên và số từng người – xem trước trên sản phẩm, đặt in trong vài phút.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <a href="#chon-san-pham" className="btn-primary px-7 py-3.5 text-base">

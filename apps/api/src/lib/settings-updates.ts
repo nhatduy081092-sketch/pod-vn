@@ -106,9 +106,53 @@ async function applyGroupPivot(): Promise<boolean> {
   return done.length > 0;
 }
 
+/**
+ * Khối "Vì sao chọn YALA" + câu giới thiệu chân trang (11/10/2026): bỏ "In từ 1 chiếc" cho khớp định vị đơn nhóm từ 10.
+ * Chỉ thay câu còn GIỐNG mặc định cũ – mục chủ shop đã sửa trong CMS giữ nguyên.
+ */
+const WHY_FLAG = "update:why-choose-group:2026-10-11";
+const OLD_TAGLINE = "Tự thiết kế áo, túi, phụ kiện theo ý bạn ngay trên web – xem trước tức thì, in từ 1 chiếc, giao toàn quốc.";
+const OLD_WHY = {
+  text: "Chúng tôi tin rằng ai cũng xứng đáng có một chiếc áo mang dấu ấn riêng – giá hợp lý, chất lượng ổn định, giao nhanh.",
+  items: [
+    { title: "Không giới hạn số lượng", desc: "In từ 1 chiếc, giá sỉ tự động khi đặt nhiều." },
+    { title: "Đồng phục in tên & số", desc: "Lớp, team, công ty – mỗi người một tên, một số, đặt trong 1 đơn." },
+  ],
+};
+
+async function applyWhyChooseGroup(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: WHY_FLAG } })) return false;
+  const row = await prisma.setting.findUnique({ where: { key: "landing" } });
+  const done: string[] = [];
+  if (row) {
+    const cur = mergeLanding(row.value);
+    const d = mergeLanding(null).whyChoose;
+    const why = { ...cur.whyChoose };
+    if (why.text === OLD_WHY.text) (why.text = d.text), done.push("đoạn giới thiệu");
+    why.items = why.items.map((it) => {
+      const i = OLD_WHY.items.findIndex((o) => o.title === it.title && o.desc === it.desc);
+      if (i === -1) return it;
+      const next = d.items.find((x) => x.title === (i === 0 ? "Đơn nhóm từ 10 sản phẩm" : "In tên & số từng người"));
+      if (!next) return it;
+      done.push(`mục “${it.title}”`);
+      return next;
+    });
+    const brand = { ...cur.brand };
+    if (brand.tagline === OLD_TAGLINE) (brand.tagline = mergeLanding(null).brand.tagline), done.push("câu giới thiệu chân trang");
+    if (done.length) {
+      await prisma.setting.update({ where: { key: "landing" }, data: { value: { ...cur, brand, whyChoose: why } } });
+      invalidateLanding();
+    }
+  }
+  await prisma.setting.create({ data: { key: WHY_FLAG, value: { at: new Date().toISOString(), done } } });
+  console.log(`[settings] Vì sao chọn YALA: ${done.length ? done.join(", ") : "không có gì cần đổi"}`);
+  return done.length > 0;
+}
+
 export async function applySettingsUpdates() {
   let changed = await applyBundledBlanks();
   if (await applyGroupPivot()) changed = true;
+  if (await applyWhyChooseGroup()) changed = true;
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });

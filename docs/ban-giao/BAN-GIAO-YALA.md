@@ -69,8 +69,8 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 1. **Deploy** commit mới nhất (`1015bf2`) nếu chưa chạy: lệnh ở mục 2.
 2. **Bảo mật VPS**: mật khẩu root có thể đã lộ trong ảnh chụp terminal (11/10) → đổi qua trang quản lý nhà cung cấp VPS; sau đó cài **khoá SSH** để deploy không cần gõ mật khẩu.
 3. Nhập **bậc giá theo số lượng** cho 6 sản phẩm YALA Everyday (áo thun 199k, dài tay 229k, sweater 359k, hoodie 399k, jogger 349k, tote 129k) – mốc gợi ý 10/30/50/100.
-4. CMS: sửa khối “Vì sao chọn YALA” (còn câu “In từ 1 chiếc”); cân nhắc tắt dải slogan “Young/Ambitious…” nếu không hợp khách lớn tuổi.
-5. **SEO** (xem `tai-lieu/yala-seo-2-cong-thuc.md`, mục 6): đã làm 4 trang mẫu áo theo nhóm + 4 trang công cụ (bc50ca2). Còn: nhập bảng size + bậc giá trong CMS, Search Console, Google Business Profile, ảnh thật; cân nhắc trang “mẫu danh sách in áo” (file Excel).
+4. ~~Khối “Vì sao chọn YALA” + câu chân trang + dải TopBar còn “In từ 1 chiếc”~~ – đã sửa (cập nhật 1 lần `update:why-choose-group:2026-10-11`, không ghi đè câu chủ shop đã sửa). Còn: cân nhắc tắt dải slogan “Young/Ambitious…” nếu không hợp khách lớn tuổi.
+5. **SEO** (xem `tai-lieu/yala-seo-2-cong-thuc.md`, mục 6): đã làm 4 trang mẫu áo theo nhóm + 4 trang công cụ (bc50ca2). Còn: nhập bảng size + bậc giá trong CMS, Search Console, Google Business Profile, ảnh thật. Đã làm trang `/mau-danh-sach-in-ao` + file `public/tai-ve/mau-danh-sach-in-ao-yala.xlsx` (tạo lại: `python scripts/gen/roster-template.py`); KPI: sự kiện GA4 `resource_download`.
 6. Ảnh thật áo nhóm (đội bóng, lớp, team building) thay ảnh minh hoạ; case study thật cho doanh nghiệp.
 7. Tắt biến thể màu Hồng/Trắng trong CMS nếu xưởng chưa có phôi; ảnh người mẫu cho sweater, dài tay, tote, áo thun đen.
 8. Nội dung 4 trang nhóm khách đang nằm trong code (`segments.ts`) – có thể đưa vào CMS nếu cần sửa thường xuyên.
@@ -102,6 +102,7 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 | Phôi trơn | `apps/web/public/blanks/<dáng>-<màu>.webp` (36 ảnh) |
 
 ## 8. Lịch sử gần đây (mới → cũ)
+- Trang mẫu danh sách in áo (tải Excel) + thông điệp “Đơn nhóm từ 10” thống nhất (TopBar, Vì sao chọn YALA, chân trang, /thiet-ke, /bo-suu-tap)
 - bc50ca2 SEO: 4 trang mẫu áo theo nhóm, thiết kế áo lớp online, bảng size, slogan áo lớp, tên đội bóng; 18 mẫu đồng phục có ô tên/số
 - 1015bf2 Giao diện chững chạc cho khách tập thể
 - 968de6e Định vị khách tập thể: trang chủ áo nhóm, 3 trang nhóm khách, đơn nhóm từ 10

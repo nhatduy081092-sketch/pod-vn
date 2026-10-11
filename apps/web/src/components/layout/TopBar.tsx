@@ -1,4 +1,4 @@
-import type { LandingSettings } from "@pod/shared";
+import { GROUP_MIN_QTY, type LandingSettings } from "@pod/shared";
 
 /** Thanh thông tin mảnh màu navy – nhận diện YALA */
 export function TopBar({ brand }: { brand: LandingSettings["brand"] }) {
@@ -7,7 +7,7 @@ export function TopBar({ brand }: { brand: LandingSettings["brand"] }) {
       <div className="container-site flex h-8 items-center justify-between gap-3">
         <p className="truncate">
           <b className="text-accent">{brand.name}</b>
-          <span className="hidden sm:inline"> · Tự thiết kế áo &amp; phụ kiện online</span> · In từ 1 chiếc
+          <span className="hidden sm:inline"> · Áo nhóm, đồng phục &amp; quà in logo</span> · Đơn nhóm từ {GROUP_MIN_QTY} sản phẩm
         </p>
         <div className="flex shrink-0 items-center gap-3">
           <a href={`tel:${brand.hotline}`} className="font-bold hover:text-accent">
