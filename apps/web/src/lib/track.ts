@@ -49,6 +49,11 @@ export const track = {
   selectPromotion(p: { id: string; name: string; slot: string; color?: string }) {
     ga("select_promotion", { promotion_id: p.id, promotion_name: p.name, creative_slot: p.slot, creative_name: p.color || "default" });
   },
+  /** Tải tài nguyên miễn phí (file mẫu danh sách…) – tên riêng để không trùng file_download tự động của GA4 */
+  resourceDownload(file: string, from: string) {
+    ga("resource_download", { file_name: file, page: from });
+    fb("ResourceDownload", { content_name: file }, true);
+  },
   contact(channel: "zalo" | "phone" | "messenger") {
     ga("contact", { channel });
     fb("Contact", { channel });
