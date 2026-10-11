@@ -68,3 +68,15 @@ Chưa có dữ liệu lượng tìm kiếm – thứ tự ưu tiên dưới đâ
 - https://balico.com.vn/trang-web-thiet-ke-ao-lop-online/
 - https://yousport.vn/dat-ao-bong-da-theo-yeu-cau.html
 - https://justplay.vn/tin-san-pham/ao-dau-bong-da-in-ten-so-cho-doi-bong-in-nhanh-gia-xuong/
+
+## 6. Đã triển khai (commit bc50ca2 – 11/10/2026)
+| Công thức | Trang | Ghi chú |
+|---|---|---|
+| 1 | /mau-ao-lop · /mau-ao-team-building · /mau-ao-doi-bong · /mau-dong-phuc-cong-ty | Title “[số mẫu thật] mẫu áo … đẹp [năm] – sửa chữ, in tên từng người”; lưới mẫu mở Studio; bảng giá dạng chữ (chưa có bậc giá → “Báo giá”); FAQ + Breadcrumb schema |
+| 1 | 3 bộ mẫu mới có ô tên/số: Áo lớp & kỷ yếu, Đội bóng & CLB, Đồng phục công ty (18 mẫu) | Nhóm “Đồng phục nhóm” đứng đầu /bo-suu-tap; tiêu đề bộ sưu tập đổi theo kiểu “[số] mẫu áo [chủ đề]” |
+| 2 | /thiet-ke-ao-lop-online | Trang công cụ, WebApplication + FAQ schema |
+| 2 | /bang-size-ao | Số đo lấy từ CMS (bảng size sản phẩm/danh mục); chưa nhập thì hiện “đang cập nhật – nhắn Zalo” |
+| 2 | /slogan-ao-lop (43 câu) · /ten-doi-bong-hay (38 tên) | Nút “Dùng câu này” mở Studio với câu chữ trên áo (`?chu=`) |
+| Liên kết | Trang chủ (Bắt đầu nhanh), footer, menu điện thoại, trang nhóm khách, sitemap | |
+
+Việc chủ shop cần làm để trang đủ mạnh: nhập **bảng size** YALA Everyday trong CMS (Danh mục/Sản phẩm), nhập **bậc giá** 10/30/50/100, ảnh thật thành phẩm; tạo Search Console + Google Business Profile và gửi sitemap.
