@@ -23,3 +23,4 @@ export * from "./brand-logo";
 export * from "./group-order";
 export * from "./models";
 export * from "./photo-prompts";
+export * from "./segments";

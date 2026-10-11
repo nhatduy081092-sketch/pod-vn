@@ -8,6 +8,7 @@ import { MerchKit } from "@/components/b2b/MerchKit";
 import { PhotoCollage } from "@/components/b2b/PhotoCollage";
 import { pastel } from "@/lib/pastel";
 import { B2BQuoteForm } from "@/components/b2b/B2BQuoteForm";
+import { SEGMENTS } from "@pod/shared";
 
 export const revalidate = 300;
 export const metadata: Metadata = {
@@ -343,6 +344,23 @@ export default async function BusinessPage() {
             zalo={brand.zalo}
             hotline={brand.hotline}
           />
+        </div>
+      </section>
+
+      {/* Nhóm khách tập thể khác */}
+      <section className="border-t border-line py-10 md:py-12">
+        <div className="container-site">
+          <p className="eyebrow">Không phải doanh nghiệp?</p>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+            {SEGMENTS.filter((g) => g.key !== "doanh-nghiep").map((g, i) => (
+              <li key={g.key}>
+                <Link href={g.href} className={`block h-full rounded-2xl border-2 border-ink p-4 shadow-sticker-sm transition hover:-translate-y-0.5 ${pastel(i + 1)}`}>
+                  <p className="text-lg font-extrabold">{g.name} →</p>
+                  <p className="mt-1 text-[14px] leading-snug text-ink/75">{g.pitch}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     </>

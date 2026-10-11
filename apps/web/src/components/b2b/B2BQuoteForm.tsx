@@ -3,13 +3,21 @@ import { useEffect, useState } from "react";
 import { track } from "@/lib/track";
 
 type Option = { key: string; title: string };
-type Props = { solutions: Option[]; industries: { name: string; slug: string }[]; zalo: string; hotline: string };
+type Props = {
+  solutions: Option[];
+  industries: { name: string; slug: string }[];
+  zalo: string;
+  hotline: string;
+  /** nhóm khách (trang CLB thể thao, hội nhóm, team building): ghi vào chủ đề liên hệ + đổi nhãn cho hợp */
+  segment?: string;
+  notePlaceholder?: string;
+};
 
-const QTY = ["Dưới 50", "50 – 200", "200 – 500", "500 – 1.000", "Trên 1.000"];
+const QTY = ["Dưới 10", "10 – 30", "30 – 50", "50 – 200", "200 – 500", "500 – 1.000", "Trên 1.000"];
 const BUDGET = ["Dưới 50.000đ", "50 – 100.000đ", "100 – 200.000đ", "200 – 300.000đ", "Trên 300.000đ", "Chưa xác định"];
 
 /** Form yêu cầu báo giá doanh nghiệp – gửi vào hệ thống liên hệ (CMS + Telegram) */
-export function B2BQuoteForm({ solutions, industries, zalo, hotline }: Props) {
+export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, notePlaceholder }: Props) {
   const [f, setF] = useState({ name: "", phone: "", company: "", email: "", occasion: "", qty: "", budget: "", deadline: "", note: "", website: "" });
   const [picked, setPicked] = useState<string[]>([]);
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
@@ -31,6 +39,7 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline }: Props) {
     setErr("");
     if (!f.name.trim() || !/^(0|\+84)\d{9,10}$/.test(f.phone.replace(/[\s.]/g, ""))) return setErr("Nhập họ tên và số điện thoại hợp lệ");
     const lines = [
+      segment && `Nhóm khách: ${segment}`,
       f.company && `Công ty: ${f.company}`,
       f.email && `Email: ${f.email}`,
       f.occasion && `Dịp: ${f.occasion}`,
@@ -98,7 +107,7 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline }: Props) {
           <input className={input} value={f.phone} onChange={up("phone")} inputMode="tel" autoComplete="tel" required />
         </label>
         <label className="block">
-          <span className="label">Công ty / tổ chức</span>
+          <span className="label">{segment ? "Tên đội / nhóm / công ty" : "Công ty / tổ chức"}</span>
           <input className={input} value={f.company} onChange={up("company")} autoComplete="organization" />
         </label>
         <label className="block">
@@ -131,7 +140,7 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline }: Props) {
           </select>
         </label>
         <label className="block">
-          <span className="label">Ngân sách mỗi phần quà</span>
+          <span className="label">{segment ? "Ngân sách mỗi sản phẩm" : "Ngân sách mỗi phần quà"}</span>
           <select className={input} value={f.budget} onChange={up("budget")}>
             <option value="">Chọn</option>
             {BUDGET.map((q) => (
@@ -140,6 +149,7 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline }: Props) {
           </select>
         </label>
       </div>
+      {industries.length > 0 && (
       <fieldset className="mt-4">
         <legend className="label">Ngành hàng quan tâm</legend>
         <div className="flex flex-wrap gap-2">
@@ -159,9 +169,10 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline }: Props) {
           })}
         </div>
       </fieldset>
+      )}
       <label className="mt-4 block">
         <span className="label">Mô tả thêm</span>
-        <textarea className={input} rows={3} value={f.note} onChange={up("note")} placeholder="VD: 300 hộp quà Tết cho nhân viên, có bình giữ nhiệt + lịch, in logo 1 màu…" maxLength={500} />
+        <textarea className={input} rows={3} value={f.note} onChange={up("note")} placeholder={notePlaceholder ?? "VD: 300 hộp quà Tết cho nhân viên, có bình giữ nhiệt + lịch, in logo 1 màu…"} maxLength={500} />
       </label>
       <input className="hidden" tabIndex={-1} autoComplete="off" value={f.website} onChange={up("website")} aria-hidden />
       {err && <p className="mt-3 text-sm text-sale">{err}</p>}

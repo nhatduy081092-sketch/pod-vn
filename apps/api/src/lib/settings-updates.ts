@@ -64,8 +64,51 @@ async function applyBundledBlanks(): Promise<boolean> {
   return true;
 }
 
+/**
+ * Định vị mới (11/10/2026): tập trung khách tập thể – đơn nhóm từ 10 sản phẩm.
+ * Chỉ thay câu chữ còn GIỐNG mặc định cũ (chủ shop đã sửa trong CMS thì giữ nguyên).
+ */
+const PIVOT_FLAG = "update:group-pivot:2026-10-11";
+const OLD = {
+  seoTitle: "YALA – Tự thiết kế áo, in theo yêu cầu từ 1 chiếc",
+  seoDescription:
+    "Tự thiết kế áo thun, hoodie, đồng phục, túi và phụ kiện online với YALA Studio: thêm ảnh, chữ, in tên số từng người, xem trước tức thì. In từ 1 chiếc, COD toàn quốc.",
+  hubTitle: "Merch & đồng phục cho team – từ 1 chiếc, thấy mockup và giá ngay",
+  hubSubtitle: "Áo, túi, bình, sổ, hộp quà in logo. Đơn nhỏ đặt online, giao nhanh; đơn lớn hoặc nhiều món nhận báo giá & mockup miễn phí.",
+  termValue: "Từ 1 sản phẩm",
+  compareYala: "Từ 1 sản phẩm",
+};
+
+async function applyGroupPivot(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: PIVOT_FLAG } })) return false;
+  const row = await prisma.setting.findUnique({ where: { key: "landing" } });
+  const done: string[] = [];
+  if (row) {
+    const cur = mergeLanding(row.value);
+    const d = mergeLanding(null);
+    const seo = { ...cur.seo };
+    if (seo.title === OLD.seoTitle) (seo.title = d.seo.title), done.push("tiêu đề SEO");
+    if (seo.description === OLD.seoDescription) (seo.description = d.seo.description), done.push("mô tả SEO");
+    const hub = { ...cur.b2bHub };
+    if (hub.title === OLD.hubTitle) (hub.title = d.b2bHub.title), done.push("tiêu đề trang Doanh nghiệp");
+    if (hub.subtitle === OLD.hubSubtitle) (hub.subtitle = d.b2bHub.subtitle), done.push("mô tả trang Doanh nghiệp");
+    const newTerm = d.b2bHub.terms.find((t) => t.label === "Số lượng tối thiểu");
+    hub.terms = hub.terms.map((t) => (t.label === "Số lượng tối thiểu" && t.value === OLD.termValue && newTerm ? (done.push("điều kiện số lượng"), newTerm) : t));
+    const newCmp = d.b2bHub.compare.find((c) => c.label === "Số lượng tối thiểu");
+    hub.compare = hub.compare.map((c) => (c.label === "Số lượng tối thiểu" && c.yala === OLD.compareYala && newCmp ? (done.push("bảng so sánh"), newCmp) : c));
+    if (done.length) {
+      await prisma.setting.update({ where: { key: "landing" }, data: { value: { ...cur, seo, b2bHub: hub } } });
+      invalidateLanding();
+    }
+  }
+  await prisma.setting.create({ data: { key: PIVOT_FLAG, value: { at: new Date().toISOString(), done } } });
+  console.log(`[settings] định vị áo nhóm: ${done.length ? done.join(", ") : "không có gì cần đổi"}`);
+  return done.length > 0;
+}
+
 export async function applySettingsUpdates() {
   let changed = await applyBundledBlanks();
+  if (await applyGroupPivot()) changed = true;
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });

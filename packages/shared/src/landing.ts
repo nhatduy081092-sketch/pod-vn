@@ -322,8 +322,8 @@ export const DEFAULT_LANDING: LandingSettings = {
   b2bPricing: DEFAULT_B2B_PRICING,
   b2bHub: {
     eyebrow: "YALA cho team & doanh nghiệp",
-    title: "Merch & đồng phục cho team – từ 1 chiếc, thấy mockup và giá ngay",
-    subtitle: "Áo, túi, bình, sổ, hộp quà in logo. Đơn nhỏ đặt online, giao nhanh; đơn lớn hoặc nhiều món nhận báo giá & mockup miễn phí.",
+    title: "Đồng phục & quà tặng in logo – thấy mockup và giá ngay",
+    subtitle: "Áo, túi, bình, sổ, hộp quà in logo. Đơn nhóm từ 10 sản phẩm đặt online, giao nhanh; đơn lớn hoặc nhiều món nhận báo giá & mockup miễn phí.",
     industries: [
       { name: "Đồng phục & may mặc", slug: "dong-phuc-may-mac", blurb: "Áo thun, polo, áo khoác, đồng phục sự kiện" },
       { name: "Balo, túi & phụ kiện", slug: "balo-tui-phu-kien", blurb: "Balo laptop, túi tote, túi rút, túi thể thao" },
@@ -360,7 +360,7 @@ export const DEFAULT_LANDING: LandingSettings = {
       { title: "Giao toàn quốc", desc: "Giao một điểm hoặc chia nhiều chi nhánh theo danh sách." },
     ],
     terms: [
-      { label: "Số lượng tối thiểu", value: "Từ 1 sản phẩm", note: "Áo, túi in theo thiết kế. Quà tặng khác theo số lượng tối thiểu ghi trên từng sản phẩm." },
+      { label: "Số lượng tối thiểu", value: "Đơn nhóm từ 10", note: "Áo, túi in theo thiết kế – ít hơn vẫn đặt được giá lẻ. Quà tặng khác theo số lượng tối thiểu ghi trên từng sản phẩm." },
       { label: "Mockup", value: "Xem ngay, miễn phí", note: "Tự xem logo trên sản phẩm bằng YALA Studio, hoặc YALA làm mockup giúp trước khi báo giá." },
       { label: "Giá", value: "Hiện ngay trên web", note: "Đơn lớn, nhiều món hoặc cần đóng hộp: báo giá chi tiết theo ngân sách." },
       { label: "Thời gian", value: "2–4 ngày", note: "Sản xuất đơn áo in đặt online. Quà tặng số lượng lớn: báo theo từng dự án." },
@@ -368,7 +368,7 @@ export const DEFAULT_LANDING: LandingSettings = {
       { label: "Giao hàng", value: "Toàn quốc", note: "Giao một điểm hoặc chia nhiều chi nhánh theo danh sách." },
     ],
     compare: [
-      { label: "Số lượng tối thiểu", usual: "Thường 30–500 sản phẩm", yala: "Từ 1 sản phẩm" },
+      { label: "Số lượng tối thiểu", usual: "Thường 30–500 sản phẩm", yala: "Từ 10 sản phẩm (ít hơn vẫn đặt được)" },
       { label: "Xem mẫu", usual: "Chờ gửi mockup qua Zalo, email", yala: "Xem ngay logo trên sản phẩm" },
       { label: "Giá", usual: "Nhắn tin, chờ báo giá", yala: "Hiện ngay; đơn lớn có báo giá riêng" },
       { label: "Thời gian", usual: "Thường 7–15 ngày trở lên", yala: "2–4 ngày cho đơn áo in" },
@@ -535,9 +535,9 @@ export const DEFAULT_LANDING: LandingSettings = {
     accountName: "CONG TY CO PHAN OEM",
   },
   seo: {
-    title: "YALA – Tự thiết kế áo, in theo yêu cầu từ 1 chiếc",
+    title: "YALA – Áo nhóm, đồng phục & quà in logo theo thiết kế riêng",
     description:
-      "Tự thiết kế áo thun, hoodie, đồng phục, túi và phụ kiện online với YALA Studio: thêm ảnh, chữ, in tên số từng người, xem trước tức thì. In từ 1 chiếc, COD toàn quốc.",
+      "In áo nhóm, đồng phục công ty, áo CLB thể thao, áo lớp, áo team building theo thiết kế riêng: in tên & số từng người, gửi 1 link cho cả nhóm tự ghi size. Đơn nhóm từ 10 sản phẩm, giao toàn quốc.",
   },
 };
 

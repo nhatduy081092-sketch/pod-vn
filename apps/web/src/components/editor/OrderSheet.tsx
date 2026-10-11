@@ -226,7 +226,12 @@ export function OrderSheet({
                   Mua ngay
                 </button>
               </div>
-                {onGroup && <p className="mt-3 text-center text-xs text-ink/65">Đặt chung cho lớp, nhóm bạn, công ty? Mỗi người tự chọn size: {groupBtn(false)}</p>}
+                {onGroup && (
+                  <div className="mt-3 border-t border-ink/10 pt-3">
+                    {groupBtn(true)}
+                    <p className="mt-1.5 text-center text-xs text-ink/65">Đặt cho đội, lớp, công ty: gửi link – mỗi người tự ghi tên & size, bạn chốt 1 đơn.</p>
+                  </div>
+                )}
               </>
             )}
             <div className="mt-2 flex justify-center gap-4 text-xs text-ink/60">

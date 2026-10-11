@@ -1,13 +1,8 @@
 import { connection } from "next/server";
-import { activeSlides } from "@pod/shared";
 import { getHome } from "@/lib/api";
 import type { HomeData } from "@/lib/types";
-import { Hero } from "@/components/landing/Hero";
-import { HeroSlider } from "@/components/landing/HeroSlider";
-import { Lanes } from "@/components/landing/Lanes";
 import { SloganRibbon } from "@/components/landing/SloganRibbon";
-import { HeroPlay } from "@/components/landing/HeroPlay";
-import { TopicRibbon } from "@/components/landing/TopicRibbon";
+import { GroupHero, GroupSteps } from "@/components/landing/GroupHero";
 import { RecentlyViewed } from "@/components/personal/RecentlyViewed";
 import { BestSellers } from "@/components/landing/BestSellers";
 import { CollectionGrid } from "@/components/landing/CollectionGrid";
@@ -19,9 +14,9 @@ import { B2BSection } from "@/components/landing/B2BSection";
 export const revalidate = 60;
 
 /**
- * Trang chủ YALA (gọn ~9 khối): dải slogan → 2 lối vào (làm hero) → dải chủ đề → mẫu có sẵn → bán chạy
- * → bạn vừa xem → từ ảnh thành áo (kèm các bước) → doanh nghiệp → đánh giá → cam kết.
- * Khách từng vào khu Doanh nghiệp: khối doanh nghiệp tự lên ngay sau hero (CSS theo html[data-lane], không nháy).
+ * Trang chủ YALA – định vị 10/2026: khách TẬP THỂ (doanh nghiệp, CLB thể thao, hội nhóm/lớp, team building).
+ * Hero áo nhóm + 4 lối vào → cách đặt áo nhóm (link nhóm) → doanh nghiệp → từ ảnh thành áo → đánh giá → cam kết
+ * → cuối trang: khu mua lẻ (mẫu có sẵn, bán chạy, vừa xem) – vẫn mua được nhưng không còn là lối vào chính.
  */
 export default async function HomePage() {
   let home: HomeData | null = null;
@@ -33,33 +28,14 @@ export default async function HomePage() {
     throw e;
   }
   const { settings, bestSellers, testimonials, b2bProducts = [], catalog = [] } = home;
-  const slides = settings.slides.enabled ? activeSlides(settings.slides.items) : [];
-  const b2bSlugs = new Set(settings.b2bHub.industries.map((i) => i.slug));
-  const retailCats = catalog.filter((c) => !b2bSlugs.has(c.slug)).map((c) => ({ name: c.name, slug: c.slug }));
-  const b2bPhotos = settings.b2bHub.industries.flatMap((i) => {
-    const c = catalog.find((x) => x.slug === i.slug);
-    return c?.image && !/\.svg(\?|$)/i.test(c.image) ? [{ src: c.image, alt: i.name }] : [];
-  });
+  const zalo = settings.brand.zalo ? `https://zalo.me/${settings.brand.zalo.replace(/\D/g, "")}` : "";
   return (
     <div className="home-flow flex flex-col">
       <div className="flow-top">
         <SloganRibbon data={settings.slogan} />
-        {/* Đầu trang = 2 lối vào Cá nhân | Doanh nghiệp. Tắt khối này trong CMS -> dùng hero cắt dán / slider / hero cũ */}
-        {settings.positioning.enabled ? (
-          <Lanes data={settings.positioning} b2bPhotos={b2bPhotos} hero />
-        ) : settings.heroPlay.enabled ? (
-          <HeroPlay data={settings.heroPlay} categories={retailCats} />
-        ) : slides.length ? (
-          <HeroSlider slides={slides} intervalMs={settings.slides.intervalMs} />
-        ) : (
-          <Hero data={settings.hero} />
-        )}
-        <TopicRibbon />
+        <GroupHero zalo={zalo} />
       </div>
-      {settings.collections.enabled && <CollectionGrid title={settings.collections.title} />}
-      <BestSellers title={settings.sectionTitles.bestSellers} items={bestSellers} />
-      <RecentlyViewed />
-      {settings.beforeAfter.enabled && <BeforeAfter data={settings.beforeAfter} steps={settings.steps} blank={settings.media.blanks["tshirt-trang"]} />}
+      <GroupSteps />
       <B2BSection
         data={settings.b2b}
         brand={settings.brand}
@@ -69,8 +45,20 @@ export default async function HomePage() {
           return c ? [{ name: i.name, slug: i.slug, image: c.image, count: c.count }] : [];
         })}
       />
+      {settings.beforeAfter.enabled && <BeforeAfter data={settings.beforeAfter} steps={settings.steps} blank={settings.media.blanks["tshirt-trang"]} />}
       <Testimonials title={settings.sectionTitles.reviews} items={testimonials} />
       <WhyChoose data={settings.whyChoose} />
+      {/* Khu mua lẻ */}
+      <div className="border-t-2 border-ink bg-surface/60">
+        <div className="container-site pt-10 md:pt-14">
+          <p className="eyebrow">Mua lẻ</p>
+          <h2 className="h-section mt-1.5">Chỉ cần 1 chiếc cho riêng bạn?</h2>
+          <p className="mt-2 max-w-2xl text-[15px] text-muted">Vẫn đặt được từ 1 sản phẩm: chọn mẫu có sẵn hoặc tự thiết kế.</p>
+        </div>
+        {settings.collections.enabled && <CollectionGrid title={settings.collections.title} />}
+        <BestSellers title={settings.sectionTitles.bestSellers} items={bestSellers} />
+        <RecentlyViewed />
+      </div>
     </div>
   );
 }

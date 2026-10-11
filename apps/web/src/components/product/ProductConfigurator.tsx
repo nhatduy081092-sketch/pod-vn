@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { areaExtraPrice, BASIC_COLORS, designFields, displayCompareAt, formatVND, isAiImage, linePrice, saleActive, TEAM_SIZE_LABEL, type ColorKey, type RosterRow } from "@pod/shared";
+import { areaExtraPrice, BASIC_COLORS, designFields, displayCompareAt, formatVND, GROUP_MIN_QTY, isAiImage, linePrice, saleActive, TEAM_SIZE_LABEL, type ColorKey, type RosterRow } from "@pod/shared";
 import { useCart } from "@/lib/cart";
 import { assetUrl } from "@/lib/config";
 import { track } from "@/lib/track";
@@ -35,7 +35,8 @@ export function ProductConfigurator({
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [added, setAdded] = useState(false);
-  const [mode, setMode] = useState<"single" | "team">("single");
+  // định vị áo nhóm: sản phẩm có size (áo) mở sẵn "Đặt cho nhóm"; khách lẻ bấm "Mua lẻ"
+  const [mode, setMode] = useState<"single" | "team">(() => (product.variants.some((v) => v.size) ? "team" : "single"));
   const [roster, setRoster] = useState<RosterRow[]>([]);
   const [imgIdx, setImgIdx] = useState(0);
 
@@ -120,7 +121,7 @@ export function ProductConfigurator({
       if (!roster.length) return setError("Tải file hoặc dán danh sách thành viên trước");
       if (roster.length < product.minQty) return setError(`Đặt tối thiểu ${product.minQty} sản phẩm`);
     } else {
-      if (teamFields.length) return setError("Thiết kế có ô tên/số áo – chọn Đồng phục nhóm và nhập tên/số (1 áo cũng được)");
+      if (teamFields.length) return setError("Thiết kế có ô tên/số áo – chọn Đặt cho nhóm và nhập tên/số (1 áo cũng được)");
       if (product.variants.length && !variant) return setError("Vui lòng chọn phân loại (màu / size)");
       if (qty < product.minQty) return setError(`Đặt tối thiểu ${product.minQty} sản phẩm`);
     }
@@ -217,8 +218,8 @@ export function ProductConfigurator({
         <div className="mt-5 grid grid-cols-2 gap-2" role="tablist" aria-label="Hình thức đặt">
           {(
             [
-              ["single", "Đặt lẻ", "Chọn phân loại & số lượng"],
-              ["team", "Đồng phục nhóm", "Tải danh sách tên, số, size"],
+              ["team", "Đặt cho nhóm", `Từ ${GROUP_MIN_QTY} áo · tên, số, size từng người`],
+              ["single", "Mua lẻ", "Chọn màu, size, số lượng"],
             ] as const
           ).map(([m, title, sub]) => (
             <button
@@ -241,7 +242,7 @@ export function ProductConfigurator({
 
         {mode === "single" && teamFields.length > 0 && (
           <p className="mt-4 rounded-lg bg-navy-light px-3 py-2 text-sm text-navy-dark">
-            Thiết kế có ô <b>tên/số áo</b> – chọn <b>Đồng phục nhóm</b> để nhập tên, số từng người (đặt 1 áo cũng được).
+            Thiết kế có ô <b>tên/số áo</b> – chọn <b>Đặt cho nhóm</b> để nhập tên, số từng người (đặt 1 áo cũng được).
           </p>
         )}
         {mode === "team" && groupCode && (
@@ -250,6 +251,16 @@ export function ProductConfigurator({
             <a href={`/nhom/${groupCode}`} className="font-bold underline">
               Quay lại nhóm
             </a>
+          </p>
+        )}
+        {mode === "team" && !roster.length && !groupCode && (
+          <p className="mt-4 rounded-lg bg-sun/40 px-3 py-2 text-sm">
+            Chưa có danh sách? Thiết kế xong bấm <b>Hoàn tất → Tạo link gom đơn nhóm</b>: gửi link vào nhóm chat, mỗi người tự ghi tên, số, size – bạn chỉ việc chốt đơn.
+          </p>
+        )}
+        {mode === "team" && roster.length > 0 && roster.length < GROUP_MIN_QTY && (
+          <p className="mt-4 rounded-lg bg-cream px-3 py-2 text-sm">
+            Thêm {GROUP_MIN_QTY - roster.length} áo nữa để thành đơn nhóm (từ {GROUP_MIN_QTY} áo). Ít hơn vẫn đặt được, tính như mua lẻ.
           </p>
         )}
         {mode === "team" && <TeamOrderPanel sizes={teamSizes} productSlug={product.slug} rows={roster} onChange={setRoster} />}

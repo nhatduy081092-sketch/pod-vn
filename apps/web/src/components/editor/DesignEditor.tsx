@@ -1093,7 +1093,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           )}
           {fields.length > 0 && (
             <p className="rounded-lg bg-navy-light px-3 py-2 text-navy-dark">
-              👕 Thiết kế có ô <b>{fields.map((f) => DESIGN_FIELDS[f]).join(" + ")}</b>: khi đặt hàng chọn <b>Đồng phục nhóm</b> và tải danh sách – mỗi áo in đúng tên/số của từng người.
+              👕 Thiết kế có ô <b>{fields.map((f) => DESIGN_FIELDS[f]).join(" + ")}</b>: khi đặt hàng chọn <b>Đặt cho nhóm</b> và tải danh sách (hoặc Hoàn tất → Tạo link gom đơn nhóm) – mỗi áo in đúng tên/số của từng người.
             </p>
           )}
         </div>

@@ -8,6 +8,10 @@ import { IconCart, IconClose, IconMenu, IconPackage, IconSearch, IconSparkle, Ic
 import { SearchBox } from "../shop/SearchBox";
 import { Logo } from "./Logo";
 import { QuoteListBadge } from "../b2b/AddToQuote";
+import { SEGMENTS } from "@pod/shared";
+
+/** Menu chính: các nhóm khách tập thể (trừ Doanh nghiệp – có mega menu riêng) */
+const GROUP_NAV = SEGMENTS.filter((s) => s.key !== "doanh-nghiep");
 
 type Lite = { name: string; slug: string };
 type Props = {
@@ -111,11 +115,22 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
         </div>
       )}
 
-      {/* Thanh điều hướng desktop: 2 lối vào Cá nhân | Doanh nghiệp */}
+      {/* Thanh điều hướng desktop: áo nhóm theo nhóm khách | Doanh nghiệp (mega menu); mua lẻ xuống cuối */}
       <nav className="relative hidden border-t border-ink/10 lg:block" aria-label="Danh mục" onMouseLeave={() => setMega(false)}>
         <div className="container-site flex h-11 items-center gap-6 text-sm font-medium">
           <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-7 overflow-x-auto">
-            <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-muted">Cá nhân</span>
+            <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-muted">Áo nhóm</span>
+            {GROUP_NAV.map((g) => (
+              <Link key={g.href} href={g.href} className={`shrink-0 whitespace-nowrap font-semibold hover:text-brand ${pathname === g.href ? "text-brand" : "text-ink"}`}>
+                {g.name}
+              </Link>
+            ))}
+            <Link href="/thiet-ke" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/thiet-ke") ? "text-brand" : "text-ink/75"}`}>
+              Tự thiết kế
+            </Link>
+            <Link href="/bo-suu-tap" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/bo-suu-tap") ? "text-brand" : "text-ink/75"}`}>
+              Mẫu có sẵn
+            </Link>
             {campaign && (
               <Link
                 href={`/dip/${campaign.slug}`}
@@ -125,21 +140,9 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
                 Quà {campaign.name}
               </Link>
             )}
-            <Link href="/bo-suu-tap" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/bo-suu-tap") ? "text-brand" : "text-ink"}`}>
-              Mẫu có sẵn
+            <Link href="/san-pham" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === "/san-pham" ? "text-brand" : "text-ink/75"}`}>
+              Mua lẻ
             </Link>
-            <Link href="/thiet-ke" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === "/thiet-ke" ? "text-brand" : "text-ink"}`}>
-              Tự thiết kế
-            </Link>
-            {retail.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/danh-muc/${c.slug}`}
-                className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === `/danh-muc/${c.slug}` ? "text-brand" : "text-ink/75"}`}
-              >
-                {c.name}
-              </Link>
-            ))}
           </div>
           <div className="flex shrink-0 items-center gap-2 border-l border-line pl-6">
             <button
@@ -198,6 +201,9 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
               <Link href="/doanh-nghiep/san-pham" className="mt-2 block text-center text-[13px] font-semibold text-white/80 hover:text-white">
                 Xem sản phẩm theo ngân sách →
               </Link>
+              <Link href="/doanh-nghiep" className="mt-1 block text-center text-[13px] font-semibold text-white/80 hover:text-white">
+                Giải pháp doanh nghiệp →
+              </Link>
             </div>
           </div>
         </div>
@@ -224,7 +230,13 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
                 Quà {campaign.name} – xem ngay
               </Link>
             )}
-            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Cá nhân</p>
+            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Áo nhóm & đồng phục</p>
+            {SEGMENTS.map((g) => (
+              <Link key={g.href} href={g.href} className="block rounded-md px-3 py-2.5 hover:bg-cream">
+                {g.key === "doanh-nghiep" ? "Doanh nghiệp" : g.name}
+              </Link>
+            ))}
+            <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Mua lẻ</p>
             <Link href="/bo-suu-tap" className="block rounded-md px-3 py-2.5 hover:bg-cream">
               Mẫu có sẵn theo chủ đề
             </Link>
@@ -240,9 +252,6 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
               </Link>
             ))}
             <p className="px-3 pb-1 pt-4 text-xs font-semibold text-muted">Doanh nghiệp</p>
-            <Link href="/doanh-nghiep" className="block rounded-md px-3 py-2.5 hover:bg-cream">
-              Giải pháp doanh nghiệp
-            </Link>
             <details className="group">
               <summary className="flex cursor-pointer list-none items-center justify-between rounded-md px-3 py-2.5 hover:bg-cream">
                 Ngành hàng in logo <span className="text-muted transition group-open:rotate-180">▾</span>

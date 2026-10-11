@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { LandingSettings } from "@pod/shared";
+import { SEGMENTS, type LandingSettings } from "@pod/shared";
 import { Logo, YalaLogoFull } from "./Logo";
 
 const CARRIERS = ["GHN", "GHTK", "Viettel Post", "J&T Express", "Ninja Van"];
@@ -26,8 +26,15 @@ export function Footer({ brand, categories, pages }: Props) {
           <p className="mt-3 text-sm leading-relaxed">{brand.tagline}</p>
         </div>
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-white">Sản phẩm</h3>
+          <h3 className="mb-3 text-sm font-semibold text-white">Áo nhóm & đồng phục</h3>
           <ul className="space-y-2 text-sm">
+            {SEGMENTS.map((g) => (
+              <li key={g.href}>
+                <Link href={g.href} className="hover:text-brand">
+                  {g.eyebrow}
+                </Link>
+              </li>
+            ))}
             <li>
               <Link href="/thiet-ke" className="font-bold text-brand hover:underline">
                 ✦ Tự thiết kế – YALA Studio
