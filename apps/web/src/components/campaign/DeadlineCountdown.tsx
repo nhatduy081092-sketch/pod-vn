@@ -24,7 +24,7 @@ export function DeadlineCountdown({ deadline, dark = false }: { deadline: string
   return (
     <div className="flex gap-1.5" role="timer" aria-live="off" aria-label="Thời gian còn lại để đặt kịp dịp">
       {(parts ?? [["–", "ngày"], ["–", "giờ"], ["–", "phút"], ["–", "giây"]]).map(([v, l]) => (
-        <span key={l as string} className={`grid min-w-[52px] place-items-center rounded-xl border-2 border-ink px-2 py-1.5 shadow-sticker-sm ${dark ? "bg-white text-ink" : "bg-ink text-white"}`}>
+        <span key={l as string} className={`grid min-w-[52px] place-items-center rounded-xl border border-line px-2 py-1.5 shadow-sticker-sm ${dark ? "bg-white text-ink" : "bg-ink text-white"}`}>
           <span className="font-display text-[22px] font-extrabold leading-none tabular-nums [font-stretch:90%]">{typeof v === "number" ? String(v).padStart(2, "0") : v}</span>
           <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide opacity-70">{l}</span>
         </span>

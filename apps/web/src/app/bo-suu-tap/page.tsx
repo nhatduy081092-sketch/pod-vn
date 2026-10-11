@@ -19,12 +19,12 @@ export default function CollectionsPage() {
   return (
     <>
       <DesignFonts designs={covers} />
-      <section className="relative overflow-hidden border-b-2 border-ink bg-sky">
+      <section className="relative overflow-hidden border-b border-line bg-sky">
         <div className="container-site relative py-10 md:py-16">
           <nav className="text-sm text-ink/70" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-ink">Trang chủ</Link> / <span className="text-ink">Mẫu có sẵn</span>
           </nav>
-          <h1 className="mt-3 max-w-3xl font-display text-[clamp(40px,6vw,76px)] font-extrabold leading-[0.95] tracking-[-0.03em] [font-stretch:86%]">
+          <h1 className="mt-3 max-w-3xl font-display text-[clamp(40px,6vw,76px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%]">
             {READY_DESIGNS.length} mẫu chữ có sẵn. Sửa chữ thoải mái.
           </h1>
           <p className="mt-4 max-w-xl text-[16px] text-ink/80 md:text-lg">Chọn chủ đề → bấm mẫu → đổi chữ, đổi màu áo trong YALA Studio → in từ 1 chiếc.</p>
@@ -54,11 +54,11 @@ export default function CollectionsPage() {
                       <div className={`sticker relative aspect-square overflow-hidden ${pastel(i)}`}>
                         {a && <DesignPreview design={a} className="absolute left-[4%] top-[4%] h-[74%] w-[74%] transition duration-300 group-hover:scale-[1.04]" title={c.name} />}
                         {b && (
-                          <span className="absolute bottom-[5%] right-[5%] block h-[44%] w-[44%] rotate-6 overflow-hidden rounded-xl border-2 border-ink bg-white shadow-sticker-sm transition group-hover:rotate-0">
+                          <span className="absolute bottom-[5%] right-[5%] block h-[44%] w-[44%] overflow-hidden rounded-xl border border-line bg-white shadow-sticker-sm transition group-hover:rotate-0">
                             <DesignPreview design={b} className="h-full w-full" />
                           </span>
                         )}
-                        <span className="absolute left-2.5 top-2.5 rounded-full border-2 border-ink bg-white px-2 py-0.5 text-[11px] font-bold">{c.designs.length} mẫu</span>
+                        <span className="absolute left-2.5 top-2.5 rounded-full border border-line bg-white px-2 py-0.5 text-[11px] font-bold">{c.designs.length} mẫu</span>
                       </div>
                       <h3 className="mt-3 font-display text-[17px] font-bold leading-tight md:text-lg">{c.name}</h3>
                       <p className="mt-0.5 line-clamp-2 text-[13px] text-ink/65 md:text-sm">{c.blurb}</p>

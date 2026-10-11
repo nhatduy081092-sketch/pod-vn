@@ -44,12 +44,12 @@ export default async function CollectionPage({ params, searchParams }: { params:
   return (
     <>
       <DesignFonts designs={[...c.designs, ...related.map((r) => r.designs[0]!)]} />
-      <section className={`border-b-2 border-ink ${pastel(idx)}`}>
+      <section className={`border-b border-line ${pastel(idx)}`}>
         <div className="container-site py-8 md:py-12">
           <nav className="text-sm text-ink/70" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-ink">Trang chủ</Link> / <Link href="/bo-suu-tap" className="hover:text-ink">Mẫu có sẵn</Link> / <span className="text-ink">{c.name}</span>
           </nav>
-          <h1 className="mt-3 font-display text-[clamp(38px,5.4vw,68px)] font-extrabold leading-[0.95] tracking-[-0.03em] [font-stretch:86%]">{c.name}</h1>
+          <h1 className="mt-3 font-display text-[clamp(38px,5.4vw,68px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%]">{c.name}</h1>
           <p className="mt-3 max-w-2xl text-[16px] text-ink/80 md:text-lg">{c.blurb} Bấm vào mẫu để sửa chữ, đổi màu áo và đặt in.</p>
           {/* Xem mẫu trên dáng + màu áo khác (ảnh phôi thật) – điện thoại: mỗi hàng cuộn ngang */}
           <div className="mt-6 space-y-3">
@@ -78,7 +78,7 @@ export default async function CollectionPage({ params, searchParams }: { params:
                   aria-checked={color === k}
                   aria-label={BASIC_COLORS[k].name}
                   title={BASIC_COLORS[k].name}
-                  className={`h-9 w-9 shrink-0 rounded-full border-2 border-ink transition hover:scale-110 ${color === k ? "ring-2 ring-ink ring-offset-2" : ""}`}
+                  className={`h-9 w-9 shrink-0 rounded-full border border-line transition hover:scale-110 ${color === k ? "ring-2 ring-ink ring-offset-2" : ""}`}
                   style={{ backgroundColor: BASIC_COLORS[k].hex }}
                 />
               ))}

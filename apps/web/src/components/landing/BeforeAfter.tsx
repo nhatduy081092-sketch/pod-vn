@@ -37,7 +37,7 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
             <ol className="mt-6 space-y-3">
               {steps.map((st, i) => (
                 <li key={st.title} className="flex items-center gap-3 text-[15px] font-semibold">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-ink bg-white font-display text-base font-extrabold">{i + 1}</span>
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-white font-display text-base font-extrabold">{i + 1}</span>
                   {st.title}
                 </li>
               ))}
@@ -46,7 +46,7 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
           {data.points.length > 0 && (
             <ul className="mt-5 flex flex-wrap gap-2">
               {data.points.map((p) => (
-                <li key={p} className="chip-sticker bg-white text-[13px] shadow-none">
+                <li key={p} className="chip-sticker bg-white text-sm shadow-none">
                   {p}
                 </li>
               ))}
@@ -96,8 +96,8 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
           <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
             {data.before && <img src={assetUrl(data.before)} alt={data.beforeLabel} className="h-full w-full object-cover" draggable={false} />}
           </div>
-          <span className="chip-sticker absolute left-3 top-3 -rotate-3 bg-white text-xs">{data.beforeLabel}</span>
-          <span className="chip-sticker absolute right-3 top-3 rotate-3 bg-brand text-xs text-white">{data.afterLabel}</span>
+          <span className="chip-sticker absolute left-3 top-3 bg-white text-xs">{data.beforeLabel}</span>
+          <span className="chip-sticker absolute right-3 top-3 bg-brand text-xs text-white">{data.afterLabel}</span>
           {/* thanh kéo */}
           <div className="absolute inset-y-0 w-1 -translate-x-1/2 bg-ink" style={{ left: `${pos}%` }}>
             <button
@@ -108,7 +108,7 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
               aria-valuemax={100}
               aria-valuenow={Math.round(pos)}
               onKeyDown={onKey}
-              className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize place-items-center rounded-full border-2 border-ink bg-white text-base font-bold shadow-sticker-sm"
+              className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize place-items-center rounded-full border border-line bg-white text-base font-bold shadow-sticker-sm"
             >
               ⇆
             </button>

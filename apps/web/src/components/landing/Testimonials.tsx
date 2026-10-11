@@ -23,7 +23,7 @@ export function Testimonials({ title, items }: { title: string; items: Testimoni
                 </div>
                 <p className="mt-3 flex-1 font-display text-[17px] font-semibold leading-snug">“{t.content}”</p>
                 <footer className="mt-4 flex items-center gap-2.5 border-t-2 border-ink/15 pt-3">
-                  {t.imageUrl && <img src={assetUrl(t.imageUrl)} alt="" className="h-10 w-10 rounded-lg border-2 border-ink object-cover" />}
+                  {t.imageUrl && <img src={assetUrl(t.imageUrl)} alt="" className="h-10 w-10 rounded-lg border border-line object-cover" />}
                   <div className="min-w-0">
                     <p className="text-sm font-bold">{t.name}</p>
                     <p className="line-clamp-1 text-xs text-ink/65">

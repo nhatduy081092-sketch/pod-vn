@@ -53,39 +53,38 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+  /* Nút (định vị 10/2026 – chững chạc): bo vừa, cao ≥ 44px, không bóng cứng / nhún */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-transparent px-5 py-2.5 text-sm font-bold transition-[transform,box-shadow,background-color,border-color] duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-transparent px-5 py-2.5 text-[15px] font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
   }
-  /* Nút kiểu sticker: viền đen + bóng cứng, bấm thì "nhún" xuống */
   .btn-primary {
-    @apply btn border-ink bg-brand text-white shadow-sticker-sm hover:-translate-x-px hover:-translate-y-px hover:shadow-sticker active:translate-x-0.5 active:translate-y-0.5 active:shadow-none;
+    @apply btn border-brand bg-brand text-white hover:border-brand-dark hover:bg-brand-dark;
   }
   .btn-dark {
-    @apply btn border-ink bg-ink text-white hover:bg-black active:translate-y-px;
+    @apply btn border-ink bg-ink text-white hover:bg-black;
   }
   .btn-outline {
-    @apply btn border-ink bg-white text-ink shadow-sticker-sm hover:-translate-x-px hover:-translate-y-px hover:shadow-sticker active:translate-x-0.5 active:translate-y-0.5 active:shadow-none;
+    @apply btn border-ink/25 bg-white text-ink hover:border-ink;
   }
-  /* Thẻ / nhãn dạng sticker */
+  /* Thẻ / nhãn (tên cũ "sticker" giữ lại): viền mảnh, bóng mềm, không nghiêng */
   .sticker {
-    @apply rounded-2xl border-2 border-ink shadow-sticker;
+    @apply rounded-xl border border-line shadow-sticker;
   }
   .chip-sticker {
-    @apply inline-flex items-center gap-1.5 rounded-xl border-2 border-ink px-3 py-1.5 text-sm font-bold shadow-sticker-sm;
+    @apply inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm font-semibold;
   }
   .btn-sm {
     @apply inline-flex items-center justify-center gap-1 rounded-md border border-line bg-white px-2 py-1.5 transition hover:border-ink active:translate-y-px disabled:opacity-50;
   }
   /* Tiêu đề section: to, nhẹ, không in hoa */
   .h-section {
-    @apply font-display text-[clamp(30px,4vw,52px)] font-extrabold leading-[1.02] tracking-[-0.02em] text-ink;
-    font-stretch: 88%;
+    @apply font-display text-[clamp(26px,3.2vw,40px)] font-bold leading-[1.15] tracking-[-0.015em] text-ink;
   }
   .display-tight {
     font-stretch: 85%;
   }
   .eyebrow {
-    @apply text-[13px] font-semibold text-muted;
+    @apply text-sm font-semibold text-brand-dark;
   }
   .input {
     @apply w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-[15px] outline-none transition placeholder:text-neutral-400 focus:border-brand-dark focus:ring-2 focus:ring-brand/30;
@@ -144,22 +143,23 @@
   from { transform: translateX(-50%); }
   to { transform: translateX(0); }
 }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 @keyframes rise {
   from { opacity: 0; transform: translateY(28px) rotate(var(--r, 0deg)); }
   to { opacity: 1; transform: translateY(0) rotate(var(--r, 0deg)); }
 }
-.tilt { transform: rotate(var(--r, 0deg)); }
-.float-a { animation: float-a 5.5s ease-in-out infinite; }
-.float-b { animation: float-b 6.5s ease-in-out infinite; }
-.pop-in { animation: pop-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-.hover-wiggle:hover { animation: wiggle 0.45s ease-in-out; }
+/* Định vị 10/2026: bỏ nghiêng, lắc, nảy, trôi – giao diện chững chạc cho khách tập thể */
+.tilt { transform: none; }
+.float-a, .float-b, .pop-in, .hover-wiggle:hover { animation: none; }
 .animate-marquee-rev { animation: marquee-rev 36s linear infinite; }
 .marquee-pause:hover .animate-marquee, .marquee-pause:hover .animate-marquee-rev { animation-play-state: paused; }
 
 /* Hiện dần khi cuộn tới: chỉ ẩn trước khi JS sẵn sàng (không có JS vẫn thấy nội dung) */
 html.reveal-on [data-reveal]:not(.is-in) { opacity: 0; }
-html.reveal-on [data-reveal].is-in { animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: var(--d, 0ms); }
-html.reveal-on [data-reveal="pop"].is-in { animation-name: pop-in; animation-duration: 0.65s; }
+html.reveal-on [data-reveal].is-in { animation: fade-in 0.5s ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
   .float-a, .float-b, .pop-in, .hover-wiggle:hover, .animate-marquee-rev,

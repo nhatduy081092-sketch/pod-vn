@@ -60,8 +60,8 @@ export default async function BusinessPage() {
       <section className="bg-ink text-white">
         <div className="container-site grid items-center gap-8 py-10 md:grid-cols-[1.05fr_1fr] md:py-16">
           <div>
-            <p className="text-[13px] font-semibold text-brand md:text-sm">{hub.eyebrow}</p>
-            <h1 className="mt-2 font-display text-[clamp(34px,5vw,64px)] font-extrabold leading-[1.0] tracking-[-0.025em] [font-stretch:86%] [text-wrap:balance]">{hub.title}</h1>
+            <p className="text-sm font-semibold text-brand md:text-[15px]">{hub.eyebrow}</p>
+            <h1 className="mt-2 font-display text-[clamp(30px,4vw,50px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%] [text-wrap:balance]">{hub.title}</h1>
             <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/75 md:text-lg">{hub.subtitle}</p>
             <div className="mt-6 flex flex-wrap gap-2.5">
               <a href="#bao-gia" className="btn-primary px-6 py-3">
@@ -118,25 +118,25 @@ export default async function BusinessPage() {
             <h2 className="h-section mt-1.5">Rõ ràng trước khi bạn nhắn tin</h2>
             <ul className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
               {hub.terms.map((t, i) => (
-                <li key={t.label} className={`rounded-2xl border-2 border-ink p-4 shadow-sticker-sm md:p-5 ${pastel(i)}`}>
-                  <p className="text-[12px] font-semibold uppercase tracking-wide text-ink/60 md:text-[13px]">{t.label}</p>
-                  <p className="mt-1 font-display text-[clamp(20px,2.4vw,30px)] font-extrabold leading-[1.05] tracking-[-0.015em] [font-stretch:90%]">{t.value}</p>
-                  {t.note && <p className="mt-2 text-[13px] leading-snug text-ink/75 md:text-sm">{t.note}</p>}
+                <li key={t.label} className={`rounded-2xl border border-line p-4 shadow-sticker-sm md:p-5 ${pastel(i)}`}>
+                  <p className="text-[12px] font-semibold uppercase tracking-wide text-ink/60 md:text-[15px]">{t.label}</p>
+                  <p className="mt-1 font-display text-[clamp(20px,2.4vw,30px)] font-extrabold leading-[1.15] tracking-[-0.015em] [font-stretch:90%]">{t.value}</p>
+                  {t.note && <p className="mt-2 text-sm leading-snug text-ink/75 md:text-[15px]">{t.note}</p>}
                 </li>
               ))}
             </ul>
 
             {hub.compare.length > 0 && (
-              <div className="mt-10 overflow-hidden rounded-2xl border-2 border-ink">
-                <div className="grid grid-cols-[1fr_1fr] bg-ink text-[13px] font-semibold text-white md:grid-cols-[0.8fr_1fr_1fr] md:text-sm">
+              <div className="mt-10 overflow-hidden rounded-2xl border border-line">
+                <div className="grid grid-cols-[1fr_1fr] bg-ink text-sm font-semibold text-white md:grid-cols-[0.8fr_1fr_1fr] md:text-[15px]">
                   <span className="hidden px-5 py-3 md:block" />
                   <span className="px-4 py-3 text-white/70 md:px-5">Đặt merch kiểu thông thường</span>
                   <span className="bg-brand px-4 py-3 md:px-5">Đặt với YALA</span>
                 </div>
                 <ul>
                   {hub.compare.map((c) => (
-                    <li key={c.label} className="grid grid-cols-[1fr_1fr] border-t border-ink/10 text-[14px] md:grid-cols-[0.8fr_1fr_1fr] md:text-[15px]">
-                      <span className="col-span-2 bg-surface px-4 pb-1 pt-3 text-[12px] font-semibold uppercase tracking-wide text-muted md:col-span-1 md:bg-transparent md:px-5 md:py-4 md:text-[13px]">{c.label}</span>
+                    <li key={c.label} className="grid grid-cols-[1fr_1fr] border-t border-ink/10 text-[15px] md:grid-cols-[0.8fr_1fr_1fr] md:text-[15px]">
+                      <span className="col-span-2 bg-surface px-4 pb-1 pt-3 text-[12px] font-semibold uppercase tracking-wide text-muted md:col-span-1 md:bg-transparent md:px-5 md:py-4 md:text-[15px]">{c.label}</span>
                       <span className="px-4 py-3 text-muted md:px-5 md:py-4">{c.usual}</span>
                       <span className="flex gap-2 bg-brand-light px-4 py-3 font-semibold text-ink md:px-5 md:py-4">
                         <svg viewBox="0 0 24 24" className="mt-[3px] h-4 w-4 shrink-0 text-brand" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -190,8 +190,8 @@ export default async function BusinessPage() {
                     </div>
                     <div className="flex flex-1 flex-col p-4 md:p-5">
                       <h3 className="text-[15px] font-semibold leading-snug md:text-lg">{i.name}</h3>
-                      <p className="mt-1 flex-1 text-[13px] leading-snug text-muted md:text-sm">{cat?.image ? i.blurb : "Đang cập nhật sản phẩm – nhận tư vấn & báo giá theo yêu cầu"}</p>
-                      <p className="mt-3 text-[13px] font-semibold text-ink md:text-sm">
+                      <p className="mt-1 flex-1 text-sm leading-snug text-muted md:text-[15px]">{cat?.image ? i.blurb : "Đang cập nhật sản phẩm – nhận tư vấn & báo giá theo yêu cầu"}</p>
+                      <p className="mt-3 text-sm font-semibold text-ink md:text-[15px]">
                         {cat ? `Xem ${cat.count} sản phẩm` : "Nhận tư vấn"} <span className="inline-block transition group-hover:translate-x-1">→</span>
                       </p>
                     </div>
@@ -213,8 +213,8 @@ export default async function BusinessPage() {
               <li key={s.key} id={`giai-phap-${s.key}`} className="scroll-mt-32 flex flex-col rounded-2xl bg-white p-5 md:p-6">
                 <p className="text-sm font-semibold text-brand">{String(idx + 1).padStart(2, "0")}</p>
                 <h3 className="mt-1 text-lg font-semibold md:text-xl">{s.title}</h3>
-                <p className="mt-2 flex-1 text-[14px] leading-relaxed text-muted md:text-[15px]">{s.desc}</p>
-                {s.items && <p className="mt-3 text-[13px] font-medium text-ink/80">{s.items}</p>}
+                <p className="mt-2 flex-1 text-[15px] leading-relaxed text-muted md:text-[15px]">{s.desc}</p>
+                {s.items && <p className="mt-3 text-sm font-medium text-ink/80">{s.items}</p>}
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm font-semibold">
                   <Link href={`/doanh-nghiep/san-pham?dip=${s.key}`} className="text-ink hover:text-brand">
                     Xem sản phẩm gợi ý →
@@ -237,16 +237,16 @@ export default async function BusinessPage() {
             <h2 className="h-section mt-1.5">Thành phẩm thật, giao thật</h2>
             <ul className="mt-7 grid gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
               {hub.cases.map((c) => (
-                <li key={c.title} className="overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sticker-sm">
+                <li key={c.title} className="overflow-hidden rounded-2xl border border-line bg-white shadow-sticker-sm">
                   {c.image && (
-                    <div className="aspect-[4/3] overflow-hidden border-b-2 border-ink bg-surface">
+                    <div className="aspect-[4/3] overflow-hidden border-b border-line bg-surface">
                       <img src={assetUrl(c.image)} alt={c.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                     </div>
                   )}
                   <div className="p-4 md:p-5">
-                    {c.client && <p className="text-[13px] font-semibold text-brand">{c.client}</p>}
+                    {c.client && <p className="text-sm font-semibold text-brand">{c.client}</p>}
                     <h3 className="mt-0.5 text-base font-semibold leading-snug md:text-lg">{c.title}</h3>
-                    {c.detail && <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{c.detail}</p>}
+                    {c.detail && <p className="mt-1.5 text-[15px] leading-relaxed text-muted">{c.detail}</p>}
                   </div>
                 </li>
               ))}
@@ -266,7 +266,7 @@ export default async function BusinessPage() {
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-sm font-semibold text-white">{i + 1}</span>
                 <div>
                   <h3 className="text-base font-semibold md:text-lg">{p.title}</h3>
-                  <p className="mt-1 text-[14px] leading-relaxed text-muted">{p.desc}</p>
+                  <p className="mt-1 text-[15px] leading-relaxed text-muted">{p.desc}</p>
                 </div>
               </li>
             ))}
@@ -283,7 +283,7 @@ export default async function BusinessPage() {
             {hub.benefits.map((b) => (
               <li key={b.title} className="rounded-2xl border border-line p-5">
                 <h3 className="text-base font-semibold md:text-lg">{b.title}</h3>
-                <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{b.desc}</p>
+                <p className="mt-1.5 text-[15px] leading-relaxed text-muted">{b.desc}</p>
               </li>
             ))}
           </ul>
@@ -311,7 +311,7 @@ export default async function BusinessPage() {
             <p className="mt-3 text-[15px] leading-relaxed text-muted">
               Đơn nhỏ có thể đặt ngay trên website. Đơn số lượng lớn, quà tặng nhiều món hoặc cần đóng hộp – để lại thông tin, YALA tư vấn theo ngân sách và gửi mockup miễn phí.
             </p>
-            <ul className="mt-5 space-y-2 text-[14px]">
+            <ul className="mt-5 space-y-2 text-[15px]">
               {brand.hotline && (
                 <li>
                   Hotline:{" "}
@@ -354,9 +354,9 @@ export default async function BusinessPage() {
           <ul className="mt-4 grid gap-3 sm:grid-cols-3">
             {SEGMENTS.filter((g) => g.key !== "doanh-nghiep").map((g, i) => (
               <li key={g.key}>
-                <Link href={g.href} className={`block h-full rounded-2xl border-2 border-ink p-4 shadow-sticker-sm transition hover:-translate-y-0.5 ${pastel(i + 1)}`}>
+                <Link href={g.href} className={`block h-full rounded-2xl border border-line p-4 shadow-sticker-sm transition hover:-translate-y-0.5 ${pastel(i + 1)}`}>
                   <p className="text-lg font-extrabold">{g.name} →</p>
-                  <p className="mt-1 text-[14px] leading-snug text-ink/75">{g.pitch}</p>
+                  <p className="mt-1 text-[15px] leading-snug text-ink/75">{g.pitch}</p>
                 </Link>
               </li>
             ))}

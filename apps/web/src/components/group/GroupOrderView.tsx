@@ -172,7 +172,7 @@ export function GroupOrderView({ code }: { code: string }) {
       {/* Mẫu áo */}
       <section className="lg:sticky lg:top-24 lg:self-start">
         <p className="text-xs font-bold uppercase tracking-[0.14em] text-brand-dark">Đặt áo nhóm · YALA</p>
-        <h1 className="mt-1 font-display text-[clamp(26px,3.4vw,40px)] font-extrabold leading-[1.05] tracking-[-0.02em] [font-stretch:88%]">{g.title || "Áo nhóm của chúng mình"}</h1>
+        <h1 className="mt-1 font-display text-[clamp(24px,3vw,34px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:88%]">{g.title || "Áo nhóm của chúng mình"}</h1>
         <p className="mt-1 text-sm text-ink/70">
           {g.product.name}
           {g.color ? ` · màu ${g.color}` : ""}
@@ -213,12 +213,12 @@ export function GroupOrderView({ code }: { code: string }) {
       {/* Ghi danh + danh sách */}
       <section className="space-y-4">
         {g.closed ? (
-          <div className="rounded-2xl border-2 border-ink bg-sun/60 p-4">
+          <div className="rounded-2xl border border-line bg-sun/60 p-4">
             <p className="font-display text-lg font-extrabold">Nhóm đã chốt danh sách</p>
             <p className="text-sm text-ink/75">Cần thêm/sửa? Nhắn trưởng nhóm mở lại.</p>
           </div>
         ) : (
-          <form onSubmit={join} className="space-y-3 rounded-2xl border-2 border-ink bg-white p-4 shadow-sticker-sm">
+          <form onSubmit={join} className="space-y-3 rounded-2xl border border-line bg-white p-4 shadow-sticker-sm">
             <div className="flex items-baseline justify-between gap-2">
               <p className="font-display text-lg font-extrabold">Ghi danh của bạn</p>
               {daysLeft !== null && <span className="text-xs font-bold text-brand-dark">{daysLeft > 0 ? `Còn ${daysLeft} ngày` : "Hạn chót hôm nay"}</span>}
@@ -358,7 +358,7 @@ export function GroupOrderView({ code }: { code: string }) {
         </div>
 
         {g.isAdmin ? (
-          <div className="space-y-3 rounded-2xl border-2 border-ink bg-surface p-4">
+          <div className="space-y-3 rounded-2xl border border-line bg-surface p-4">
             <p className="font-display text-lg font-extrabold">Bạn là trưởng nhóm</p>
             <div className="grid grid-cols-2 gap-2">
               <button type="button" className="btn-primary py-2.5 text-sm" onClick={() => void share()}>

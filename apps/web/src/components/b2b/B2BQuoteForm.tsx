@@ -161,7 +161,7 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
                 type="button"
                 aria-pressed={on}
                 onClick={() => setPicked((p) => (on ? p.filter((x) => x !== i.name) : [...p, i.name]))}
-                className={`rounded-full border px-3 py-1.5 text-[13px] font-medium transition ${on ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}
+                className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${on ? "border-ink bg-ink text-white" : "border-line bg-white hover:border-ink"}`}
               >
                 {i.name}
               </button>
@@ -180,7 +180,7 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
         <button type="submit" className="btn-primary px-6 py-3" disabled={state === "sending"}>
           {state === "sending" ? "Đang gửi…" : "Gửi yêu cầu báo giá"}
         </button>
-        <p className="text-[13px] text-muted">Miễn phí tư vấn & mockup. Thông tin chỉ dùng để liên hệ báo giá.</p>
+        <p className="text-sm text-muted">Miễn phí tư vấn & mockup. Thông tin chỉ dùng để liên hệ báo giá.</p>
       </div>
     </form>
   );

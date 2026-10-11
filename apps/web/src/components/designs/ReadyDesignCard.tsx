@@ -26,8 +26,8 @@ export function ReadyDesignCard({ d, price, color, garment }: { d: ReadyDesign; 
       <div className="relative aspect-square overflow-hidden rounded-2xl border-2 border-transparent bg-surface transition-[transform,box-shadow,border-color] duration-200 [@media(hover:hover)]:group-hover:-translate-y-1 [@media(hover:hover)]:group-hover:border-ink [@media(hover:hover)]:group-hover:shadow-sticker">
         <DesignPreview design={d} color={c} garment={g} className="absolute inset-0 h-full w-full transition duration-500 [@media(hover:hover)]:group-hover:opacity-0" />
         <DesignPreview design={d} color={c} garment={g} zoom={false} className="absolute inset-0 h-full w-full opacity-0 transition duration-500 [@media(hover:hover)]:group-hover:opacity-100" />
-        {off > 0 && <span className="absolute left-2.5 top-2.5 -rotate-3 rounded-lg border-2 border-ink bg-sale px-2 py-0.5 text-[11px] font-bold text-white shadow-sticker-sm md:text-xs">-{off}%</span>}
-        <span className="absolute bottom-2.5 right-2.5 rounded-full border-2 border-ink bg-white px-2.5 py-0.5 text-[11px] font-bold opacity-0 transition group-hover:opacity-100 md:text-xs">Sửa chữ</span>
+        {off > 0 && <span className="absolute left-2.5 top-2.5 rounded-lg border border-line bg-sale px-2 py-0.5 text-[11px] font-bold text-white shadow-sticker-sm md:text-xs">-{off}%</span>}
+        <span className="absolute bottom-2.5 right-2.5 rounded-full border border-line bg-white px-2.5 py-0.5 text-[11px] font-bold opacity-0 transition group-hover:opacity-100 md:text-xs">Sửa chữ</span>
       </div>
       <h3 className="mt-3 line-clamp-2 text-[13px] font-medium leading-[1.3] transition-colors group-hover:text-brand-dark md:text-[15px]">
         {GARMENT_PRODUCT[g].label} {d.title}

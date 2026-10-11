@@ -36,7 +36,7 @@ export function HeroPlay({ data, categories }: Props) {
       <div className="pointer-events-none absolute -right-[10%] top-0 hidden h-full w-[62%] bg-peach md:block [clip-path:polygon(28%_0,100%_0,100%_100%,0_100%)]" aria-hidden />
       <div className="container-site relative grid items-center gap-10 pb-14 pt-8 md:grid-cols-[1.05fr_1fr] md:gap-8 md:pb-20 md:pt-14">
         <div>
-          <h1 className="font-display text-[clamp(44px,6.6vw,86px)] font-extrabold leading-[0.92] tracking-[-0.035em] text-ink [font-stretch:86%]">
+          <h1 className="font-display text-[clamp(44px,6.6vw,86px)] font-extrabold leading-[1.15] tracking-[-0.035em] text-ink [font-stretch:86%]">
             {words.map((w, i) => (
               <span key={i} className="block [text-wrap:balance]">
                 {w}

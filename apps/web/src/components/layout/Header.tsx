@@ -134,7 +134,7 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
             {campaign && (
               <Link
                 href={`/dip/${campaign.slug}`}
-                className="shrink-0 whitespace-nowrap rounded-full border-2 border-ink px-3 py-0.5 text-[13px] font-bold shadow-sticker-sm transition hover:-translate-y-0.5"
+                className="shrink-0 whitespace-nowrap rounded-full border border-line px-3 py-0.5 text-[13px] font-bold shadow-sticker-sm transition hover:-translate-y-0.5"
                 style={{ backgroundColor: campaign.accent, color: luminance(campaign.accent) > 0.45 ? "#1d1d1f" : "#ffffff" }}
               >
                 Quà {campaign.name}

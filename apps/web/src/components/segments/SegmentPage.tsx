@@ -43,12 +43,12 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
       {s.faq.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
 
       {/* Hero */}
-      <section className="border-b-2 border-ink bg-cream">
+      <section className="border-b border-line bg-cream">
         <div className="container-site grid items-center gap-8 py-8 md:grid-cols-[1.05fr_1fr] md:gap-10 md:py-14">
           <div>
-            <p className="chip-sticker inline-block -rotate-2 bg-sun">{s.eyebrow}</p>
-            <h1 className="mt-4 font-display text-[clamp(30px,4.6vw,58px)] font-extrabold leading-[1.02] tracking-[-0.025em] [font-stretch:86%] [text-wrap:balance]">{s.title}</h1>
-            <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-ink/75 md:text-lg">{s.subtitle}</p>
+            <p className="eyebrow">{s.eyebrow}</p>
+            <h1 className="mt-3 font-display text-[clamp(28px,3.8vw,46px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%] [text-wrap:balance]">{s.title}</h1>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-ink/80 md:text-lg">{s.subtitle}</p>
             <div className="mt-6 flex flex-wrap gap-2.5">
               <Link href={studioHref(first)} className="btn-primary px-6 py-3">
                 Thiết kế áo nhóm ngay
@@ -63,16 +63,16 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
               )}
             </div>
           </div>
-          <div className={`rounded-3xl border-2 border-ink px-3 py-4 shadow-sticker md:p-6 ${s.lineup.color === "trang" || s.lineup.color === "kem" ? "bg-sky/60" : "bg-white"}`}>
+          <div className={`rounded-2xl border border-line px-3 py-4 shadow-sticker md:p-6 ${s.lineup.color === "trang" || s.lineup.color === "kem" ? "bg-sky/60" : "bg-white"}`}>
             <TeamLineup team={s.lineup.team} color={s.lineup.color} people={s.lineup.people} />
           </div>
         </div>
         <div className="container-site pb-8 md:pb-12">
           <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-4">
             {facts.map((f, i) => (
-              <li key={f.v} className={`rounded-2xl border-2 border-ink px-4 py-3 shadow-sticker-sm ${pastel(i + 1)}`}>
+              <li key={f.v} className={`rounded-2xl border border-line px-4 py-3 shadow-sticker-sm ${pastel(i + 1)}`}>
                 <p className="font-display text-[clamp(17px,2vw,24px)] font-extrabold leading-tight [font-stretch:90%]">{f.v}</p>
-                <p className="mt-0.5 text-[13px] leading-snug text-ink/75">{f.l}</p>
+                <p className="mt-0.5 text-sm leading-snug text-ink/75">{f.l}</p>
               </li>
             ))}
           </ul>
@@ -102,11 +102,11 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
             <h2 className="h-section [text-wrap:balance]">Làm áo nhóm không còn là việc của một người</h2>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2 md:mt-7 md:gap-5 lg:grid-cols-4">
               {s.features.map((f, i) => (
-                <li key={f.title} className="flex gap-3 rounded-2xl border-2 border-ink bg-white p-4 shadow-sticker-sm md:block md:p-5">
-                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-ink text-sm font-extrabold ${pastel(i + 2)}`}>{i + 1}</span>
+                <li key={f.title} className="flex gap-3 rounded-2xl border border-line bg-white p-4 shadow-sticker-sm md:block md:p-5">
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-sm font-extrabold ${pastel(i + 2)}`}>{i + 1}</span>
                   <div>
                     <h3 className="text-[16px] font-bold leading-snug md:mt-3 md:text-[17px]">{f.title}</h3>
-                    <p className="mt-1 text-[14px] leading-relaxed text-muted md:mt-1.5">{f.desc}</p>
+                    <p className="mt-1 text-[15px] leading-relaxed text-muted md:mt-1.5">{f.desc}</p>
                   </div>
                 </li>
               ))}
@@ -128,14 +128,14 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
               const from = price.get(g.slug);
               return (
                 <li key={`${p.garment}-${p.color}`}>
-                  <Link href={studioHref(p)} className="group flex h-full flex-col overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sticker-sm transition hover:-translate-y-0.5">
-                    <div className={`relative aspect-square border-b-2 border-ink ${pastel(i + 3)}`}>
+                  <Link href={studioHref(p)} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sticker-sm transition hover:-translate-y-0.5">
+                    <div className={`relative aspect-square border-b border-line ${pastel(i + 3)}`}>
                       <img src={`/blanks/${p.garment}-${p.color}.webp`} alt={`${g.label} ${BASIC_COLORS[p.color].name}`} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain p-3 transition duration-500 group-hover:scale-105" />
                     </div>
                     <div className="flex flex-1 flex-col p-3 md:p-4">
                       <h3 className="text-[15px] font-bold leading-snug md:text-base">{g.label}</h3>
-                      <p className="mt-0.5 flex-1 text-[13px] text-muted">{p.note}</p>
-                      <p className="mt-2 flex items-center justify-between gap-2 text-[13px] font-semibold">
+                      <p className="mt-0.5 flex-1 text-sm text-muted">{p.note}</p>
+                      <p className="mt-2 flex items-center justify-between gap-2 text-sm font-semibold">
                         {from ? <span>Từ {formatVND(from)}</span> : <span />}
                         <span className="text-brand">Thiết kế →</span>
                       </p>
@@ -185,7 +185,7 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
             <p className="mt-3 text-[15px] leading-relaxed text-muted">
               Muốn tự làm? Thiết kế trong YALA Studio và đặt ngay trên web. Cần tư vấn chất liệu, số lượng lớn hoặc nhiều món – để lại thông tin, YALA liên hệ trong giờ làm việc.
             </p>
-            <ul className="mt-5 space-y-2 text-[14px]">
+            <ul className="mt-5 space-y-2 text-[15px]">
               {brand.hotline && (
                 <li>
                   Hotline:{" "}
@@ -215,9 +215,9 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
           <ul className="mt-4 grid gap-3 sm:grid-cols-3">
             {others.map((o, i) => (
               <li key={o.key}>
-                <Link href={o.href} className={`group block h-full rounded-2xl border-2 border-ink p-4 shadow-sticker-sm transition hover:-translate-y-0.5 ${pastel(i + 4)}`}>
+                <Link href={o.href} className={`group block h-full rounded-2xl border border-line p-4 shadow-sticker-sm transition hover:-translate-y-0.5 ${pastel(i + 4)}`}>
                   <p className="text-lg font-extrabold">{o.name} →</p>
-                  <p className="mt-1 text-[14px] leading-snug text-ink/75">{o.pitch}</p>
+                  <p className="mt-1 text-[15px] leading-snug text-ink/75">{o.pitch}</p>
                 </Link>
               </li>
             ))}

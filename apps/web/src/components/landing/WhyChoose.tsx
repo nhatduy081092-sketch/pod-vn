@@ -18,7 +18,7 @@ export function WhyChoose({ data }: { data: LandingSettings["whyChoose"] }) {
                 <Icon className="h-6 w-6" />
               </span>
               <h3 className="mt-3 font-display text-[16px] font-bold leading-tight">{it.title}</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-ink/65 md:text-sm">{it.desc}</p>
+              <p className="mt-1 text-sm leading-relaxed text-ink/65 md:text-[15px]">{it.desc}</p>
             </li>
           );
         })}

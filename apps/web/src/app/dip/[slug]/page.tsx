@@ -87,10 +87,10 @@ export default async function CampaignPage({ params, searchParams }: { params: P
       <section className="relative overflow-hidden" style={{ backgroundColor: c.bg, color: fg }}>
         <div className="container-site relative grid items-center gap-10 pb-14 pt-8 md:grid-cols-[1.05fr_1fr] md:pb-20 md:pt-14">
           <div>
-            <span className="chip-sticker -rotate-2" style={{ backgroundColor: c.accent, color: accentFg }}>
+            <span className="chip-sticker " style={{ backgroundColor: c.accent, color: accentFg }}>
               {c.eyebrow}
             </span>
-            <h1 className="mt-5 font-display text-[clamp(38px,5.6vw,76px)] font-extrabold leading-[0.95] tracking-[-0.03em] [font-stretch:86%] [text-wrap:balance]">{c.title}</h1>
+            <h1 className="mt-5 font-display text-[clamp(38px,5.6vw,76px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%] [text-wrap:balance]">{c.title}</h1>
             <p className="mt-4 max-w-xl text-[16px] leading-relaxed opacity-80 md:text-lg">{c.subtitle}</p>
 
             {live && canOrder && c.deadline ? (
@@ -133,7 +133,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
               </div>
             )}
             {c.discountPercent > 0 && (
-              <span className="pop-in absolute -left-3 -top-4 grid h-24 w-24 -rotate-12 place-items-center rounded-full border-2 border-ink text-center font-display font-extrabold leading-none shadow-sticker" style={{ backgroundColor: c.accent, color: accentFg }}>
+              <span className="pop-in absolute -left-3 -top-4 grid h-24 w-24 place-items-center rounded-full border border-line text-center font-display font-extrabold leading-none shadow-sticker" style={{ backgroundColor: c.accent, color: accentFg }}>
                 <span>
                   <span className="block text-[13px]">Giảm</span>
                   <span className="block text-[30px]">{c.discountPercent}%</span>
@@ -146,7 +146,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
 
       {/* ---------- Ruy băng chữ chạy chéo ---------- */}
       <div className="relative h-[92px] overflow-hidden md:h-[120px]" aria-hidden style={{ backgroundColor: c.bg }}>
-        <div className="absolute inset-x-[-5%] top-[18%] -rotate-2 border-y-2 border-ink py-2 md:py-2.5" style={{ backgroundColor: c.accent, color: accentFg }}>
+        <div className="absolute inset-x-[-5%] top-[18%] border-y-2 border-ink py-2 md:py-2.5" style={{ backgroundColor: c.accent, color: accentFg }}>
           <div className="animate-marquee flex w-max gap-6 font-display text-[clamp(18px,2.4vw,30px)] font-extrabold uppercase leading-none [font-stretch:85%]">
             {unit}
             {unit}
@@ -154,7 +154,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
             {unit}
           </div>
         </div>
-        <div className="absolute inset-x-[-5%] top-[52%] rotate-1 border-y-2 border-ink bg-ink py-2 text-white md:py-2.5">
+        <div className="absolute inset-x-[-5%] top-[52%] border-y-2 border-ink bg-ink py-2 text-white md:py-2.5">
           <div className="animate-marquee-rev flex w-max gap-6 font-display text-[clamp(18px,2.4vw,30px)] font-extrabold uppercase leading-none [font-stretch:85%]">
             {unit}
             {unit}
@@ -234,7 +234,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
               [c.deadline ? `Đặt trước ${vnShortDate(c.deadline)}` : "Giao toàn quốc", "Giao 1–3 ngày, COD toàn quốc – nhận kịp trước dịp."],
             ].map(([t, d], i) => (
               <li key={t} className={`sticker tilt p-6 ${pastel(i)}`} style={{ ["--r" as string]: `${i === 1 ? 1 : -1}deg` }}>
-                <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-ink bg-white font-display text-lg font-extrabold">{i + 1}</span>
+                <span className="grid h-10 w-10 place-items-center rounded-full border border-line bg-white font-display text-lg font-extrabold">{i + 1}</span>
                 <h3 className="mt-3 font-display text-2xl font-extrabold leading-tight">{t}</h3>
                 <p className="mt-1.5 text-[15px] leading-relaxed text-ink/80">{d}</p>
               </li>
@@ -251,7 +251,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
               <p className="text-sm font-semibold" style={{ color: c.accent === "#1d1d1f" ? undefined : c.accent }}>
                 Cho doanh nghiệp
               </p>
-              <h2 className="mt-1.5 font-display text-[clamp(28px,3.6vw,44px)] font-extrabold leading-[1.04] [font-stretch:88%]">{c.b2bTitle}</h2>
+              <h2 className="mt-1.5 font-display text-[clamp(28px,3.6vw,44px)] font-extrabold leading-[1.15] [font-stretch:88%]">{c.b2bTitle}</h2>
               <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-white/75 md:text-base">{c.b2bText}</p>
             </div>
             <div className="flex flex-wrap gap-3 md:justify-end">

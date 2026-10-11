@@ -17,7 +17,7 @@ export default async function CampaignsPage() {
   return (
     <section className="py-10 md:py-14">
       <div className="container-site">
-        <h1 className="font-display text-[clamp(32px,4.6vw,56px)] font-extrabold leading-[1.02] tracking-[-0.025em] [font-stretch:88%]">Quà tặng theo dịp</h1>
+        <h1 className="font-display text-[clamp(32px,4.6vw,56px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:88%]">Quà tặng theo dịp</h1>
         <p className="mt-3 max-w-2xl text-[16px] text-muted">Chọn dịp sắp tới – mẫu chữ, sản phẩm và hạn chót đặt hàng để nhận kịp.</p>
         <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((c, i) => {

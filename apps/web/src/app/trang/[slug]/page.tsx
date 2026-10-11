@@ -25,7 +25,7 @@ export default async function ContentPageView({ params }: { params: Params }) {
         </Link>{" "}
         / <span className="text-ink">{page.title}</span>
       </nav>
-      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%] mb-6 mt-2">{page.title}</h1>
+      <h1 className="font-display text-[clamp(26px,3.2vw,38px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:88%] mb-6 mt-2">{page.title}</h1>
       <ContentRenderer content={page.content} />
     </div>
   );

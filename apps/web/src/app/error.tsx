@@ -22,7 +22,7 @@ export default function Error({ error }: { error: Error & { digest?: string }; r
 
   return (
     <div className="container-site py-20 text-center">
-      <h1 className="font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.04] tracking-[-0.02em] [font-stretch:88%]">Có lỗi xảy ra</h1>
+      <h1 className="font-display text-[clamp(26px,3.2vw,38px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:88%]">Có lỗi xảy ra</h1>
       <p className="mt-1 text-ink/60">{isStaleBuild(error) ? "YALA vừa cập nhật phiên bản mới – đang tải lại trang…" : "Trang tạm thời chưa hiển thị được. Bấm tải lại để thử lần nữa."}</p>
       {/* tải lại toàn trang (không chỉ dựng lại phần lỗi) -> lấy được bản web mới nhất */}
       <button onClick={() => window.location.reload()} className="btn-primary mt-6">

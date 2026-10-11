@@ -25,8 +25,8 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
       <div className="container-site relative">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr] lg:items-center">
           <div>
-            <span className="chip-sticker -rotate-2 bg-brand text-white">{sentence(data.eyebrow.replace(/^YALA\s*·\s*/i, ""))}</span>
-            <h2 className="mt-4 font-display text-[clamp(32px,4.2vw,56px)] font-extrabold leading-[1.0] tracking-[-0.02em] [font-stretch:86%]">{data.title}</h2>
+            <span className="chip-sticker bg-brand text-white">{sentence(data.eyebrow.replace(/^YALA\s*·\s*/i, ""))}</span>
+            <h2 className="mt-4 font-display text-[clamp(26px,3.2vw,38px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%]">{data.title}</h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80 md:text-base">{data.subtitle}</p>
             <div className="mt-5 flex flex-wrap gap-2.5">
               <Link href="/doanh-nghiep#bao-gia" className="btn-primary px-6 py-3">
@@ -45,7 +45,7 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
             {data.stats.map((s, i) => (
               <li key={s.label} className={`sticker tilt p-4 text-ink md:p-5 ${pastel(i)}`} style={{ ["--r" as string]: `${tiltOf(i) / 1.5}deg` }}>
                 <p className="font-display text-[clamp(26px,5vw,42px)] font-extrabold leading-none [font-stretch:85%]">{s.value}</p>
-                <p className="mt-1.5 text-xs font-medium leading-snug text-ink/75 md:text-sm">{s.label}</p>
+                <p className="mt-1.5 text-xs font-medium leading-snug text-ink/75 md:text-[15px]">{s.label}</p>
               </li>
             ))}
           </ul>
@@ -75,8 +75,8 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
                     <span className="absolute left-0 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-ink left-2">IN / THÊU LOGO</span>
                   </div>
                   <div className="border-t border-line p-3">
-                    <h3 className="line-clamp-2 min-h-[2.6em] text-[13px] font-bold leading-snug md:text-[15px]">{p.name}</h3>
-                    <p className="mt-1 flex items-center justify-between text-xs font-extrabold text-navy md:text-sm">
+                    <h3 className="line-clamp-2 min-h-[2.6em] text-sm font-bold leading-snug md:text-[15px]">{p.name}</h3>
+                    <p className="mt-1 flex items-center justify-between text-xs font-extrabold text-navy md:text-[15px]">
                       Báo giá theo số lượng <IconArrow className="h-4 w-4 text-accent transition group-hover:translate-x-1" />
                     </p>
                   </div>

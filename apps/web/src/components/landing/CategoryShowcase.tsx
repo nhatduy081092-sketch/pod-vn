@@ -155,7 +155,7 @@ function Tile({ tile: t, index, lgSpan, mdSpan, count, colors, filterable, eager
           style={{ color: ink }}
         >
           {exists && <p className="text-[clamp(10px,2.6cqw,13px)] font-semibold opacity-70">{count} mẫu</p>}
-          <h3 className="text-[clamp(20px,7.2cqw,40px)] font-bold leading-[1.05] tracking-[-0.02em]">{t.title}</h3>
+          <h3 className="text-[clamp(20px,7.2cqw,40px)] font-bold leading-[1.15] tracking-[-0.02em]">{t.title}</h3>
           {t.subtitle && <p className="text-[clamp(12px,3.4cqw,17px)] font-medium leading-snug opacity-85">{t.subtitle}</p>}
           <Link
             href={href}

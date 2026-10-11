@@ -34,8 +34,8 @@ export function ProductCard({ p, priority = false, color }: { p: ProductCardData
         />
         {(isNew || off > 0) && (
           <span className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex gap-1.5">
-            {off > 0 && <span className="-rotate-3 rounded-lg border-2 border-ink bg-sale px-2 py-0.5 text-[11px] font-bold text-white shadow-sticker-sm md:text-xs">-{off}%</span>}
-            {isNew && <span className="rotate-2 rounded-lg border-2 border-ink bg-sun px-2 py-0.5 text-[11px] font-bold text-ink shadow-sticker-sm md:text-xs">Mới</span>}
+            {off > 0 && <span className="rounded-lg border border-line bg-sale px-2 py-0.5 text-[11px] font-bold text-white shadow-sticker-sm md:text-xs">-{off}%</span>}
+            {isNew && <span className="rounded-lg border border-line bg-sun px-2 py-0.5 text-[11px] font-bold text-ink shadow-sticker-sm md:text-xs">Mới</span>}
           </span>
         )}
         {hasSecond && (

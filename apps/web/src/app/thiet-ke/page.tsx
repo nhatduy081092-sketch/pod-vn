@@ -78,8 +78,8 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
         <div className="pointer-events-none absolute -left-[8%] bottom-0 hidden h-[70%] w-[45%] bg-sun md:block [clip-path:polygon(0_0,72%_0,100%_100%,0_100%)]" aria-hidden />
         <div className="container-site relative grid items-center gap-10 pb-14 pt-8 md:grid-cols-[1fr_1.05fr] md:pb-20 md:pt-14">
           <div className="relative">
-            <span className="chip-sticker -rotate-2 bg-brand text-white">{brand} Studio</span>
-            <h1 className="mt-5 font-display text-[clamp(44px,6.6vw,84px)] font-extrabold leading-[0.92] tracking-[-0.035em] [font-stretch:86%]">
+            <span className="chip-sticker bg-brand text-white">{brand} Studio</span>
+            <h1 className="mt-5 font-display text-[clamp(34px,4.8vw,56px)] font-extrabold leading-[1.15] tracking-[-0.035em] [font-stretch:86%]">
               <span className="block">Tự thiết kế.</span>
               <span className="block">In từ 1 chiếc.</span>
             </h1>
@@ -106,9 +106,9 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
           {/* Mô phỏng Studio: khung sticker + áo mẫu + thanh công cụ */}
           <div className="relative mx-auto w-full max-w-[520px]" aria-hidden>
             <div className="sticker tilt overflow-hidden bg-white shadow-sticker-lg" style={{ ["--r" as string]: "1.5deg" }}>
-              <div className="flex h-11 items-center gap-2 border-b-2 border-ink px-3">
+              <div className="flex h-11 items-center gap-2 border-b border-line px-3">
                 <span className="font-display text-[15px] font-extrabold">Áo thun · Mặt trước</span>
-                <span className="ml-auto rounded-full border-2 border-ink bg-brand px-3 py-0.5 text-[12px] font-bold text-white">Hoàn tất</span>
+                <span className="ml-auto rounded-full border border-line bg-brand px-3 py-0.5 text-[12px] font-bold text-white">Hoàn tất</span>
               </div>
               <div className="grid grid-cols-[56px_1fr]">
                 <div className="flex flex-col items-center gap-2 border-r-2 border-ink/10 py-3">
@@ -171,7 +171,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
             ].map((x, i) => (
               <li key={x.t} data-reveal="pop" style={{ ["--d" as string]: `${i * 80}ms` }}>
                 <a href={x.href} className={`sticker tilt hover-wiggle flex h-full flex-col p-6 ${pastel(i)}`} style={{ ["--r" as string]: `${tiltOf(i)}deg` }}>
-                  <span className="grid h-12 w-12 place-items-center rounded-xl border-2 border-ink bg-white">
+                  <span className="grid h-12 w-12 place-items-center rounded-xl border border-line bg-white">
                     <x.Icon className="h-6 w-6" />
                   </span>
                   <h3 className="mt-4 font-display text-2xl font-extrabold leading-tight">{x.t}</h3>
@@ -281,8 +281,8 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
       <section id="dong-phuc" className="scroll-mt-28 border-y-2 border-ink bg-ink py-14 text-white md:py-20">
         <div className="container-site grid items-center gap-10 md:grid-cols-2">
           <div>
-            <span className="chip-sticker -rotate-2 bg-sun text-ink">Đồng phục nhóm</span>
-            <h2 className="mt-4 font-display text-[clamp(32px,4.2vw,54px)] font-extrabold leading-[1.0] tracking-[-0.02em] [font-stretch:86%]">Mỗi áo một tên, một số – đặt chung 1 đơn</h2>
+            <span className="chip-sticker bg-sun text-ink">Đồng phục nhóm</span>
+            <h2 className="mt-4 font-display text-[clamp(26px,3.2vw,38px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%]">Mỗi áo một tên, một số – đặt chung 1 đơn</h2>
             <ol className="mt-6 space-y-3 text-[15px] text-white/85">
               {[
                 <>Trong Studio, thêm chữ rồi chọn <b className="text-sun">Tên thành viên</b> hoặc <b className="text-sun">Số áo</b>.</>,
@@ -341,10 +341,10 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
               ["Sản phẩm in có giống bản xem trước?", "Xưởng in đúng file từ thiết kế của bạn. Màu thực tế có thể chênh nhẹ so với màn hình tuỳ chất liệu."],
               ["Không tự thiết kế được thì sao?", "Nhắn Zalo kèm ý tưởng hoặc ảnh – đội ngũ YALA hỗ trợ lên mẫu."],
             ].map(([q, a]) => (
-              <details key={q} className="group rounded-2xl border-2 border-ink bg-white px-5 py-4 shadow-sticker-sm open:bg-peach">
+              <details key={q} className="group rounded-2xl border border-line bg-white px-5 py-4 shadow-sticker-sm open:bg-peach">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-display text-[17px] font-bold">
                   {q}
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 border-ink text-lg leading-none transition group-open:rotate-45">+</span>
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-lg leading-none transition group-open:rotate-45">+</span>
                 </summary>
                 <p className="mt-2 text-[15px] leading-relaxed text-ink/75">{a}</p>
               </details>
@@ -374,7 +374,7 @@ function StudioCard({ p, priority }: { p: ProductCardData; priority: boolean }) 
     <div className="group flex h-full flex-col">
       <Link href={`/thiet-ke/${p.slug}`} className="relative block aspect-square overflow-hidden rounded-2xl border-2 border-transparent bg-white transition-[transform,box-shadow,border-color] duration-200 group-hover:-translate-y-1 group-hover:border-ink group-hover:shadow-sticker">
         <Img src={p.images[0]} alt={p.name} priority={priority} sizes="(min-width:1024px) 280px, (min-width:640px) 30vw, 46vw" className="object-contain p-[6%] transition duration-300 group-hover:scale-105" />
-        <span className="absolute left-2.5 top-2.5 rounded-lg border-2 border-ink bg-sun px-2 py-0.5 text-[11px] font-bold">{p.category.name}</span>
+        <span className="absolute left-2.5 top-2.5 rounded-lg border border-line bg-sun px-2 py-0.5 text-[11px] font-bold">{p.category.name}</span>
       </Link>
       <h3 className="mt-3 line-clamp-2 min-h-[2.6em] text-[13px] font-medium leading-[1.3] md:text-[15px]">
         <Link href={`/san-pham/${p.slug}`} className="hover:underline">

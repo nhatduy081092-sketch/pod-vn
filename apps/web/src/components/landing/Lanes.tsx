@@ -29,7 +29,7 @@ export function Lanes({
           <Title
             className={
               hero
-                ? "max-w-5xl font-display text-[clamp(30px,3.9vw,54px)] font-extrabold leading-[1.02] tracking-[-0.025em] [font-stretch:88%] [text-wrap:balance]"
+                ? "max-w-5xl font-display text-[clamp(28px,3.6vw,46px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:88%] [text-wrap:balance]"
                 : "h-section max-w-4xl [text-wrap:balance]"
             }
           >
@@ -63,7 +63,7 @@ function LaneCard({ lane, tone, className, tilt, photos = [], eager = false }: {
       className={`sticker tilt relative flex flex-col overflow-hidden shadow-sticker-lg transition-transform duration-300 hover:rotate-0 ${dark ? "bg-ink text-white" : "bg-sky text-ink"} ${className}`}
       style={{ ["--r" as string]: `${tilt}deg` }}
     >
-      <div className={`relative aspect-[16/10] overflow-hidden border-b-2 border-ink ${dark ? "bg-peach" : "bg-white"}`}>
+      <div className={`relative aspect-[16/10] overflow-hidden border-b border-line ${dark ? "bg-peach" : "bg-white"}`}>
         {lane.image ? (
           <img src={assetUrl(lane.image)} alt="" loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "auto"} decoding="async" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "60% 30%" }} />
         ) : photos.length >= 4 ? (
@@ -71,10 +71,10 @@ function LaneCard({ lane, tone, className, tilt, photos = [], eager = false }: {
         ) : (
           <MerchKit className="absolute inset-0 h-full w-full" />
         )}
-        <span className={`chip-sticker absolute left-4 top-4 -rotate-3 ${dark ? "bg-brand text-white" : "bg-sun"}`}>{lane.label}</span>
+        <span className={`chip-sticker absolute left-4 top-4 ${dark ? "bg-brand text-white" : "bg-sun"}`}>{lane.label}</span>
       </div>
       <div className="flex flex-1 flex-col p-6 md:p-8">
-        <h3 className="font-display text-[clamp(26px,3vw,38px)] font-extrabold leading-[1.02] tracking-[-0.02em] [font-stretch:88%]">{lane.title}</h3>
+        <h3 className="font-display text-[clamp(26px,3vw,38px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:88%]">{lane.title}</h3>
         {lane.points.length > 0 && (
           <ul className={`mt-4 space-y-2 text-[15px] ${dark ? "text-white/85" : "text-ink/85"}`}>
             {lane.points.map((p) => (

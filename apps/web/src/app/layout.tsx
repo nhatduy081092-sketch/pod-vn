@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Be_Vietnam_Pro, Bricolage_Grotesque } from "next/font/google";
+import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart";
 import { QuoteListProvider } from "@/lib/quote-list";
@@ -23,13 +23,7 @@ const font = Be_Vietnam_Pro({
   variable: "--font-sans",
   display: "swap",
 });
-// Chữ tiêu đề: tươi, hơi tinh nghịch, hỗ trợ tiếng Việt
-const display = Bricolage_Grotesque({
-  subsets: ["vietnamese", "latin"],
-  axes: ["opsz", "wdth"], // biến thể độ rộng -> tiêu đề hẹp, đậm
-  variable: "--font-display",
-  display: "swap",
-});
+// Tiêu đề dùng chung Be Vietnam Pro (chững chạc, dễ đọc) – bỏ font tiêu đề hẹp kiểu vui nhộn
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
@@ -53,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // chiến dịch theo dịp đang chạy (gần nhất) -> thanh thông báo + mục nổi bật trên menu
   const campaign = liveCampaigns(settings.campaigns)[0] ?? null;
   return (
-    <html lang="vi" className={`${font.variable} ${display.variable}`} suppressHydrationWarning>
+    <html lang="vi" className={font.variable} suppressHydrationWarning>
       <head>
         {/* nhớ lối khách (Cá nhân | Doanh nghiệp) trước khi vẽ trang */}
         <script dangerouslySetInnerHTML={{ __html: LANE_BOOT_SCRIPT }} />

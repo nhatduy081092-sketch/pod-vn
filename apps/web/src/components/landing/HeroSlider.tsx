@@ -78,7 +78,7 @@ export function HeroSlider({ slides, intervalMs = 6000 }: { slides: HeroSlide[];
               <div className="container-site grid items-center gap-5 py-5 md:grid-cols-[1fr_1.15fr] md:gap-10 md:py-10">
                 <div className="order-2 md:order-1">
                   {s.eyebrow && <p className="text-[13px] font-semibold opacity-75 md:text-sm">{s.eyebrow}</p>}
-                  <Title className="mt-2 text-[clamp(30px,4.6vw,56px)] font-bold leading-[1.05] tracking-[-0.025em]">{s.title}</Title>
+                  <Title className="mt-2 text-[clamp(28px,3.8vw,46px)] font-bold leading-[1.15] tracking-[-0.02em]">{s.title}</Title>
                   {s.subtitle && <p className="mt-3 max-w-md text-[15px] leading-relaxed opacity-85 md:text-lg">{s.subtitle}</p>}
                   {s.ctaLabel && s.href && (
                     <Link

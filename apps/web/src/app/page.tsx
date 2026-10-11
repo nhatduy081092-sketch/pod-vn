@@ -49,7 +49,7 @@ export default async function HomePage() {
       <Testimonials title={settings.sectionTitles.reviews} items={testimonials} />
       <WhyChoose data={settings.whyChoose} />
       {/* Khu mua lẻ */}
-      <div className="border-t-2 border-ink bg-surface/60">
+      <div className="border-t border-line bg-surface/60">
         <div className="container-site pt-10 md:pt-14">
           <p className="eyebrow">Mua lẻ</p>
           <h2 className="h-section mt-1.5">Chỉ cần 1 chiếc cho riêng bạn?</h2>

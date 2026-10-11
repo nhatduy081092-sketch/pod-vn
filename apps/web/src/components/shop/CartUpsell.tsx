@@ -31,11 +31,11 @@ export function CartUpsell({ productIds, subtotal, freeThreshold }: { productIds
   return (
     <section className="mt-10" aria-label="Gợi ý mua kèm">
       {freeThreshold > 0 && (
-        <div className="mb-5 rounded-2xl border-2 border-ink bg-sun p-4 shadow-sticker">
+        <div className="mb-5 rounded-2xl border border-line bg-sun p-4 shadow-sticker">
           <p className="font-display text-lg font-extrabold leading-tight">
             {gap > 0 ? <>Thêm {formatVND(gap)} nữa là được miễn phí giao hàng</> : <>Đơn của bạn đã được miễn phí giao hàng 🎉</>}
           </p>
-          <div className="mt-2.5 h-3 overflow-hidden rounded-full border-2 border-ink bg-white" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <div className="mt-2.5 h-3 overflow-hidden rounded-full border border-line bg-white" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
             <div className="h-full bg-brand transition-[width] duration-700" style={{ width: `${pct}%` }} />
           </div>
         </div>
