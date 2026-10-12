@@ -102,6 +102,7 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 | Phôi trơn | `apps/web/public/blanks/<dáng>-<màu>.webp` (36 ảnh) |
 
 ## 8. Lịch sử gần đây (mới → cũ)
+- Đo phễu đơn nhóm (group_create → … → purchase order_type) + nghiên cứu từ khoá SEO
 - Trang mẫu danh sách in áo (tải Excel) + thông điệp “Đơn nhóm từ 10” thống nhất (TopBar, Vì sao chọn YALA, chân trang, /thiet-ke, /bo-suu-tap)
 - bc50ca2 SEO: 4 trang mẫu áo theo nhóm, thiết kế áo lớp online, bảng size, slogan áo lớp, tên đội bóng; 18 mẫu đồng phục có ô tên/số
 - 1015bf2 Giao diện chững chạc cho khách tập thể
@@ -128,6 +129,8 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 | yala-vs-printdoors-christmas.md | Chiến dịch theo dịp |
 | core-gap-vs-printdoors.md | Khoảng cách lõi hệ thống |
 | audit-vs-printdoors.md | Rà soát bố cục ban đầu |
+| yala-do-luong-don-nhom.md | Sự kiện phễu đơn nhóm (GA4/Pixel), cấu hình GA4, cách đọc số |
+| yala-tu-khoa-seo.md + yala-ban-do-tu-khoa.xlsx | Nghiên cứu từ khoá: 64 từ khoá/8 cụm, map URL, trang nên làm, cách kiểm chứng |
 
 ## 10. Câu mở đầu dán vào tài khoản mới
 > Tôi đang tiếp tục dự án YALA (yala.vn) từ tài khoản Claude khác. Hãy đọc file BAN-GIAO-YALA.md và các tài liệu trong Project trước, sau đó clone repo nhatduy081092-sketch/pod-vn để làm việc. Trả lời bằng tiếng Việt. Việc tiếp theo: [ghi việc bạn muốn làm].
