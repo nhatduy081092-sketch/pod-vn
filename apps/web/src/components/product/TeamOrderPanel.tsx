@@ -10,6 +10,7 @@ import {
   type RosterRow,
 } from "@pod/shared";
 import { readXlsxFirstSheet } from "@/lib/xlsx";
+import { track } from "@/lib/track";
 import { IconUpload } from "../ui/icons";
 
 type Props = {
@@ -44,10 +45,11 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
     setOne({ name: "", number: "", size: one.size });
   }
 
-  function apply(table: string[][]) {
+  function apply(table: string[][], method: "xlsx" | "csv" | "paste") {
     const res = rowsToRoster(table, sizes);
     onChange(res.rows);
     setIssues(res.issues);
+    track.rosterUpload(method, res.rows.length, res.issues.length);
   }
 
   async function onFile(file?: File) {
@@ -55,8 +57,8 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
     setBusy(true);
     setFileName(file.name);
     try {
-      if (/\.xlsx$/i.test(file.name)) apply(await readXlsxFirstSheet(file));
-      else if (/\.(csv|txt|tsv)$/i.test(file.name)) apply(parseDelimited(await file.text()));
+      if (/\.xlsx$/i.test(file.name)) apply(await readXlsxFirstSheet(file), "xlsx");
+      else if (/\.(csv|txt|tsv)$/i.test(file.name)) apply(parseDelimited(await file.text()), "csv");
       else setIssues([{ line: 0, message: "Chỉ nhận file .xlsx hoặc .csv (file .xls cũ: mở bằng Excel rồi Lưu thành .xlsx)" }]);
     } catch (e) {
       setIssues([{ line: 0, message: (e as Error).message || "Không đọc được file" }]);
@@ -117,7 +119,7 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
             className="input font-mono text-[13px]"
             placeholder={"Bôi đen các cột trong Excel/Google Sheets → Ctrl+C → dán vào đây\nTên in\tSố áo\tSize\nNGUYỄN AN\t10\tM"}
           />
-          <button type="button" className="btn-primary mt-2 px-4 py-2 text-[13px]" onClick={() => apply(parseDelimited(paste))}>
+          <button type="button" className="btn-primary mt-2 px-4 py-2 text-[13px]" onClick={() => apply(parseDelimited(paste), "paste")}>
             Đọc danh sách
           </button>
         </div>

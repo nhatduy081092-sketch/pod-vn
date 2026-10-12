@@ -1,11 +1,12 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatVND, groupToRoster, linePrice, type GroupView } from "@pod/shared";
 import { assetUrl } from "@/lib/config";
 import { groupAdminKey, myGroupRows, rememberGroupRow, setGroupAdminKey, stashGroupRoster } from "@/lib/group";
 import { attachDesign } from "@/components/editor/storage";
+import { track } from "@/lib/track";
 
 type Form = { person: string; printName: string; number: string; size: string; qty: number; note: string };
 
@@ -27,6 +28,7 @@ export function GroupOrderView({ code }: { code: string }) {
   const [done, setDone] = useState("");
   const [copied, setCopied] = useState("");
   const [slide, setSlide] = useState(0);
+  const viewed = useRef(false);
 
   // khoá quản lý: từ link quản lý (?k=) -> lưu trên máy rồi xoá khỏi thanh địa chỉ (tránh lỡ gửi nhầm)
   useEffect(() => {
@@ -48,6 +50,10 @@ export function GroupOrderView({ code }: { code: string }) {
       const data = (await res.json().catch(() => ({}))) as GroupView & { error?: string };
       if (!res.ok) throw new Error(data.error ?? "Không tải được nhóm");
       setG(data);
+      if (!viewed.current) {
+        viewed.current = true;
+        track.groupView(code, data.isAdmin ? "leader" : "member", data.members.reduce((s, m) => s + m.qty, 0));
+      }
       setForm((f) => (f.size ? f : { ...f, size: data.product.sizes[0]?.size ?? "" }));
       setLoadErr("");
     } catch (e) {
@@ -95,6 +101,8 @@ export function GroupOrderView({ code }: { code: string }) {
   const hasNumber = g.fields.includes("number");
   const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/nhom/${code}` : `/nhom/${code}`;
   const manageUrl = `${shareUrl}?k=${adminKey}`;
+  /** Link gửi thành viên: gắn UTM để đo khách đến từ link nhóm (captureUtm lưu lần chạm đầu) */
+  const inviteUrl = `${shareUrl}?utm_source=nhom&utm_medium=share&utm_campaign=gom-don-nhom`;
   const daysLeft = g.deadline ? Math.ceil((new Date(`${g.deadline}T23:59:59+07:00`).getTime() - Date.now()) / 864e5) : null;
 
   async function join(e: React.FormEvent) {
@@ -113,6 +121,7 @@ export function GroupOrderView({ code }: { code: string }) {
       const data = (await res.json().catch(() => ({}))) as { id?: string; editKey?: string; error?: string };
       if (!res.ok || !data.id || !data.editKey) throw new Error(data.error ?? "Không ghi danh được");
       rememberGroupRow(code, data.id, data.editKey);
+      track.groupJoin({ role: g.isAdmin ? "leader" : "member", qty: form.qty, members: total + form.qty });
       setMine(myGroupRows(code));
       setDone(`✓ Đã ghi danh ${form.person} – size ${form.size} × ${form.qty}`);
       setForm((f) => ({ ...f, person: "", printName: "", number: "", qty: 1, note: "" }));
@@ -143,6 +152,7 @@ export function GroupOrderView({ code }: { code: string }) {
     const res = await fetch(`/api/groups/${encodeURIComponent(code)}`, { method: "PATCH", headers: { "Content-Type": "application/json", "x-group-key": adminKey }, body: JSON.stringify(p) });
     const data = (await res.json().catch(() => ({}))) as GroupView & { error?: string };
     if (!res.ok) return setErr(data.error ?? "Không lưu được");
+    if (p.closed === true) track.groupClose(data.members.reduce((s, m) => s + m.qty, 0));
     setG(data);
   }
 
@@ -154,8 +164,9 @@ export function GroupOrderView({ code }: { code: string }) {
   async function share() {
     const text = `${g!.title || "Đặt áo nhóm"}: mở link, ghi tên và chọn size giúp mình nhé 👕`;
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
-    if (nav.share) await nav.share({ title: g!.title || "Đặt áo nhóm", text, url: shareUrl }).catch(() => undefined);
-    else await copy(`${text}\n${shareUrl}`, "share");
+    track.groupShare("share");
+    if (nav.share) await nav.share({ title: g!.title || "Đặt áo nhóm", text, url: inviteUrl }).catch(() => undefined);
+    else await copy(`${text}\n${inviteUrl}`, "share");
   }
 
   /** Trưởng nhóm: mang thiết kế + danh sách sang trang sản phẩm -> thêm giỏ như đơn đồng phục */
@@ -164,6 +175,7 @@ export function GroupOrderView({ code }: { code: string }) {
     if (!g.members.length) return setErr("Chưa có ai ghi danh");
     attachDesign(g.product.id, g.design, g.color || undefined);
     stashGroupRoster(g.product.id, groupToRoster(g.members.map((m) => ({ ...m, note: m.note ?? "" })), g.fields), code);
+    track.groupCheckout(total, price?.sum ?? 0);
     router.push(`/san-pham/${g.product.slug}?nhom=${code}`);
   }
 
@@ -364,7 +376,7 @@ export function GroupOrderView({ code }: { code: string }) {
               <button type="button" className="btn-primary py-2.5 text-sm" onClick={() => void share()}>
                 {copied === "share" ? "Đã chép ✓" : "Gửi link cho nhóm"}
               </button>
-              <button type="button" className="btn-outline py-2.5 text-sm" onClick={() => void copy(shareUrl, "link")}>
+              <button type="button" className="btn-outline py-2.5 text-sm" onClick={() => (track.groupShare("copy"), void copy(inviteUrl, "link"))}>
                 {copied === "link" ? "Đã chép ✓" : "Chép link"}
               </button>
             </div>

@@ -135,6 +135,7 @@ export function ProductConfigurator({
       color: sel.color,
       quantity: team ? roster.length : qty,
       roster: team ? roster : undefined,
+      groupCode: team && groupCode ? groupCode : undefined,
       sizeDeltas: team ? sizeDeltas : undefined,
       basePrice: product.basePrice,
       priceTiers: product.priceTiers,

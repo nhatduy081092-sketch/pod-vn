@@ -51,6 +51,7 @@ import { CalendarPanel } from "./CalendarPanel";
 import { buildCollage, CollagePanel, coverCrop, polaroidCard, type Collage, type Photo } from "./CollagePanel";
 import { artify, type ArtStyle } from "./artFilters";
 import { createGroup } from "@/lib/group";
+import { track } from "@/lib/track";
 import { ModelPreview } from "./ModelPreview";
 
 type Props = {
@@ -1610,6 +1611,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           team={designFields(orderOut.json).length > 0}
           onGroup={async () => {
             const code = await createGroup({ productId: product.id, color: color?.name ?? "", design: orderOut });
+            track.groupCreate({ product: product.slug, personalized: designFields(orderOut.json).length > 0 });
             router.push(`/nhom/${code}`);
           }}
         />

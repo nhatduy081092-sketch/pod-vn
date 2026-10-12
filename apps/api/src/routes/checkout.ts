@@ -109,6 +109,7 @@ checkoutRoutes.post("/orders", rateLimit({ key: "order", limit: 10, windowMs: 10
       roster: (l.data.roster as unknown[] | undefined) ?? undefined,
     })),
     utmSource: input.utm?.utm_source ?? (input.utm?.fbclid ? "facebook" : input.utm?.gclid ? "google" : undefined),
+    group: input.utm?.group,
   });
   return c.json(order, 201);
 });

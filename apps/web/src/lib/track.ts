@@ -4,6 +4,22 @@
  * Sự kiện chuẩn: view_item, add_to_cart, begin_checkout, purchase.
  */
 type Item = { id: string; name: string; price: number; quantity: number };
+/** single = mua lẻ · team_roster = đồng phục theo danh sách tự nhập · group_link = đặt từ link gom đơn nhóm */
+export type OrderType = "single" | "team_roster" | "group_link";
+
+/** Nhóm số lượng để báo cáo dễ đọc (1–9 / 10–29 / 30–49 / 50–99 / 100+) – khớp mốc giá 10/30/50/100 */
+export function bucket(n: number) {
+  return n >= 100 ? "100+" : n >= 50 ? "50-99" : n >= 30 ? "30-49" : n >= 10 ? "10-29" : n >= 1 ? "1-9" : "0";
+}
+function once(key: string) {
+  try {
+    if (sessionStorage.getItem(`trk:${key}`)) return false;
+    sessionStorage.setItem(`trk:${key}`, "1");
+  } catch {
+    /* private mode */
+  }
+  return true;
+}
 
 declare global {
   interface Window {
@@ -33,9 +49,38 @@ export const track = {
     ga("begin_checkout", { currency: "VND", value, items: items.map((i) => ({ item_id: i.id, item_name: i.name, price: i.price, quantity: i.quantity })) });
     fb("InitiateCheckout", { value, currency: "VND", num_items: items.length });
   },
-  purchase(orderCode: string, value: number) {
-    ga("purchase", { transaction_id: orderCode, currency: "VND", value });
-    fb("Purchase", { value, currency: "VND" });
+  purchase(orderCode: string, value: number, orderType: OrderType = "single") {
+    ga("purchase", { transaction_id: orderCode, currency: "VND", value, order_type: orderType });
+    fb("Purchase", { value, currency: "VND", content_category: orderType });
+  },
+  /**
+   * Phễu đơn nhóm (định vị khách tập thể). Không gửi tên/SĐT – chỉ số đếm và nhãn.
+   * group_create -> group_share -> group_view (thành viên mở link) -> group_join -> group_close -> group_checkout -> purchase(order_type=group_link)
+   */
+  groupCreate(p: { product: string; personalized: boolean }) {
+    ga("group_create", { product_slug: p.product, personalized: p.personalized });
+    fb("GroupCreate", { content_name: p.product }, true);
+  },
+  groupShare(method: "share" | "copy") {
+    ga("group_share", { method });
+  },
+  /** Mở trang nhóm: 1 lần / mã nhóm / phiên */
+  groupView(code: string, role: "leader" | "member", members: number) {
+    if (once(`gv:${code}`)) ga("group_view", { role, members_bucket: bucket(members) });
+  },
+  groupJoin(p: { role: "leader" | "member"; qty: number; members: number }) {
+    ga("group_join", { role: p.role, qty: p.qty, members_bucket: bucket(p.members) });
+    if (p.role === "member") fb("GroupJoin", {}, true);
+  },
+  groupClose(members: number) {
+    ga("group_close", { members, members_bucket: bucket(members) });
+  },
+  groupCheckout(members: number, value: number) {
+    ga("group_checkout", { members, members_bucket: bucket(members), currency: "VND", value });
+  },
+  /** Trang sản phẩm – tab Đặt cho nhóm: nạp danh sách */
+  rosterUpload(method: "xlsx" | "csv" | "paste", rows: number, errors: number) {
+    ga("roster_upload", { method, rows, rows_bucket: bucket(rows), has_errors: errors > 0 });
   },
   lead(topic: string) {
     ga("generate_lead", { topic });

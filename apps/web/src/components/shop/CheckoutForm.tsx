@@ -17,7 +17,7 @@ import {
 import { useCart } from "@/lib/cart";
 import { assetUrl } from "@/lib/config";
 import { apiFetch } from "@/lib/client-api";
-import { readUtm, track } from "@/lib/track";
+import { readUtm, track, type OrderType } from "@/lib/track";
 
 type Form = {
   customerName: string;
@@ -116,6 +116,8 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setServerError("");
+    const groupCode = cart.items.find((i) => i.groupCode)?.groupCode ?? "";
+    const orderType: OrderType = groupCode ? "group_link" : cart.items.some((i) => i.roster?.length) ? "team_roster" : "single";
     const payload = {
       ...form,
       items: cart.items.map((i) => ({
@@ -131,7 +133,8 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
         roster: i.roster?.length ? i.roster : undefined,
       })),
       shippingMethod: chosen?.method ?? "STANDARD",
-      utm: readUtm(),
+      // nguồn khách + loại đơn lưu cùng đơn (CMS hiện ở chi tiết đơn) – không phụ thuộc trình chặn quảng cáo
+      utm: { ...readUtm(), order_type: orderType, ...(groupCode ? { group: groupCode } : {}) },
     };
     const parsed = orderCreateSchema.safeParse(payload);
     if (!parsed.success) {
@@ -156,7 +159,7 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      track.purchase(order.code, order.total);
+      track.purchase(order.code, order.total, orderType);
       try {
         sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify({ code: order.code, phone: parsed.data.phone }));
       } catch {

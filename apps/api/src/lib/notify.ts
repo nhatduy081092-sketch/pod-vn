@@ -10,6 +10,8 @@ type NewOrder = {
   note: string;
   items: { productName: string; size: string; quantity: number; designUrl: string; roster?: unknown[] }[];
   utmSource?: string;
+  /** Mã nhóm khi đặt từ link gom đơn /nhom/<mã> */
+  group?: string;
 };
 
 const esc = (s: string) => s.replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch]!);
@@ -29,6 +31,7 @@ export function notifyNewOrder(o: NewOrder): void {
         `• ${esc(i.productName)} – ${i.roster?.length ? `👕 đồng phục ${i.roster.length} áo` : `size ${esc(i.size)}`} ×${i.quantity}${i.designUrl ? " 🎨" : " (chưa có file)"}`,
     ),
     o.note ? `📝 ${esc(o.note)}` : "",
+    o.group ? `👥 Đặt từ link nhóm /nhom/${esc(o.group)}` : "",
     o.utmSource ? `📣 Nguồn: ${esc(o.utmSource)}` : "",
   ].filter(Boolean);
 

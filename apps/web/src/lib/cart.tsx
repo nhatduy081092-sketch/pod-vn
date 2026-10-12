@@ -19,6 +19,8 @@ export type CartItem = {
   printMode: PrintMode;
   designNote: string;
   roster?: RosterRow[]; // đồng phục nhóm: quantity = roster.length
+  /** Đặt từ link gom đơn nhóm /nhom/<mã> (để đo phễu) */
+  groupCode?: string;
   /** Biến thể (màu × size) */
   variantId?: string;
   sku?: string;
