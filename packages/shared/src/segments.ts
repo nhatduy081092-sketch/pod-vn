@@ -142,7 +142,7 @@ export const SEGMENTS: Segment[] = [
     ],
     extras: "Cần thêm cốc, móc khoá, sổ in chung thiết kế làm quà lưu niệm? Gửi yêu cầu – YALA báo giá.",
     faq: [COMMON_FAQ.link, COMMON_FAQ.design, COMMON_FAQ.names, COMMON_FAQ.under],
-    seoTitle: "In áo lớp, áo nhóm, áo gia đình theo yêu cầu",
+    seoTitle: "Áo đồng phục nhóm, áo thun lớp, áo gia đình in theo yêu cầu",
     seoDescription:
       "Thiết kế áo lớp, áo kỷ yếu, áo họp lớp, áo nhóm, áo gia đình online: mỗi người tự ghi size và tên qua 1 link, in tên riêng từng áo. Đơn nhóm từ 10 áo, giao toàn quốc.",
     lineup: { team: "12A1 · 2026", color: "trang", people: [{ name: "HÀ" }, { name: "KHOA" }, { name: "VY" }] },
@@ -154,7 +154,7 @@ export const SEGMENTS: Segment[] = [
     name: "Team building",
     pitch: "Áo team building, sự kiện, giải chạy – chia màu theo đội",
     eyebrow: "Team building & sự kiện",
-    title: "Áo team building & sự kiện – chia màu theo đội, in tên từng người",
+    title: "Đồng phục team building & áo sự kiện – chia màu theo đội, in tên từng người",
     subtitle:
       "Team building, year-end party, du lịch công ty, giải chạy, hội nghị… Mỗi đội một màu, chung một thiết kế; thu size cả công ty bằng 1 link, giao về một điểm.",
     useCases: ["Team building", "Du lịch công ty", "Year-end party", "Giải chạy, fun run", "Hội nghị, hội thảo", "Ra mắt sản phẩm", "Hoạt động tình nguyện"],
@@ -178,7 +178,7 @@ export const SEGMENTS: Segment[] = [
       COMMON_FAQ.under,
       COMMON_FAQ.design,
     ],
-    seoTitle: "In áo team building, áo sự kiện, áo giải chạy theo yêu cầu",
+    seoTitle: "Đồng phục team building, áo team building in tên theo yêu cầu",
     seoDescription:
       "Thiết kế áo team building, áo du lịch công ty, áo sự kiện, giải chạy online: chia màu theo đội, in tên từng người, thu size cả công ty bằng 1 link. Có hoá đơn, giao toàn quốc.",
     lineup: { team: "TRIP 2026", color: "hong", people: [{ name: "ĐỘI HỒNG", color: "hong" }, { name: "ĐỘI XANH", color: "navy" }, { name: "ĐỘI XÁM", color: "xam" }] },

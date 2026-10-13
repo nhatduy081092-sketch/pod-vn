@@ -12,9 +12,9 @@ import { SEGMENTS } from "@pod/shared";
 
 export const revalidate = 300;
 export const metadata: Metadata = {
-  title: "Quà tặng doanh nghiệp, merchandise & đồng phục in logo",
+  title: "Đồng phục công ty, quà tặng & merchandise in logo – xem mockup ngay",
   description:
-    "YALA làm quà tặng doanh nghiệp, merchandise, quà Tết, welcome kit, đồng phục in logo theo yêu cầu: tư vấn theo ngân sách, mockup miễn phí, sản xuất và giao toàn quốc.",
+    "Hệ thống merchandise in logo cho doanh nghiệp: đồng phục công ty, áo đồng phục văn phòng, quà tặng, welcome kit, túi, bình, sổ. Tự đặt logo và xem mockup ngay, số lượng ít từ 10 sản phẩm, đơn lớn nhận báo giá theo ngân sách.",
   alternates: { canonical: "/doanh-nghiep" },
 };
 

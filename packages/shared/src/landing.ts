@@ -212,6 +212,8 @@ const LEGACY_B2B_STATS = [
 ];
 const LEGACY_B2B_CLIENTS = ["Saigon Co.op", "ShopeeFood", "Vietnam Airlines", "BIDV", "Samsung", "7-Eleven", "VNG", "Acecook", "Schneider Electric", "GHN"];
 /** Câu chữ mặc định cũ của trang Doanh nghiệp / thẻ Doanh nghiệp – còn nguyên trong DB thì dùng câu định vị mới */
+/** tiêu đề mặc định trước 13/10/2026 – CMS chưa sửa thì dùng tiêu đề mới (có "đồng phục công ty") */
+const PREV_HUB_TITLE = "Đồng phục & quà tặng in logo – thấy mockup và giá ngay";
 const LEGACY_HUB_TEXT = {
   eyebrow: "YALA cho doanh nghiệp",
   title: "Merchandise & quà tặng doanh nghiệp in logo theo yêu cầu",
@@ -322,7 +324,7 @@ export const DEFAULT_LANDING: LandingSettings = {
   b2bPricing: DEFAULT_B2B_PRICING,
   b2bHub: {
     eyebrow: "YALA cho team & doanh nghiệp",
-    title: "Đồng phục & quà tặng in logo – thấy mockup và giá ngay",
+    title: "Đồng phục công ty & quà tặng in logo – thấy mockup và giá ngay",
     subtitle: "Áo, túi, bình, sổ, hộp quà in logo. Đơn nhóm từ 10 sản phẩm đặt online, giao nhanh; đơn lớn hoặc nhiều món nhận báo giá & mockup miễn phí.",
     industries: [
       { name: "Đồng phục & may mặc", slug: "dong-phuc-may-mac", blurb: "Áo thun, polo, áo khoác, đồng phục sự kiện" },
@@ -576,7 +578,7 @@ export function mergeLanding(value: unknown): LandingSettings {
       ...d.b2bHub,
       ...v.b2bHub,
       eyebrow: !v.b2bHub?.eyebrow || v.b2bHub.eyebrow === LEGACY_HUB_TEXT.eyebrow ? d.b2bHub.eyebrow : v.b2bHub.eyebrow,
-      title: !v.b2bHub?.title || v.b2bHub.title === LEGACY_HUB_TEXT.title ? d.b2bHub.title : v.b2bHub.title,
+      title: !v.b2bHub?.title || v.b2bHub.title === LEGACY_HUB_TEXT.title || v.b2bHub.title === PREV_HUB_TITLE ? d.b2bHub.title : v.b2bHub.title,
       subtitle: !v.b2bHub?.subtitle || v.b2bHub.subtitle === LEGACY_HUB_TEXT.subtitle ? d.b2bHub.subtitle : v.b2bHub.subtitle,
       industries: v.b2bHub?.industries?.length ? v.b2bHub.industries : d.b2bHub.industries,
       // dữ liệu cũ chưa có từ khoá -> lấy từ khoá mặc định theo mã giải pháp

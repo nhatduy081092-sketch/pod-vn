@@ -10,7 +10,7 @@ import {
   type DesignHub,
   type ReadyDesign,
 } from "@pod/shared";
-import { getProduct } from "@/lib/api";
+import { getProduct, getSettings } from "@/lib/api";
 import { SITE_URL } from "@/lib/config";
 import { ReadyDesignCard } from "@/components/designs/ReadyDesignCard";
 import { DesignFonts } from "@/components/designs/DesignFonts";
@@ -28,7 +28,9 @@ export function hubDesigns(h: DesignHub): ReadyDesign[] {
 }
 
 export function hubTitle(h: DesignHub) {
-  return `${hubDesigns(h).length} ${h.keyword} ${YEAR()} – sửa chữ, in tên từng người`;
+  const n = hubDesigns(h).length;
+  if (h.titleTemplate) return h.titleTemplate.replace("{n}", String(n)).replace("{year}", String(YEAR()));
+  return `${n} ${h.keyword} ${YEAR()} – sửa chữ, in tên từng người`;
 }
 
 export function hubMetadata(h: DesignHub) {
@@ -41,6 +43,8 @@ export async function HubPage({ hub: h }: { hub: DesignHub }) {
   const designs = hubDesigns(h);
   const seg = segmentByKey(h.segment);
   const products = await Promise.all(h.garments.map((g) => getProduct(GARMENT_PRODUCT[g].slug).catch(() => null)));
+  // ngành hàng merchandise lấy từ CMS (không phải đồng phục) – lỗi thì ẩn khối
+  const merch = h.showMerch ? ((await getSettings().catch(() => null))?.b2bHub.industries ?? []).filter((i) => i.slug !== "dong-phuc-may-mac").slice(0, 4) : [];
   const priced = h.garments.map((g, i) => ({ g, p: products[i] })).filter((x) => x.p && x.p.basePrice > 0);
   const tierQtys = [...new Set(priced.flatMap((x) => x.p!.priceTiers.map((t) => t.minQty)))].sort((a, b) => a - b).slice(0, 4);
   const back = `/${h.slug}`;
@@ -165,6 +169,33 @@ export async function HubPage({ hub: h }: { hub: DesignHub }) {
         </section>
       )}
 
+      {/* Cùng bộ nhận diện: đồng phục là cửa vào, merchandise là phần mở rộng đơn */}
+      {merch.length > 0 && (
+        <section className="border-t border-line py-10 md:py-14">
+          <div className="container-site">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="h-section">Cùng bộ nhận diện: merchandise in logo</h2>
+                <p className="mt-2 max-w-2xl text-[15px] text-muted">Dùng chung logo, màu thương hiệu với đồng phục – xem mockup từng món, gom vào một báo giá.</p>
+              </div>
+              <Link href="/doanh-nghiep/san-pham" className="text-[15px] font-semibold underline underline-offset-4 hover:text-brand-dark">
+                Xem tất cả sản phẩm in logo
+              </Link>
+            </div>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {merch.map((i) => (
+                <li key={i.slug}>
+                  <Link href={`/doanh-nghiep/san-pham?nganh=${i.slug}`} className="block h-full rounded-xl border border-line bg-white p-4 transition hover:border-ink">
+                    <p className="font-semibold">{i.name}</p>
+                    <p className="mt-1 text-sm text-muted">{i.blurb}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
       {/* Kinh nghiệm */}
       <section className="border-t border-line bg-surface/60 py-10 md:py-14">
         <div className="container-site">
@@ -184,7 +215,7 @@ export async function HubPage({ hub: h }: { hub: DesignHub }) {
       <section className="py-10 md:py-12">
         <div className="container-site">
           <h2 className="text-xl font-bold">Công cụ miễn phí</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {TOOL_LINKS.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className="block h-full rounded-xl border border-line bg-white p-4 transition hover:border-ink">

@@ -164,7 +164,7 @@ export default async function Page() {
       <section className="bg-cream py-10">
         <div className="container-site">
           <h2 className="text-xl font-bold">Công cụ miễn phí khác</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {TOOL_LINKS.filter((l) => l.href !== PATH).map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className="block h-full rounded-xl border border-line bg-white p-4 transition hover:border-ink">

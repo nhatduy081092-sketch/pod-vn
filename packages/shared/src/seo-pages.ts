@@ -14,6 +14,10 @@ export type DesignHub = {
   name: string;
   /** cụm từ khoá chính – dùng trong title/H1: "[số] mẫu áo lớp đẹp [năm]" */
   keyword: string;
+  /** tiêu đề/H1 riêng thay mẫu mặc định; {n} = số mẫu, {year} = năm */
+  titleTemplate?: string;
+  /** hiện khối "Cùng bộ nhận diện" – merchandise in logo (YALA là hệ thống merchandise, đồng phục là cửa vào) */
+  showMerch?: boolean;
   intro: string;
   /** bộ mẫu (DESIGN_COLLECTIONS) lấy vào trang – bộ đầu là mẫu đồng phục có ô tên/số */
   collections: string[];
@@ -42,10 +46,36 @@ const FAQ_EDIT = {
 
 export const DESIGN_HUBS: DesignHub[] = [
   {
+    slug: "dong-phuc-ao-thun",
+    name: "Đồng phục áo thun",
+    keyword: "đồng phục áo thun",
+    titleTemplate: "Đồng phục áo thun in theo yêu cầu {year} – tự thiết kế, xem mockup ngay",
+    intro:
+      "Tự chỉnh logo, chữ, màu áo và thấy ngay mockup trên áo thật trước khi đặt in. In áo đồng phục, áo thun đồng phục cho công ty, lớp, nhóm, team building: in tên – số từng người, giá theo số lượng. Đơn nhóm từ 10 áo, số lượng ít vẫn đặt được.",
+    collections: ["dong-phuc-cong-ty", "team-building", "ao-lop", "doi-bong", "toi-gian"],
+    segment: "doanh-nghiep",
+    showMerch: true,
+    garments: ["tshirt", "longsleeve", "hoodie", "sweater"],
+    tips: [
+      { title: "Thấy áo thật trước khi đặt", body: "Mỗi thay đổi – logo, chữ, màu áo, vị trí in – hiện ngay trên mockup áo thật, xem được cả trên người mẫu. Cả nhóm duyệt cùng một bản trước khi in, không phải chờ bản vẽ qua lại." },
+      { title: "Số lượng ít vẫn in được", body: "Đơn nhóm từ 10 áo, ít hơn vẫn đặt được (tính như mua lẻ). Không cần đặt hàng trăm áo như khi may đồng phục theo mẫu riêng." },
+      { title: "In trên áo có sẵn, không may đo", body: "YALA in lên áo thun YALA Everyday có sẵn 6 màu: trắng, đen, kem, xám, navy, hồng – nên xem được mockup ngay và giao nhanh hơn may mới. Cần polo, sơ mi hoặc may theo mẫu riêng: gửi yêu cầu báo giá." },
+      { title: "Logo ngực trái hay chữ to giữa ngực", body: "Đồng phục mặc hằng ngày hợp logo nhỏ ngực trái; áo sự kiện, team building hợp tên to giữa ngực để lên ảnh rõ." },
+      { title: "Tên – số riêng từng người", body: "Một thiết kế chung, mỗi áo in đúng tên hoặc số của từng người, cùng giá với áo in chung. Thu tên, size cả nhóm bằng một link hoặc file Excel mẫu." },
+    ],
+    faq: [
+      FAQ_MIN,
+      { q: "YALA có may đồng phục theo số đo, theo mẫu riêng không?", a: "Đặt online là in trên áo thun có sẵn (YALA Everyday). Đồng phục polo, sơ mi hoặc may theo mẫu riêng: gửi yêu cầu báo giá ở trang Doanh nghiệp, YALA tư vấn chất liệu và số lượng." },
+      FAQ_NAMES,
+      FAQ_LINK,
+      FAQ_EDIT,
+    ],
+  },
+  {
     slug: "mau-ao-lop",
     name: "Mẫu áo lớp",
-    keyword: "mẫu áo lớp đẹp",
-    intro: "Mẫu áo lớp, áo kỷ yếu, áo họp lớp có sẵn tên lớp, niên khoá và ô tên từng bạn. Bấm vào mẫu để sửa chữ, đổi màu áo – cả lớp tự ghi size qua một link.",
+    keyword: "mẫu áo thun lớp đẹp",
+    intro: "Mẫu áo thun lớp, áo phông lớp, áo kỷ yếu, áo họp lớp có sẵn tên lớp, niên khoá và ô tên từng bạn. Bấm vào mẫu để sửa chữ, đổi màu áo – cả lớp tự ghi size qua một link.",
     collections: ["ao-lop", "hoc-sinh-sinh-vien", "20-11", "ban-than"],
     segment: "hoi-nhom",
     garments: ["tshirt", "hoodie", "sweater"],
@@ -60,8 +90,8 @@ export const DESIGN_HUBS: DesignHub[] = [
   {
     slug: "mau-ao-team-building",
     name: "Mẫu áo team building",
-    keyword: "mẫu áo team building đẹp",
-    intro: "Mẫu áo team building, du lịch công ty, year-end party – sửa tên công ty, khẩu hiệu đội, chia màu theo đội và in tên từng người trong cùng một đơn.",
+    keyword: "mẫu áo đồng phục team building",
+    intro: "Mẫu áo đồng phục team building, du lịch công ty, year-end party – sửa tên công ty, khẩu hiệu đội, chia màu theo đội và in tên từng người trong cùng một đơn.",
     collections: ["team-building", "dong-phuc-cong-ty", "viet-nam-du-lich", "mua-he-bien"],
     segment: "su-kien",
     garments: ["tshirt", "hoodie", "tote"],
@@ -92,10 +122,11 @@ export const DESIGN_HUBS: DesignHub[] = [
   {
     slug: "mau-dong-phuc-cong-ty",
     name: "Mẫu đồng phục công ty",
-    keyword: "mẫu đồng phục công ty đẹp",
-    intro: "Mẫu áo đồng phục công ty: tên công ty ngực trái, phòng ban, tên nhân viên – sửa theo nhận diện thương hiệu, xem mockup ngay và đặt theo danh sách nhân viên.",
+    keyword: "mẫu áo đồng phục công ty đẹp",
+    intro: "Mẫu áo đồng phục công ty, áo đồng phục văn phòng: tên công ty ngực trái, phòng ban, tên nhân viên – sửa theo nhận diện thương hiệu, xem mockup ngay và đặt theo danh sách nhân viên.",
     collections: ["dong-phuc-cong-ty", "team-building", "nghe-nghiep", "toi-gian"],
     segment: "doanh-nghiep",
+    showMerch: true,
     garments: ["tshirt", "hoodie", "sweater", "tote"],
     tips: [
       { title: "Logo ngực trái hay giữa ngực", body: "Áo mặc hằng ngày thường in logo nhỏ ở ngực trái, gọn và lịch sự; áo sự kiện hợp tên công ty lớn giữa ngực để lên ảnh rõ." },
