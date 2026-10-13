@@ -27,11 +27,14 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Tên image
         id: meta
         run: |
-          echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          TAG="$(git log -1 --format=%h --abbrev=7 -- . ':(exclude)*.md' ':(exclude)docs' ':(exclude)deploy')"
+          echo "tag=${TAG:-${GITHUB_SHA::7}}" >> "$GITHUB_OUTPUT"
           echo "repo=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
