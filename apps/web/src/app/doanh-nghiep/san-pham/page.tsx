@@ -27,7 +27,8 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }): 
   return {
     title,
     description: ind?.blurb ? `${ind.blurb}. In / thêu / khắc logo theo yêu cầu, báo giá theo số lượng, mockup miễn phí.` : "Quà tặng doanh nghiệp, merchandise, đồng phục in logo – lọc theo ngành hàng, dịp và ngân sách mỗi phần quà.",
-    alternates: { canonical: ind && !dip ? `${BASE}?nganh=${ind.slug}` : dip && !ind ? `${BASE}?dip=${dip.key}` : BASE },
+    // quà Tết có trang tĩnh /doanh-nghiep/qua-cuoi-nam – dồn tín hiệu SEO về đó
+    alternates: { canonical: ind && !dip ? `${BASE}?nganh=${ind.slug}` : dip && !ind ? (dip.key === "qua-tet" ? "/doanh-nghiep/qua-cuoi-nam" : `${BASE}?dip=${dip.key}`) : BASE },
     ...(filtered ? { robots: { index: false, follow: true } } : {}),
   };
 }

@@ -231,7 +231,8 @@ export default async function BusinessPage() {
                 <p className="mt-2 flex-1 text-[15px] leading-relaxed text-muted md:text-[15px]">{s.desc}</p>
                 {s.items && <p className="mt-3 text-sm font-medium text-ink/80">{s.items}</p>}
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm font-semibold">
-                  <Link href={`/doanh-nghiep/san-pham?dip=${s.key}`} className="text-ink hover:text-brand">
+                  {/* quà Tết có trang tĩnh riêng cho SEO */}
+                  <Link href={s.key === "qua-tet" ? "/doanh-nghiep/qua-cuoi-nam" : `/doanh-nghiep/san-pham?dip=${s.key}`} className="text-ink hover:text-brand">
                     Xem sản phẩm gợi ý →
                   </Link>
                   <a href={`/doanh-nghiep?dip=${s.key}#bao-gia`} className="text-muted hover:text-brand">
