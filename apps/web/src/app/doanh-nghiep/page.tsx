@@ -10,6 +10,16 @@ import { pastel } from "@/lib/pastel";
 import { B2BQuoteForm } from "@/components/b2b/B2BQuoteForm";
 import { SEGMENTS } from "@pod/shared";
 
+// từ khoá "đồng phục công ty số lượng ít" – nội dung khớp điều kiện mặc định trong CMS (b2bHub.terms)
+const FAQ = [
+  { q: "Đặt đồng phục công ty số lượng ít được không?", a: "Được. Đơn nhóm từ 10 áo, in theo thiết kế của công ty. Ít hơn 10 áo vẫn đặt được, tính như mua lẻ. Quà tặng khác theo số lượng tối thiểu ghi trên từng sản phẩm." },
+  { q: "Đặt 10 áo đồng phục thì bao lâu nhận được?", a: "Đơn áo in đặt online sản xuất trong 2–4 ngày, cộng thời gian giao hàng. Quà tặng số lượng lớn hoặc cần đóng hộp: báo thời gian theo từng dự án." },
+  { q: "In tên từng nhân viên có tính thêm phí không?", a: "Không. Khi đặt theo nhóm, mỗi áo in đúng tên một nhân viên. Có thể gửi link gom đơn để nhân viên tự ghi tên và size." },
+  { q: "Có xem mẫu trước khi đặt không?", a: "Có, miễn phí. Tự đặt logo lên áo bằng YALA Studio và xem mockup ngay, hoặc gửi logo để YALA làm mockup giúp trước khi báo giá." },
+  { q: "Có xuất hoá đơn VAT cho công ty không?", a: "Có. Ghi thông tin xuất hoá đơn khi đặt hàng, YALA xuất hoá đơn điện tử cho doanh nghiệp." },
+  { q: "Công ty có nhiều chi nhánh thì giao thế nào?", a: "Giao toàn quốc, một điểm hoặc chia nhiều chi nhánh theo danh sách công ty gửi." },
+];
+
 export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Đồng phục công ty, quà tặng & merchandise in logo – xem mockup ngay",
@@ -39,18 +49,21 @@ export default async function BusinessPage() {
     return c?.image && !/\.svg(\?|$)/i.test(c.image) ? [{ src: c.image, alt: i.name }] : [];
   });
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Service",
-    serviceType: "Quà tặng doanh nghiệp in logo",
-    provider: { "@type": "Organization", name: brand.name },
-    areaServed: "VN",
-    hasOfferCatalog: {
-      "@type": "OfferCatalog",
-      name: "Ngành hàng",
-      itemListElement: hub.industries.map((i) => ({ "@type": "OfferCatalog", name: i.name })),
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      serviceType: "Quà tặng doanh nghiệp in logo",
+      provider: { "@type": "Organization", name: brand.name },
+      areaServed: "VN",
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Ngành hàng",
+        itemListElement: hub.industries.map((i) => ({ "@type": "OfferCatalog", name: i.name })),
+      },
     },
-  };
+    { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
+  ];
 
   return (
     <>
@@ -100,6 +113,7 @@ export default async function BusinessPage() {
               hub.cases.length ? ["#du-an", "Dự án đã làm"] : null,
               ["#quy-trinh", "Quy trình"],
               ["#vi-sao", "Vì sao chọn YALA"],
+              ["#hoi-dap", "Hỏi đáp"],
               ["#bao-gia", "Nhận báo giá"],
             ].filter(Boolean) as [string, string][]
           ).map(([h, l]) => (
@@ -115,7 +129,8 @@ export default async function BusinessPage() {
         <section id="dieu-kien" className="scroll-mt-32 py-12 md:py-16">
           <div className="container-site">
             <p className="eyebrow">Điều kiện đặt hàng</p>
-            <h2 className="h-section mt-1.5">Rõ ràng trước khi bạn nhắn tin</h2>
+            <h2 className="h-section mt-1.5">Đồng phục công ty số lượng ít, từ 10 áo</h2>
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted">Điều kiện rõ ràng trước khi bạn nhắn tin – không cần đặt hàng trăm áo mới có đồng phục cho team.</p>
             <ul className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
               {hub.terms.map((t, i) => (
                 <li key={t.label} className={`rounded-2xl border border-line p-4 shadow-sticker-sm md:p-5 ${pastel(i)}`}>
@@ -299,6 +314,31 @@ export default async function BusinessPage() {
               </ul>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Hỏi đáp – từ khoá "đồng phục số lượng ít" */}
+      <section id="hoi-dap" className="scroll-mt-32 border-t border-line py-12 md:py-16">
+        <div className="container-site max-w-3xl">
+          <p className="eyebrow">Hỏi đáp</p>
+          <h2 className="h-section mt-1.5">Câu hỏi về đặt đồng phục số lượng ít</h2>
+          <div className="mt-6 divide-y divide-line border-y border-line">
+            {FAQ.map((f) => (
+              <details key={f.q} className="group py-4">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-[16px] font-semibold">
+                  {f.q}
+                  <span className="mt-0.5 text-xl leading-none text-muted transition group-open:rotate-45">+</span>
+                </summary>
+                <p className="mt-2 text-[15px] leading-relaxed text-ink/80">{f.a}</p>
+              </details>
+            ))}
+          </div>
+          <p className="mt-5 text-[15px]">
+            Muốn tự làm mẫu trước?{" "}
+            <Link href="/thiet-ke-ao-dong-phuc-online" className="font-semibold underline underline-offset-4 hover:text-brand">
+              Thiết kế áo đồng phục online →
+            </Link>
+          </p>
         </div>
       </section>
 
