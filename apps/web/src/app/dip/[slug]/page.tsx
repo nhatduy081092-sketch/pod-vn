@@ -202,7 +202,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="h-section">Mẫu chữ có sẵn cho {c.name}</h2>
-                <p className="mt-2 text-[15px] text-muted">Chọn mẫu, sửa tên – lời chúc theo ý bạn, in từ 1 chiếc.</p>
+                <p className="mt-2 text-[15px] text-muted">Chọn mẫu, sửa tên – lời chúc theo ý bạn, đặt in cho cả nhóm từ 10 áo.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {collections.map((col, i) => (

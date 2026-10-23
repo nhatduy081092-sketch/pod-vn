@@ -6,7 +6,7 @@ import { getSettings } from "@/lib/api";
 export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Quà tặng theo dịp – 20/10, Halloween, 20/11, Noel, Tết",
-  description: "Áo in chữ, quà in tên theo từng dịp lễ trong năm. Thiết kế online, in từ 1 chiếc, giao toàn quốc.",
+  description: "Áo in chữ, quà in tên theo từng dịp lễ trong năm. Thiết kế online, đặt in cho lớp, nhóm, công ty từ 10 áo, giao toàn quốc.",
   alternates: { canonical: "/dip" },
 };
 
