@@ -102,6 +102,7 @@ export function CampaignsCard({ value, onChange }: { value: S; onChange: (fn: (p
                 <Txt label="Tên ngắn (menu, thanh thông báo)" value={c.name} onChange={(v) => up(c.slug, { name: v })} />
                 <Txt label="Nhãn nhỏ" value={c.eyebrow} onChange={(v) => up(c.slug, { eyebrow: v })} />
                 <Txt label="Tiêu đề (H1)" value={c.title} onChange={(v) => up(c.slug, { title: v })} wide />
+                <Txt label="Tiêu đề Google (trống = tiêu đề | nhãn nhỏ)" value={c.seoTitle ?? ""} onChange={(v) => up(c.slug, { seoTitle: v })} wide />
                 <Txt label="Mô tả" value={c.subtitle} onChange={(v) => up(c.slug, { subtitle: v })} wide />
                 <Txt label="Bắt đầu" type="date" value={c.startsAt} onChange={(v) => up(c.slug, { startsAt: v })} />
                 <Txt label="Kết thúc" type="date" value={c.endsAt} onChange={(v) => up(c.slug, { endsAt: v })} />

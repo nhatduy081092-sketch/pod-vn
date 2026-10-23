@@ -19,6 +19,8 @@ export type Campaign = {
   name: string;
   eyebrow: string;
   title: string;
+  /** tiêu đề tab/Google, nên chứa từ khoá chính (trống = "tiêu đề | nhãn nhỏ") */
+  seoTitle?: string;
   subtitle: string;
   /** chạy từ ngày … đến ngày … (YYYY-MM-DD, giờ VN) */
   startsAt: string;
@@ -116,7 +118,8 @@ export const DEFAULT_CAMPAIGNS: Campaign[] = [
     enabled: true,
     name: "20/11",
     eyebrow: "Ngày Nhà giáo Việt Nam 20/11",
-    title: "Tri ân thầy cô, in lời cảm ơn",
+    title: "Áo lớp 20/11 in lời tri ân thầy cô",
+    seoTitle: "Áo lớp 20/11 – in lời tri ân thầy cô, đặt chung 1 đơn",
     subtitle: "Áo lớp, cốc, sổ in lời tri ân – cả lớp góp ý trên một thiết kế, đặt chung một đơn.",
     startsAt: "2026-10-25",
     endsAt: "2026-11-20",
@@ -160,7 +163,8 @@ export const DEFAULT_CAMPAIGNS: Campaign[] = [
     enabled: true,
     name: "Tết 2027",
     eyebrow: "Tết Đinh Mùi 2027",
-    title: "Áo Tết cả nhà, quà Tết in logo",
+    title: "Áo gia đình Tết 2027, quà Tết in logo",
+    seoTitle: "Áo gia đình Tết 2027 & quà Tết doanh nghiệp in logo",
     subtitle: "Áo gia đình chụp ảnh Tết, áo lì xì vui nhộn, quà Tết doanh nghiệp in logo – chốt sớm, giao trước Tết.",
     startsAt: "2026-12-15",
     endsAt: "2027-02-05",

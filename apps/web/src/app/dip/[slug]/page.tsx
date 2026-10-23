@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!r) return { title: "Không tìm thấy" };
   const { c } = r;
   return {
-    title: `${c.title} | ${c.eyebrow}`,
+    title: c.seoTitle || `${c.title} | ${c.eyebrow}`,
     description: c.subtitle,
     alternates: { canonical: `/dip/${c.slug}` },
     openGraph: { title: c.title, description: c.subtitle, images: c.heroImage ? [assetUrl(c.heroImage)] : undefined },

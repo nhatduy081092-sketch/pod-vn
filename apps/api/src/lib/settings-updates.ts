@@ -149,10 +149,44 @@ async function applyWhyChooseGroup(): Promise<boolean> {
   return done.length > 0;
 }
 
+/**
+ * SEO trang dịp (23/10/2026): H1 /dip/20-11, /dip/tet-2027 chứa từ khoá "áo lớp 20/11", "áo gia đình Tết 2027".
+ * Chỉ thay tiêu đề còn GIỐNG mặc định cũ; tiêu đề Google (seoTitle) tự lấy từ mặc định khi chưa lưu trong CMS.
+ */
+const CAMPAIGN_SEO_FLAG = "update:campaign-seo:2026-10-23";
+const OLD_CAMPAIGN_TITLES: Record<string, string> = {
+  "20-11": "Tri ân thầy cô, in lời cảm ơn",
+  "tet-2027": "Áo Tết cả nhà, quà Tết in logo",
+};
+
+async function applyCampaignSeo(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: CAMPAIGN_SEO_FLAG } })) return false;
+  const row = await prisma.setting.findUnique({ where: { key: "landing" } });
+  const done: string[] = [];
+  if (row) {
+    const cur = mergeLanding(row.value);
+    const d = mergeLanding(null).campaigns;
+    const campaigns = cur.campaigns.map((c) => {
+      const next = d.find((x) => x.slug === c.slug);
+      if (!next || OLD_CAMPAIGN_TITLES[c.slug] !== c.title) return c;
+      done.push(`/dip/${c.slug}`);
+      return { ...c, title: next.title };
+    });
+    if (done.length) {
+      await prisma.setting.update({ where: { key: "landing" }, data: { value: { ...cur, campaigns } } });
+      invalidateLanding();
+    }
+  }
+  await prisma.setting.create({ data: { key: CAMPAIGN_SEO_FLAG, value: { at: new Date().toISOString(), done } } });
+  console.log(`[settings] tiêu đề trang dịp: ${done.length ? done.join(", ") : "không có gì cần đổi"}`);
+  return done.length > 0;
+}
+
 export async function applySettingsUpdates() {
   let changed = await applyBundledBlanks();
   if (await applyGroupPivot()) changed = true;
   if (await applyWhyChooseGroup()) changed = true;
+  if (await applyCampaignSeo()) changed = true;
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });
