@@ -26,3 +26,6 @@ backups/
 
 # deploy trên VPS
 .deploy/
+
+# build cache của tsc
+*.tsbuildinfo
