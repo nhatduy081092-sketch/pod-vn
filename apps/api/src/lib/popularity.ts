@@ -51,7 +51,7 @@ export async function topProducts<S extends Prisma.ProductSelect>(opts: { where?
   const where: Prisma.ProductWhereInput = { isActive: true, category: { isActive: true }, ...opts.where, ...(opts.exclude?.length ? { id: { notIn: opts.exclude } } : {}) };
   const ranked = [...scores.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
   const hits = ranked.length
-    ? await prisma.product.findMany({ where: { ...where, id: { in: ranked.slice(0, 400), ...(opts.exclude?.length ? { notIn: opts.exclude } : {}) } }, select: { ...opts.select, id: true } })
+    ? await prisma.product.findMany({ where: { ...where, id: { in: ranked.slice(0, 400), ...(opts.exclude?.length ? { notIn: opts.exclude } : {}) } }, select: { ...opts.select, id: true } as Prisma.ProductSelect })
     : [];
   const order = new Map(ranked.map((id, i) => [id, i]));
   const sorted = (hits as unknown as { id: string }[]).sort((a, b) => order.get(a.id)! - order.get(b.id)!).slice(0, opts.take);
@@ -60,7 +60,7 @@ export async function topProducts<S extends Prisma.ProductSelect>(opts: { where?
       where: { ...where, id: { notIn: [...sorted.map((x) => x.id), ...(opts.exclude ?? [])] } },
       orderBy: [{ isBestSeller: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
       take: opts.take - sorted.length,
-      select: { ...opts.select, id: true },
+      select: { ...opts.select, id: true } as Prisma.ProductSelect,
     });
     sorted.push(...(fill as unknown as { id: string }[]));
   }
