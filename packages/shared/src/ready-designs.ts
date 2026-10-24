@@ -295,6 +295,10 @@ const EXTRA: Record<string, Spec[]> = {
   "gia-dinh": [
     ["Team mẹ", "stack", "Team\nmẹ", "trưởng phòng tài chính", "", "tshirt", "trang"],
     ["Team con", "stack", "Team\ncon", "phó phòng ăn vặt", "", "tshirt", "trang"],
+    ["Team ông bà", "badge", "Nhà mình", "Team ông bà", "cố vấn cấp cao"],
+    ["Nhà mình đón Tết", "script", "Xuân Đinh Mùi 2027", "Nhà mình\nđón Tết", "sum vầy là đủ", "tshirt", "kem"],
+    ["Gia đình là số một", "stack", "Gia đình\nlà số một", "đi đâu cũng về nhà", "", "tshirt", "navy"],
+    ["Bố là siêu nhân", "note", "Bố là\nsiêu nhân\n(mẹ là sếp)", "— cả nhà xác nhận", "", "tshirt", "trang"],
   ],
   "viet-nam-du-lich": [
     ["Hội An lên đèn", "lobster", "Quảng Nam", "Hội An\nlên đèn", "phố cổ về đêm", "tshirt", "kem"],

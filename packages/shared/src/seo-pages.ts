@@ -136,6 +136,30 @@ export const DESIGN_HUBS: DesignHub[] = [
     ],
     faq: [FAQ_EDIT, FAQ_NAMES, { q: "Công ty cần hoá đơn VAT?", a: "Ghi thông tin xuất hoá đơn (tên công ty, mã số thuế, email) vào ghi chú đơn hàng hoặc form báo giá – YALA xác nhận khi chốt đơn." }, FAQ_MIN],
   },
+  {
+    slug: "mau-ao-gia-dinh",
+    name: "Mẫu áo gia đình",
+    keyword: "mẫu áo gia đình đẹp",
+    // mùa Tết 2027 – sau Tết đổi lại năm
+    titleTemplate: "{n} mẫu áo gia đình đẹp, áo gia đình Tết 2027 – in tên từng người",
+    intro: "Mẫu áo gia đình cho ảnh Tết, chuyến đi chơi, họp mặt ông bà: Team bố, Team mẹ, Team con, áo Tết cả nhà. Bấm vào mẫu để sửa chữ, đổi màu áo, in tên từng người – cả nhà tự ghi size qua một link.",
+    collections: ["gia-dinh", "tet-li-xi"],
+    segment: "hoi-nhom",
+    garments: ["tshirt", "sweater", "hoodie"],
+    tips: [
+      { title: "Một thiết kế, mỗi người một chữ", body: "Giữ chung bố cục và màu, chỉ đổi dòng chữ: Team bố, Team mẹ, Team con, Team ông bà. Ảnh cả nhà nhìn đồng bộ mà mỗi người vẫn có áo riêng." },
+      { title: "Chọn màu cho ảnh Tết", body: "Áo trắng, kem lên ảnh sáng và hợp nền hoa đào, hoa mai; muốn nổi bật hơn chọn navy hoặc đen với chữ sáng. Đổi màu ngay trên mockup để xem trước cả bộ." },
+      { title: "Thu size cả nhà, cả họ", body: "Tạo link gom đơn từ thiết kế, gửi vào nhóm chat gia đình: mỗi người tự ghi tên và size, người đặt xem danh sách đếm sẵn rồi đặt một đơn." },
+      { title: "Đặt sớm trước Tết", body: "Sát Tết xưởng in và vận chuyển đều dồn đơn – chốt mẫu và size sớm để kịp chụp ảnh đầu năm." },
+    ],
+    faq: [
+      FAQ_EDIT,
+      { q: "Mỗi người một chữ khác nhau có đặt chung một đơn được không?", a: "Được. Dùng mẫu có ô tên hoặc sửa dòng chữ cho từng người; mỗi áo in đúng chữ của người đó, cùng giá với áo in chung, vẫn là một đơn." },
+      { q: "Có áo size trẻ em không?", a: "Size từng dòng áo ghi trong bảng size của sản phẩm. Cần size trẻ em mà sản phẩm chưa có: gửi yêu cầu báo giá, YALA tư vấn phôi phù hợp." },
+      FAQ_LINK,
+      FAQ_MIN,
+    ],
+  },
 ];
 
 export const findDesignHub = (slug: string) => DESIGN_HUBS.find((h) => h.slug === slug);
