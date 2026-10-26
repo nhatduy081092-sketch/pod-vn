@@ -15,7 +15,7 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "typecheck": {
-      "dependsOn": ["^generate"]
+      "dependsOn": ["^generate", "generate"]
     }
   }
 }
