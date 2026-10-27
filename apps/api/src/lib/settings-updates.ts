@@ -1,5 +1,5 @@
 import { prisma } from "@pod/db";
-import { mergeLanding } from "@pod/shared";
+import { GROUP_MIN_LINE, mergeLanding, OLD_MIN_LINE, PAGE_KEY_PREFIX } from "@pod/shared";
 import { invalidateLanding } from "./settings";
 import { applyBlankPhotos } from "./blank-photos";
 
@@ -182,11 +182,30 @@ async function applyCampaignSeo(): Promise<boolean> {
   return done.length > 0;
 }
 
+/**
+ * Trang Giới thiệu (27/10/2026): bỏ "In từ 1 chiếc, không yêu cầu số lượng tối thiểu" (trái định vị đơn nhóm từ 10).
+ * Chưa lưu trong CMS -> web dùng mặc định trong code (đã sửa). Đã lưu -> chỉ thay đúng dòng cũ, giữ phần chủ shop đã viết.
+ */
+const ABOUT_MIN_FLAG = "update:about-group-min:2026-10-27";
+
+async function applyAboutGroupMin(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: ABOUT_MIN_FLAG } })) return false;
+  const key = `${PAGE_KEY_PREFIX}gioi-thieu`;
+  const row = await prisma.setting.findUnique({ where: { key } });
+  const page = row?.value as { content?: string } | null;
+  const hit = typeof page?.content === "string" && page.content.includes(OLD_MIN_LINE);
+  if (hit) await prisma.setting.update({ where: { key }, data: { value: { ...page, content: page!.content!.replace(OLD_MIN_LINE, GROUP_MIN_LINE) } } });
+  await prisma.setting.create({ data: { key: ABOUT_MIN_FLAG, value: { at: new Date().toISOString(), changed: hit } } });
+  console.log(`[settings] trang Giới thiệu – số lượng tối thiểu: ${hit ? "đã đổi" : "không có gì cần đổi"}`);
+  return hit;
+}
+
 export async function applySettingsUpdates() {
   let changed = await applyBundledBlanks();
   if (await applyGroupPivot()) changed = true;
   if (await applyWhyChooseGroup()) changed = true;
   if (await applyCampaignSeo()) changed = true;
+  if (await applyAboutGroupMin()) changed = true;
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });

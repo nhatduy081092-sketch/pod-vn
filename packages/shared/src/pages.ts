@@ -21,6 +21,10 @@ export type PageUpsertInput = z.infer<typeof pageUpsertSchema>;
 
 export const pageSlugSchema = z.string().regex(/^[a-z0-9-]{2,60}$/, "Slug chỉ gồm a-z, 0-9, dấu gạch");
 
+/** Điều kiện số lượng (định vị đơn nhóm 11/10/2026) – dùng lại khi cập nhật trang Giới thiệu đã lưu trong CMS */
+export const GROUP_MIN_LINE = "Đơn nhóm từ 10 sản phẩm; ít hơn vẫn đặt được, tính như mua lẻ";
+export const OLD_MIN_LINE = "In từ 1 chiếc, không yêu cầu số lượng tối thiểu";
+
 const NOTE = "\n\n*Nội dung mẫu – vui lòng chỉnh theo thực tế doanh nghiệp trong CMS → Trang nội dung.*";
 
 export const DEFAULT_PAGES: ContentPage[] = [
@@ -29,12 +33,13 @@ export const DEFAULT_PAGES: ContentPage[] = [
     title: "Giới thiệu",
     showInFooter: true,
     sortOrder: 0,
-    content: `Chúng tôi là xưởng in áo theo yêu cầu, chuyên **in toàn thân (All-Over Print)** trên áo thun, hoodie, pijama, sơ mi, đồ thể thao và phụ kiện.
+    content: `YALA in áo, đồng phục và quà tặng theo yêu cầu cho **tập thể**: doanh nghiệp, CLB thể thao, lớp – hội nhóm – gia đình, team building và sự kiện.
 
 ## Chúng tôi làm gì
-- In từ 1 chiếc, không yêu cầu số lượng tối thiểu
-- Hỗ trợ thiết kế và gửi mockup duyệt miễn phí trước khi in
-- Nhận in đồng phục lớp, nhóm, công ty, sự kiện với giá sỉ theo số lượng
+- ${GROUP_MIN_LINE}
+- Tự thiết kế và xem mockup ngay trên web bằng YALA Studio; cần hỗ trợ thì YALA làm mockup miễn phí trước khi in
+- In tên, số riêng từng người trong cùng một đơn; thu tên – size cả nhóm bằng một link
+- Đồng phục, quà tặng, merchandise in logo cho doanh nghiệp – đơn lớn báo giá theo ngân sách
 
 ## Liên hệ
 Nhắn Zalo hoặc gọi hotline ở cuối trang để được tư vấn nhanh nhất.${NOTE}`,
