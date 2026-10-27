@@ -98,3 +98,31 @@ Xem `.env.production.example`. Lưu ý:
 ## Kiểm tra build trước khi lên VPS (máy Windows)
 
 `scripts\prod-check.cmd` – install, prisma validate/generate/migrate status, typecheck, `next build` web + cms (giả lập không có API như lúc build Docker), chạy API chế độ production + health check. Kết quả: `logs\prod-check-summary.txt`.
+
+## Tự deploy từ GitHub Actions (cài 1 lần, ~5 phút)
+
+Sau khi cài, mỗi lần push `main`: typecheck → build image → **tự chạy `deploy.sh` trên VPS** (backup, migrate, health check, tự rollback như chạy tay). Chưa cài thì bước deploy tự bỏ qua.
+
+Khoá dùng cho GitHub bị **khoá cứng** bằng `command=…`: lộ khoá cũng chỉ chạy được `deploy.sh`, không mở được shell, không chuyển tiếp cổng.
+
+```bash
+# 1. Trên VPS (root) – tạo khoá riêng cho GitHub Actions
+ssh-keygen -t ed25519 -N "" -f ~/yala-gha -C github-actions-deploy
+echo "command=\"cd /opt/yala && bash deploy/deploy.sh\",no-port-forwarding,no-agent-forwarding,no-X11-forwarding,no-pty $(cat ~/yala-gha.pub)" >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+cat ~/yala-gha                         # -> copy toàn bộ (cả dòng BEGIN/END) vào secret VPS_SSH_KEY
+ssh-keyscan -H 14.225.253.165          # -> copy vào secret VPS_KNOWN_HOSTS
+rm ~/yala-gha ~/yala-gha.pub           # xoá bản khoá riêng trên VPS sau khi đã copy
+```
+
+2. GitHub → repo `pod-vn` → Settings → Secrets and variables → Actions → **New repository secret**:
+
+| Secret | Giá trị |
+|---|---|
+| `VPS_HOST` | `14.225.253.165` |
+| `VPS_SSH_KEY` | nội dung `~/yala-gha` (khoá riêng) |
+| `VPS_KNOWN_HOSTS` | kết quả `ssh-keyscan` |
+
+3. Kiểm tra: GitHub → Actions → Build images → **Run workflow** (nhánh main). Job `deploy` xanh, tóm tắt ghi "Đã deploy lên 14.225.253.165".
+
+Thu hồi: xoá dòng `github-actions-deploy` trong `/root/.ssh/authorized_keys` và xoá secret `VPS_SSH_KEY`.

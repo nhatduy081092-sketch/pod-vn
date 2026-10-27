@@ -13,9 +13,10 @@ on:
       - "deploy/**"
   workflow_dispatch:
 
+# không huỷ lượt đang chạy: huỷ giữa bước deploy có thể cắt ngang migrate trên VPS -> xếp hàng chạy lần lượt
 concurrency:
   group: images-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -120,3 +121,27 @@ jobs:
             echo "### Image đã đẩy lên GHCR – tag \`${{ steps.meta.outputs.tag }}\`"
             echo "Trên VPS: \`cd /opt/yala && git pull && bash deploy/deploy.sh\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Tự deploy sau khi build xong. Chỉ chạy khi đã cài secret VPS_HOST + VPS_SSH_KEY (xem docs/ban-giao/tai-lieu/yala-deploy.md,
+  # mục "Tự deploy từ GitHub Actions"). Khoá trên VPS bị khoá cứng bằng command=… -> chỉ chạy được deploy.sh, không mở shell.
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Deploy lên VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$VPS_HOST" ] || [ -z "$VPS_SSH_KEY" ]; then
+            echo "Chưa cài VPS_HOST / VPS_SSH_KEY – bỏ qua tự deploy, chạy tay: cd /opt/yala && bash deploy/deploy.sh"
+            exit 0
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          if [ -n "$VPS_KNOWN_HOSTS" ]; then printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts; else ssh-keyscan -H "$VPS_HOST" > ~/.ssh/known_hosts 2>/dev/null; fi
+          ssh -i ~/.ssh/deploy -o BatchMode=yes -o ServerAliveInterval=30 "root@$VPS_HOST" deploy
+          echo "### Đã deploy lên $VPS_HOST" >> "$GITHUB_STEP_SUMMARY"
