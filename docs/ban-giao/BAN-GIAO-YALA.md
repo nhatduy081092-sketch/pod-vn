@@ -66,6 +66,15 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 - Studio giữ viền rõ để dễ thao tác.
 
 ## 5. Việc đang dở / nên làm tiếp
+
+> **Cập nhật 27/10/2026 (production đang chạy `5f9376f`):**
+> - Đã lên web: H1/SEO `/dip/20-11`, `/dip/tet-2027`; `/doanh-nghiep` H2 + FAQ "đồng phục số lượng ít, từ 10 áo"; trang mới `/doanh-nghiep/qua-cuoi-nam`, `/mau-ao-gia-dinh` (16 mẫu); trang Giới thiệu bỏ "In từ 1 chiếc, không yêu cầu số lượng tối thiểu"; vá next 15.5.27, react 19.3.1, hono, turbo.
+> - **CI/CD:** push `main` → typecheck → build image → **tự deploy** qua SSH (secret `VPS_HOST`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`; khoá khoá cứng `command=deploy.sh`). Không cần chạy `deploy.sh` tay. Xem `tai-lieu/yala-deploy.md`.
+> - Chủ shop **không đổi mật khẩu root** (đã quyết định) – không nhắc lại.
+> - SEO tiếp theo: #4 `/mau-ao-hop-lop` (trước 15/12), #5 `/bang-gia-in-ao` (chờ nhập bậc giá CMS), #6 slogan team building / ý nghĩa số áo.
+> - Còn "in từ 1 chiếc" ở trang chủ (CollectionGrid, slide, khối Từ ảnh thành áo), `/bo-suu-tap` – chủ shop chưa yêu cầu sửa.
+> - Nâng cấp lớn (Next 16, Prisma 7, Tailwind 4, zod 4) để sau Tết.
+> - Chưa làm: Search Console + gửi sitemap, bậc giá CMS, ảnh thật, sao lưu ra ngoài VPS.
 1. **Deploy** commit mới nhất (`1015bf2`) nếu chưa chạy: lệnh ở mục 2.
 2. **Bảo mật VPS**: mật khẩu root có thể đã lộ trong ảnh chụp terminal (11/10) → đổi qua trang quản lý nhà cung cấp VPS; sau đó cài **khoá SSH** để deploy không cần gõ mật khẩu.
 3. Nhập **bậc giá theo số lượng** cho 6 sản phẩm YALA Everyday (áo thun 199k, dài tay 229k, sweater 359k, hoodie 399k, jogger 349k, tote 129k) – mốc gợi ý 10/30/50/100.
