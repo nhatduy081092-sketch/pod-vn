@@ -37,6 +37,15 @@ export function modelPrompt(g: ModelGarment, c: ModelColor): string {
   );
 }
 
+/** Lệnh cho nút "Tạo bằng AI" trong CMS: ảnh nguồn = hình vẽ phôi trơn cùng dáng + màu -> người mẫu mặc đúng phôi đó */
+export function modelAiPrompt(g: ModelGarment, c: ModelColor): string {
+  return (
+    `The input image is a flat 2D illustration of the exact ${COLOR_EN[c]} ${GARMENT_EN[g]} to show. ` +
+    "Keep the same color, cut, neckline, sleeves, ribbing and proportions as the input – do not add pockets, prints or details that are not in it. " +
+    modelPrompt(g, c)
+  );
+}
+
 /** Ảnh có sẵn của YALA (ảnh lookbook) làm mặc định – CMS thay/xoá được (xoá = lưu photo rỗng) */
 export const DEFAULT_MODELS: Record<string, ModelPhoto> = {
   "tshirt-trang": { photo: "/showcase/ao-thun.webp", x: 0.39, y: 0.42, w: 0.17, h: 0.24 },

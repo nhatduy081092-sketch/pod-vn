@@ -98,7 +98,7 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 - Không commit secret (`.env*` bị ignore); không đưa URL/SECRET Apps Script lên GitHub hay CMS.
 - Không nhập mật khẩu/đăng nhập hộ (VPS, CMS, ChatGPT); không nhập thẻ, không thanh toán – chủ shop tự làm.
 - Chủ shop **không muốn dùng tiện ích Claude in Chrome** (đã từ chối 3 lần); thích nhận link hơn mở bảng trình duyệt bên cạnh.
-- Ảnh AI: không dùng Gemini; hạn mức chi ~**3 USD**; thường tự tạo ảnh bằng ChatGPT theo prompt Claude soạn.
+- Ảnh AI: **được dùng Gemini** (chủ shop đồng ý 30/10/2026, trước đó cấm), giữ hạn mức chi **3 USD**; chủ shop tự thêm `GEMINI_API_KEY` lên VPS. Ảnh AI chỉ là ảnh minh hoạ, không dùng làm ảnh khách/case study thật.
 - Không bịa đánh giá, logo khách hàng, số liệu; không dùng tên/khẳng định của OEM Group như của YALA; không chép logo thương hiệu khác.
 - Hiển thị giá/điều kiện nhất quán (đơn nhóm từ 10).
 

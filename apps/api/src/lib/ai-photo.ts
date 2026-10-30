@@ -166,13 +166,15 @@ function apiError(status: number, json: Record<string, unknown>): HTTPException 
 /**
  * Gọi Gemini: ảnh nguồn (PNG/JPG) + prompt -> ảnh mới (Buffer).
  * Thử API "interactions" (tài liệu hiện hành) trước, không được thì dùng generateContent (API cũ vẫn chạy).
+ * aspect "4:5" = ảnh dọc (người mẫu); mặc định vuông.
  */
-export async function generateAiPhoto(source: Buffer, sourceMime: string, prompt: string): Promise<Buffer> {
+export type AiAspect = "1:1" | "4:5";
+export async function generateAiPhoto(source: Buffer, sourceMime: string, prompt: string, aspect: AiAspect = "1:1"): Promise<Buffer> {
   if (!aiPhotoEnabled()) throw new HTTPException(400, { message: `Chưa cấu hình ${KEY_NAME()} trong .env.production` });
   const unit = await reserve();
   let ok = false;
   try {
-    const out = aiPhotoProvider() === "openai" ? await callOpenAI(source, sourceMime, prompt) : await callGemini(source, sourceMime, prompt);
+    const out = aiPhotoProvider() === "openai" ? await callOpenAI(source, sourceMime, prompt, aspect) : await callGemini(source, sourceMime, prompt, aspect);
     ok = true;
     return out;
   } finally {
@@ -180,7 +182,7 @@ export async function generateAiPhoto(source: Buffer, sourceMime: string, prompt
   }
 }
 
-async function callGemini(source: Buffer, sourceMime: string, prompt: string): Promise<Buffer> {
+async function callGemini(source: Buffer, sourceMime: string, prompt: string, aspect: AiAspect): Promise<Buffer> {
   const model = aiPhotoModel();
   const b64 = source.toString("base64");
 
@@ -190,7 +192,7 @@ async function callGemini(source: Buffer, sourceMime: string, prompt: string): P
       { type: "text", text: prompt },
       { type: "image", mime_type: sourceMime, data: b64 },
     ],
-    response_format: { type: "image", mime_type: "image/jpeg", aspect_ratio: "1:1", image_size: "1K" },
+    response_format: { type: "image", mime_type: "image/jpeg", aspect_ratio: aspect, image_size: "1K" },
   });
   let img = r.status < 300 ? findImage(r.json) : null;
 
@@ -198,7 +200,7 @@ async function callGemini(source: Buffer, sourceMime: string, prompt: string): P
     if (r.status >= 300) console.warn(`[ai-photo] interactions ${r.status} – thử generateContent`);
     r = await post(`${BASE}/models/${encodeURIComponent(model)}:generateContent`, {
       contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: sourceMime, data: b64 } }] }],
-      generationConfig: { responseModalities: ["IMAGE"], imageConfig: { aspectRatio: "1:1", imageSize: "1K" } },
+      generationConfig: { responseModalities: ["IMAGE"], imageConfig: { aspectRatio: aspect, imageSize: "1K" } },
     });
     img = r.status < 300 ? findImage(r.json) : null;
   }
@@ -211,13 +213,14 @@ async function callGemini(source: Buffer, sourceMime: string, prompt: string): P
 }
 
 /* ---------- OpenAI gpt-image: POST /v1/images/edits (ảnh nguồn + lời nhắc -> ảnh mới, giữ bố cục) ---------- */
-async function callOpenAI(source: Buffer, sourceMime: string, prompt: string, fidelity = true): Promise<Buffer> {
+async function callOpenAI(source: Buffer, sourceMime: string, prompt: string, aspect: AiAspect, fidelity = true): Promise<Buffer> {
   const model = aiPhotoModel();
   const fd = new FormData();
   fd.append("model", model);
   fd.append("prompt", prompt);
   fd.append("image", new Blob([new Uint8Array(source)], { type: sourceMime }), sourceMime === "image/png" ? "source.png" : sourceMime === "image/webp" ? "source.webp" : "source.jpg");
-  fd.append("size", "1024x1024");
+  // OpenAI không có 4:5 -> ảnh dọc gần nhất 2:3
+  fd.append("size", aspect === "4:5" ? "1024x1536" : "1024x1024");
   fd.append("quality", openaiQuality());
   fd.append("output_format", "jpeg");
   fd.append("n", "1");
@@ -241,7 +244,7 @@ async function callOpenAI(source: Buffer, sourceMime: string, prompt: string, fi
     const code = String(json.error?.code ?? json.error?.type ?? "");
     console.error(`[ai-photo] OpenAI ${res.status} ${code}: ${msg.slice(0, 300)}`);
     // model không hỗ trợ input_fidelity -> gửi lại không có tham số này
-    if (res.status === 400 && fidelity && /input_fidelity/i.test(msg)) return callOpenAI(source, sourceMime, prompt, false);
+    if (res.status === 400 && fidelity && /input_fidelity/i.test(msg)) return callOpenAI(source, sourceMime, prompt, aspect, false);
     if (res.status === 401) throw new HTTPException(400, { message: "OPENAI_API_KEY không hợp lệ – kiểm tra lại trong .env.production" });
     if (code === "insufficient_quota" || /quota|billing/i.test(msg)) throw new HTTPException(400, { message: "Tài khoản OpenAI hết tiền hoặc chưa nạp – vào platform.openai.com/settings/organization/billing nạp thêm" });
     if (res.status === 403 && /verif/i.test(msg)) throw new HTTPException(400, { message: "OpenAI yêu cầu xác minh tổ chức để dùng model ảnh này – đổi OPENAI_IMAGE_MODEL hoặc xác minh tại platform.openai.com/settings/organization/general" });

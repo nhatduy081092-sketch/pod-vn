@@ -32,6 +32,7 @@ import {
   designJsonSchema,
   designTemplateSchema,
   MODEL_SLOTS,
+  modelAiPrompt,
   modelPrompt,
 } from "@pod/shared";
 import { z } from "zod";
@@ -168,7 +169,7 @@ adminRoutes.put("/blanks/:key", async (c) => {
 /* ---------- Ảnh người mẫu mặc áo trơn ("Xem trên người mẫu" trong Studio) ---------- */
 adminRoutes.get("/models", async (c) => {
   const models = (await getLanding(true)).media.models;
-  return c.json({ items: MODEL_SLOTS.map((m) => ({ ...m, model: models[m.key]?.photo ? models[m.key] : null, prompt: modelPrompt(m.garment, m.color) })) });
+  return c.json({ items: MODEL_SLOTS.map((m) => ({ ...m, model: models[m.key]?.photo ? models[m.key] : null, prompt: modelPrompt(m.garment, m.color) })), aiEnabled: aiPhotoEnabled(), unit: aiPhotoUnitPrice() });
 });
 
 const modelPutSchema = z.object({
@@ -191,6 +192,20 @@ adminRoutes.put("/models/:key", async (c) => {
   await prisma.setting.upsert({ where: { key: "landing" }, update: { value }, create: { key: "landing", value } });
   invalidateLanding();
   return c.json({ model: models[key]?.photo ? models[key] : null });
+});
+
+/**
+ * Tạo ảnh người mẫu mặc phôi trơn bằng AI (nguồn = hình vẽ phôi cùng dáng + màu). Chỉ trả về ảnh, CHƯA lưu:
+ * chủ shop kéo khung vùng in trên ngực áo rồi bấm "Lưu khung" (PUT /models/:key).
+ */
+adminRoutes.post("/models/:key/ai", async (c) => {
+  const slot = MODEL_SLOTS.find((m) => m.key === c.req.param("key"));
+  if (!slot) throw notFound("Không có ô người mẫu này");
+  const src = await readFile(resolve(BASIC_DIR, `${slot.key}.jpg`)).catch(() => null);
+  if (!src) throw notFound("Thiếu hình phôi nguồn cho dáng/màu này");
+  const out = await generateAiPhoto(src, "image/jpeg", modelAiPrompt(slot.garment, slot.color), "4:5");
+  const { url } = await saveBuffer(out, "ai-");
+  return c.json({ url }, 201);
 });
 
 /** tạo ảnh thật cho 1 phôi bằng AI (OpenAI hoặc Gemini – xem lib/ai-photo) */

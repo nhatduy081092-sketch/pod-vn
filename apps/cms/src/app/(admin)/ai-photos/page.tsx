@@ -10,7 +10,7 @@ export const metadata = { title: "Ảnh thật AI" };
 export default async function AiPhotosPage() {
   const config = await adminFetch<{ enabled: boolean; model: string; budget?: number; spent?: number; unit?: number }>("/ai-photo/config").catch(() => ({ enabled: false, model: "", budget: 0, spent: 0, unit: 0 }));
   const blanks = await adminFetch<{ items: BlankItem[]; aiEnabled: boolean }>("/blanks").catch(() => ({ items: [] as BlankItem[], aiEnabled: false }));
-  const models = await adminFetch<{ items: ModelItem[] }>("/models").catch(() => ({ items: [] as ModelItem[] }));
+  const models = await adminFetch<{ items: ModelItem[]; aiEnabled?: boolean; unit?: number }>("/models").catch(() => ({ items: [] as ModelItem[], aiEnabled: false, unit: 0 }));
   const items: AiProduct[] = [];
   const gpt: GptProduct[] = [];
   for (let page = 1; page <= 12; page++) {
@@ -31,7 +31,7 @@ export default async function AiPhotosPage() {
         </p>
       )}
       {blanks.items.length > 0 && <BlankPhotos items={blanks.items} aiEnabled={blanks.aiEnabled} />}
-      {models.items.length > 0 && <ModelPhotos items={models.items} />}
+      {models.items.length > 0 && <ModelPhotos items={models.items} ai={{ enabled: !!models.aiEnabled, unit: models.unit ?? 0 }} />}
       <ChatGptPhotoStudio products={gpt} />
       <AiPhotoStudio products={items} enabled={config.enabled} model={config.model} />
     </>

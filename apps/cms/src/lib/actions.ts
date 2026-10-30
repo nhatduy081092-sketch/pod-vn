@@ -357,6 +357,17 @@ export async function setModelPhotoAction(key: string, model: { photo: string | 
   }
 }
 
+/** Ảnh người mẫu bằng AI – chỉ tạo ảnh, lưu khi chủ shop bấm "Lưu khung" (setModelPhotoAction) */
+export async function aiModelPhotoAction(key: string): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  try {
+    const r = await adminFetch<{ url: string }>(`/models/${encodeURIComponent(key)}/ai`, { method: "POST" });
+    revalidatePath("/ai-photos");
+    return { ok: true, url: r.url };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
 export async function aiBlankPhotoAction(key: string): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
   try {
     const r = await adminFetch<{ url: string }>(`/blanks/${encodeURIComponent(key)}/ai`, { method: "POST" });

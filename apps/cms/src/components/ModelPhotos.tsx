@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, type PointerEvent } from "react";
 import type { ModelPhoto } from "@pod/shared";
-import { setModelPhotoAction, uploadImageAction } from "@/lib/actions";
+import { aiModelPhotoAction, setModelPhotoAction, uploadImageAction } from "@/lib/actions";
 import { assetUrl, WEB_URL } from "@/lib/config";
 
 /** ảnh mặc định nằm ở web (/showcase/…), ảnh tải lên ở /uploads */
@@ -35,7 +35,7 @@ const DEFAULT_RECT = { x: 0.34, y: 0.3, w: 0.32, h: 0.3 };
  * Người mẫu mặc áo trơn: tải ảnh + kéo khung vùng in trên ngực áo.
  * Studio hiện nút "Người mẫu" khi sản phẩm cùng dáng có ảnh (áo tối dùng ảnh áo đen, còn lại ảnh áo trắng).
  */
-export function ModelPhotos({ items: initial }: { items: ModelItem[] }) {
+export function ModelPhotos({ items: initial, ai }: { items: ModelItem[]; ai?: { enabled: boolean; unit: number } }) {
   const [items, setItems] = useState(initial);
   const [open, setOpen] = useState<string | null>(null);
   const [copied, setCopied] = useState("");
@@ -56,7 +56,13 @@ export function ModelPhotos({ items: initial }: { items: ModelItem[] }) {
         </span>
       </div>
       <p className="mt-1 text-sm text-neutral-600">
-        Khách bấm <b>Người mẫu</b> trong Studio để xem thiết kế trên người thật. Cần 1 ảnh áo trắng + 1 ảnh áo đen cho mỗi dáng. Tạo bằng ChatGPT: bấm <i>Chép lệnh</i> → dán vào chatgpt.com → tải ảnh về →{" "}
+        Khách bấm <b>Người mẫu</b> trong Studio để xem thiết kế trên người thật. Cần 1 ảnh áo trắng + 1 ảnh áo đen cho mỗi dáng.{" "}
+        {ai?.enabled && (
+          <>
+            Nhanh nhất: bấm ô → <i>Tạo bằng AI</i> (~{ai.unit.toFixed(2)} USD/lần, trừ vào hạn mức) → kéo khung xanh đúng vùng in → <i>Lưu khung</i>.{" "}
+          </>
+        )}
+        {ai?.enabled ? "Hoặc tạo" : "Tạo"} bằng ChatGPT: bấm <i>Chép lệnh</i> → dán vào chatgpt.com → tải ảnh về →{" "}
         <i>Tải ảnh lên</i> → kéo khung xanh đúng vùng in trên ngực áo → <i>Lưu khung</i>. Chỉ dùng ảnh AI hoặc ảnh có quyền sử dụng (không dùng ảnh người thật chưa đồng ý).
       </p>
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -88,6 +94,7 @@ export function ModelPhotos({ items: initial }: { items: ModelItem[] }) {
       </div>
       {open && (
         <ModelEditor
+          ai={ai}
           item={items.find((x) => x.key === open)!}
           onClose={() => setOpen(null)}
           onSaved={(model) => {
@@ -100,11 +107,12 @@ export function ModelPhotos({ items: initial }: { items: ModelItem[] }) {
   );
 }
 
-function ModelEditor({ item, onClose, onSaved }: { item: ModelItem; onClose: () => void; onSaved: (m: ModelPhoto | null) => void }) {
+function ModelEditor({ item, ai, onClose, onSaved }: { item: ModelItem; ai?: { enabled: boolean; unit: number }; onClose: () => void; onSaved: (m: ModelPhoto | null) => void }) {
   const [photo, setPhoto] = useState(item.model?.photo ?? "");
   const [rect, setRect] = useState(item.model ? { x: item.model.x, y: item.model.y, w: item.model.w, h: item.model.h } : DEFAULT_RECT);
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
+  const [fresh, setFresh] = useState(false); // ảnh AI vừa tạo, chưa lưu
   const fileRef = useRef<HTMLInputElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ mode: "move" | "draw"; sx: number; sy: number; r: typeof rect } | null>(null);
@@ -143,11 +151,21 @@ function ModelEditor({ item, onClose, onSaved }: { item: ModelItem; onClose: () 
       const up = await uploadImageAction(fd);
       if (!up.ok) throw new Error(up.error);
       setPhoto(up.url);
+      setFresh(false);
     } catch (e) {
       setErr((e as Error).message);
     } finally {
       setBusy("");
     }
+  }
+  async function generate() {
+    setErr("");
+    setBusy("Đang tạo ảnh (30–90 giây)…");
+    const r = await aiModelPhotoAction(item.key);
+    setBusy("");
+    if (!r.ok) return setErr(r.error);
+    setPhoto(r.url);
+    setFresh(true);
   }
   async function save(remove = false) {
     setErr("");
@@ -194,11 +212,17 @@ function ModelEditor({ item, onClose, onSaved }: { item: ModelItem; onClose: () 
           <summary className="cursor-pointer font-medium">Lệnh ChatGPT</summary>
           <p className="mt-1 rounded bg-neutral-50 p-2 font-mono text-[11px] leading-relaxed">{item.prompt}</p>
         </details>
+        {fresh && <p className="mt-2 text-sm text-amber-700">Ảnh AI chưa lưu – kéo khung xanh đúng ngực áo{item.garment === "tote" ? " (mặt túi)" : ""} rồi bấm Lưu khung. Không ưng thì bấm Tạo lại.</p>}
         {err && <p className="mt-2 text-sm text-red-600">{err}</p>}
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" className="btn-ghost text-sm" disabled={!!busy} onClick={() => fileRef.current?.click()}>
             {photo ? "Đổi ảnh" : "Tải ảnh lên"}
           </button>
+          {ai?.enabled && (
+            <button type="button" className="btn-ghost text-sm" disabled={!!busy} onClick={() => void generate()}>
+              {fresh ? "Tạo lại" : "Tạo bằng AI"} (~{ai.unit.toFixed(2)} USD)
+            </button>
+          )}
           {item.model && (
             <button type="button" className="btn-ghost text-sm text-red-600" disabled={!!busy} onClick={() => confirm("Xoá ảnh người mẫu này?") && void save(true)}>
               Xoá
