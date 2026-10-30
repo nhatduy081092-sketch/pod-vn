@@ -8,7 +8,7 @@ import { pastel, tiltOf } from "@/lib/pastel";
 export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Mẫu áo chữ có sẵn theo chủ đề – sửa chữ miễn phí",
-  description: `${READY_DESIGNS.length} mẫu áo chữ tiếng Việt theo ${DESIGN_COLLECTIONS.length} chủ đề: gym, pickleball, cà phê, cặp đôi, gia đình, Tết… Chọn mẫu, sửa chữ, in theo nhóm hoặc từ 1 chiếc.`,
+  description: `${READY_DESIGNS.length} mẫu áo chữ tiếng Việt theo ${DESIGN_COLLECTIONS.length} chủ đề: gym, pickleball, cà phê, cặp đôi, gia đình, Tết… Chọn mẫu, sửa chữ, in tên từng người cho cả nhóm.`,
   alternates: { canonical: "/bo-suu-tap" },
 };
 
@@ -27,7 +27,7 @@ export default function CollectionsPage() {
           <h1 className="mt-3 max-w-3xl font-display text-[clamp(40px,6vw,76px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%]">
             {READY_DESIGNS.length} mẫu chữ có sẵn. Sửa chữ thoải mái.
           </h1>
-          <p className="mt-4 max-w-xl text-[16px] text-ink/80 md:text-lg">Chọn chủ đề → bấm mẫu → đổi chữ, đổi màu áo trong YALA Studio → đặt cho cả nhóm hoặc từ 1 chiếc.</p>
+          <p className="mt-4 max-w-xl text-[16px] text-ink/80 md:text-lg">Chọn chủ đề → bấm mẫu → đổi chữ, đổi màu áo trong YALA Studio → đặt cho cả nhóm, in tên từng người.</p>
           <nav className="mt-6 flex flex-wrap gap-2" aria-label="Nhóm chủ đề">
             {DESIGN_GROUPS.map((g, i) => (
               <a key={g.key} href={`#${g.key}`} className={`chip-sticker hover-wiggle ${pastel(i + 2)}`}>

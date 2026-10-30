@@ -53,8 +53,8 @@ export default async function HomePage() {
       <div className="border-t border-line bg-surface/60">
         <div className="container-site pt-10 md:pt-14">
           <p className="eyebrow">Mua lẻ</p>
-          <h2 className="h-section mt-1.5">Chỉ cần 1 chiếc cho riêng bạn?</h2>
-          <p className="mt-2 max-w-2xl text-[15px] text-muted">Vẫn đặt được từ 1 sản phẩm: chọn mẫu có sẵn hoặc tự thiết kế.</p>
+          <h2 className="h-section mt-1.5">Đặt lẻ cho riêng bạn?</h2>
+          <p className="mt-2 max-w-2xl text-[15px] text-muted">Ít hơn 10 sản phẩm vẫn đặt được, tính như mua lẻ: chọn mẫu có sẵn hoặc tự thiết kế.</p>
         </div>
         {settings.collections.enabled && <CollectionGrid title={settings.collections.title} />}
         <BestSellers title={settings.sectionTitles.bestSellers} items={bestSellers} />

@@ -254,7 +254,7 @@ export const DEFAULT_LANDING: LandingSettings = {
     line2: "NHẬN HÀNG CHỈ TỪ",
     highlight: "3",
     line3: "NGÀY.",
-    line4: "TỰ THIẾT KẾ ONLINE – IN TỪ 1 CHIẾC.",
+    line4: "TỰ THIẾT KẾ ONLINE – ĐƠN NHÓM TỪ 10.",
     href: "/thiet-ke",
   },
   hero: {
@@ -282,7 +282,7 @@ export const DEFAULT_LANDING: LandingSettings = {
     personal: {
       label: "Cá nhân",
       title: "In áo & quà theo ý bạn",
-      points: ["Tự thiết kế online, xem trước trên áo thật", "Hơn 90 mẫu chữ có sẵn theo chủ đề", "In từ 1 chiếc, giao toàn quốc"],
+      points: ["Tự thiết kế online, xem trước trên áo thật", "Hơn 90 mẫu chữ có sẵn theo chủ đề", "Đặt lẻ vẫn được, giao toàn quốc"],
       ctaLabel: "Bắt đầu thiết kế",
       href: "/thiet-ke",
       secondaryLabel: "Xem mẫu có sẵn",
@@ -292,7 +292,7 @@ export const DEFAULT_LANDING: LandingSettings = {
     business: {
       label: "Doanh nghiệp",
       title: "Merchandise & quà tặng doanh nghiệp",
-      points: ["Quà Tết, welcome kit, quà sự kiện, đồng phục", "In – thêu – khắc logo theo nhận diện thương hiệu", "Từ 1 chiếc · mockup & giá ngay · có hoá đơn VAT"],
+      points: ["Quà Tết, welcome kit, quà sự kiện, đồng phục", "In – thêu – khắc logo theo nhận diện thương hiệu", "Đơn nhóm từ 10 · mockup & giá ngay · có hoá đơn VAT"],
       ctaLabel: "Xem giải pháp doanh nghiệp",
       href: "/doanh-nghiep",
       secondaryLabel: "Nhận báo giá",
@@ -300,7 +300,7 @@ export const DEFAULT_LANDING: LandingSettings = {
       image: "",
     },
     services: [
-      { title: "In theo yêu cầu", desc: "Áo, túi, cốc, gối… in ảnh, chữ, logo từ 1 chiếc", href: "/thiet-ke" },
+      { title: "In theo yêu cầu", desc: "Áo, túi, cốc, gối… in ảnh, chữ, logo theo ý bạn", href: "/thiet-ke" },
       { title: "Merchandise thương hiệu", desc: "Bộ nhận diện trên sản phẩm: áo, túi, bình, sổ", href: "/doanh-nghiep#nganh-hang" },
       { title: "Quà tặng doanh nghiệp", desc: "Quà Tết, tri ân khách hàng, quà sự kiện theo ngân sách", href: "/doanh-nghiep#giai-phap" },
       { title: "Đồng phục", desc: "Đồng phục công ty, lớp, đội nhóm – in tên & số từng người", href: "/danh-muc/ao-thun" },
@@ -310,7 +310,7 @@ export const DEFAULT_LANDING: LandingSettings = {
   campaigns: DEFAULT_CAMPAIGNS,
   heroPlay: {
     enabled: true,
-    title: "Áo in chữ của riêng bạn. Từ 1 chiếc.",
+    title: "Áo in chữ cho cả nhóm. In tên từng người.",
     subtitle: "Chọn mẫu có sẵn hoặc tự thiết kế – xem trước ngay trên áo, sửa chữ thoải mái, giao toàn quốc.",
     ctaLabel: "Tự thiết kế ngay",
     href: "/thiet-ke",
@@ -387,10 +387,10 @@ export const DEFAULT_LANDING: LandingSettings = {
     enabled: true,
     intervalMs: 6000,
     items: [
-      { eyebrow: "Mùa lạnh 2026", title: "Hoodie & sweater nỉ bông", subtitle: "Ấm áp, dễ phối, in chữ – in logo theo ý bạn từ 1 chiếc.", ctaLabel: "Xem mẫu mùa lạnh", href: "/bo-suu-tap/mua-thu-ha-noi", image: "/showcase/hoodie.webp", bg: "#bca796", focus: "70% 35%", startsAt: "", endsAt: "" },
+      { eyebrow: "Mùa lạnh 2026", title: "Hoodie & sweater nỉ bông", subtitle: "Ấm áp, dễ phối – in chữ, in logo cho cả nhóm, tên riêng từng người.", ctaLabel: "Xem mẫu mùa lạnh", href: "/bo-suu-tap/mua-thu-ha-noi", image: "/showcase/hoodie.webp", bg: "#bca796", focus: "70% 35%", startsAt: "", endsAt: "" },
       { eyebrow: "Bộ sưu tập mới", title: "Pickleball cho vui", subtitle: "Ra sân 5 giờ sáng, mặc áo chữ khiến cả hội bật cười.", ctaLabel: "Xem mẫu pickleball", href: "/bo-suu-tap/pickleball", image: "/showcase/the-thao.webp", bg: "#e2e1df", focus: "62% 40%", startsAt: "", endsAt: "" },
       { eyebrow: "Mặc đôi", title: "Áo cặp đôi, áo nhóm bạn", subtitle: "Chọn mẫu có sẵn, sửa tên – ngày kỷ niệm trong 1 phút.", ctaLabel: "Xem mẫu cặp đôi", href: "/bo-suu-tap/cap-doi", image: "/showcase/ao-thun.webp", bg: "#e5e5e9", focus: "68% 30%", startsAt: "", endsAt: "" },
-      { eyebrow: "YALA Studio", title: "Tự thiết kế áo của bạn", subtitle: "Tải ảnh, thêm chữ, xem trước trên áo thật – in từ 1 chiếc, giao toàn quốc.", ctaLabel: "Bắt đầu thiết kế", href: "/thiet-ke", image: "/showcase/so-mi-polo.webp", bg: "#e6e8ea", focus: "60% 40%", startsAt: "", endsAt: "" },
+      { eyebrow: "YALA Studio", title: "Tự thiết kế áo của bạn", subtitle: "Tải ảnh, thêm chữ, xem trước trên áo thật – đặt cho cả nhóm, giao toàn quốc.", ctaLabel: "Bắt đầu thiết kế", href: "/thiet-ke", image: "/showcase/so-mi-polo.webp", bg: "#e6e8ea", focus: "60% 40%", startsAt: "", endsAt: "" },
     ],
   },
   seasonal: {
@@ -406,14 +406,14 @@ export const DEFAULT_LANDING: LandingSettings = {
     enabled: true,
     eyebrow: "Custom áo theo ý bạn",
     title: "Từ tấm ảnh của bạn thành chiếc áo",
-    subtitle: "Gửi ảnh, chữ hoặc logo – YALA Studio cho xem trước trên áo, xưởng in đúng file từ 1 chiếc.",
+    subtitle: "Gửi ảnh, chữ hoặc logo – YALA Studio cho xem trước trên áo, xưởng in đúng file bạn đã xem.",
     before: "/showcase/ao-thun.webp",
     after: "",
     beforeLabel: "Ảnh gốc",
     afterLabel: "Áo in xong",
     ctaLabel: "Thử in ảnh của bạn",
     href: "/thiet-ke",
-    points: ["Xem trước trên áo trước khi đặt", "Kiểm tra độ nét ảnh tự động", "In từ 1 chiếc, giao toàn quốc"],
+    points: ["Xem trước trên áo trước khi đặt", "Kiểm tra độ nét ảnh tự động", "Đơn nhóm từ 10, giao toàn quốc"],
   },
   lookbook: {
     enabled: true,

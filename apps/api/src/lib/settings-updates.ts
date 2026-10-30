@@ -200,12 +200,93 @@ async function applyAboutGroupMin(): Promise<boolean> {
   return hit;
 }
 
+/**
+ * Câu "từ 1 chiếc" còn lại (30/10/2026): dải chữ đầu trang, khối Cá nhân/Doanh nghiệp, ảnh lớn trang chủ, slide,
+ * Before/After, trang dịp 20/10 + Noel, mô tả áo dài tay – cho khớp định vị đơn nhóm từ 10.
+ * Chỉ thay câu còn GIỐNG mặc định cũ (cũ -> mới); câu chủ shop đã sửa trong CMS giữ nguyên.
+ */
+const ONE_PIECE_FLAG = "update:group-min-landing:2026-10-30";
+const ONE_PIECE: Record<string, string> = {
+  "TỰ THIẾT KẾ ONLINE – IN TỪ 1 CHIẾC.": "TỰ THIẾT KẾ ONLINE – ĐƠN NHÓM TỪ 10.",
+  "In từ 1 chiếc, giao toàn quốc": "Đặt lẻ vẫn được, giao toàn quốc",
+  "Từ 1 chiếc · mockup & giá ngay · có hoá đơn VAT": "Đơn nhóm từ 10 · mockup & giá ngay · có hoá đơn VAT",
+  "Áo, túi, cốc, gối… in ảnh, chữ, logo từ 1 chiếc": "Áo, túi, cốc, gối… in ảnh, chữ, logo theo ý bạn",
+  "Áo in chữ của riêng bạn. Từ 1 chiếc.": "Áo in chữ cho cả nhóm. In tên từng người.",
+  "Ấm áp, dễ phối, in chữ – in logo theo ý bạn từ 1 chiếc.": "Ấm áp, dễ phối – in chữ, in logo cho cả nhóm, tên riêng từng người.",
+  "Tải ảnh, thêm chữ, xem trước trên áo thật – in từ 1 chiếc, giao toàn quốc.": "Tải ảnh, thêm chữ, xem trước trên áo thật – đặt cho cả nhóm, giao toàn quốc.",
+  "Gửi ảnh, chữ hoặc logo – YALA Studio cho xem trước trên áo, xưởng in đúng file từ 1 chiếc.":
+    "Gửi ảnh, chữ hoặc logo – YALA Studio cho xem trước trên áo, xưởng in đúng file bạn đã xem.",
+  "Áo, túi, cốc in tên – lời chúc riêng cho mẹ, cho nàng, cho chị em đồng nghiệp. Thiết kế online, in từ 1 chiếc.":
+    "Áo, túi, cốc in tên – lời chúc riêng cho mẹ, cho nàng, cho chị em đồng nghiệp. Thiết kế online, xem trước rồi đặt.",
+  "Từ 1 chiếc": "Xem trước online",
+  "Có. Mở YALA Studio, sửa chữ trên mẫu có sẵn hoặc tự gõ lời chúc, xem trước rồi đặt in từ 1 chiếc.":
+    "Có. Mở YALA Studio, sửa chữ trên mẫu có sẵn hoặc tự gõ lời chúc, xem trước rồi đặt in.",
+  "Áo len, hoodie, áo gia đình mùa Giáng sinh – kèm túi, cốc in lời chúc. Thiết kế online, in từ 1 chiếc.":
+    "Áo len, hoodie, áo gia đình mùa Giáng sinh – kèm túi, cốc in lời chúc. Thiết kế online, cả nhà đặt chung một đơn.",
+};
+const OLD_LONGSLEEVE_DESC = "Áo thun dài tay form rộng cho những ngày se lạnh. In theo thiết kế riêng từ 1 chiếc.";
+
+async function applyGroupMinLanding(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: ONE_PIECE_FLAG } })) return false;
+  const row = await prisma.setting.findUnique({ where: { key: "landing" } });
+  const done: string[] = [];
+  if (row) {
+    const cur = mergeLanding(row.value);
+    // mỗi chỗ có câu cũ -> ghi tên chỗ đó 1 lần vào nhật ký
+    const fix =
+      (where: string, map = ONE_PIECE) =>
+      (s: string) => {
+        const to = map[s];
+        if (to === undefined) return s;
+        if (!done.includes(where)) done.push(where);
+        return to;
+      };
+    // cùng câu cũ nhưng Before/After nói về đơn nhóm, khối Cá nhân nói về đặt lẻ
+    const baMap = { ...ONE_PIECE, "In từ 1 chiếc, giao toàn quốc": "Đơn nhóm từ 10, giao toàn quốc" };
+    const p = cur.positioning;
+    const next = {
+      ...cur,
+      topBanner: { ...cur.topBanner, line4: fix("dải chữ đầu trang")(cur.topBanner.line4) },
+      positioning: {
+        ...p,
+        personal: { ...p.personal, points: p.personal.points.map(fix("khối Cá nhân")) },
+        business: { ...p.business, points: p.business.points.map(fix("khối Doanh nghiệp")) },
+        services: p.services.map((x) => ({ ...x, desc: fix("dịch vụ In theo yêu cầu")(x.desc) })),
+      },
+      heroPlay: { ...cur.heroPlay, title: fix("tiêu đề ảnh lớn trang chủ")(cur.heroPlay.title) },
+      slides: { ...cur.slides, items: cur.slides.items.map((x) => ({ ...x, subtitle: fix(`slide “${x.title}”`)(x.subtitle) })) },
+      beforeAfter: {
+        ...cur.beforeAfter,
+        subtitle: fix("Before/After", baMap)(cur.beforeAfter.subtitle),
+        points: cur.beforeAfter.points.map(fix("Before/After", baMap)),
+      },
+      campaigns: cur.campaigns.map((c) => {
+        const f = fix(`/dip/${c.slug}`);
+        return { ...c, subtitle: f(c.subtitle), ribbon: c.ribbon.map(f), faq: c.faq.map((q) => ({ ...q, a: f(q.a) })) };
+      }),
+    };
+    if (done.length) {
+      await prisma.setting.update({ where: { key: "landing" }, data: { value: next } });
+      invalidateLanding();
+    }
+  }
+  const { count } = await prisma.product.updateMany({
+    where: { description: OLD_LONGSLEEVE_DESC },
+    data: { description: "Áo thun dài tay form rộng cho những ngày se lạnh. In theo thiết kế riêng, in tên từng người cho cả nhóm." },
+  });
+  if (count) done.push("mô tả áo thun dài tay");
+  await prisma.setting.create({ data: { key: ONE_PIECE_FLAG, value: { at: new Date().toISOString(), done } } });
+  console.log(`[settings] bỏ "từ 1 chiếc": ${done.length ? done.join(", ") : "không có gì cần đổi"}`);
+  return done.length > 0;
+}
+
 export async function applySettingsUpdates() {
   let changed = await applyBundledBlanks();
   if (await applyGroupPivot()) changed = true;
   if (await applyWhyChooseGroup()) changed = true;
   if (await applyCampaignSeo()) changed = true;
   if (await applyAboutGroupMin()) changed = true;
+  if (await applyGroupMinLanding()) changed = true;
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });

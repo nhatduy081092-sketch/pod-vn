@@ -190,7 +190,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
           <h2 className="h-section">Chọn sản phẩm để thiết kế</h2>
           <p className="mt-2 text-[15px] text-ink/70">{total > 0 ? `${total} sản phẩm tự thiết kế được` : "Đang cập nhật sản phẩm"}</p>
 
-          {/* Phôi YALA in từ 1 chiếc – ảnh chụp thật (ảnh phôi trơn khi đã có, không thì ảnh người mẫu) */}
+          {/* Phôi YALA – ảnh chụp thật (ảnh phôi trơn khi đã có, không thì ảnh người mẫu) */}
           {!category && page === 1 && (
             <ul className="mt-6 grid gap-4 sm:grid-cols-2">
               {EVERYDAY.map((e, i) => {
@@ -201,7 +201,7 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
                     <Link href={`/thiet-ke/${e.slug}`} className={`sticker tilt hover-wiggle grid grid-cols-[42%_1fr] overflow-hidden ${pastel(i + 1)}`} style={{ ["--r" as string]: `${i ? 1 : -1}deg` }}>
                       <img src={assetUrl(photo)} alt={e.name} loading="lazy" className="h-full min-h-[150px] w-full border-r-2 border-ink object-cover" style={{ objectPosition: e.pos }} />
                       <span className="flex flex-col justify-center gap-1 p-4 md:p-5">
-                        <span className="text-[12px] font-bold uppercase tracking-wide text-ink/60">Phôi YALA · in từ 1 chiếc</span>
+                        <span className="text-[12px] font-bold uppercase tracking-wide text-ink/60">Phôi YALA · đơn nhóm từ 10</span>
                         <span className="font-display text-[clamp(20px,2.2vw,28px)] font-extrabold leading-tight">{e.name}</span>
                         {price && <span className="text-[15px] font-semibold">Từ {formatVND(price.basePrice)}</span>}
                         <span className="mt-1 text-sm font-bold underline decoration-2 underline-offset-4">Thiết kế ngay →</span>
@@ -383,7 +383,7 @@ function StudioCard({ p, priority }: { p: ProductCardData; priority: boolean }) 
       </h3>
       <p className="mt-1 text-[15px] font-semibold md:text-base">{shortPriceLabel(p, formatVND)}</p>
       <p className={`mb-2 min-h-[1.4em] text-[12px] font-semibold ${p.minQty && p.minQty > 1 ? "text-ink/55" : "text-[#15803d]"}`}>
-        {p.minQty && p.minQty > 1 ? `Đặt từ ${p.minQty} sản phẩm` : p.basePrice > 0 ? "In từ 1 chiếc" : ""}
+        {p.minQty && p.minQty > 1 ? `Đặt từ ${p.minQty} sản phẩm` : p.basePrice > 0 ? "Đơn nhóm từ 10" : ""}
       </p>
       <Link href={`/thiet-ke/${p.slug}`} className="btn-primary mt-auto w-full py-2 text-[13px] md:text-sm">
         <IconSparkle className="h-3.5 w-3.5" aria-hidden /> Thiết kế ngay

@@ -11,7 +11,7 @@ export function CollectionGrid({ title }: { eyebrow?: string; title: string }) {
   return (
     <section className="py-12 md:py-20" aria-label={title}>
       <DesignFonts designs={covers.map((x) => x.d)} />
-      <SectionTitle href="/bo-suu-tap" hrefLabel={`Cả ${DESIGN_COLLECTIONS.length} chủ đề`} sub="Mẫu chữ tiếng Việt do YALA thiết kế – sửa chữ, đổi màu áo, in từ 1 chiếc.">
+      <SectionTitle href="/bo-suu-tap" hrefLabel={`Cả ${DESIGN_COLLECTIONS.length} chủ đề`} sub="Mẫu chữ tiếng Việt do YALA thiết kế – sửa chữ, đổi màu áo, thêm tên từng người.">
         {title}
       </SectionTitle>
       <ul className="container-site mt-8 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 md:mt-10 md:grid-cols-4 md:gap-x-6 md:gap-y-9 xl:grid-cols-6">
