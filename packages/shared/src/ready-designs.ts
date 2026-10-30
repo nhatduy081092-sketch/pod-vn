@@ -364,7 +364,7 @@ const EXTRA: Record<string, Spec[]> = {
 
 /** Nhóm bộ sưu tập để duyệt nhanh */
 export const DESIGN_GROUPS: { key: string; name: string; slugs: string[] }[] = [
-  { key: "dong-phuc", name: "Đồng phục nhóm (in tên từng người)", slugs: ["ao-lop", "doi-bong", "dong-phuc-cong-ty", "team-building"] },
+  { key: "dong-phuc", name: "Đồng phục nhóm (in tên từng người)", slugs: ["ao-lop", "hop-lop", "doi-bong", "dong-phuc-cong-ty", "team-building"] },
   { key: "mua-le", name: "Dịp lễ sắp tới", slugs: ["20-10", "halloween", "20-11", "noel", "tet-li-xi"] },
   { key: "dip-le", name: "Mùa & du lịch", slugs: ["mua-thu-ha-noi", "mua-he-bien", "viet-nam-du-lich", "tu-hao-viet-nam"] },
   { key: "so-thich", name: "Sở thích", slugs: ["chuyen-phong-gym", "pickleball", "chay-bo", "ca-phe-tra-sua", "doi-game-thu", "karaoke", "foodie", "hoang-thuong-meo-cun"] },
@@ -383,6 +383,19 @@ export const DESIGN_COLLECTIONS: DesignCollection[] = [
     ["Họp lớp 10 năm", "classTee", "10 năm", "Họp lớp · gặp lại nhau", "Tên bạn", "tshirt", "kem"],
     ["Số thứ tự trong lớp", "jersey", "12A1 · 2026", "26", "Tên bạn", "tshirt", "trang"],
     ["Lớp chuyên", "classTee", "Chuyên Toán", "Niên khoá 2024 – 2027", "Tên bạn", "hoodie", "navy"],
+  ]),
+  // Họp lớp dịp Tết (trang /mau-ao-hop-lop): mốc năm gặp lại khớp với năm ra trường, sửa trong Studio
+  C("hop-lop", "Họp lớp & họp khoá", "Tên lớp, năm ra trường, mốc 10 – 20 năm gặp lại và tên từng bạn.", "#f1e7d8", "#b45309", "tshirt", "trang", [
+    ["Lớp cũ gặp lại", "classTee", "12A1", "10 năm gặp lại · 2027", "Tên bạn"],
+    ["Họp lớp 20 năm", "classTee", "20 năm", "Họp lớp khoá 2007", "Tên bạn", "sweater", "navy"],
+    ["Họp khoá 30 năm", "classTee", "30 năm", "Họp khoá · 1997 – 2027", "Tên bạn", "sweater", "kem"],
+    ["Tên trường & lớp", "corpCenter", "Tên trường\nLớp 12A1", "Họp lớp 2027 · 10 năm gặp lại", "Tên bạn", "tshirt", "navy"],
+    ["Họp lớp đầu xuân", "script", "Xuân Đinh Mùi 2027", "Họp lớp\nđầu xuân", "Tết này gặp lại nhau", "hoodie", "kem"],
+    ["Họp lớp không hỏi lương", "stack", "Họp lớp\nkhông hỏi\nlương", "chỉ hỏi thăm nhau", "", "tshirt", "den"],
+    ["Già rồi vẫn quậy", "note", "Già rồi\nvẫn quậy\nnhư hồi 17", "— lớp mình ngày ấy", "", "tshirt", "xam"],
+    ["Tóc bạc lớp vẫn xanh", "script", "Họp lớp 25 năm", "Tóc đã bạc\nlớp vẫn xanh", "khoá 1999 – 2002", "sweater", "den"],
+    ["Hội bàn cuối", "badge", "Ngày xưa", "Bàn cuối", "giờ vẫn ngồi chung", "tshirt", "trang"],
+    ["Lớp cũ tình chưa cũ", "lobster", "Họp lớp 2027", "Lớp cũ\ntình chưa cũ", "gặp lại là vui", "tshirt", "kem"],
   ]),
   C("doi-bong", "Đội bóng & CLB thể thao", "Tên đội, số áo và tên từng thành viên – in riêng từng áo.", "#e3ebe6", "#16a34a", "tshirt", "navy", [
     ["Áo đội số lớn", "jersey", "FC Anh Em", "10", "Tên"],

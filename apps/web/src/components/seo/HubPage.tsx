@@ -7,6 +7,7 @@ import {
   GARMENT_PRODUCT,
   GROUP_MIN_QTY,
   segmentByKey,
+  tetSeasonYear,
   type DesignHub,
   type ReadyDesign,
 } from "@pod/shared";
@@ -29,10 +30,11 @@ export function hubDesigns(h: DesignHub): ReadyDesign[] {
 
 export function hubTitle(h: DesignHub) {
   const n = hubDesigns(h).length;
-  if (h.titleTemplate) return h.titleTemplate.replace("{n}", String(n)).replace("{year}", String(YEAR()));
+  if (h.titleTemplate) return h.titleTemplate.replace("{n}", String(n)).replace("{year}", String(YEAR())).replace("{tet}", String(tetSeasonYear()));
   return `${n} ${h.keyword} ${YEAR()} – sửa chữ, in tên từng người`;
 }
 
+/** Gọi trong generateMetadata của trang: `export const metadata` chỉ tính 1 lần khi nạp module -> {year}/{tet} trên tiêu đề đứng yên tới lần deploy sau */
 export function hubMetadata(h: DesignHub) {
   const title = hubTitle(h);
   return { title: { absolute: `${title} | YALA` }, description: h.intro, alternates: { canonical: `/${h.slug}` }, openGraph: { title, description: h.intro } };

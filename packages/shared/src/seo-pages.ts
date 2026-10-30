@@ -14,7 +14,7 @@ export type DesignHub = {
   name: string;
   /** cụm từ khoá chính – dùng trong title/H1: "[số] mẫu áo lớp đẹp [năm]" */
   keyword: string;
-  /** tiêu đề/H1 riêng thay mẫu mặc định; {n} = số mẫu, {year} = năm */
+  /** tiêu đề/H1 riêng thay mẫu mặc định; {n} = số mẫu, {year} = năm, {tet} = năm của mùa Tết (tetSeasonYear) */
   titleTemplate?: string;
   /** hiện khối "Cùng bộ nhận diện" – merchandise in logo (YALA là hệ thống merchandise, đồng phục là cửa vào) */
   showMerch?: boolean;
@@ -88,6 +88,33 @@ export const DESIGN_HUBS: DesignHub[] = [
     faq: [FAQ_EDIT, FAQ_NAMES, FAQ_LINK, FAQ_MIN],
   },
   {
+    slug: "mau-ao-hop-lop",
+    name: "Mẫu áo họp lớp",
+    keyword: "mẫu áo họp lớp đẹp",
+    // "đồng phục họp lớp" theo từ vựng khách tìm (yala-tu-khoa-seo-v2.md); họp lớp dồn vào dịp Tết
+    titleTemplate: "{n} mẫu áo họp lớp đẹp, đồng phục họp lớp Tết {tet} – in tên từng bạn",
+    intro:
+      "Mẫu áo đồng phục họp lớp 10 năm, 20 năm, họp khoá dịp Tết: tên lớp, năm ra trường và tên từng bạn in riêng trên mỗi áo. Bấm vào mẫu để sửa chữ, đổi màu áo – cả lớp tự ghi size qua một link.",
+    collections: ["hop-lop", "ao-lop"],
+    segment: "hoi-nhom",
+    garments: ["tshirt", "sweater", "hoodie"],
+    tips: [
+      { title: "Nội dung nên có", body: "Tên lớp và năm ra trường (hoặc niên khoá) ở mặt trước, thêm mốc “10 năm gặp lại” để nhớ đúng dịp. Mặt sau hợp in tên hoặc biệt danh ngày xưa của từng bạn – ai nhìn cũng nhận ra." },
+      { title: "Chọn dáng áo theo thời tiết", body: "Họp lớp dịp Tết ở miền Bắc trời lạnh – sweater hoặc hoodie mặc được cả buổi; miền Nam chọn áo thun. Cùng một thiết kế in được trên cả ba dáng áo." },
+      { title: "Thu size cả lớp, kể cả bạn ở xa", body: "Tạo link gom đơn từ thiết kế, gửi vào nhóm chat của lớp: mỗi bạn tự ghi tên và chọn size, ban liên lạc xem danh sách đếm sẵn theo size rồi đặt một đơn." },
+      { title: "Chốt sớm trước Tết", body: "Họp lớp hay dồn vào mấy ngày Tết, đúng lúc xưởng in và vận chuyển đông đơn – chốt mẫu và size sớm để có áo trước buổi gặp mặt." },
+    ],
+    faq: [
+      FAQ_EDIT,
+      FAQ_NAMES,
+      { q: "Áo tặng thầy cô in chữ khác có đặt chung một đơn được không?", a: "Được. Với mẫu có ô tên, ghi “Cô chủ nhiệm” hoặc “Thầy chủ nhiệm” vào ô tên của áo đó – mỗi áo in đúng chữ của từng người, cùng giá với áo in chung, vẫn là một đơn." },
+      FAQ_LINK,
+      { q: "Các bạn ở nhiều tỉnh có đặt chung được không?", a: "Được. Mỗi bạn tự ghi tên, size qua link gom đơn; đơn giao về địa chỉ của người đặt. Cần chia giao nhiều nơi: ghi trong yêu cầu báo giá." },
+      { q: "Họp lớp dịp Tết nên đặt áo trước bao lâu?", a: "Nên chốt mẫu và size càng sớm càng tốt vì sát Tết xưởng in và vận chuyển đều đông đơn. Thời gian sản xuất, giao hàng xem ở tab Vận chuyển trên trang sản phẩm." },
+      FAQ_MIN,
+    ],
+  },
+  {
     slug: "mau-ao-team-building",
     name: "Mẫu áo team building",
     keyword: "mẫu áo đồng phục team building",
@@ -140,8 +167,7 @@ export const DESIGN_HUBS: DesignHub[] = [
     slug: "mau-ao-gia-dinh",
     name: "Mẫu áo gia đình",
     keyword: "mẫu áo gia đình đẹp",
-    // mùa Tết 2027 – sau Tết đổi lại năm
-    titleTemplate: "{n} mẫu áo gia đình đẹp, áo gia đình Tết 2027 – in tên từng người",
+    titleTemplate: "{n} mẫu áo gia đình đẹp, áo gia đình Tết {tet} – in tên từng người",
     intro: "Mẫu áo gia đình cho ảnh Tết, chuyến đi chơi, họp mặt ông bà: Team bố, Team mẹ, Team con, áo Tết cả nhà. Bấm vào mẫu để sửa chữ, đổi màu áo, in tên từng người – cả nhà tự ghi size qua một link.",
     collections: ["gia-dinh", "tet-li-xi"],
     segment: "hoi-nhom",

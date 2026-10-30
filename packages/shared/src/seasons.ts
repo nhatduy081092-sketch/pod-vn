@@ -53,3 +53,13 @@ export function upcomingSeasons(from = new Date()) {
     return { ...s, date, daysLeft: Math.round((date.getTime() - today) / 86_400_000) };
   }).sort((a, b) => a.daysLeft - b.daysLeft);
 }
+
+/**
+ * Năm của "mùa Tết" ghi trên tiêu đề trang SEO ({tet} trong DesignHub.titleTemplate), VD "áo họp lớp Tết 2027".
+ * Tết rơi vào 21/1 – 20/2 dương lịch, mỗi năm một ngày (2026: 17/2, 2027: 6/2, 2028: 26/1).
+ * Mùa Tết kéo tới rằm tháng Giêng (họp lớp, chúc Tết đầu năm) – qua rằm mới chuyển sang Tết năm sau.
+ */
+export function tetSeasonYear(now = new Date()): number {
+  const l = solarToLunar(now.getDate(), now.getMonth() + 1, now.getFullYear());
+  return l.month === 1 && !l.leap && l.day <= 15 ? l.year : l.year + 1;
+}

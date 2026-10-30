@@ -4,7 +4,9 @@ import { HubPage, hubMetadata } from "@/components/seo/HubPage";
 
 export const revalidate = 600;
 const hub = findDesignHub("dong-phuc-ao-thun")!;
-export const metadata: Metadata = hubMetadata(hub);
+export function generateMetadata(): Metadata {
+  return hubMetadata(hub);
+}
 
 export default function Page() {
   return <HubPage hub={hub} />;
