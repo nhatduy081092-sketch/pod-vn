@@ -67,6 +67,14 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 
 ## 5. Việc đang dở / nên làm tiếp
 
+> **Cập nhật 30/10/2026 (production đang chạy `575d168`):**
+> - Đã lên web SEO #4 `/mau-ao-hop-lop` gồm 16 mẫu: bộ mới `hop-lop` 10 mẫu + 6 mẫu `ao-lop`, kèm 4 mẹo và 7 FAQ. Thêm `/bo-suu-tap/hop-lop`. Cả hai đã có trong menu, trang chủ và sitemap.
+> - Năm Tết trên tiêu đề giờ tự tính: chỗ giữ `{tet}` trong `titleTemplate` + hàm `tetSeasonYear()` (`seasons.ts`), tự sang năm sau rằm tháng Giêng. Các trang hub dùng `generateMetadata`, nên sau Tết không phải sửa tay "Tết 2027".
+> - **Push:** trên máy này `git push origin` dùng nhầm tài khoản GitHub (lỗi 403). Push bằng `git push https://nhatduy081092-sketch@github.com/nhatduy081092-sketch/pod-vn.git HEAD:main`. Nếu phải đăng nhập lại: chạy lệnh đó trong Terminal của app, thêm `-c credential.guiPrompt=false -c credential.gitHubAuthModes=browser`.
+> - Lỗi cũ chưa sửa: tiêu đề `/bo-suu-tap/ao-lop` ra "mẫu áo áo lớp & kỷ yếu", do tên bộ bắt đầu bằng "Áo".
+> - Chủ shop: gửi sitemap và yêu cầu lập chỉ mục `/mau-ao-hop-lop` trong Search Console. Có thể thêm bộ `hop-lop` vào chiến dịch Tết 2027 trong CMS (chiến dịch đã lưu trong CMS thì đè lên mặc định trong code).
+> - SEO tiếp theo: #5 `/bang-gia-in-ao` (chờ bậc giá CMS), #6 slogan team building / ý nghĩa số áo.
+
 > **Cập nhật 27/10/2026 (production đang chạy `5f9376f`):**
 > - Đã lên web: H1/SEO `/dip/20-11`, `/dip/tet-2027`; `/doanh-nghiep` H2 + FAQ "đồng phục số lượng ít, từ 10 áo"; trang mới `/doanh-nghiep/qua-cuoi-nam`, `/mau-ao-gia-dinh` (16 mẫu); trang Giới thiệu bỏ "In từ 1 chiếc, không yêu cầu số lượng tối thiểu"; vá next 15.5.27, react 19.3.1, hono, turbo.
 > - **CI/CD:** push `main` → typecheck → build image → **tự deploy** qua SSH (secret `VPS_HOST`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`; khoá khoá cứng `command=deploy.sh`). Không cần chạy `deploy.sh` tay. Xem `tai-lieu/yala-deploy.md`.
@@ -111,6 +119,7 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 | Phôi trơn | `apps/web/public/blanks/<dáng>-<màu>.webp` (36 ảnh) |
 
 ## 8. Lịch sử gần đây (mới → cũ)
+- 575d168 SEO #4 `/mau-ao-hop-lop` + bộ "Họp lớp & họp khoá"; năm Tết trên tiêu đề tự đổi sau rằm tháng Giêng
 - Đo phễu đơn nhóm (group_create → … → purchase order_type) + nghiên cứu từ khoá SEO
 - Trang mẫu danh sách in áo (tải Excel) + thông điệp “Đơn nhóm từ 10” thống nhất (TopBar, Vì sao chọn YALA, chân trang, /thiet-ke, /bo-suu-tap)
 - bc50ca2 SEO: 4 trang mẫu áo theo nhóm, thiết kế áo lớp online, bảng size, slogan áo lớp, tên đội bóng; 18 mẫu đồng phục có ô tên/số
