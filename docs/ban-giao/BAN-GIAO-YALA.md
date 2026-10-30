@@ -67,11 +67,11 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 
 ## 5. Việc đang dở / nên làm tiếp
 
-> **Cập nhật 30/10/2026 (production đang chạy `575d168`):**
+> **Cập nhật 30/10/2026 (production đang chạy `5b7b541`):**
+> - Đã bỏ hết "từ 1 chiếc" còn lại: dải chữ đầu trang, khối Cá nhân/Doanh nghiệp, ảnh lớn trang chủ, slide, khối Từ ảnh thành áo, khu Mua lẻ, `/bo-suu-tap`, `/thiet-ke`, `/dip/20-10`, `/dip/noel`, mô tả áo dài tay. Câu đã lưu trong CMS dùng cập nhật 1 lần `update:group-min-landing:2026-10-30`: chỉ thay câu còn đúng mặc định cũ, câu chủ shop tự viết giữ nguyên. Đã sửa tiêu đề "mẫu áo áo lớp" (bộ có tên mở đầu bằng "Áo"/"Túi").
 > - Đã lên web SEO #4 `/mau-ao-hop-lop` gồm 16 mẫu: bộ mới `hop-lop` 10 mẫu + 6 mẫu `ao-lop`, kèm 4 mẹo và 7 FAQ. Thêm `/bo-suu-tap/hop-lop`. Cả hai đã có trong menu, trang chủ và sitemap.
 > - Năm Tết trên tiêu đề giờ tự tính: chỗ giữ `{tet}` trong `titleTemplate` + hàm `tetSeasonYear()` (`seasons.ts`), tự sang năm sau rằm tháng Giêng. Các trang hub dùng `generateMetadata`, nên sau Tết không phải sửa tay "Tết 2027".
 > - **Push:** trên máy này `git push origin` dùng nhầm tài khoản GitHub (lỗi 403). Push bằng `git push https://nhatduy081092-sketch@github.com/nhatduy081092-sketch/pod-vn.git HEAD:main`. Nếu phải đăng nhập lại: chạy lệnh đó trong Terminal của app, thêm `-c credential.guiPrompt=false -c credential.gitHubAuthModes=browser`.
-> - Lỗi cũ chưa sửa: tiêu đề `/bo-suu-tap/ao-lop` ra "mẫu áo áo lớp & kỷ yếu", do tên bộ bắt đầu bằng "Áo".
 > - Chủ shop: gửi sitemap và yêu cầu lập chỉ mục `/mau-ao-hop-lop` trong Search Console. Có thể thêm bộ `hop-lop` vào chiến dịch Tết 2027 trong CMS (chiến dịch đã lưu trong CMS thì đè lên mặc định trong code).
 > - SEO tiếp theo: #5 `/bang-gia-in-ao` (chờ bậc giá CMS), #6 slogan team building / ý nghĩa số áo.
 
@@ -80,7 +80,6 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 > - **CI/CD:** push `main` → typecheck → build image → **tự deploy** qua SSH (secret `VPS_HOST`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`; khoá khoá cứng `command=deploy.sh`). Không cần chạy `deploy.sh` tay. Xem `tai-lieu/yala-deploy.md`.
 > - Chủ shop **không đổi mật khẩu root** (đã quyết định) – không nhắc lại.
 > - SEO tiếp theo: #4 `/mau-ao-hop-lop` (trước 15/12), #5 `/bang-gia-in-ao` (chờ nhập bậc giá CMS), #6 slogan team building / ý nghĩa số áo.
-> - Còn "in từ 1 chiếc" ở trang chủ (CollectionGrid, slide, khối Từ ảnh thành áo), `/bo-suu-tap` – chủ shop chưa yêu cầu sửa.
 > - Nâng cấp lớn (Next 16, Prisma 7, Tailwind 4, zod 4) để sau Tết.
 > - Chưa làm: Search Console + gửi sitemap, bậc giá CMS, ảnh thật, sao lưu ra ngoài VPS.
 1. **Deploy** commit mới nhất (`1015bf2`) nếu chưa chạy: lệnh ở mục 2.
@@ -119,6 +118,7 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 | Phôi trơn | `apps/web/public/blanks/<dáng>-<màu>.webp` (36 ảnh) |
 
 ## 8. Lịch sử gần đây (mới → cũ)
+- 5b7b541 Bỏ "từ 1 chiếc" còn lại (mặc định + câu CMS còn mặc định cũ); sửa tiêu đề "mẫu áo áo lớp"
 - 575d168 SEO #4 `/mau-ao-hop-lop` + bộ "Họp lớp & họp khoá"; năm Tết trên tiêu đề tự đổi sau rằm tháng Giêng
 - Đo phễu đơn nhóm (group_create → … → purchase order_type) + nghiên cứu từ khoá SEO
 - Trang mẫu danh sách in áo (tải Excel) + thông điệp “Đơn nhóm từ 10” thống nhất (TopBar, Vì sao chọn YALA, chân trang, /thiet-ke, /bo-suu-tap)
