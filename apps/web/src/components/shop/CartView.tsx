@@ -7,6 +7,8 @@ import { IconClose } from "../ui/icons";
 import { CartUpsell } from "./CartUpsell";
 import { useQuoteList } from "@/lib/quote-list";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { track } from "@/lib/track";
 
 /** threshold: từ số lượng này gợi ý chuyển sang yêu cầu báo giá (đơn nhỏ mua online, đơn lớn báo giá) */
 export function CartView({ threshold = 0, freeThreshold = 0 }: { threshold?: number; freeThreshold?: number }) {
@@ -14,6 +16,13 @@ export function CartView({ threshold = 0, freeThreshold = 0 }: { threshold?: num
   const quotes = useQuoteList();
   const router = useRouter();
   // chỉ chuyển được dòng chưa gắn thiết kế / danh sách đồng phục (báo giá theo sản phẩm, file gửi sau)
+  // view_cart: 1 lần mỗi lần mở trang giỏ (khi giỏ đã nạp từ localStorage)
+  const seen = useRef(false);
+  useEffect(() => {
+    if (!cart.ready || seen.current || !cart.items.length) return;
+    seen.current = true;
+    track.viewCart(cart.subtotal, cart.trackItems());
+  }, [cart]);
   const bigLines = threshold > 1 ? cart.items.filter((i) => i.quantity >= threshold && !i.roster?.length && !i.design && !i.designUrl) : [];
   if (!cart.ready) return <p className="py-10 text-center text-ink/60">Đang tải giỏ hàng...</p>;
   if (!cart.items.length)

@@ -102,6 +102,14 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
       .catch(() => undefined);
   }, []);
 
+  // begin_checkout: khi mở trang thanh toán có hàng (1 lần / lần mở trang)
+  const [checkoutSent, setCheckoutSent] = useState(false);
+  useEffect(() => {
+    if (!cart.ready || checkoutSent || !cart.items.length) return;
+    setCheckoutSent(true);
+    track.beginCheckout(cart.subtotal, cart.trackItems());
+  }, [cart, checkoutSent]);
+
   if (!cart.ready) return <p className="py-10 text-center text-ink/60">Đang tải...</p>;
   if (!cart.items.length)
     return (
@@ -149,17 +157,24 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
     }
     setErrors({});
     setSubmitting(true);
-    track.beginCheckout(
-      total,
-      cart.items.map((i) => ({ id: i.productId, name: i.name, price: cart.unitPrice(i), quantity: i.quantity })),
-    );
+    const items = cart.trackItems();
+    track.addShippingInfo(total, items, shipMethod === "EXPRESS" ? "express" : "standard");
+    track.addPaymentInfo(total, items, form.paymentMethod === "BANK_TRANSFER" ? "bank_transfer" : "cod");
     try {
-      const order = await apiFetch<{ code: string; total: number }>("/orders", {
+      const order = await apiFetch<{ code: string; total: number; shippingFee?: number }>("/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      track.purchase(order.code, order.total, orderType);
+      // purchase chỉ sau khi server đã tạo đơn: mã đơn + tổng tiền do server tính
+      track.purchase({
+        code: order.code,
+        total: order.total,
+        shipping: order.shippingFee ?? fee,
+        paymentType: form.paymentMethod === "BANK_TRANSFER" ? "bank_transfer" : "cod",
+        orderType,
+        items,
+      });
       try {
         sessionStorage.setItem(LAST_ORDER_KEY, JSON.stringify({ code: order.code, phone: parsed.data.phone }));
       } catch {

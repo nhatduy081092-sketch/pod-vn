@@ -89,7 +89,7 @@ checkoutRoutes.post("/orders", rateLimit({ key: "order", limit: 10, windowMs: 10
         ip: clientIp(c),
         items: { create: priced.lines.map((l) => l.data) },
       },
-      select: { code: true, total: true, paymentMethod: true },
+      select: { code: true, total: true, paymentMethod: true, shippingFee: true },
     }),
   );
 
@@ -108,7 +108,7 @@ checkoutRoutes.post("/orders", rateLimit({ key: "order", limit: 10, windowMs: 10
       designUrl: l.data.designUrl ?? "",
       roster: (l.data.roster as unknown[] | undefined) ?? undefined,
     })),
-    utmSource: input.utm?.utm_source ?? (input.utm?.fbclid ? "facebook" : input.utm?.gclid ? "google" : undefined),
+    utmSource: input.utm?.utm_source ?? (input.utm?.fbclid ? "facebook" : input.utm?.gclid ? "google" : input.utm?.ttclid ? "tiktok" : undefined),
     group: input.utm?.group,
   });
   return c.json(order, 201);

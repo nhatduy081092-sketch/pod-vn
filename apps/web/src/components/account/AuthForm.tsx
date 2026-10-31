@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { customerLoginSchema, customerRegisterSchema } from "@pod/shared";
 import { api, notifyAuthChanged, safeNext } from "@/lib/account";
+import { track } from "@/lib/track";
 
 /** Đăng nhập / đăng ký bằng số điện thoại + mật khẩu */
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
@@ -24,6 +25,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     setBusy(true);
     try {
       await api(mode === "login" ? "/account/login" : "/account/register", { method: "POST", json: parsed.data });
+      if (mode === "login") track.login("phone");
+      else track.signUp("phone");
       notifyAuthChanged();
       router.replace(next);
       router.refresh();

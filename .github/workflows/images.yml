@@ -89,6 +89,8 @@ jobs:
             NEXT_PUBLIC_UPLOADS_BASE=${{ vars.NEXT_PUBLIC_UPLOADS_BASE }}
             NEXT_PUBLIC_GA4_ID=${{ vars.NEXT_PUBLIC_GA4_ID }}
             NEXT_PUBLIC_META_PIXEL_ID=${{ vars.NEXT_PUBLIC_META_PIXEL_ID }}
+            NEXT_PUBLIC_GTM_ID=${{ vars.NEXT_PUBLIC_GTM_ID }}
+            NEXT_PUBLIC_TIKTOK_PIXEL_ID=${{ vars.NEXT_PUBLIC_TIKTOK_PIXEL_ID }}
           tags: |
             ${{ steps.meta.outputs.repo }}/yala-web:${{ steps.meta.outputs.tag }}
             ${{ steps.meta.outputs.repo }}/yala-web:latest
@@ -109,6 +111,8 @@ jobs:
             NEXT_PUBLIC_UPLOADS_BASE=${{ vars.NEXT_PUBLIC_UPLOADS_BASE }}
             NEXT_PUBLIC_GA4_ID=${{ vars.NEXT_PUBLIC_GA4_ID }}
             NEXT_PUBLIC_META_PIXEL_ID=${{ vars.NEXT_PUBLIC_META_PIXEL_ID }}
+            NEXT_PUBLIC_GTM_ID=${{ vars.NEXT_PUBLIC_GTM_ID }}
+            NEXT_PUBLIC_TIKTOK_PIXEL_ID=${{ vars.NEXT_PUBLIC_TIKTOK_PIXEL_ID }}
           tags: |
             ${{ steps.meta.outputs.repo }}/yala-cms:${{ steps.meta.outputs.tag }}
             ${{ steps.meta.outputs.repo }}/yala-cms:latest

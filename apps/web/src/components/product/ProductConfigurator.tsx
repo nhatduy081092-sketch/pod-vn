@@ -112,8 +112,8 @@ export function ProductConfigurator({
   }, [product.id]);
 
   useEffect(() => {
-    track.viewItem({ id: product.id, name: product.name, price: product.basePrice, quantity: 1 });
-  }, [product.id, product.name, product.basePrice]);
+    track.viewItem({ id: product.id, name: product.name, price: product.basePrice, quantity: 1, category: product.category.name });
+  }, [product.id, product.name, product.basePrice, product.category.name]);
 
   function addToCart() {
     setError("");
@@ -152,7 +152,7 @@ export function ProductConfigurator({
       printMode: "FILL",
       designNote: note,
     });
-    track.addToCart({ id: product.id, name: product.name, price: unit, quantity: effQty });
+    track.addToCart({ id: product.id, name: product.name, price: unit, quantity: effQty, category: product.category.name, variant: team ? "team" : [variant?.color, variant?.size].filter(Boolean).join(" / ") || undefined });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
     return true;

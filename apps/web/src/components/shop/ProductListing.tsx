@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import type { Facets } from "@/lib/api";
 import type { Paged, ProductCardData } from "@/lib/types";
 import { ProductGrid } from "./ProductCard";
+import { ListTracker } from "./ListTracker";
 import { SortSelect } from "./SortSelect";
 import { FilterSheet } from "./FilterSheet";
 
@@ -174,7 +175,15 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
 
         <div className="mt-6">
           {data.items.length ? (
-            <ProductGrid items={data.items} dense color={params.mau} />
+            <ListTracker
+              listId={params.q ? "search" : basePath}
+              listName={params.q ? "Tìm kiếm" : mode === "category" ? `Danh mục ${data.items[0]?.category.name ?? basePath}` : "Tất cả sản phẩm"}
+              items={data.items.map((p) => ({ id: p.id, slug: p.slug, name: p.name, price: p.salePrice ?? p.basePrice, category: p.category.name }))}
+              searchTerm={params.q}
+              total={data.total}
+            >
+              <ProductGrid items={data.items} dense color={params.mau} />
+            </ListTracker>
           ) : (
             <div className="rounded-lg bg-surface px-4 py-16 text-center text-lg">
               <p>Chưa có sản phẩm phù hợp.</p>

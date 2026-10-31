@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { linePrice, type OrderDesign, type PriceTier, type PrintMode, type RosterRow } from "@pod/shared";
+import { track } from "./track";
 
 export type CartItem = {
   key: string;
@@ -47,6 +48,8 @@ type CartCtx = {
   clear: () => void;
   unitPrice: (item: CartItem) => number;
   lineTotal: (item: CartItem) => number;
+  /** Dòng giỏ -> sản phẩm cho tracking (giá = đơn giá thực tế của dòng, tính cả phụ phí size) */
+  trackItems: (items?: CartItem[]) => { id: string; name: string; price: number; quantity: number; variant?: string }[];
 };
 
 const Ctx = createContext<CartCtx | null>(null);
@@ -105,6 +108,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [unitPrice],
   );
 
+  const trackItems = useCallback(
+    (list: CartItem[] = items) =>
+      list.map((i) => ({
+        id: i.productId,
+        name: i.name,
+        price: Math.round(lineTotal(i) / Math.max(1, i.quantity)),
+        quantity: i.quantity,
+        variant: [i.color, i.size].filter((x) => x && x !== "—").join(" / ") || undefined,
+      })),
+    [items, lineTotal],
+  );
+
   const add = useCallback((item: Omit<CartItem, "key">) => {
     setItems((prev) => {
       const newItem = { ...item, key: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}` };
@@ -136,12 +151,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems((prev) =>
           prev.map((p) => (p.key === key && !p.roster?.length ? { ...p, quantity: Math.max(1, Math.min(1000, Math.floor(qty) || 1)) } : p)),
         ),
-      remove: (key) => setItems((prev) => prev.filter((p) => p.key !== key)),
+      remove: (key) => {
+        const gone = items.find((p) => p.key === key);
+        if (gone) track.removeFromCart(trackItems([gone])[0]!);
+        setItems((prev) => prev.filter((p) => p.key !== key));
+      },
       clear: () => setItems([]),
       unitPrice,
       lineTotal,
+      trackItems,
     }),
-    [items, ready, add, unitPrice, lineTotal],
+    [items, ready, add, unitPrice, lineTotal, trackItems],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
