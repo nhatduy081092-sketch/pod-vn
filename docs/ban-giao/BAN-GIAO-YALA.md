@@ -67,6 +67,11 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 
 ## 5. Việc đang dở / nên làm tiếp
 
+> **Cập nhật 31/10/2026 (production đang chạy `3d15322`):**
+> - CMS → Ảnh thật AI → Người mẫu: mỗi ô có nút **Tạo bằng AI** (Gemini, ảnh dọc 4:5, dùng hình phôi trơn làm ảnh gốc). Ảnh tạo xong chưa lưu ngay: kéo khung vùng in rồi bấm Lưu khung. Nút chỉ hiện khi VPS có `GEMINI_API_KEY` (+ `AI_IMAGE_PROVIDER="gemini"`). Chủ shop chưa thêm khoá. Khoá Gemini CLI trên máy dev là bản miễn phí, tạo ảnh bị giới hạn 0 lượt.
+> - Rà soát ảnh: `tai-lieu/yala-anh-can-lam.md`. 596 SP OEM vẫn dùng ảnh oemgroup.vn, nhiều ảnh in logo OEM Group trên sản phẩm. Có 23 ảnh như vậy hiện trên trang chủ. Còn thiếu 7 ảnh người mẫu và 5 banner dịp lễ. Tài liệu có prompt Gemini cho từng loại; chủ shop làm bằng Gemini Pro (gemini.google.com) rồi tải ảnh lên CMS.
+> - Chủ shop đổi tên 2 SP có chữ "OEM Group" (`oem-group-goi-hoi`, `oem-group-vali-ve-nha`).
+
 > **Cập nhật 30/10/2026 (production đang chạy `5b7b541`):**
 > - Đã bỏ hết "từ 1 chiếc" còn lại: dải chữ đầu trang, khối Cá nhân/Doanh nghiệp, ảnh lớn trang chủ, slide, khối Từ ảnh thành áo, khu Mua lẻ, `/bo-suu-tap`, `/thiet-ke`, `/dip/20-10`, `/dip/noel`, mô tả áo dài tay. Câu đã lưu trong CMS dùng cập nhật 1 lần `update:group-min-landing:2026-10-30`: chỉ thay câu còn đúng mặc định cũ, câu chủ shop tự viết giữ nguyên. Đã sửa tiêu đề "mẫu áo áo lớp" (bộ có tên mở đầu bằng "Áo"/"Túi").
 > - Đã lên web SEO #4 `/mau-ao-hop-lop` gồm 16 mẫu: bộ mới `hop-lop` 10 mẫu + 6 mẫu `ao-lop`, kèm 4 mẹo và 7 FAQ. Thêm `/bo-suu-tap/hop-lop`. Cả hai đã có trong menu, trang chủ và sitemap.
@@ -118,6 +123,7 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 | Phôi trơn | `apps/web/public/blanks/<dáng>-<màu>.webp` (36 ảnh) |
 
 ## 8. Lịch sử gần đây (mới → cũ)
+- 3d15322 CMS: nút "Tạo bằng AI" cho ảnh người mẫu (Gemini 4:5); rà soát ảnh còn thiếu + prompt Gemini (`tai-lieu/yala-anh-can-lam.md`)
 - 5b7b541 Bỏ "từ 1 chiếc" còn lại (mặc định + câu CMS còn mặc định cũ); sửa tiêu đề "mẫu áo áo lớp"
 - 575d168 SEO #4 `/mau-ao-hop-lop` + bộ "Họp lớp & họp khoá"; năm Tết trên tiêu đề tự đổi sau rằm tháng Giêng
 - Đo phễu đơn nhóm (group_create → … → purchase order_type) + nghiên cứu từ khoá SEO
@@ -149,6 +155,7 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 | audit-vs-printdoors.md | Rà soát bố cục ban đầu |
 | yala-do-luong-don-nhom.md | Sự kiện phễu đơn nhóm (GA4/Pixel), cấu hình GA4, cách đọc số |
 | yala-tu-khoa-seo.md + yala-ban-do-tu-khoa.xlsx | Nghiên cứu từ khoá: 64 từ khoá/8 cụm, map URL, trang nên làm, cách kiểm chứng |
+| yala-anh-can-lam.md | Rà soát ảnh còn thiếu (31/10): ảnh OEM có logo, người mẫu, banner dịp lễ + prompt Gemini |
 
 ## 10. Câu mở đầu dán vào tài khoản mới
 > Tôi đang tiếp tục dự án YALA (yala.vn) từ tài khoản Claude khác. Hãy đọc file BAN-GIAO-YALA.md và các tài liệu trong Project trước, sau đó clone repo nhatduy081092-sketch/pod-vn để làm việc. Trả lời bằng tiếng Việt. Việc tiếp theo: [ghi việc bạn muốn làm].
