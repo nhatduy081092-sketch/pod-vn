@@ -99,26 +99,26 @@ const VERBS = ["Thiết kế", "Gửi link", "Chốt đơn", "In & giao"];
 
 /**
  * Cách đặt áo nhóm (trang chủ + trang SEO mẫu áo, nhóm khách): 4 cột ngang, vạch cam vẽ dần theo thứ tự bước,
- * động từ cỡ vừa màu trắng ngà (không trắng tinh) và mô tả xám ấm -> nền đen đỡ chói, cam chỉ ở vạch + nhãn bước + nút.
+ * động từ cỡ vừa màu trắng đá (không trắng tinh, không ngả vàng) và mô tả xám ấm -> nền đen đỡ chói, cam chỉ ở vạch + nhãn bước + nút.
  */
 export function HomeSteps() {
   return (
-    <section className="bg-ink py-[clamp(72px,12vh,140px)] text-[#ece8e1]" aria-labelledby="cach-dat-ao-nhom">
+    <section className="bg-ink py-[clamp(72px,12vh,140px)] text-[#e8e6e3]" aria-labelledby="cach-dat-ao-nhom">
       <div className="container-site">
-        <p className="text-sm font-semibold text-brand">Đặt áo nhóm trong 4 bước</p>
-        <h2 id="cach-dat-ao-nhom" className="mt-2 max-w-4xl font-display text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.025em] [text-wrap:balance]">
+        <h2 id="cach-dat-ao-nhom" className="max-w-4xl font-display text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.025em] [text-wrap:balance]">
           Không phải gom tin nhắn hỏi size
         </h2>
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-[#e8e6e3]/80 md:text-lg">Bốn bước, một đường link: cả nhóm tự ghi tên và size, trưởng nhóm chỉ việc chốt đơn.</p>
+        {/* thứ tự đọc ra từ vị trí + vạch cam vẽ lần lượt, không cần nhãn "Bước n" */}
         <ol className="mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 md:mt-16 lg:grid-cols-4">
           {GROUP_STEPS.map((st, i) => (
             <li key={st.title} {...rise(i + 1)}>
               <span className="draw-rule mb-5 bg-brand" aria-hidden />
-              <p className="text-[13px] font-semibold text-brand">Bước {i + 1}</p>
-              <p aria-hidden className="mt-1 font-display text-[clamp(30px,2.6vw,40px)] font-bold leading-[1.05] tracking-[-0.03em]">
+              <p aria-hidden className="font-display text-[clamp(30px,2.6vw,40px)] font-bold leading-[1.05] tracking-[-0.03em]">
                 {VERBS[i]}
               </p>
               <h3 className="mt-4 text-[17px] font-bold leading-snug">{st.title}</h3>
-              <p className="mt-2 max-w-sm text-base leading-relaxed text-[#ece8e1]/70">{st.desc}</p>
+              <p className="mt-2 max-w-sm text-base leading-relaxed text-[#e8e6e3]/70">{st.desc}</p>
             </li>
           ))}
         </ol>
@@ -126,7 +126,7 @@ export function HomeSteps() {
           <Link href={`/thiet-ke/${GARMENT_PRODUCT.tshirt.slug}`} className="btn-primary px-7 py-3.5 text-base">
             Bắt đầu thiết kế
           </Link>
-          <Link href="/dong-phuc-the-thao" className="btn border-white/30 bg-transparent px-7 py-3.5 text-base text-[#ece8e1] hover:border-white hover:bg-white hover:text-ink">
+          <Link href="/dong-phuc-the-thao" className="btn border-white/30 bg-transparent px-7 py-3.5 text-base text-[#e8e6e3] hover:border-white hover:bg-white hover:text-ink">
             Xem áo đội in tên số
           </Link>
         </div>

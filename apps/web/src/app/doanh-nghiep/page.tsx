@@ -5,7 +5,6 @@ import { getHome } from "@/lib/api";
 import type { HomeData } from "@/lib/types";
 import { assetUrl } from "@/lib/config";
 import { MerchKit } from "@/components/b2b/MerchKit";
-import { PhotoCollage } from "@/components/b2b/PhotoCollage";
 import { B2BQuoteForm } from "@/components/b2b/B2BQuoteForm";
 import { MaskTitle } from "@/components/motion/MaskTitle";
 import { SEGMENTS } from "@pod/shared";
@@ -74,40 +73,53 @@ export default async function BusinessPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Hero */}
+      {/* Đầu trang: tiêu đề chạy hết bề ngang ở cỡ trưng bày (2 dòng trên máy tính) là điểm nhấn duy nhất;
+          dưới là lời dẫn + nút + điều kiện bên trái, 4 ảnh sản phẩm thật phẳng bên phải (không khung, không nghiêng/bóng) */}
       <section className="bg-ink text-white">
-        <div className="container-site grid items-center gap-8 py-10 md:grid-cols-[1.05fr_1fr] md:py-16">
-          <div>
-            <p className="text-sm font-semibold text-brand md:text-[15px]">{hub.eyebrow}</p>
-            <h1 className="mt-2 font-display text-[clamp(30px,4vw,50px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%] [text-wrap:balance]">{hub.title}</h1>
-            <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/75 md:text-lg">{hub.subtitle}</p>
-            <div className="mt-6 flex flex-wrap gap-2.5">
-              <a href="#bao-gia" className="btn-primary px-6 py-3">
-                Nhận báo giá miễn phí
-              </a>
-              {zalo && (
-                <a href={zalo} target="_blank" rel="noopener noreferrer" className="btn border-white/40 bg-transparent px-6 py-3 text-white hover:border-white">
-                  Chat Zalo tư vấn
+        <div className="container-site py-12 md:py-20">
+          <h1 className="max-w-[1180px] font-display text-[clamp(32px,4.8vw,70px)] font-bold leading-[1.04] tracking-[-0.035em] [text-wrap:balance]">{hub.title}</h1>
+          <div className="mt-8 grid gap-10 md:mt-12 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-14">
+            <div>
+              <p className="max-w-xl text-base leading-relaxed text-white/85 md:text-lg">{hub.subtitle}</p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <a href="#bao-gia" className="btn-primary px-7 py-3.5 text-base">
+                  Nhận báo giá miễn phí
                 </a>
-              )}
+                {zalo && (
+                  <a href={zalo} target="_blank" rel="noopener noreferrer" className="btn border-white/30 bg-transparent px-7 py-3.5 text-base text-white hover:border-white hover:bg-white hover:text-ink">
+                    Chat Zalo tư vấn
+                  </a>
+                )}
+              </div>
+              {/* điều kiện đặt hàng nói rõ ngay đầu trang – khách so sánh với đơn vị khác không cần hỏi; giá trị trước, tên điều kiện sau */}
+              <ul className="mt-12 grid max-w-xl grid-cols-2 gap-x-8 gap-y-7">
+                {(hub.terms.length ? hub.terms.slice(0, 4).map((t) => ({ value: t.value, label: t.label })) : settings.b2b.stats).map((s) => (
+                  <li key={s.label}>
+                    <p className="font-display text-[22px] font-bold leading-tight tracking-[-0.015em] md:text-2xl">{s.value}</p>
+                    <p className="mt-1 text-base leading-snug text-white/70">{s.label}</p>
+                  </li>
+                ))}
+              </ul>
             </div>
-            {/* điều kiện đặt hàng nói rõ ngay đầu trang – khách so sánh với đơn vị khác không cần hỏi */}
-            <ul className="mt-9 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-5 border-t border-white/15 pt-6 sm:grid-cols-4">
-              {(hub.terms.length ? hub.terms.slice(0, 4).map((t) => ({ value: t.value, label: t.label })) : settings.b2b.stats).map((s) => (
-                <li key={s.label}>
-                  <p className="font-display text-xl font-bold leading-tight tracking-[-0.01em] text-white md:text-[22px]">{s.value}</p>
-                  <p className="mt-1 text-[13px] leading-snug text-white/65">{s.label}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="overflow-hidden rounded-3xl bg-peach">
-            {photos.length >= 4 ? <PhotoCollage images={photos} /> : <MerchKit className="h-auto w-full" />}
+            {photos.length >= 4 ? (
+              <ul className="grid grid-cols-2 gap-3 md:gap-4" aria-label="Sản phẩm in logo tiêu biểu">
+                {photos.slice(0, 4).map((p) => (
+                  <li key={p.src} className="aspect-square overflow-hidden rounded-lg bg-white">
+                    <img src={assetUrl(p.src)} alt={p.alt} decoding="async" className="h-full w-full object-contain p-[8%]" />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="overflow-hidden rounded-lg bg-peach">
+                <MerchKit className="h-auto w-full" />
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Mục lục nhanh */}
-      <nav className="sticky top-12 z-30 border-b border-line bg-white/95 backdrop-blur md:top-16 lg:top-[108px]" aria-label="Trong trang này">
+      <nav className="sticky top-12 z-30 bg-surface md:top-16 lg:top-[108px]" aria-label="Trong trang này">
         <div className="container-site no-scrollbar flex h-11 items-center gap-6 overflow-x-auto text-sm font-medium">
           {(
             [
@@ -121,7 +133,7 @@ export default async function BusinessPage() {
               ["#bao-gia", "Nhận báo giá"],
             ].filter(Boolean) as [string, string][]
           ).map(([h, l]) => (
-            <a key={h} href={h} className={`shrink-0 whitespace-nowrap ${h === "#bao-gia" ? "font-semibold text-brand" : "text-ink/75 hover:text-ink"}`}>
+            <a key={h} href={h} className={`shrink-0 whitespace-nowrap ${h === "#bao-gia" ? "font-semibold text-brand-dark" : "text-ink/80 hover:text-ink"}`}>
               {l}
             </a>
           ))}
@@ -132,7 +144,6 @@ export default async function BusinessPage() {
       {hub.terms.length > 0 && (
         <section id="dieu-kien" className={SECTION}>
           <div className="container-site">
-            <p className="eyebrow">Điều kiện đặt hàng</p>
             <MaskTitle className={H2}>Đồng phục công ty số lượng ít, từ 10 áo</MaskTitle>
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-ink/75">Điều kiện rõ ràng trước khi bạn nhắn tin – không cần đặt hàng trăm áo mới có đồng phục cho team.</p>
             {/* điều kiện = danh sách chữ lớn có vạch kẻ, không thẻ pastel / bóng */}
@@ -140,24 +151,24 @@ export default async function BusinessPage() {
               {hub.terms.map((t, i) => (
                 <li key={t.label} data-reveal="rise" style={{ ["--d" as string]: `${(i % 3) * 80}ms` }}>
                   <span className="draw-rule bg-ink" aria-hidden />
-                  <p className="mt-4 text-[13px] font-semibold uppercase tracking-[0.06em] text-ink/60 md:text-sm">{t.label}</p>
-                  <p className="mt-1.5 font-display text-[clamp(22px,2.6vw,34px)] font-bold leading-[1.12] tracking-[-0.02em]">{t.value}</p>
-                  {t.note && <p className="mt-2 max-w-[22rem] text-[15px] leading-snug text-ink/75">{t.note}</p>}
+                  <p className="mt-4 font-display text-[clamp(22px,2.6vw,34px)] font-bold leading-[1.12] tracking-[-0.02em]">{t.value}</p>
+                  <p className="mt-1.5 text-base font-semibold text-ink/75">{t.label}</p>
+                  {t.note && <p className="mt-2 max-w-[22rem] text-base leading-snug text-ink/75">{t.note}</p>}
                 </li>
               ))}
             </ul>
 
             {hub.compare.length > 0 && (
-              <div data-reveal="rise" className="mt-14 overflow-hidden rounded-xl border border-line">
-                <div className="grid grid-cols-[1fr_1fr] bg-ink text-sm font-semibold text-white md:grid-cols-[0.8fr_1fr_1fr] md:text-[15px]">
+              <div data-reveal="rise" className="mt-14 overflow-hidden rounded-xl">
+                <div className="grid grid-cols-[1fr_1fr] bg-ink text-sm font-semibold text-white md:grid-cols-[0.8fr_1fr_1fr] md:text-base">
                   <span className="hidden px-5 py-3 md:block" />
                   <span className="px-4 py-3 text-white/70 md:px-5">Đặt merch kiểu thông thường</span>
                   <span className="bg-brand px-4 py-3 md:px-5">Đặt với YALA</span>
                 </div>
                 <ul>
-                  {hub.compare.map((c) => (
-                    <li key={c.label} className="grid grid-cols-[1fr_1fr] border-t border-ink/10 text-[15px] md:grid-cols-[0.8fr_1fr_1fr] md:text-[15px]">
-                      <span className="col-span-2 bg-surface px-4 pb-1 pt-3 text-[13px] font-semibold uppercase tracking-wide text-muted md:col-span-1 md:bg-transparent md:px-5 md:py-4 md:text-[15px]">{c.label}</span>
+                  {hub.compare.map((c, ci) => (
+                    <li key={c.label} className={`grid grid-cols-[1fr_1fr] text-base md:grid-cols-[0.8fr_1fr_1fr] ${ci % 2 ? "bg-surface" : "bg-white"}`}>
+                      <span className="col-span-2 px-4 pb-1 pt-3 font-semibold text-ink md:col-span-1 md:px-5 md:py-4">{c.label}</span>
                       <span className="px-4 py-3 text-muted md:px-5 md:py-4">{c.usual}</span>
                       <span className="flex gap-2 bg-brand-light px-4 py-3 font-semibold text-ink md:px-5 md:py-4">
                         <svg viewBox="0 0 24 24" className="mt-[3px] h-4 w-4 shrink-0 text-brand" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -185,10 +196,9 @@ export default async function BusinessPage() {
       {/* Ngành hàng */}
       <section id="nganh-hang" className={SECTION}>
         <div className="container-site">
-          <p className="eyebrow">{hub.industries.length} nhóm ngành hàng</p>
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
             <MaskTitle className={H2}>In logo lên gần như mọi thứ doanh nghiệp cần</MaskTitle>
-            <Link href="/doanh-nghiep/san-pham" className="text-[15px] font-semibold underline underline-offset-4 hover:text-brand">
+            <Link href="/doanh-nghiep/san-pham" className="text-base font-semibold underline underline-offset-4 hover:text-brand">
               Xem tất cả sản phẩm, lọc theo ngân sách →
             </Link>
           </div>
@@ -211,8 +221,8 @@ export default async function BusinessPage() {
                       )}
                     </div>
                     <h3 className="mt-4 font-display text-[17px] font-bold leading-snug transition-colors group-hover:text-brand-dark md:text-xl">{i.name}</h3>
-                    <p className="mt-1 text-[15px] leading-snug text-ink/70">{cat?.image ? i.blurb : "Đang cập nhật sản phẩm – nhận tư vấn & báo giá theo yêu cầu"}</p>
-                    <p className="mt-2.5 text-[15px] font-semibold text-ink">
+                    <p className="mt-1 text-base leading-snug text-ink/70">{cat?.image ? i.blurb : "Đang cập nhật sản phẩm – nhận tư vấn & báo giá theo yêu cầu"}</p>
+                    <p className="mt-2.5 text-base font-semibold text-ink">
                       {cat ? `Xem ${cat.count} sản phẩm` : "Nhận tư vấn"} <span className="inline-block transition group-hover:translate-x-1">→</span>
                     </p>
                   </Link>
@@ -226,16 +236,15 @@ export default async function BusinessPage() {
       {/* Giải pháp theo dịp */}
       <section id="giai-phap" className={`${SECTION} bg-surface`}>
         <div className="container-site">
-          <p className="eyebrow">Giải pháp theo dịp</p>
           <MaskTitle className={H2}>Bạn đang chuẩn bị cho dịp nào?</MaskTitle>
           {/* dạng dòng có vạch kẻ, không thẻ trắng / đánh số */}
           <ul className="mt-12 grid gap-x-12 md:grid-cols-2 lg:grid-cols-3">
             {hub.solutions.map((s, idx) => (
-              <li key={s.key} id={`giai-phap-${s.key}`} className="scroll-mt-32 flex flex-col border-t border-ink/15 pb-9 pt-6" data-reveal="rise" style={{ ["--d" as string]: `${(idx % 3) * 70}ms` }}>
+              <li key={s.key} id={`giai-phap-${s.key}`} className="scroll-mt-32 flex flex-col pb-10" data-reveal="rise" style={{ ["--d" as string]: `${(idx % 3) * 70}ms` }}>
                 <h3 className="font-display text-xl font-bold leading-snug tracking-[-0.01em] md:text-[22px]">{s.title}</h3>
-                <p className="mt-2 flex-1 text-[15px] leading-relaxed text-ink/75">{s.desc}</p>
-                {s.items && <p className="mt-3 text-[15px] font-medium text-ink">{s.items}</p>}
-                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[15px] font-semibold">
+                <p className="mt-2 flex-1 text-base leading-relaxed text-ink/75">{s.desc}</p>
+                {s.items && <p className="mt-3 text-base font-medium text-ink">{s.items}</p>}
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-base font-semibold">
                   {/* quà Tết có trang tĩnh riêng cho SEO */}
                   <Link href={s.key === "qua-tet" ? "/doanh-nghiep/qua-cuoi-nam" : `/doanh-nghiep/san-pham?dip=${s.key}`} className="text-ink hover:text-brand">
                     Xem sản phẩm gợi ý →
@@ -254,7 +263,6 @@ export default async function BusinessPage() {
       {hub.cases.length > 0 && (
         <section id="du-an" className={SECTION}>
           <div className="container-site">
-            <p className="eyebrow">Dự án đã làm</p>
             <MaskTitle className={H2}>Thành phẩm thật, giao thật</MaskTitle>
             <ul className="mt-12 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
               {hub.cases.map((c, idx) => (
@@ -267,7 +275,7 @@ export default async function BusinessPage() {
                   <div className="pt-4">
                     {c.client && <p className="text-sm font-semibold text-brand">{c.client}</p>}
                     <h3 className="mt-0.5 text-base font-semibold leading-snug md:text-lg">{c.title}</h3>
-                    {c.detail && <p className="mt-1.5 text-[15px] leading-relaxed text-muted">{c.detail}</p>}
+                    {c.detail && <p className="mt-1.5 text-base leading-relaxed text-muted">{c.detail}</p>}
                   </div>
                 </li>
               ))}
@@ -279,16 +287,14 @@ export default async function BusinessPage() {
       {/* Quy trình */}
       <section id="quy-trinh" className={SECTION}>
         <div className="container-site">
-          <p className="eyebrow">Quy trình làm việc</p>
           <MaskTitle className={H2}>Từ yêu cầu đến tay người nhận</MaskTitle>
           {/* vạch cam kẻ lần lượt theo thứ tự bước (line draw) – đọc ra trình tự, không cần vòng tròn số */}
           <ol className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {hub.process.map((p, i) => (
               <li key={p.title} data-reveal="rise" style={{ ["--d" as string]: `${i * 110}ms` }}>
                 <span className="draw-rule bg-brand" aria-hidden />
-                <p className="mt-4 text-sm font-semibold tabular-nums text-brand-dark">Bước {i + 1}</p>
-                <h3 className="mt-1 font-display text-lg font-bold leading-snug md:text-xl">{p.title}</h3>
-                <p className="mt-1.5 text-[15px] leading-relaxed text-ink/75">{p.desc}</p>
+                <h3 className="mt-4 font-display text-lg font-bold leading-snug md:text-xl">{p.title}</h3>
+                <p className="mt-1.5 text-base leading-relaxed text-ink/75">{p.desc}</p>
               </li>
             ))}
           </ol>
@@ -296,15 +302,14 @@ export default async function BusinessPage() {
       </section>
 
       {/* Lợi ích */}
-      <section id="vi-sao" className={`${SECTION} border-t border-line`}>
+      <section id="vi-sao" className={`${SECTION} bg-surface`}>
         <div className="container-site">
-          <p className="eyebrow">Vì sao chọn YALA</p>
           <MaskTitle className={H2}>Một đầu mối, ít việc hơn cho bạn</MaskTitle>
           <ul className="mt-12 grid gap-x-10 gap-y-9 sm:grid-cols-2 lg:grid-cols-3">
             {hub.benefits.map((b, i) => (
-              <li key={b.title} className="border-t border-ink/15 pt-5" data-reveal="rise" style={{ ["--d" as string]: `${(i % 3) * 70}ms` }}>
+              <li key={b.title} data-reveal="rise" style={{ ["--d" as string]: `${(i % 3) * 70}ms` }}>
                 <h3 className="font-display text-lg font-bold leading-snug md:text-xl">{b.title}</h3>
-                <p className="mt-1.5 text-[15px] leading-relaxed text-ink/75">{b.desc}</p>
+                <p className="mt-1.5 text-base leading-relaxed text-ink/75">{b.desc}</p>
               </li>
             ))}
           </ul>
@@ -313,7 +318,7 @@ export default async function BusinessPage() {
               <p className="text-sm font-medium text-muted">Đã đồng hành cùng</p>
               <ul className="mt-3 flex flex-wrap gap-2">
                 {clients.map((c) => (
-                  <li key={c} className="rounded-full border border-line px-4 py-1.5 text-sm font-semibold">
+                  <li key={c} className="rounded-full bg-white px-4 py-1.5 text-base font-semibold">
                     {c}
                   </li>
                 ))}
@@ -324,27 +329,29 @@ export default async function BusinessPage() {
       </section>
 
       {/* Hỏi đáp – từ khoá "đồng phục số lượng ít" */}
-      <section id="hoi-dap" className={`${SECTION} border-t border-line`}>
-        <div className="container-site max-w-3xl">
-          <p className="eyebrow">Hỏi đáp</p>
-          <MaskTitle className={H2}>Câu hỏi về đặt đồng phục số lượng ít</MaskTitle>
-          <div className="mt-6 divide-y divide-line border-y border-line">
+      <section id="hoi-dap" className={SECTION}>
+        {/* cùng lề trái với cả trang: tiêu đề bên trái, câu hỏi bên phải (không thu khối vào giữa) */}
+        <div className="container-site grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+          <div>
+            <MaskTitle className={H2}>Câu hỏi về đặt đồng phục số lượng ít</MaskTitle>
+            <p className="mt-5 text-base">
+              Muốn tự làm mẫu trước?{" "}
+              <Link href="/thiet-ke-ao-dong-phuc-online" className="font-semibold underline underline-offset-4 hover:text-brand-dark">
+                Thiết kế áo đồng phục online →
+              </Link>
+            </p>
+          </div>
+          <div className="space-y-2">
             {FAQ.map((f) => (
-              <details key={f.q} className="group py-4">
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-[16px] font-semibold">
+              <details key={f.q} className="group rounded-lg bg-surface px-5 py-4">
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-base font-semibold md:text-[17px]">
                   {f.q}
                   <span className="mt-0.5 text-xl leading-none text-muted transition group-open:rotate-45">+</span>
                 </summary>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink/80">{f.a}</p>
+                <p className="mt-2 text-base leading-relaxed text-ink/80">{f.a}</p>
               </details>
             ))}
           </div>
-          <p className="mt-5 text-[15px]">
-            Muốn tự làm mẫu trước?{" "}
-            <Link href="/thiet-ke-ao-dong-phuc-online" className="font-semibold underline underline-offset-4 hover:text-brand">
-              Thiết kế áo đồng phục online →
-            </Link>
-          </p>
         </div>
       </section>
 
@@ -352,12 +359,11 @@ export default async function BusinessPage() {
       <section id="bao-gia" className="scroll-mt-32 bg-white pb-14 md:pb-20">
         <div className="container-site grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
           <div className="pt-2">
-            <p className="eyebrow">Nhận báo giá</p>
             <MaskTitle className={H2}>Gửi nhu cầu, nhận báo giá & mockup</MaskTitle>
-            <p className="mt-3 text-[15px] leading-relaxed text-muted">
+            <p className="mt-3 text-base leading-relaxed text-muted">
               Đơn nhỏ có thể đặt ngay trên website. Đơn số lượng lớn, quà tặng nhiều món hoặc cần đóng hộp – để lại thông tin, YALA tư vấn theo ngân sách và gửi mockup miễn phí.
             </p>
-            <ul className="mt-5 space-y-2 text-[15px]">
+            <ul className="mt-5 space-y-2 text-base">
               {brand.hotline && (
                 <li>
                   Hotline:{" "}
@@ -394,17 +400,17 @@ export default async function BusinessPage() {
       </section>
 
       {/* Nhóm khách tập thể khác */}
-      <section className="border-t border-line py-10 md:py-12">
+      <section className="bg-surface py-14 md:py-20">
         <div className="container-site">
-          <p className="eyebrow">Không phải doanh nghiệp?</p>
-          <ul className="mt-5 grid gap-x-10 sm:grid-cols-3">
+          <h2 className="font-display text-[clamp(22px,2.2vw,28px)] font-bold tracking-[-0.02em]">Không phải doanh nghiệp?</h2>
+          <ul className="mt-6 grid gap-x-10 sm:grid-cols-3">
             {SEGMENTS.filter((g) => g.key !== "doanh-nghiep").map((g) => (
               <li key={g.key}>
-                <Link href={g.href} className="group block h-full border-t border-ink/15 py-5">
+                <Link href={g.href} className="group block h-full py-4">
                   <p className="font-display text-lg font-bold transition-colors group-hover:text-brand-dark">
                     {g.name} <span className="inline-block transition group-hover:translate-x-1">→</span>
                   </p>
-                  <p className="mt-1 text-[15px] leading-snug text-ink/75">{g.pitch}</p>
+                  <p className="mt-1 text-base leading-snug text-ink/75">{g.pitch}</p>
                 </Link>
               </li>
             ))}
