@@ -10,6 +10,7 @@ import { BeforeAfter } from "@/components/landing/BeforeAfter";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { WhyChoose } from "@/components/landing/WhyChoose";
 import { B2BSection } from "@/components/landing/B2BSection";
+import { CatalogSection } from "@/components/landing/CatalogSection";
 
 export const revalidate = 60;
 
@@ -47,6 +48,8 @@ export default async function HomePage() {
           return c ? [{ name: i.name, slug: i.slug, image: c.image, count: c.count }] : [];
         })}
       />
+      {/* toàn bộ danh mục merchandise + phôi OEM (ảnh sản phẩm thật) */}
+      <CatalogSection items={catalog} />
       {settings.beforeAfter.enabled && <BeforeAfter data={settings.beforeAfter} steps={settings.steps} blank={settings.media.blanks["tshirt-trang"]} />}
       <Testimonials title={settings.sectionTitles.reviews} items={testimonials} />
       <WhyChoose data={settings.whyChoose} />
