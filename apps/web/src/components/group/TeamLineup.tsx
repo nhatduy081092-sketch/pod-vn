@@ -2,6 +2,7 @@ import { BASIC_COLORS, GARMENT_ZONE, type ColorKey, type LineupPerson } from "@p
 
 /**
  * Minh hoạ áo nhóm: 3 áo cùng thiết kế, mỗi áo in tên/số riêng (ảnh phôi thật + chữ chồng lên vùng ngực).
+ * data-ui: chữ ở đây là hình in trên áo, không phải nhãn giao diện (bộ kiểm tra thiết kế bỏ qua).
  * Đúng tính năng thật của YALA (ô tên/số trong Studio) – không phải ảnh khách hàng.
  */
 export function TeamLineup({ team, color, people, className = "" }: { team: string; color: ColorKey; people: LineupPerson[]; className?: string }) {
@@ -14,7 +15,7 @@ export function TeamLineup({ team, color, people, className = "" }: { team: stri
     { left: "54%", top: "12%", w: "50%", z: 2, r: 4 },
   ];
   return (
-    <div className={`relative aspect-[16/10] w-full ${className}`} role="img" aria-label={`Minh hoạ áo nhóm ${team} in tên riêng từng người`}>
+    <div data-ui className={`relative aspect-[16/10] w-full ${className}`} role="img" aria-label={`Minh hoạ áo nhóm ${team} in tên riêng từng người`}>
       {list.map((p, i) => {
         const c = p.color ?? color;
         const dark = BASIC_COLORS[c].dark;
@@ -37,7 +38,7 @@ export function TeamLineup({ team, color, people, className = "" }: { team: stri
           </div>
         );
       })}
-      <span className="absolute bottom-1 right-1 rounded bg-white/85 px-1.5 py-0.5 text-[10px] font-semibold text-ink/60">Minh hoạ</span>
+      <span className="absolute bottom-1 right-1 rounded bg-white/85 px-1.5 py-0.5 text-[13px] font-semibold text-ink/70">Minh hoạ</span>
     </div>
   );
 }

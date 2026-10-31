@@ -3,64 +3,59 @@ import type { LandingSettings } from "@pod/shared";
 import { assetUrl } from "@/lib/config";
 import type { ProductCardData } from "@/lib/types";
 import { IconArrow } from "../ui/icons";
-import { pastel, tiltOf } from "@/lib/pastel";
-
-/** CHỮ IN HOA (dữ liệu cũ) -> câu thường */
-const sentence = (t: string) => (t === t.toLocaleUpperCase("vi") ? t.charAt(0) + t.slice(1).toLocaleLowerCase("vi") : t);
 
 type Industry = { name: string; slug: string; image: string; count: number };
 type Props = { data: LandingSettings["b2b"]; brand: LandingSettings["brand"]; products: ProductCardData[]; industries?: Industry[] };
 
 /**
- * Khối "Giải pháp doanh nghiệp" mang nhận diện YALA (xanh navy + cam accent),
- * tạo khác biệt với bản mẫu: số liệu năng lực, sản phẩm B2B báo giá theo số lượng, khách hàng tiêu biểu.
+ * Khối "Giải pháp doanh nghiệp" trên nền đen: tiêu đề lớn + nút báo giá, số liệu năng lực chữ to,
+ * ngành hàng in logo (ảnh sản phẩm thật), khách hàng tiêu biểu (khi CMS có).
  */
 export function B2BSection({ data, brand, products, industries = [] }: Props) {
   const tiles = industries.filter((i) => i.image).slice(0, 8);
   if (!data.enabled) return null;
   const zalo = `https://zalo.me/${brand.zalo.replace(/\D/g, "")}`;
   return (
-    <section id="doanh-nghiep" className="home-b2b relative scroll-mt-16 overflow-hidden bg-ink border-y-2 border-ink py-14 text-white md:py-20">
-
+    <section id="doanh-nghiep" className="home-b2b relative scroll-mt-16 overflow-hidden bg-ink py-[clamp(80px,14vh,170px)] text-white">
       <div className="container-site relative">
-        <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr] lg:items-center">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
+          <h2 className="font-display text-[clamp(30px,3.6vw,52px)] font-bold leading-[1.06] tracking-[-0.03em] [text-wrap:balance]">{data.title}</h2>
           <div>
-            <span className="chip-sticker bg-brand text-white">{sentence(data.eyebrow.replace(/^YALA\s*·\s*/i, ""))}</span>
-            <h2 className="mt-4 font-display text-[clamp(26px,3.2vw,38px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%]">{data.title}</h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80 md:text-base">{data.subtitle}</p>
-            <div className="mt-5 flex flex-wrap gap-2.5">
-              <Link href="/doanh-nghiep#bao-gia" className="btn-primary px-6 py-3">
+            <p className="max-w-xl text-base leading-relaxed text-white/80 md:text-lg">{data.subtitle}</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/doanh-nghiep#bao-gia" className="btn-primary px-7 py-3.5 text-base">
                 {data.ctaLabel}
               </Link>
-              <Link href="/doanh-nghiep" className="btn border-white bg-transparent px-6 py-3 text-white hover:bg-white hover:text-ink">
+              <Link href="/doanh-nghiep" className="btn border-white/60 bg-transparent px-7 py-3.5 text-base text-white hover:border-white hover:bg-white hover:text-ink">
                 Xem giải pháp doanh nghiệp
               </Link>
-              <a href={zalo} target="_blank" rel="noopener noreferrer" className="btn border-white/50 bg-transparent px-6 py-3 text-white hover:border-white">
+              <a href={zalo} target="_blank" rel="noopener noreferrer" className="px-2 py-3 text-base font-semibold underline underline-offset-4 transition-colors hover:text-brand">
                 Chat Zalo
               </a>
             </div>
           </div>
-
-          <ul className="grid grid-cols-2 gap-4">
-            {data.stats.map((s, i) => (
-              <li key={s.label} className={`sticker tilt p-4 text-ink md:p-5 ${pastel(i)}`} style={{ ["--r" as string]: `${tiltOf(i) / 1.5}deg` }}>
-                <p className="font-display text-[clamp(26px,5vw,42px)] font-extrabold leading-none [font-stretch:85%]">{s.value}</p>
-                <p className="mt-1.5 text-xs font-medium leading-snug text-ink/75 md:text-[15px]">{s.label}</p>
-              </li>
-            ))}
-          </ul>
         </div>
 
+        {/* số liệu năng lực (chủ shop xác nhận 31/10/2026 là của YALA) – chữ lớn, không thẻ */}
+        <ul className="mt-20 grid grid-cols-2 gap-x-8 gap-y-10 md:mt-28 lg:grid-cols-4">
+          {data.stats.map((s, i) => (
+            <li key={s.label} data-reveal="rise" style={{ ["--d" as string]: `${i * 70}ms` }}>
+              <p className="whitespace-nowrap font-display text-[clamp(40px,5vw,76px)] font-bold leading-none tracking-[-0.04em] [font-variant-numeric:tabular-nums]">{s.value}</p>
+              <p className="mt-3 max-w-[15rem] text-base leading-snug text-white/80">{s.label}</p>
+            </li>
+          ))}
+        </ul>
+
         {tiles.length >= 4 ? (
-          <ul className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
+          <ul className="mt-16 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4 md:mt-20 md:gap-x-6">
             {tiles.map((t, i) => (
-              <li key={t.slug} data-reveal="pop" style={{ ["--d" as string]: `${(i % 4) * 70}ms` }}>
-                <Link href={`/doanh-nghiep/san-pham?nganh=${t.slug}`} className="hover-wiggle tilt group block" style={{ ["--r" as string]: `${tiltOf(i) / 1.5}deg` }}>
-                  <span className="sticker block aspect-square overflow-hidden border-white bg-white shadow-[4px_4px_0_#E4570B]">
+              <li key={t.slug} data-reveal="rise" style={{ ["--d" as string]: `${(i % 4) * 70}ms` }}>
+                <Link href={`/doanh-nghiep/san-pham?nganh=${t.slug}`} className="group block">
+                  <span className="block aspect-square overflow-hidden rounded-lg bg-white">
                     <img src={assetUrl(t.image)} alt={t.name} loading="lazy" decoding="async" className="h-full w-full object-contain p-[8%] transition duration-500 group-hover:scale-105" />
                   </span>
-                  <span className="mt-3 block text-center font-display text-[15px] font-bold leading-tight text-white md:text-base">{t.name}</span>
-                  <span className="block text-center text-xs text-white/60">{t.count} mẫu in được logo</span>
+                  <span className="mt-3 block font-display text-[17px] font-bold leading-tight transition-colors group-hover:text-brand">{t.name}</span>
+                  <span className="mt-0.5 block text-[15px] text-white/70">{t.count} mẫu in được logo</span>
                 </Link>
               </li>
             ))}
@@ -72,9 +67,9 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
                 <Link href={`/san-pham/${p.slug}`} className="group block overflow-hidden rounded-xl bg-white text-ink transition hover:-translate-y-0.5">
                   <div className="relative aspect-square overflow-hidden bg-navy-light">
                     <img src={assetUrl(p.images[0])} alt={p.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-                    <span className="absolute left-0 top-3 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-ink left-2">IN / THÊU LOGO</span>
+                    <span className="absolute left-0 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[13px] font-semibold text-ink left-2">In / thêu logo</span>
                   </div>
-                  <div className="border-t border-line p-3">
+                  <div className="p-3">
                     <h3 className="line-clamp-2 min-h-[2.6em] text-sm font-bold leading-snug md:text-[15px]">{p.name}</h3>
                     <p className="mt-1 flex items-center justify-between text-xs font-extrabold text-navy md:text-[15px]">
                       Báo giá theo số lượng <IconArrow className="h-4 w-4 text-accent transition group-hover:translate-x-1" />

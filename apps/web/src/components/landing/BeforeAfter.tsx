@@ -28,16 +28,15 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
   const z = GARMENT_ZONE.tshirt;
 
   return (
-    <section className="relative overflow-hidden bg-sun py-14 md:py-24" aria-label={data.title}>
+    <section className="relative overflow-hidden bg-sky py-[clamp(80px,14vh,170px)]" aria-labelledby="anh-thanh-ao">
       <div className="container-site grid items-center gap-10 md:grid-cols-[1fr_1.1fr] md:gap-14">
-        <div data-reveal>
-          <h2 className="h-section">{data.title}</h2>
-          <p className="mt-3 max-w-md text-[15px] leading-relaxed text-ink/80 md:text-base">{data.subtitle}</p>
+        <div data-reveal="rise">
+          <h2 id="anh-thanh-ao" className="font-display text-[clamp(30px,3.6vw,52px)] font-bold leading-[1.06] tracking-[-0.03em] [text-wrap:balance]">{data.title}</h2>
+          <p className="mt-5 max-w-md text-base leading-relaxed text-ink/80 md:text-lg">{data.subtitle}</p>
           {steps.length > 0 && (
-            <ol className="mt-6 space-y-3">
-              {steps.map((st, i) => (
-                <li key={st.title} className="flex items-center gap-3 text-[15px] font-semibold">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-white font-display text-base font-extrabold">{i + 1}</span>
+            <ol className="mt-8 list-decimal space-y-2.5 pl-6 marker:font-bold">
+              {steps.map((st) => (
+                <li key={st.title} className="pl-1 text-base font-semibold md:text-[17px]">
                   {st.title}
                 </li>
               ))}
@@ -46,7 +45,7 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
           {data.points.length > 0 && (
             <ul className="mt-5 flex flex-wrap gap-2">
               {data.points.map((p) => (
-                <li key={p} className="chip-sticker bg-white text-sm shadow-none">
+                <li key={p} className="rounded-md bg-white px-3 py-1.5 text-[15px] font-semibold">
                   {p}
                 </li>
               ))}
@@ -58,8 +57,8 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
         </div>
         <div
           ref={box}
-          data-reveal="pop"
-          className="sticker relative aspect-square touch-pan-y select-none overflow-hidden bg-white shadow-sticker-lg"
+          data-reveal="rise"
+          className="relative aspect-square touch-pan-y select-none overflow-hidden rounded-lg bg-white"
           onPointerDown={onDown}
           onPointerMove={(e) => drag.current && move(e.clientX)}
           onPointerUp={() => (drag.current = false)}
@@ -96,8 +95,8 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
           <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
             {data.before && <img src={assetUrl(data.before)} alt={data.beforeLabel} className="h-full w-full object-cover" draggable={false} />}
           </div>
-          <span className="chip-sticker absolute left-3 top-3 bg-white text-xs">{data.beforeLabel}</span>
-          <span className="chip-sticker absolute right-3 top-3 bg-brand text-xs text-white">{data.afterLabel}</span>
+          <span className="absolute left-3 top-3 rounded-md bg-white px-2.5 py-1 text-sm font-semibold">{data.beforeLabel}</span>
+          <span className="absolute right-3 top-3 rounded-md bg-ink px-2.5 py-1 text-sm font-semibold text-white">{data.afterLabel}</span>
           {/* thanh kéo */}
           <div className="absolute inset-y-0 w-1 -translate-x-1/2 bg-ink" style={{ left: `${pos}%` }}>
             <button
@@ -108,7 +107,7 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
               aria-valuemax={100}
               aria-valuenow={Math.round(pos)}
               onKeyDown={onKey}
-              className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize place-items-center rounded-full border border-line bg-white text-base font-bold shadow-sticker-sm"
+              className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize place-items-center rounded-full border-2 border-ink bg-white text-base font-bold"
             >
               ⇆
             </button>

@@ -1,27 +1,22 @@
 import type { LandingSettings } from "@pod/shared";
-import { pastel } from "@/lib/pastel";
-import { IconBrush, IconLayers, IconShield, IconTruck, IconUsers, IconWallet } from "../ui/icons";
 
-const ICONS = [IconLayers, IconBrush, IconShield, IconTruck, IconWallet, IconUsers];
-
-/** Cam kết: 1 dải gọn (icon sticker + tiêu đề + 1 dòng), thay cho 6 thẻ to */
+/** Cam kết: tiêu đề + câu dẫn bên trái, 6 cam kết dạng chữ (không icon, không thẻ) bên phải */
 export function WhyChoose({ data }: { data: LandingSettings["whyChoose"] }) {
   return (
-    <section className="container-site py-12 md:py-16" aria-label={data.title} data-reveal>
-      <h2 className="h-section">{data.title}</h2>
-      <ul className="mt-7 grid grid-cols-2 gap-x-5 gap-y-7 md:grid-cols-3 lg:grid-cols-6">
-        {data.items.map((it, i) => {
-          const Icon = ICONS[i % ICONS.length]!;
-          return (
-            <li key={it.title}>
-              <span className={`sticker inline-grid h-12 w-12 place-items-center rounded-xl shadow-sticker-sm ${pastel(i)}`}>
-                <Icon className="h-6 w-6" />
-              </span>
-              <h3 className="mt-3 font-display text-[16px] font-bold leading-tight">{it.title}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-ink/65 md:text-[15px]">{it.desc}</p>
-            </li>
-          );
-        })}
+    <section className="container-site grid gap-10 py-[clamp(72px,12vh,150px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16" aria-labelledby="vi-sao-chon">
+      <div>
+        <h2 id="vi-sao-chon" className="font-display text-[clamp(30px,3.6vw,52px)] font-bold leading-[1.06] tracking-[-0.03em] [text-wrap:balance]">
+          {data.title}
+        </h2>
+        {data.text && <p className="mt-5 max-w-md text-base leading-relaxed text-ink/80 md:text-lg">{data.text}</p>}
+      </div>
+      <ul className="grid gap-x-10 gap-y-9 sm:grid-cols-2">
+        {data.items.map((it, i) => (
+          <li key={it.title} data-reveal="rise" style={{ ["--d" as string]: `${(i % 2) * 70}ms` }}>
+            <h3 className="font-display text-xl font-bold leading-snug md:text-2xl">{it.title}</h3>
+            <p className="mt-2 text-base leading-relaxed text-ink/80">{it.desc}</p>
+          </li>
+        ))}
       </ul>
     </section>
   );
