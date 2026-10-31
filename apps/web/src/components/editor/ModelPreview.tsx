@@ -6,7 +6,7 @@ import { drawMockup, loadImage, type ImageCache } from "./render";
 import { ensureFonts } from "./fonts";
 import type { PrintArea } from "@/lib/types";
 
-/** Độ đậm nếp vải: áo tối thì nhân bóng rất nhẹ (nhân mạnh làm thiết kế đen sì), áo sáng nhân rõ */
+/** Dự phòng khi không đọc được điểm ảnh (vân vải `fabric` không chạy): áo tối nhân bóng rất nhẹ (nhân mạnh làm thiết kế đen sì), áo sáng nhân rõ */
 function zoneShading(img: HTMLImageElement, m: ModelPhoto): number {
   try {
     const c = document.createElement("canvas");
@@ -54,7 +54,7 @@ export function ModelPreview({ model, area, design, images, version }: { model: 
       c.height = H;
       const ctx = c.getContext("2d")!;
       ctx.clearRect(0, 0, W, H);
-      drawMockup(ctx, W, H, { zoneX: model.x, zoneY: model.y, zoneW: model.w, zoneH: model.h, widthMm: area.widthMm, heightMm: area.heightMm }, design, { mockup: img, mockupIsPhoto: true }, images, { shading: zoneShading(img, model) });
+      drawMockup(ctx, W, H, { zoneX: model.x, zoneY: model.y, zoneW: model.w, zoneH: model.h, widthMm: area.widthMm, heightMm: area.heightMm }, design, { mockup: img, mockupIsPhoto: true }, images, { fabric: 1, shading: zoneShading(img, model) });
     });
     return () => {
       alive = false;

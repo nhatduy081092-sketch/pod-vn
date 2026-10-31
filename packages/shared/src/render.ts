@@ -465,6 +465,11 @@ export type MockupOptions = {
   garmentColor?: string | null;
   /** 0–1: độ đậm nếp vải/bóng đổ in lên thiết kế (chỉ với ảnh chụp thật) */
   shading?: number;
+  /**
+   * 0–1: ảnh người mẫu – thiết kế nhận vân vải + uốn nhẹ theo nếp áo. Tính theo độ sáng TƯƠNG ĐỐI của áo
+   * nên áo đen cũng ra nếp rõ như áo trắng. Áp được thì bỏ qua `shading`; ảnh khác domain (canvas bẩn) thì dùng `shading`.
+   */
+  fabric?: number;
 };
 
 /**
@@ -521,10 +526,11 @@ export function drawMockup(ctx: Ctx, canvasW: number, canvasH: number, area: Are
     octx.drawImage(assets.mask, mock.x, mock.y, mock.w, mock.h);
     octx.globalCompositeOperation = "source-over";
   }
+  const fabricDone = !!opts.fabric && !!assets.mockup && !!assets.mockupIsPhoto && applyFabric(off, assets.mockup, mock, pr, opts.fabric);
   ctx.drawImage(off, 0, 0);
 
   // nếp vải: lấy độ sáng tối của ảnh chụp, nhân lên phần có thiết kế
-  const shading = opts.shading ?? 0;
+  const shading = fabricDone ? 0 : (opts.shading ?? 0);
   if (shading > 0 && assets.mockup && assets.mockupIsPhoto) {
     const s = createCanvas(canvasW, canvasH);
     const sctx = s.getContext("2d")!;
@@ -545,6 +551,99 @@ export function drawMockup(ctx: Ctx, canvasW: number, canvasH: number, area: Are
   if (assets.overlay) ctx.drawImage(assets.overlay, mock.x, mock.y, mock.w, mock.h);
   ctx.restore();
   return { mock, printRect: pr };
+}
+
+/** Làm mờ hộp 2 lượt (xấp xỉ Gaussian) trên mảng độ sáng w×h */
+function boxBlur(src: Float32Array, w: number, h: number, r: number): Float32Array {
+  let a = Float32Array.from(src);
+  let b = new Float32Array(a.length);
+  for (let pass = 0; pass < 4; pass++) {
+    const horiz = pass % 2 === 0;
+    const len = horiz ? w : h;
+    const lines = horiz ? h : w;
+    const step = horiz ? 1 : w;
+    for (let l = 0; l < lines; l++) {
+      const base = horiz ? l * w : l;
+      let sum = 0;
+      for (let i = -r; i <= r; i++) sum += a[base + Math.min(len - 1, Math.max(0, i)) * step]!;
+      for (let i = 0; i < len; i++) {
+        b[base + i * step] = sum / (2 * r + 1);
+        sum += a[base + Math.min(len - 1, i + r + 1) * step]! - a[base + Math.max(0, i - r) * step]!;
+      }
+    }
+    [a, b] = [b, a];
+  }
+  return a;
+}
+
+/**
+ * Vân vải + nếp áo cho ảnh người mẫu, sửa trực tiếp lớp thiết kế `off`:
+ * - nếp áo (độ sáng đã làm mờ ÷ trung bình vùng in): thiết kế tối/sáng theo nếp và trôi vài px theo độ dốc nếp
+ * - vân vải (độ sáng ÷ độ sáng đã làm mờ): sợi vải lộ qua mực
+ * Trả false nếu không đọc được điểm ảnh (ảnh khác domain) -> bên gọi dùng cách đổ bóng cũ.
+ */
+function applyFabric(off: Canvas, photo: Img, mock: { x: number; y: number; w: number; h: number }, pr: { x: number; y: number; w: number; h: number }, strength: number): boolean {
+  const pad = Math.ceil(Math.max(pr.w, pr.h) * 0.04);
+  const x0 = Math.max(0, Math.floor(pr.x - pad));
+  const y0 = Math.max(0, Math.floor(pr.y - pad));
+  const w = Math.min(off.width, Math.ceil(pr.x + pr.w + pad)) - x0;
+  const h = Math.min(off.height, Math.ceil(pr.y + pr.h + pad)) - y0;
+  if (w < 16 || h < 16) return false;
+  const ph = createCanvas(w, h);
+  const pctx = ph.getContext("2d", { willReadFrequently: true })!;
+  pctx.drawImage(photo, mock.x - x0, mock.y - y0, mock.w, mock.h);
+  const octx = off.getContext("2d", { willReadFrequently: true })!;
+  let px: Uint8ClampedArray;
+  let des: ImageData;
+  try {
+    px = pctx.getImageData(0, 0, w, h).data;
+    des = octx.getImageData(x0, y0, w, h);
+  } catch {
+    return false;
+  } finally {
+    ph.width = ph.height = 0;
+  }
+  const n = w * h;
+  const L = new Float32Array(n);
+  // +6: áo đen tuyền không chia cho 0 và nhiễu ảnh không bị phóng đại thành vân giả
+  for (let i = 0; i < n; i++) L[i] = 0.299 * px[i * 4]! + 0.587 * px[i * 4 + 1]! + 0.114 * px[i * 4 + 2]! + 6;
+  const fold = boxBlur(L, w, h, Math.max(2, Math.round(Math.min(w, h) * 0.02)));
+  // trường uốn lấy từ nếp lớn (mờ hơn nhiều) -> thiết kế cong mềm, nét chữ không bị xé
+  const wave = boxBlur(L, w, h, Math.max(3, Math.round(Math.min(w, h) * 0.06)));
+  let mean = 0;
+  for (let i = 0; i < n; i++) mean += fold[i]!;
+  mean /= n;
+  const maxShift = Math.max(1, Math.min(w, h) * 0.008) * strength;
+  const g = Math.max(2, Math.round(Math.min(w, h) * 0.02));
+  const d = des.data;
+  const out = new Uint8ClampedArray(d.length);
+  const clamp = (v: number, lo: number, hi: number) => (v < lo ? lo : v > hi ? hi : v);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      // độ dốc nếp -> lệch điểm lấy mẫu: thiết kế cong theo nếp áo
+      const gx = (wave[y * w + Math.min(w - 1, x + g)]! - wave[y * w + Math.max(0, x - g)]!) / mean;
+      const gy = (wave[Math.min(h - 1, y + g) * w + x]! - wave[Math.max(0, y - g) * w + x]!) / mean;
+      const sx = clamp(x - clamp(gx / 0.25, -1, 1) * maxShift, 0, w - 1.001);
+      const sy = clamp(y - clamp(gy / 0.25, -1, 1) * maxShift, 0, h - 1.001);
+      const ix = sx | 0;
+      const iy = sy | 0;
+      const fx = sx - ix;
+      const fy = sy - iy;
+      const p00 = (iy * w + ix) * 4;
+      const p10 = p00 + 4;
+      const p01 = p00 + w * 4;
+      const p11 = p01 + 4;
+      // tối theo nếp nhiều, sáng lên rất ít (sáng mạnh làm cháy ảnh/chữ trắng)
+      const shade = clamp(1 + (fold[i]! / mean - 1) * 0.8 * strength, 0.6, 1.08) * clamp(1 + (L[i]! / fold[i]! - 1) * 0.4 * strength, 0.92, 1.05);
+      for (let c = 0; c < 4; c++) {
+        const v = (d[p00 + c]! * (1 - fx) + d[p10 + c]! * fx) * (1 - fy) + (d[p01 + c]! * (1 - fx) + d[p11 + c]! * fx) * fy;
+        out[i * 4 + c] = c === 3 ? v : v * shade;
+      }
+    }
+  }
+  octx.putImageData(new ImageData(out, w, h), x0, y0);
+  return true;
 }
 
 /**
