@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { BASIC_COLORS, DESIGN_HUBS, formatVND, GARMENT_PRODUCT, GROUP_MIN_QTY, SEGMENTS, type Segment } from "@pod/shared";
 import { getProducts, getSettings } from "@/lib/api";
-import { pastel } from "@/lib/pastel";
 import { B2BQuoteForm } from "@/components/b2b/B2BQuoteForm";
-import { TeamLineup } from "@/components/group/TeamLineup";
-import { GroupSteps } from "@/components/landing/GroupHero";
+import { heroActions, heroLead, HomeSteps, ObjectHero, rise } from "@/components/landing/HomeSections";
+import { Arrow, Breadcrumb, Faq, h2Big, rowLink, splitTitle } from "@/components/seo/SeoBlocks";
 
 export function segmentMetadata(s: Segment) {
   return {
@@ -25,6 +24,8 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
   const price = new Map((list?.items ?? []).map((p) => [p.slug, p.basePrice]));
   const first = s.products[0]!;
   const others = SEGMENTS.filter((x) => x.key !== s.key);
+  const hubs = DESIGN_HUBS.filter((h) => h.segment === s.key);
+  const [main, sub] = splitTitle(s.title);
   const facts = [
     { v: `Từ ${GROUP_MIN_QTY} sản phẩm`, l: "là đơn nhóm – ít hơn vẫn đặt được" },
     { v: "Tên & số riêng", l: "từng áo, không tính thêm phí" },
@@ -42,161 +43,137 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
     <>
       {s.faq.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
 
-      {/* Hero */}
-      <section className="border-b border-line bg-cream">
-        <div className="container-site grid items-center gap-8 py-8 md:grid-cols-[1.05fr_1fr] md:gap-10 md:py-14">
-          <div>
-            <p className="eyebrow">{s.eyebrow}</p>
-            <h1 className="mt-3 font-display text-[clamp(28px,3.8vw,46px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:86%] [text-wrap:balance]">{s.title}</h1>
-            <p className="mt-4 max-w-xl text-base leading-relaxed text-ink/80 md:text-lg">{s.subtitle}</p>
-            <div className="mt-6 flex flex-wrap gap-2.5">
-              <Link href={studioHref(first)} className="btn-primary px-6 py-3">
-                Thiết kế áo nhóm ngay
-              </Link>
-              <a href="#bao-gia" className="btn-outline bg-white px-6 py-3">
-                Nhận báo giá
-              </a>
-              {zalo && (
-                <a href={zalo} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-3 text-sm font-semibold underline underline-offset-4 hover:text-brand">
-                  Chat Zalo
-                </a>
-              )}
-            </div>
-          </div>
-          <div className={`rounded-2xl border border-line px-3 py-4 shadow-sticker md:p-6 ${s.lineup.color === "trang" || s.lineup.color === "kem" ? "bg-sky/60" : "bg-white"}`}>
-            <TeamLineup team={s.lineup.team} color={s.lineup.color} people={s.lineup.people} />
-          </div>
+      <ObjectHero id="seg-title" title={main} lineup={s.lineup} before={<Breadcrumb name={s.name} />}>
+        {sub && <p className="mt-5 text-xl font-semibold md:text-2xl">{sub}</p>}
+        <p className={heroLead}>{s.subtitle}</p>
+        <div className={heroActions}>
+          <Link href={studioHref(first)} className="btn-primary px-7 py-3.5 text-base">
+            Thiết kế áo nhóm ngay
+          </Link>
+          <a href="#bao-gia" className="btn-outline px-7 py-3.5 text-base">
+            Nhận báo giá
+          </a>
+          {zalo && (
+            <a href={zalo} target="_blank" rel="noopener noreferrer" className="px-2 py-3 text-base font-semibold underline underline-offset-4 transition-colors hover:text-brand-dark">
+              Chat Zalo
+            </a>
+          )}
         </div>
-        <div className="container-site pb-8 md:pb-12">
-          <ul className="grid grid-cols-2 gap-2.5 md:grid-cols-4 md:gap-4">
-            {facts.map((f, i) => (
-              <li key={f.v} className={`rounded-2xl border border-line px-4 py-3 shadow-sticker-sm ${pastel(i + 1)}`}>
-                <p className="font-display text-[clamp(17px,2vw,24px)] font-extrabold leading-tight [font-stretch:90%]">{f.v}</p>
-                <p className="mt-0.5 text-sm leading-snug text-ink/75">{f.l}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
+      </ObjectHero>
+
+      {/* 4 cam kết: chữ lớn, không thẻ */}
+      <section className="container-site pt-[clamp(56px,9vh,110px)]" aria-label="Cam kết đơn nhóm">
+        <ul className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-4 md:gap-x-10">
+          {facts.map((f, i) => (
+            <li key={f.v} {...rise(i)}>
+              <p className="font-display text-[clamp(24px,2.6vw,38px)] font-bold leading-[1.08] tracking-[-0.025em]">{f.v}</p>
+              <p className="mt-2 text-base leading-snug">{f.l}</p>
+            </li>
+          ))}
+        </ul>
       </section>
 
-      {/* Dịp / ý tưởng */}
-      <section className="py-10 md:py-14">
-        <div className="container-site">
-          <p className="eyebrow">Dùng cho</p>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {s.useCases.map((u, i) => (
-              <li key={u}>
-                <a href={`#bao-gia`} className={`chip-sticker inline-block ${pastel(i)}`}>
-                  {u}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* Tính năng */}
+      {/* Tính năng: tiêu đề rộng + dịp dùng, bên dưới 4 cột chữ */}
       {s.features.length > 0 && (
-        <section className="pb-12 md:pb-16">
-          <div className="container-site">
-            <h2 className="h-section [text-wrap:balance]">Làm áo nhóm không còn là việc của một người</h2>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2 md:mt-7 md:gap-5 lg:grid-cols-4">
-              {s.features.map((f, i) => (
-                <li key={f.title} className="flex gap-3 rounded-2xl border border-line bg-white p-4 shadow-sticker-sm md:block md:p-5">
-                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-sm font-extrabold ${pastel(i + 2)}`}>{i + 1}</span>
-                  <div>
-                    <h3 className="text-[16px] font-bold leading-snug md:mt-3 md:text-[17px]">{f.title}</h3>
-                    <p className="mt-1 text-[15px] leading-relaxed text-muted md:mt-1.5">{f.desc}</p>
-                  </div>
+        <section className="container-site py-[clamp(72px,12vh,150px)]" aria-labelledby="tinh-nang">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
+            <h2 id="tinh-nang" className={h2Big}>
+              Làm áo nhóm không còn là việc của một người
+            </h2>
+            {s.useCases.length > 0 && (
+              <div className="lg:pb-1">
+                <p className="text-[15px] font-semibold">Hợp cho</p>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {s.useCases.map((u) => (
+                    <li key={u}>
+                      <a href="#bao-gia" className="inline-block rounded-lg bg-surface px-3.5 py-2 text-[15px] font-medium transition-colors hover:bg-ink hover:text-white">
+                        {u}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+          <div className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2 md:mt-16 lg:grid-cols-4">
+            {s.features.map((f, i) => (
+              <div key={f.title} {...rise(i)}>
+                <h3 className="text-xl font-bold leading-snug">{f.title}</h3>
+                <p className="mt-2 text-base leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <HomeSteps />
+
+      {/* Sản phẩm gợi ý */}
+      <section className="container-site py-[clamp(72px,12vh,150px)]" aria-labelledby="san-pham-goi-y">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
+          <h2 id="san-pham-goi-y" className={h2Big}>
+            Chọn áo, bấm để thiết kế
+          </h2>
+          {hubs.length > 0 && (
+            <ul className="space-y-1 lg:pb-1">
+              {hubs.map((h) => (
+                <li key={h.slug}>
+                  <Link href={`/${h.slug}`} className="text-base font-semibold underline underline-offset-4 hover:text-brand-dark md:text-lg">
+                    Xem {h.name.charAt(0).toLocaleLowerCase("vi") + h.name.slice(1)} có sẵn
+                  </Link>
                 </li>
               ))}
             </ul>
-          </div>
-        </section>
-      )}
-
-      <GroupSteps />
-
-      {/* Sản phẩm gợi ý */}
-      <section className="py-12 md:py-16">
-        <div className="container-site">
-          <p className="eyebrow">Sản phẩm gợi ý</p>
-          <div className="mt-1.5 flex flex-wrap items-end justify-between gap-3">
-            <h2 className="h-section">Chọn áo, bấm để thiết kế</h2>
-            {DESIGN_HUBS.filter((h) => h.segment === s.key).map((h) => (
-              <Link key={h.slug} href={`/${h.slug}`} className="text-[15px] font-semibold underline underline-offset-4 hover:text-brand-dark">
-                Xem {h.name.charAt(0).toLocaleLowerCase("vi") + h.name.slice(1)} có sẵn
-              </Link>
-            ))}
-          </div>
-          <ul className="mt-7 grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-4">
-            {s.products.map((p, i) => {
-              const g = GARMENT_PRODUCT[p.garment];
-              const from = price.get(g.slug);
-              return (
-                <li key={`${p.garment}-${p.color}`}>
-                  <Link href={studioHref(p)} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sticker-sm transition hover:-translate-y-0.5">
-                    <div className={`relative aspect-square border-b border-line ${pastel(i + 3)}`}>
-                      <img src={`/blanks/${p.garment}-${p.color}.webp`} alt={`${g.label} ${BASIC_COLORS[p.color].name}`} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain p-3 transition duration-500 group-hover:scale-105" />
-                    </div>
-                    <div className="flex flex-1 flex-col p-3 md:p-4">
-                      <h3 className="text-[15px] font-bold leading-snug md:text-base">{g.label}</h3>
-                      <p className="mt-0.5 flex-1 text-sm text-muted">{p.note}</p>
-                      <p className="mt-2 flex items-center justify-between gap-2 text-sm font-semibold">
-                        {from ? <span>Từ {formatVND(from)}</span> : <span />}
-                        <span className="text-brand">Thiết kế →</span>
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-          {s.extras && (
-            <p className="mt-6 rounded-2xl bg-surface px-5 py-4 text-[15px] leading-relaxed">
-              {s.extras}{" "}
-              <a href="#bao-gia" className="font-semibold text-brand underline underline-offset-4">
-                Gửi yêu cầu
-              </a>
-            </p>
           )}
         </div>
+        <ul className="mt-10 grid grid-cols-2 gap-x-3 gap-y-8 md:mt-14 md:gap-x-6 md:gap-y-12 lg:grid-cols-4">
+          {s.products.map((p, i) => {
+            const g = GARMENT_PRODUCT[p.garment];
+            const from = price.get(g.slug);
+            return (
+              <li key={`${p.garment}-${p.color}`} {...rise(i % 4)}>
+                <Link href={studioHref(p)} className="group block">
+                  <div className="relative aspect-square overflow-hidden rounded-lg bg-surface">
+                    <img src={`/blanks/${p.garment}-${p.color}.webp`} alt={`${g.label} ${BASIC_COLORS[p.color].name}`} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain p-4 transition duration-500 group-hover:scale-105" />
+                  </div>
+                  <h3 className="mt-3 text-[15px] font-semibold leading-snug md:text-[17px]">{g.label}</h3>
+                  <p className="mt-0.5 text-[15px] leading-snug text-ink/80">{p.note}</p>
+                  <p className="mt-2 flex items-center justify-between gap-2 text-base font-bold tabular-nums">
+                    {from ? <span className="whitespace-nowrap">Từ {formatVND(from)}</span> : <span />}
+                    <span className="hidden text-[15px] font-semibold text-brand-dark underline-offset-4 group-hover:underline md:inline">Thiết kế</span>
+                  </p>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+        {s.extras && (
+          <p className="mt-12 max-w-[44rem] text-lg leading-relaxed">
+            {s.extras}{" "}
+            <a href="#bao-gia" className="font-semibold underline underline-offset-4 hover:text-brand-dark">
+              Gửi yêu cầu
+            </a>
+          </p>
+        )}
       </section>
 
-      {/* Hỏi đáp */}
-      {s.faq.length > 0 && (
-        <section className="border-t border-line py-12 md:py-16">
-          <div className="container-site max-w-3xl">
-            <h2 className="h-section">Câu hỏi thường gặp</h2>
-            <div className="mt-6 divide-y divide-line border-y border-line">
-              {s.faq.map((f) => (
-                <details key={f.q} className="group py-4">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-[16px] font-semibold">
-                    {f.q}
-                    <span className="mt-0.5 text-xl leading-none text-muted transition group-open:rotate-45">+</span>
-                  </summary>
-                  <p className="mt-2 text-[15px] leading-relaxed text-ink/75">{f.a}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      <Faq items={s.faq} />
 
       {/* Báo giá */}
-      <section id="bao-gia" className="scroll-mt-28 bg-cream py-12 md:py-16">
-        <div className="container-site grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
+      <section id="bao-gia" className="scroll-mt-28 bg-surface py-[clamp(72px,12vh,150px)]" aria-labelledby="bao-gia-title">
+        <div className="container-site grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-16">
           <div>
-            <p className="eyebrow">Nhận báo giá</p>
-            <h2 className="h-section mt-1.5">Gửi nhu cầu – YALA tư vấn & làm mockup miễn phí</h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-muted">
+            <h2 id="bao-gia-title" className={h2Big}>
+              Nhận báo giá, mockup miễn phí
+            </h2>
+            <p className="mt-5 max-w-[32rem] text-base leading-relaxed md:text-lg">
               Muốn tự làm? Thiết kế trong YALA Studio và đặt ngay trên web. Cần tư vấn chất liệu, số lượng lớn hoặc nhiều món – để lại thông tin, YALA liên hệ trong giờ làm việc.
             </p>
-            <ul className="mt-5 space-y-2 text-[15px]">
+            <ul className="mt-8 space-y-2 text-lg">
               {brand.hotline && (
                 <li>
                   Hotline:{" "}
-                  <a href={`tel:${brand.hotline.replace(/\s/g, "")}`} className="font-semibold hover:text-brand">
+                  <a href={`tel:${brand.hotline.replace(/\s/g, "")}`} className="font-semibold tabular-nums hover:text-brand-dark">
                     {brand.hotline}
                   </a>
                 </li>
@@ -204,7 +181,7 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
               {zalo && (
                 <li>
                   Zalo:{" "}
-                  <a href={zalo} target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-brand">
+                  <a href={zalo} target="_blank" rel="noopener noreferrer" className="font-semibold tabular-nums hover:text-brand-dark">
                     {brand.zalo}
                   </a>
                 </li>
@@ -216,20 +193,23 @@ export async function SegmentPage({ segment: s }: { segment: Segment }) {
       </section>
 
       {/* Nhóm khách khác */}
-      <section className="py-10 md:py-12">
-        <div className="container-site">
-          <p className="eyebrow">YALA cũng làm cho</p>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-3">
-            {others.map((o, i) => (
-              <li key={o.key}>
-                <Link href={o.href} className={`group block h-full rounded-2xl border border-line p-4 shadow-sticker-sm transition hover:-translate-y-0.5 ${pastel(i + 4)}`}>
-                  <p className="text-lg font-extrabold">{o.name} →</p>
-                  <p className="mt-1 text-[15px] leading-snug text-ink/75">{o.pitch}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <section className="container-site grid gap-8 py-[clamp(72px,12vh,150px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16" aria-labelledby="nhom-khac">
+        <h2 id="nhom-khac" className={h2Big}>
+          YALA cũng làm cho
+        </h2>
+        <ul className="space-y-2">
+          {others.map((o) => (
+            <li key={o.key}>
+              <Link href={o.href} className={rowLink}>
+                <span>
+                  <span className="block text-xl font-bold">{o.name}</span>
+                  <span className="mt-0.5 block text-[15px] opacity-80">{o.pitch}</span>
+                </span>
+                <Arrow />
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
     </>
   );

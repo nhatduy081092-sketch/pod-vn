@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { DESIGN_HUBS, GARMENT_PRODUCT, GROUP_MIN_QTY, GROUP_STEPS, SEGMENTS } from "@pod/shared";
+import type { ReactNode } from "react";
+import { DESIGN_HUBS, GARMENT_PRODUCT, GROUP_MIN_QTY, GROUP_STEPS, SEGMENTS, type Segment } from "@pod/shared";
 import { TOOL_LINKS } from "../seo/ToolLinks";
 import { TeamLineup } from "../group/TeamLineup";
 
@@ -9,45 +10,62 @@ import { TeamLineup } from "../group/TeamLineup";
  * Khối nào cũng có tiêu đề riêng; chuyển động = data-reveal="rise" (tắt khi giảm chuyển động).
  */
 
-const rise = (i: number) => ({ "data-reveal": "rise", style: { ["--d" as string]: `${i * 70}ms` } });
+export const rise = (i: number) => ({ "data-reveal": "rise", style: { ["--d" as string]: `${i * 70}ms` } });
 
-/** Đầu trang: tiêu đề + 1 câu + 2 nút bên trái, 3 áo in tên/số phóng to tràn mép phải */
-export function HomeHero({ zalo }: { zalo?: string }) {
-  const sport = SEGMENTS.find((s) => s.key === "the-thao")!;
+/**
+ * Khuôn đầu trang "vật thể thật to" (trang chủ, trang SEO mẫu áo, trang nhóm khách): tiêu đề + nội dung bên trái,
+ * 3 áo in tên/số phóng to tràn mép phải, mở kiểu màn trập. `before` = đường dẫn (breadcrumb) phía trên tiêu đề.
+ */
+export function ObjectHero({ id, title, lineup, before, children }: { id: string; title: ReactNode; lineup: Segment["lineup"]; before?: ReactNode; children: ReactNode }) {
   return (
-    <section className="relative overflow-hidden bg-surface" aria-labelledby="home-title">
+    <section className="relative overflow-hidden bg-surface" aria-labelledby={id}>
       <div className="container-site grid items-center gap-6 pt-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:gap-4 md:pt-16 lg:min-h-[min(74svh,720px)]">
         <div className="relative z-10 md:pb-16">
-          <h1 id="home-title" className="font-display text-[clamp(40px,5vw,76px)] font-bold leading-[1.02] tracking-[-0.035em] [text-wrap:balance]">
-            Áo nhóm, mỗi người đúng tên
+          {before}
+          <h1 id={id} className="font-display text-[clamp(40px,5vw,76px)] font-bold leading-[1.02] tracking-[-0.035em] [text-wrap:balance]">
+            {title}
           </h1>
-          <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-ink md:text-xl">
-            Doanh nghiệp, CLB, lớp, team building: thiết kế trên web, gửi 1 link để cả nhóm tự ghi tên – size. YALA in và giao tận nơi, đơn nhóm từ {GROUP_MIN_QTY} sản phẩm.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href={`/thiet-ke/${GARMENT_PRODUCT.tshirt.slug}`} className="btn-primary px-7 py-3.5 text-base">
-              Thiết kế áo nhóm
-            </Link>
-            <Link href="/doanh-nghiep#bao-gia" className="btn-outline px-7 py-3.5 text-base">
-              Nhận báo giá
-            </Link>
-            {zalo && (
-              <a href={zalo} target="_blank" rel="noopener noreferrer" className="px-2 py-3 text-base font-semibold underline underline-offset-4 transition-colors hover:text-brand-dark">
-                Chat Zalo
-              </a>
-            )}
-          </div>
-          <p className="mt-7 text-base text-ink/80">Xem mẫu trước khi đặt · Có hoá đơn VAT · Giao hàng toàn quốc</p>
+          {children}
         </div>
         {/* vật thể: rộng hơn cột, tràn mép phải + bị cắt đáy */}
         <div className="home-shutter relative -mx-4 -mb-[6%] md:-mr-[6vw] md:ml-0 md:self-end">
           <div className="w-[118%] max-w-none md:w-[112%]">
-            <TeamLineup team={sport.lineup.team} color={sport.lineup.color} people={sport.lineup.people} />
+            <TeamLineup team={lineup.team} color={lineup.color} people={lineup.people} />
           </div>
           <span className="absolute bottom-[12%] left-4 z-10 rounded-md bg-white px-2 py-0.5 text-[13px] font-semibold text-ink/80 md:left-2">Minh hoạ</span>
         </div>
       </div>
     </section>
+  );
+}
+
+/** Câu đỡ ngay dưới tiêu đề + hàng nút */
+export const heroLead = "mt-6 max-w-[34rem] text-lg leading-relaxed text-ink md:text-xl";
+export const heroActions = "mt-8 flex flex-wrap items-center gap-3";
+
+/** Đầu trang chủ: áo đội in tên/số */
+export function HomeHero({ zalo }: { zalo?: string }) {
+  const sport = SEGMENTS.find((s) => s.key === "the-thao")!;
+  return (
+    <ObjectHero id="home-title" title="Áo nhóm, mỗi người đúng tên" lineup={sport.lineup}>
+      <p className={heroLead}>
+        Doanh nghiệp, CLB, lớp, team building: thiết kế trên web, gửi 1 link để cả nhóm tự ghi tên – size. YALA in và giao tận nơi, đơn nhóm từ {GROUP_MIN_QTY} sản phẩm.
+      </p>
+      <div className={heroActions}>
+        <Link href={`/thiet-ke/${GARMENT_PRODUCT.tshirt.slug}`} className="btn-primary px-7 py-3.5 text-base">
+          Thiết kế áo nhóm
+        </Link>
+        <Link href="/doanh-nghiep#bao-gia" className="btn-outline px-7 py-3.5 text-base">
+          Nhận báo giá
+        </Link>
+        {zalo && (
+          <a href={zalo} target="_blank" rel="noopener noreferrer" className="px-2 py-3 text-base font-semibold underline underline-offset-4 transition-colors hover:text-brand-dark">
+            Chat Zalo
+          </a>
+        )}
+      </div>
+      <p className="mt-7 text-base text-ink/80">Xem mẫu trước khi đặt · Có hoá đơn VAT · Giao hàng toàn quốc</p>
+    </ObjectHero>
   );
 }
 
@@ -79,7 +97,7 @@ export function HomeSegments() {
 
 const VERBS = ["Thiết kế", "Gửi link", "Chốt đơn", "In & giao"];
 
-/** Cách đặt áo nhóm: mỗi bước 1 động từ cỡ rất lớn, mô tả bên phải */
+/** Cách đặt áo nhóm: mỗi bước 1 động từ cỡ rất lớn, mô tả bên phải (trang chủ + trang SEO mẫu áo, nhóm khách) */
 export function HomeSteps() {
   return (
     <section className="bg-ink py-[clamp(80px,14vh,170px)] text-white" aria-labelledby="cach-dat-ao-nhom">

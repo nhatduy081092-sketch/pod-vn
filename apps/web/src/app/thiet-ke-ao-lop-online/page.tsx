@@ -6,7 +6,7 @@ import { basicPrices } from "@/lib/basic-prices";
 import { ReadyDesignCard } from "@/components/designs/ReadyDesignCard";
 import { DesignFonts } from "@/components/designs/DesignFonts";
 import { TeamLineup } from "@/components/group/TeamLineup";
-import { GroupSteps } from "@/components/landing/GroupHero";
+import { HomeSteps } from "@/components/landing/HomeSections";
 import { hubDesigns } from "@/components/seo/HubPage";
 import { phraseHref } from "@/components/seo/PhrasePage";
 import { TOOL_LINKS } from "@/components/seo/ToolLinks";
@@ -100,7 +100,7 @@ export default async function Page() {
         </div>
       </section>
 
-      <GroupSteps />
+      <HomeSteps />
 
       <section className="py-10 md:py-14">
         <div className="container-site">

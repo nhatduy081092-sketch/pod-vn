@@ -15,7 +15,8 @@ import { getProduct, getSettings } from "@/lib/api";
 import { SITE_URL } from "@/lib/config";
 import { ReadyDesignCard } from "@/components/designs/ReadyDesignCard";
 import { DesignFonts } from "@/components/designs/DesignFonts";
-import { GroupSteps } from "@/components/landing/GroupHero";
+import { heroActions, heroLead, HomeSteps, ObjectHero, rise } from "@/components/landing/HomeSections";
+import { Arrow, Breadcrumb, Faq, h2Big, rowLink, splitTitle } from "./SeoBlocks";
 import { TOOL_LINKS } from "./ToolLinks";
 
 const YEAR = () => new Date().getFullYear();
@@ -65,91 +66,93 @@ export async function HubPage({ hub: h }: { hub: DesignHub }) {
     { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: h.faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
   ];
 
+  const [main, sub] = splitTitle(title);
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <DesignFonts designs={designs} />
 
-      <section className="border-b border-line bg-cream">
-        <div className="container-site py-8 md:py-12">
-          <nav className="text-sm text-muted" aria-label="Breadcrumb">
-            <Link href="/" className="hover:text-ink">
-              Trang chủ
-            </Link>{" "}
-            / <span className="text-ink">{h.name}</span>
-          </nav>
-          <h1 className="mt-3 max-w-4xl font-display text-[clamp(28px,3.8vw,46px)] font-bold leading-[1.15] tracking-[-0.02em] [text-wrap:balance]">{title}</h1>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-ink/80 md:text-lg">{h.intro}</p>
-          <div className="mt-6 flex flex-wrap gap-2.5">
-            <a href="#mau" className="btn-primary px-6">
-              Xem {designs.length} mẫu
-            </a>
-            <Link href={seg.href} className="btn-outline bg-white px-6">
-              Giải pháp cho {lc(seg.name)}
-            </Link>
-          </div>
+      <ObjectHero id="hub-title" title={main} lineup={seg.lineup} before={<Breadcrumb name={h.name} />}>
+        {sub && <p className="mt-5 text-xl font-semibold md:text-2xl">{sub}</p>}
+        <p className={heroLead}>{h.intro}</p>
+        <div className={heroActions}>
+          <a href="#mau" className="btn-primary px-7 py-3.5 text-base">
+            Xem {designs.length} mẫu
+          </a>
+          <Link href={seg.href} className="btn-outline px-7 py-3.5 text-base">
+            Giải pháp cho {lc(seg.name)}
+          </Link>
         </div>
-      </section>
+      </ObjectHero>
 
       {/* Lưới mẫu */}
-      <section id="mau" className="scroll-mt-28 py-10 md:py-14">
-        <div className="container-site">
-          <h2 className="h-section">Bấm vào mẫu để sửa chữ, đổi màu áo</h2>
-          <p className="mt-2 max-w-2xl text-[15px] text-muted">Mẫu có ô tên/số sẽ in riêng cho từng người khi đặt theo nhóm. Giá hiển thị là giá áo in 1 mặt trước.</p>
-          <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
-            {designs.map((d) => {
-              const p = products[h.garments.indexOf(d.garment)] ?? null;
-              return (
-                <li key={d.slug}>
-                  <ReadyDesignCard d={d} back={back} price={p ? { basePrice: effectiveBasePrice(p), compareAtPrice: p.compareAtPrice } : undefined} />
-                </li>
-              );
-            })}
-          </ul>
+      <section id="mau" className="container-site scroll-mt-28 py-[clamp(72px,12vh,150px)]" aria-labelledby="mau-title">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
+          <h2 id="mau-title" className={h2Big}>
+            Bấm vào mẫu để sửa chữ, đổi màu áo
+          </h2>
+          <p className="max-w-[34rem] text-base leading-relaxed md:text-lg lg:pb-1">Mẫu có ô tên/số sẽ in riêng cho từng người khi đặt theo nhóm. Giá hiển thị là giá áo in 1 mặt trước.</p>
         </div>
+        <ul className="mt-10 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 md:mt-14 md:gap-x-6 md:gap-y-12 lg:grid-cols-4">
+          {designs.map((d, i) => {
+            const p = products[h.garments.indexOf(d.garment)] ?? null;
+            return (
+              <li key={d.slug} {...rise(i % 4)}>
+                <ReadyDesignCard d={d} back={back} price={p ? { basePrice: effectiveBasePrice(p), compareAtPrice: p.compareAtPrice } : undefined} />
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
-      <GroupSteps />
+      <HomeSteps />
 
-      {/* Bảng giá dạng chữ */}
+      {/* Bảng giá dạng chữ (bảng thật: giữ đường kẻ hàng) */}
       {priced.length > 0 && (
-        <section className="py-10 md:py-14">
-          <div className="container-site max-w-4xl">
-            <h2 className="h-section">Bảng giá {lc(h.name)}</h2>
-            <p className="mt-2 text-[15px] text-muted">Giá áo in 1 mặt trước theo thiết kế của bạn; in thêm mặt sau tính phụ phí hiện trong Studio. Đơn nhóm từ {GROUP_MIN_QTY} sản phẩm.</p>
-            <div className="mt-6 overflow-x-auto rounded-xl border border-line">
-              <table className="w-full min-w-[480px] text-left text-[15px]">
-                <thead className="bg-surface text-sm text-muted">
+        <section className="container-site grid gap-8 py-[clamp(72px,12vh,150px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16" aria-labelledby="bang-gia">
+          <div>
+            <h2 id="bang-gia" className={h2Big}>
+              Bảng giá {lc(h.name)}
+            </h2>
+            <p className="mt-5 max-w-[30rem] text-base leading-relaxed md:text-lg">
+              Giá áo in 1 mặt trước theo thiết kế của bạn; in thêm mặt sau tính phụ phí hiện trong Studio. Đơn nhóm từ {GROUP_MIN_QTY} sản phẩm.
+            </p>
+          </div>
+          <div>
+            <div className="overflow-x-auto rounded-lg bg-surface">
+              <table className="w-full min-w-[480px] text-left text-base">
+                <thead className="text-[15px] text-ink/70">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Sản phẩm</th>
-                    <th className="px-4 py-3 font-semibold">Giá lẻ</th>
+                    <th className="px-5 py-4 font-semibold">Sản phẩm</th>
+                    <th className="px-5 py-4 font-semibold">Giá lẻ</th>
                     {tierQtys.map((q) => (
-                      <th key={q} className="px-4 py-3 font-semibold">
+                      <th key={q} className="px-5 py-4 font-semibold">
                         Từ {q} sp
                       </th>
                     ))}
-                    {!tierQtys.length && <th className="px-4 py-3 font-semibold">Từ {GROUP_MIN_QTY} sp</th>}
+                    {!tierQtys.length && <th className="px-5 py-4 font-semibold">Từ {GROUP_MIN_QTY} sp</th>}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="tabular-nums">
                   {priced.map(({ g, p }) => (
-                    <tr key={g} className="border-t border-line">
-                      <td className="px-4 py-3">
-                        <Link href={`/san-pham/${p!.slug}`} className="font-semibold hover:text-brand-dark">
+                    <tr key={g} className="border-t border-ink/10">
+                      <td className="px-5 py-4">
+                        <Link href={`/san-pham/${p!.slug}`} className="font-semibold underline-offset-4 hover:text-brand-dark hover:underline">
                           {p!.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3">{formatVND(effectiveBasePrice(p!))}</td>
+                      <td className="px-5 py-4">{formatVND(effectiveBasePrice(p!))}</td>
                       {tierQtys.map((q) => {
                         const t = [...p!.priceTiers].filter((x) => x.minQty <= q).sort((a, b) => b.minQty - a.minQty)[0];
                         return (
-                          <td key={q} className="px-4 py-3">
+                          <td key={q} className="px-5 py-4">
                             {t ? formatVND(t.price) : "Báo giá"}
                           </td>
                         );
                       })}
                       {!tierQtys.length && (
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-4">
                           <a href={`${seg.href}#bao-gia`} className="font-semibold text-brand-dark underline underline-offset-4">
                             Nhận báo giá
                           </a>
@@ -160,9 +163,9 @@ export async function HubPage({ hub: h }: { hub: DesignHub }) {
                 </tbody>
               </table>
             </div>
-            <p className="mt-3 text-sm text-muted">
+            <p className="mt-4 text-base">
               Chọn size cho cả nhóm:{" "}
-              <Link href="/bang-size-ao" className="font-semibold text-ink underline underline-offset-4">
+              <Link href="/bang-size-ao" className="font-semibold underline underline-offset-4 hover:text-brand-dark">
                 bảng size áo nhóm
               </Link>
               .
@@ -173,23 +176,26 @@ export async function HubPage({ hub: h }: { hub: DesignHub }) {
 
       {/* Cùng bộ nhận diện: đồng phục là cửa vào, merchandise là phần mở rộng đơn */}
       {merch.length > 0 && (
-        <section className="border-t border-line py-10 md:py-14">
-          <div className="container-site">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <h2 className="h-section">Cùng bộ nhận diện: merchandise in logo</h2>
-                <p className="mt-2 max-w-2xl text-[15px] text-muted">Dùng chung logo, màu thương hiệu với đồng phục – xem mockup từng món, gom vào một báo giá.</p>
-              </div>
-              <Link href="/doanh-nghiep/san-pham" className="text-[15px] font-semibold underline underline-offset-4 hover:text-brand-dark">
+        <section className="bg-sky/60 py-[clamp(72px,12vh,150px)]" aria-labelledby="merch">
+          <div className="container-site grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
+            <div>
+              <h2 id="merch" className={h2Big}>
+                Cùng bộ nhận diện: merchandise in logo
+              </h2>
+              <p className="mt-5 max-w-[30rem] text-base leading-relaxed md:text-lg">Dùng chung logo, màu thương hiệu với đồng phục – xem mockup từng món, gom vào một báo giá.</p>
+              <Link href="/doanh-nghiep/san-pham" className="mt-6 inline-block text-base font-semibold underline underline-offset-4 hover:text-brand-dark">
                 Xem tất cả sản phẩm in logo
               </Link>
             </div>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {merch.map((i) => (
-                <li key={i.slug}>
-                  <Link href={`/doanh-nghiep/san-pham?nganh=${i.slug}`} className="block h-full rounded-xl border border-line bg-white p-4 transition hover:border-ink">
-                    <p className="font-semibold">{i.name}</p>
-                    <p className="mt-1 text-sm text-muted">{i.blurb}</p>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {merch.map((i, k) => (
+                <li key={i.slug} {...rise(k)}>
+                  <Link href={`/doanh-nghiep/san-pham?nganh=${i.slug}`} className="group flex h-full items-start justify-between gap-4 rounded-lg bg-white px-5 py-4 transition-colors hover:bg-ink hover:text-white">
+                    <span>
+                      <span className="block text-lg font-semibold">{i.name}</span>
+                      <span className="mt-0.5 block text-[15px] opacity-80">{i.blurb}</span>
+                    </span>
+                    <Arrow />
                   </Link>
                 </li>
               ))}
@@ -199,65 +205,48 @@ export async function HubPage({ hub: h }: { hub: DesignHub }) {
       )}
 
       {/* Kinh nghiệm */}
-      <section className="border-t border-line bg-surface/60 py-10 md:py-14">
-        <div className="container-site">
-          <h2 className="h-section">Kinh nghiệm làm {lc(h.name)}</h2>
-          <div className="mt-6 grid gap-x-10 gap-y-6 md:grid-cols-2">
-            {h.tips.map((t) => (
-              <div key={t.title}>
-                <h3 className="text-lg font-bold">{t.title}</h3>
-                <p className="mt-1.5 text-[15px] leading-relaxed text-ink/80">{t.body}</p>
-              </div>
-            ))}
-          </div>
+      <section className="container-site grid gap-8 py-[clamp(72px,12vh,150px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16" aria-labelledby="kinh-nghiem">
+        <h2 id="kinh-nghiem" className={h2Big}>
+          Kinh nghiệm làm {lc(h.name)}
+        </h2>
+        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+          {h.tips.map((t, i) => (
+            <div key={t.title} {...rise(i)}>
+              <h3 className="text-xl font-bold leading-snug">{t.title}</h3>
+              <p className="mt-2 text-base leading-relaxed">{t.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Công cụ & tài nguyên */}
-      <section className="py-10 md:py-12">
-        <div className="container-site">
-          <h2 className="text-xl font-bold">Công cụ miễn phí</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <Faq items={h.faq} />
+
+      {/* Công cụ + mẫu khác: 2 cột dòng nền nhạt */}
+      <section className="container-site grid gap-14 pb-[clamp(72px,12vh,150px)] md:grid-cols-2 md:gap-12" aria-label="Công cụ và mẫu khác">
+        <div>
+          <h2 className="h-section">Công cụ miễn phí</h2>
+          <ul className="mt-6 space-y-2">
             {TOOL_LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="block h-full rounded-xl border border-line bg-white p-4 transition hover:border-ink">
-                  <p className="font-semibold">{l.title}</p>
-                  <p className="mt-1 text-sm text-muted">{l.desc}</p>
+                <Link href={l.href} className={rowLink}>
+                  <span>
+                    <span className="block text-lg font-semibold">{l.title}</span>
+                    <span className="mt-0.5 block text-[15px] opacity-80">{l.desc}</span>
+                  </span>
+                  <Arrow />
                 </Link>
               </li>
             ))}
           </ul>
         </div>
-      </section>
-
-      {/* Hỏi đáp */}
-      <section className="border-t border-line py-10 md:py-14">
-        <div className="container-site max-w-3xl">
-          <h2 className="h-section">Câu hỏi thường gặp</h2>
-          <div className="mt-6 divide-y divide-line border-y border-line">
-            {h.faq.map((f) => (
-              <details key={f.q} className="group py-4">
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-[16px] font-semibold">
-                  {f.q}
-                  <span className="mt-0.5 text-xl leading-none text-muted transition group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink/80">{f.a}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Mẫu khác */}
-      <section className="bg-cream py-10 md:py-12">
-        <div className="container-site">
-          <h2 className="text-xl font-bold">Xem thêm mẫu</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div>
+          <h2 className="h-section">Xem thêm mẫu</h2>
+          <ul className="mt-6 space-y-2">
             {others.map((o) => (
               <li key={o.slug}>
-                <Link href={`/${o.slug}`} className="block h-full rounded-xl border border-line bg-white p-4 transition hover:border-ink">
-                  <p className="font-semibold">{o.name}</p>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted">{o.intro}</p>
+                <Link href={`/${o.slug}`} className={rowLink}>
+                  <span className="text-lg font-semibold">{o.name}</span>
+                  <Arrow />
                 </Link>
               </li>
             ))}
