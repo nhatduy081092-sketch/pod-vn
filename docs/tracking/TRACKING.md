@@ -153,7 +153,7 @@ Môi trường: `localhost:3000`, API thật nhưng **POST /orders bị giả l�
 | Purchase | Đạt trên máy | Thử #8–10 | Giá trị từ server; chưa có dữ liệu thật trên GA4 |
 | Add to Cart | Đạt trên máy | Thử #5 | — |
 | Checkout | Đạt trên máy | Thử #7–8 | — |
-| UTM | Đạt trên máy | Lưu đầu + cuối, gửi kèm đơn | Thêm `ttclid → tiktok` ở API |
+| UTM | Đạt trên máy | Lưu đầu + cuối, gửi kèm đơn | Click ID: gclid, gbraid, wbraid, fbclid, ttclid. Tài liệu Google: GOOGLE_*.md cùng thư mục |
 | Deduplication | Phía trình duyệt: đạt | Thử #4, 7, 9, 10 | Khử trùng với server (CAPI) chưa có vì chưa làm CAPI |
 | Refund | **Chưa làm** | — | Không có cổng thanh toán; hoàn tiền ghi tay trong CMS. Cần GA4 Measurement Protocol (API secret) – giai đoạn 2 |
 | Google Ads | Chưa làm | — | Cấu hình trong GTM (6.3 bước 5) |

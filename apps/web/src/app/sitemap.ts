@@ -7,7 +7,7 @@ import { SITE_URL } from "@/lib/config";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [cats, products, pages, help, settings] = await Promise.all([getCategories(), getProducts({ pageSize: "100" }).catch(() => null), getPages(), getHelp(), getSettings()]);
+  const [cats, products, pages, help, settings] = await Promise.all([getCategories(), allProducts(), getPages(), getHelp(), getSettings()]);
   return [
     { url: SITE_URL, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/san-pham`, changeFrequency: "daily", priority: 0.8 },
@@ -26,6 +26,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...pages.map((p) => ({ url: `${SITE_URL}/trang/${p.slug}`, changeFrequency: "monthly" as const, priority: 0.3 })),
     { url: `${SITE_URL}/ho-tro`, changeFrequency: "weekly", priority: 0.4 },
     ...help.items.map((a) => ({ url: `${SITE_URL}/ho-tro/${a.slug}`, lastModified: a.updatedAt, changeFrequency: "monthly" as const, priority: 0.3 })),
-    ...(products?.items ?? []).map((p) => ({ url: `${SITE_URL}/san-pham/${p.slug}`, changeFrequency: "weekly" as const, priority: 0.6 })),
+    ...products.map((p) => ({ url: `${SITE_URL}/san-pham/${p.slug}`, changeFrequency: "weekly" as const, priority: 0.6 })),
   ];
+}
+
+/** API trả tối đa 100 SP/trang -> đi hết các trang (trước đây chỉ lấy trang 1, sitemap thiếu ~670 SP) */
+async function allProducts() {
+  const first = await getProducts({ pageSize: "100" }).catch(() => null);
+  if (!first) return [];
+  const pages = Math.min(Math.ceil(first.total / 100), 50);
+  const rest = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => getProducts({ pageSize: "100", page: String(i + 2) }).catch(() => null)));
+  return [first, ...rest].flatMap((r) => r?.items ?? []);
 }

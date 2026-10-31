@@ -225,7 +225,7 @@ export const track = {
   },
 };
 
-const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "gclid", "ttclid"];
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "gclid", "gbraid", "wbraid", "ttclid"];
 const UTM_STORE = "pod_utm_v1";
 const UTM_LAST = "pod_utm_last_v1";
 

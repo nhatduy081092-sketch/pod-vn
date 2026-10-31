@@ -76,4 +76,4 @@ export function dispatchQuote(p: QuotePayload): void {
 }
 
 export const sourceOf = (utm?: Record<string, string> | null) =>
-  utm ? [utm.utm_source, utm.utm_medium, utm.utm_campaign].filter(Boolean).join(" / ") || (utm.gclid ? "google ads" : utm.fbclid ? "facebook" : "") : "";
+  utm ? [utm.utm_source, utm.utm_medium, utm.utm_campaign].filter(Boolean).join(" / ") || (utm.gclid || utm.gbraid || utm.wbraid ? "google ads" : utm.fbclid ? "facebook" : "") : "";
