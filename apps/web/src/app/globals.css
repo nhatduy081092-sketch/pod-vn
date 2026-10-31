@@ -168,6 +168,34 @@ html.reveal-on [data-reveal].is-in { animation: fade-in 0.5s ease-out both; }
 }
 html.reveal-on [data-reveal="rise"].is-in { animation: rise-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both; }
 
+/* Khu doanh nghiệp (10/2026) – chuyển động chững chạc, không nảy:
+   data-reveal="mask": tiêu đề trồi lên qua khe che (mask reveal, power3.out ~0.95s).
+   Khe nới 0.16em trên/dưới để không cắt dấu tiếng Việt (Ở, Ẩ…), bù lại bằng margin âm. */
+.mask-reveal { overflow: hidden; padding-block: 0.16em; margin-block: -0.16em; }
+.mask-reveal > .mask-line { display: block; }
+@keyframes mask-up {
+  from { transform: translateY(110%); }
+  to { transform: none; }
+}
+html.reveal-on [data-reveal="mask"]:not(.is-in) { opacity: 1; }
+html.reveal-on [data-reveal="mask"]:not(.is-in) > .mask-line { transform: translateY(110%); }
+html.reveal-on [data-reveal="mask"].is-in { animation: none; }
+html.reveal-on [data-reveal="mask"].is-in > .mask-line { animation: mask-up 0.95s cubic-bezier(0.215, 0.61, 0.355, 1) var(--d, 0ms) both; }
+
+/* Vạch kẻ theo thứ tự (line draw): .draw-rule chạy từ trái sang khi khối cha hiện */
+@keyframes draw-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.draw-rule { display: block; height: 2px; transform-origin: left center; }
+html.reveal-on [data-reveal]:not(.is-in) .draw-rule { transform: scaleX(0); }
+html.reveal-on [data-reveal].is-in .draw-rule { animation: draw-x 0.9s cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d, 0ms) + 120ms) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  html.reveal-on [data-reveal="mask"] > .mask-line,
+  html.reveal-on [data-reveal] .draw-rule { animation: none !important; transform: none !important; }
+}
+
 /* Ảnh chính trang chủ mở như cửa chớp (1 lần khi tải) */
 @keyframes shutter-open {
   from { clip-path: inset(0 0 0 100%); }

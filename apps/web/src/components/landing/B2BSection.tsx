@@ -3,6 +3,8 @@ import type { LandingSettings } from "@pod/shared";
 import { assetUrl } from "@/lib/config";
 import type { ProductCardData } from "@/lib/types";
 import { IconArrow } from "../ui/icons";
+import { CountUp } from "../motion/CountUp";
+import { MaskTitle } from "../motion/MaskTitle";
 
 type Industry = { name: string; slug: string; image: string; count: number };
 type Props = { data: LandingSettings["b2b"]; brand: LandingSettings["brand"]; products: ProductCardData[]; industries?: Industry[] };
@@ -19,7 +21,7 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
     <section id="doanh-nghiep" className="home-b2b relative scroll-mt-16 overflow-hidden bg-ink py-[clamp(80px,14vh,170px)] text-white">
       <div className="container-site relative">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
-          <h2 className="font-display text-[clamp(30px,3.6vw,52px)] font-bold leading-[1.06] tracking-[-0.03em] [text-wrap:balance]">{data.title}</h2>
+          <MaskTitle className="font-display text-[clamp(30px,3.6vw,52px)] font-bold leading-[1.06] tracking-[-0.03em] [text-wrap:balance]">{data.title}</MaskTitle>
           <div>
             <p className="max-w-xl text-base leading-relaxed text-white/80 md:text-lg">{data.subtitle}</p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -40,7 +42,10 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
         <ul className="mt-20 grid grid-cols-2 gap-x-8 gap-y-10 md:mt-28 lg:grid-cols-4">
           {data.stats.map((s, i) => (
             <li key={s.label} data-reveal="rise" style={{ ["--d" as string]: `${i * 70}ms` }}>
-              <p className="whitespace-nowrap font-display text-[clamp(40px,5vw,76px)] font-bold leading-none tracking-[-0.04em] [font-variant-numeric:tabular-nums]">{s.value}</p>
+              <span className="draw-rule mb-5 bg-white/25" aria-hidden />
+              <p className="whitespace-nowrap font-display text-[clamp(40px,5vw,76px)] font-bold leading-none tracking-[-0.04em] [font-variant-numeric:tabular-nums]">
+                <CountUp value={s.value} />
+              </p>
               <p className="mt-3 max-w-[15rem] text-base leading-snug text-white/80">{s.label}</p>
             </li>
           ))}

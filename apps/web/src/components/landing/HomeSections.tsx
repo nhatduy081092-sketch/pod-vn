@@ -97,24 +97,28 @@ export function HomeSegments() {
 
 const VERBS = ["Thiết kế", "Gửi link", "Chốt đơn", "In & giao"];
 
-/** Cách đặt áo nhóm: mỗi bước 1 động từ cỡ rất lớn, mô tả bên phải (trang chủ + trang SEO mẫu áo, nhóm khách) */
+/**
+ * Cách đặt áo nhóm (trang chủ + trang SEO mẫu áo, nhóm khách): 4 cột ngang, vạch cam vẽ dần theo thứ tự bước,
+ * động từ cỡ vừa màu trắng ngà (không trắng tinh) và mô tả xám ấm -> nền đen đỡ chói, cam chỉ ở vạch + nhãn bước + nút.
+ */
 export function HomeSteps() {
   return (
-    <section className="bg-ink py-[clamp(80px,14vh,170px)] text-white" aria-labelledby="cach-dat-ao-nhom">
+    <section className="bg-ink py-[clamp(72px,12vh,140px)] text-[#ece8e1]" aria-labelledby="cach-dat-ao-nhom">
       <div className="container-site">
-        <h2 id="cach-dat-ao-nhom" className="max-w-4xl font-display text-[clamp(28px,3.4vw,48px)] font-bold leading-[1.1] tracking-[-0.025em] [text-wrap:balance]">
+        <p className="text-sm font-semibold text-brand">Đặt áo nhóm trong 4 bước</p>
+        <h2 id="cach-dat-ao-nhom" className="mt-2 max-w-4xl font-display text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.025em] [text-wrap:balance]">
           Không phải gom tin nhắn hỏi size
         </h2>
-        <ol className="mt-12 space-y-12 md:mt-16 md:space-y-16">
+        <ol className="mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 md:mt-16 lg:grid-cols-4">
           {GROUP_STEPS.map((st, i) => (
-            <li key={st.title} className="grid gap-3 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:items-end md:gap-12" {...rise(0)}>
-              <p aria-hidden className="font-display text-[clamp(56px,9vw,136px)] font-bold leading-[0.9] tracking-[-0.045em]">
+            <li key={st.title} {...rise(i + 1)}>
+              <span className="draw-rule mb-5 bg-brand" aria-hidden />
+              <p className="text-[13px] font-semibold text-brand">Bước {i + 1}</p>
+              <p aria-hidden className="mt-1 font-display text-[clamp(30px,2.6vw,40px)] font-bold leading-[1.05] tracking-[-0.03em]">
                 {VERBS[i]}
               </p>
-              <div className="md:pb-3">
-                <h3 className="text-xl font-bold leading-snug">{st.title}</h3>
-                <p className="mt-2 max-w-md text-base leading-relaxed text-white/80 md:text-lg">{st.desc}</p>
-              </div>
+              <h3 className="mt-4 text-[17px] font-bold leading-snug">{st.title}</h3>
+              <p className="mt-2 max-w-sm text-base leading-relaxed text-[#ece8e1]/70">{st.desc}</p>
             </li>
           ))}
         </ol>
@@ -122,7 +126,7 @@ export function HomeSteps() {
           <Link href={`/thiet-ke/${GARMENT_PRODUCT.tshirt.slug}`} className="btn-primary px-7 py-3.5 text-base">
             Bắt đầu thiết kế
           </Link>
-          <Link href="/dong-phuc-the-thao" className="btn border-white/60 bg-transparent px-7 py-3.5 text-base text-white hover:border-white hover:bg-white hover:text-ink">
+          <Link href="/dong-phuc-the-thao" className="btn border-white/30 bg-transparent px-7 py-3.5 text-base text-[#ece8e1] hover:border-white hover:bg-white hover:text-ink">
             Xem áo đội in tên số
           </Link>
         </div>
