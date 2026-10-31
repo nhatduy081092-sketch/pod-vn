@@ -55,11 +55,11 @@ export default async function ProductPage({ params }: { params: Params }) {
       content: (
         <div>
           {product.description ? (
-            <p className="whitespace-pre-line leading-relaxed text-ink/85">{product.description}</p>
+            <p className="whitespace-pre-line text-base leading-relaxed text-ink md:text-lg">{product.description}</p>
           ) : (
-            <p className="text-ink/60">Mô tả đang được cập nhật.</p>
+            <p className="text-ink/70">Mô tả đang được cập nhật.</p>
           )}
-          <dl className="mt-5 grid gap-x-6 gap-y-2 rounded-lg bg-cream p-4 text-sm sm:grid-cols-2">
+          <dl className="mt-6 grid gap-x-6 gap-y-2 rounded-lg bg-surface p-5 text-base sm:grid-cols-2">
             {(
               [
                 ["Danh mục", product.category.name],
@@ -72,7 +72,7 @@ export default async function ProductPage({ params }: { params: Params }) {
               .filter(([, v]) => v)
               .map(([k, v]) => (
                 <div key={k} className="flex gap-2">
-                  <dt className="shrink-0 font-bold">{k}:</dt>
+                  <dt className="shrink-0 font-semibold">{k}</dt>
                   <dd className="text-ink/80">{v}</dd>
                 </div>
               ))}
@@ -88,9 +88,9 @@ export default async function ProductPage({ params }: { params: Params }) {
       content: sizeChart ? (
         <SizeChartTable chart={sizeChart} />
       ) : (
-        <div className="rounded-lg border-2 border-dashed border-ink/20 p-4 text-sm">
+        <div className="rounded-lg bg-surface p-5 text-base">
           <p className="font-bold">Bảng số đo chi tiết đang được cập nhật.</p>
-          <p className="mt-1 text-ink/70">
+          <p className="mt-1 text-ink/80">
             Size hiện có: <b>{realSizes.join(", ")}</b>. Gửi chiều cao, cân nặng qua Zalo để được tư vấn size phù hợp.
           </p>
           <a href={zaloHref} target="_blank" rel="noopener noreferrer" className="btn mt-3 border-ink bg-zalo px-4 text-white">
@@ -106,11 +106,11 @@ export default async function ProductPage({ params }: { params: Params }) {
     content: (
       <div>
         {isQuote ? (
-          <p className="mb-4 rounded-lg bg-navy-light p-4 text-sm">
+          <p className="mb-4 rounded-lg bg-navy-light p-5 text-base">
             Thời gian sản xuất và phí giao hàng cho đơn cá nhân hoá / doanh nghiệp được báo cụ thể trong báo giá.
           </p>
         ) : (
-          <ul className="mb-4 grid gap-2 rounded-lg bg-cream p-4 text-sm sm:grid-cols-3">
+          <ul className="mb-6 grid gap-4 rounded-lg bg-surface p-5 text-base sm:grid-cols-3">
             <li>
               <b className="block">Sản xuất</b>
               {settings.shipping.productionDays} sau khi duyệt mockup
@@ -169,8 +169,8 @@ export default async function ProductPage({ params }: { params: Params }) {
   };
 
   return (
-    <div className="container-site py-4 md:py-10">
-      <nav className="mb-3 text-sm text-ink/60" aria-label="Breadcrumb">
+    <div className="container-site pb-20 pt-6 md:pb-28 md:pt-10">
+      <nav className="mb-5 text-[15px] text-ink/70" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-ink">
           Trang chủ
         </Link>{" "}
@@ -182,10 +182,10 @@ export default async function ProductPage({ params }: { params: Params }) {
       {productNotices.map((n) => (
         <div
           key={n.id}
-          className={`mb-4 rounded-lg border-2 px-4 py-3 text-sm ${n.level === "warning" ? "border-amber-400 bg-amber-50 text-amber-900" : "border-sky-300 bg-sky-50 text-sky-900"}`}
+          className={`mb-4 rounded-lg px-5 py-4 text-[15px] ${n.level === "warning" ? "bg-amber-50 text-amber-900" : "bg-sky-50 text-sky-900"}`}
           role="note"
         >
-          <p className="font-extrabold">{n.level === "warning" ? "⚠️ " : "ℹ️ "}{n.title}</p>
+          <p className="text-base font-bold">{n.title}</p>
           {n.content && <p className="mt-0.5 whitespace-pre-line">{n.content}</p>}
         </div>
       ))}
@@ -203,8 +203,8 @@ export default async function ProductPage({ params }: { params: Params }) {
       <ProductTabs tabs={tabs} />
 
       {product.related.length > 0 && (
-        <section className="mt-12">
-          <h2 className="h-section mb-5">{product.relatedFromOrders ? "Thường được mua cùng" : "Có thể bạn cũng thích"}</h2>
+        <section className="mt-24 md:mt-32">
+          <h2 className="mb-8 font-display text-[clamp(30px,3.6vw,52px)] font-bold leading-[1.05] tracking-[-0.03em]">{product.relatedFromOrders ? "Thường được mua cùng" : "Có thể bạn cũng thích"}</h2>
           <ProductGrid items={product.related} />
         </section>
       )}

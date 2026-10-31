@@ -24,14 +24,16 @@ export default async function ProductsPage({ searchParams }: { searchParams: SP 
     getFacets({ q: params.q, gia: params.gia, "doi-tuong": params["doi-tuong"], "bo-suu-tap": params["bo-suu-tap"] }),
   ]);
   return (
-    <div className="container-site py-5 md:py-8">
-      <nav className="text-sm text-ink/60" aria-label="Breadcrumb">
+    <div className="container-site pb-20 pt-6 md:pb-28 md:pt-10">
+      <nav className="text-[15px] text-ink/70" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-ink">
           Trang chủ
         </Link>{" "}
         / <span className="text-ink">{params.q ? "Tìm kiếm" : "Tất cả sản phẩm"}</span>
       </nav>
-      <h1 className="font-display text-[clamp(26px,3.2vw,38px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:88%] mb-4 mt-1">{params.q ? <>Kết quả cho “{params.q}”</> : "Tất cả sản phẩm"}</h1>
+      <h1 className="mb-10 mt-4 font-display text-[clamp(40px,5.2vw,80px)] font-bold leading-[1.02] tracking-[-0.035em] [text-wrap:balance] md:mb-14 md:mt-6">
+        {params.q ? <>Kết quả cho “{params.q}”</> : "Tất cả sản phẩm"}
+      </h1>
       <ProductListing basePath="/san-pham" data={data} params={params} facets={facets} mode="all" />
     </div>
   );

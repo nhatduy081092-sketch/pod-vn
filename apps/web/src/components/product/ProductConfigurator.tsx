@@ -161,16 +161,16 @@ export function ProductConfigurator({
   const zaloHref = `https://zalo.me/${zalo.replace(/\D/g, "")}`;
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 md:gap-10">
-      {/* Cột trái: ảnh */}
-      <div className="md:sticky md:top-20 md:self-start">
-        <div className="relative aspect-square w-full overflow-hidden rounded-2xl border-2 border-ink/10 bg-white">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:gap-12">
+      {/* Cột trái: ảnh lớn trên nền nhạt (redesign 31/10/2026: không viền, nhãn ≥ 13px) */}
+      <div className="md:max-w-[520px] lg:sticky lg:top-28 lg:max-w-none lg:self-start">
+        <div className="shutter-in relative aspect-square w-full overflow-hidden rounded-lg bg-surface">
           <img src={assetUrl(gallery[imgIdx] ?? gallery[0])} alt={product.name} className="h-full w-full object-contain" />
           {design && imgIdx < design.files.length && (
-            <span className="absolute left-2 top-2 rounded bg-ink px-2 py-0.5 text-[11px] font-bold text-brand-badge">Thiết kế của bạn · {design.files[imgIdx]?.name}</span>
+            <span className="absolute left-3 top-3 rounded-md bg-ink px-2 py-0.5 text-[13px] font-semibold text-white">Thiết kế của bạn · {design.files[imgIdx]?.name}</span>
           )}
           {isAiImage(gallery[imgIdx] ?? gallery[0]) && (
-            <span className="absolute bottom-2 right-2 rounded bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-ink/75">Ảnh minh hoạ · sản phẩm in theo đúng file thiết kế</span>
+            <span className="absolute bottom-3 right-3 rounded-md bg-white px-2 py-0.5 text-[13px] font-semibold text-ink/80">Ảnh minh hoạ · in theo đúng file thiết kế</span>
           )}
         </div>
         <Thumbs images={gallery} active={imgIdx} onPick={setImgIdx} name={product.name} />
@@ -178,21 +178,20 @@ export function ProductConfigurator({
 
       {/* Cột phải: tuỳ chọn */}
       <div>
-        <p className="text-sm font-semibold text-brand-dark">{product.category.name}</p>
-        <h1 className="font-display text-[clamp(24px,2.8vw,36px)] font-extrabold leading-[1.08] tracking-[-0.02em] [font-stretch:88%] mt-1">{product.name}</h1>
-        <div className="mt-3 flex flex-wrap items-baseline gap-2">
-          <span className="text-3xl font-black">{formatVND(unit)}</span>
-          {compareAt && compareAt > unit && <span className="text-sm text-ink/50 line-through">{formatVND(compareAt)}</span>}
-          {onSale && <span className="rounded bg-[#e11d48] px-1.5 py-0.5 text-xs font-bold text-white">KHUYẾN MÃI</span>}
-          {unit < listUnit && <span className="rounded bg-ink px-1.5 py-0.5 text-xs font-bold text-brand-badge">Giá sỉ</span>}
+        <h1 className="font-display text-[clamp(32px,3.4vw,52px)] font-bold leading-[1.05] tracking-[-0.03em] [text-wrap:balance]">{product.name}</h1>
+        <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="text-[clamp(28px,2.6vw,36px)] font-bold tabular-nums">{formatVND(unit)}</span>
+          {compareAt && compareAt > unit && <span className="text-base tabular-nums text-ink/60 line-through">{formatVND(compareAt)}</span>}
+          {onSale && <span className="rounded-md bg-sale px-2 py-0.5 text-[13px] font-bold text-white">Khuyến mãi</span>}
+          {unit < listUnit && <span className="rounded-md bg-ink px-2 py-0.5 text-[13px] font-bold text-white">Giá sỉ</span>}
         </div>
         {onSale && product.saleEndsAt && <SaleCountdown endsAt={product.saleEndsAt} />}
-        {product.productionDays && <p className="mt-1 text-sm text-ink/70">⏱ Thời gian sản xuất: {product.productionDays}</p>}
+        {product.productionDays && <p className="mt-2 text-base text-ink/80">Thời gian sản xuất: {product.productionDays}</p>}
 
         {product.priceTiers.length > 0 && (
-          <div className="mt-3 overflow-hidden rounded-lg border border-line">
-            <p className="bg-brand px-3 py-1.5 text-xs font-extrabold uppercase">Giá sỉ theo số lượng (đồng phục, nhóm)</p>
-            <ul className="grid grid-cols-2 divide-x divide-y divide-ink/10 text-sm sm:grid-cols-4">
+          <div className="mt-5 rounded-lg bg-surface p-4">
+            <p className="text-[15px] font-bold">Giá sỉ theo số lượng (đồng phục, nhóm)</p>
+            <ul className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
               <TierCell label={`1–${product.priceTiers[0]!.minQty - 1} cái`} price={product.basePrice} active={effQty < product.priceTiers[0]!.minQty} />
               {product.priceTiers.map((t, i) => {
                 const next = product.priceTiers[i + 1];
@@ -205,7 +204,7 @@ export function ProductConfigurator({
         <div className="mt-5">
           <DesignCard slug={product.slug} productId={product.id} areas={product.printAreas} design={design} step="1. Thiết kế" color={sel.color} />
           {!design && (
-            <p className="mt-2 text-xs text-ink/70">
+            <p className="mt-3 text-[15px] leading-relaxed text-ink/80">
               Chưa có ý tưởng?{" "}
               <a href={zaloHref} target="_blank" rel="noopener noreferrer" className="font-bold text-zalo underline">
                 Gửi ý tưởng qua Zalo
@@ -216,7 +215,7 @@ export function ProductConfigurator({
         </div>
 
         {/* Chế độ đặt */}
-        <div className="mt-5 grid grid-cols-2 gap-2" role="tablist" aria-label="Hình thức đặt">
+        <div className="mt-8 grid grid-cols-2 gap-2" role="tablist" aria-label="Hình thức đặt">
           {(
             [
               ["team", "Đặt cho nhóm", `Từ ${GROUP_MIN_QTY} áo · tên, số, size từng người`],
@@ -229,38 +228,38 @@ export function ProductConfigurator({
               role="tab"
               aria-selected={mode === m}
               onClick={() => (setMode(m), setError(""))}
-              className={`rounded-lg border-2 px-3 py-2 text-left ${mode === m ? "border-ink bg-brand" : "border-ink/20 bg-white"}`}
+              className={`rounded-lg px-4 py-3 text-left transition-colors ${mode === m ? "bg-ink text-white" : "bg-surface text-ink hover:bg-ink/10"}`}
             >
-              <span className="block text-sm font-extrabold">{title}</span>
-              <span className="block text-[11px] text-ink/70">{sub}</span>
+              <span className="block text-base font-bold">{title}</span>
+              <span className={`mt-0.5 block text-[13px] leading-snug ${mode === m ? "text-white/80" : "text-ink/70"}`}>{sub}</span>
             </button>
           ))}
         </div>
 
-        <div className="mt-5">
+        <div className="mt-6">
           <VariantPicker variants={product.variants} color={sel.color} size={sel.size} onChange={setSel} hideSize={mode === "team"} sizeGuide={hasSizeGuide} step={{ color: "2. Màu", size: "3. Size" }} />
         </div>
 
         {mode === "single" && teamFields.length > 0 && (
-          <p className="mt-4 rounded-lg bg-navy-light px-3 py-2 text-sm text-navy-dark">
+          <p className="mt-4 rounded-lg bg-navy-light px-4 py-3 text-[15px] text-navy-dark">
             Thiết kế có ô <b>tên/số áo</b> – chọn <b>Đặt cho nhóm</b> để nhập tên, số từng người (đặt 1 áo cũng được).
           </p>
         )}
         {mode === "team" && groupCode && (
-          <p className="mt-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">
-            ✓ Đã lấy {roster.length} áo từ danh sách nhóm. Kiểm tra lại tên/size rồi thêm vào giỏ.{" "}
+          <p className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-[15px] text-green-800">
+            Đã lấy {roster.length} áo từ danh sách nhóm. Kiểm tra lại tên/size rồi thêm vào giỏ.{" "}
             <a href={`/nhom/${groupCode}`} className="font-bold underline">
               Quay lại nhóm
             </a>
           </p>
         )}
         {mode === "team" && !roster.length && !groupCode && (
-          <p className="mt-4 rounded-lg bg-sun/40 px-3 py-2 text-sm">
+          <p className="mt-4 rounded-lg bg-sun/40 px-4 py-3 text-[15px] leading-relaxed">
             Chưa có danh sách? Thiết kế xong bấm <b>Hoàn tất → Tạo link gom đơn nhóm</b>: gửi link vào nhóm chat, mỗi người tự ghi tên, số, size – bạn chỉ việc chốt đơn.
           </p>
         )}
         {mode === "team" && roster.length > 0 && roster.length < GROUP_MIN_QTY && (
-          <p className="mt-4 rounded-lg bg-cream px-3 py-2 text-sm">
+          <p className="mt-4 rounded-lg bg-surface px-4 py-3 text-[15px]">
             Thêm {GROUP_MIN_QTY - roster.length} áo nữa để thành đơn nhóm (từ {GROUP_MIN_QTY} áo). Ít hơn vẫn đặt được, tính như mua lẻ.
           </p>
         )}
@@ -268,13 +267,13 @@ export function ProductConfigurator({
         {mode === "team" && design && teamFields.length > 0 && <TeamPreview areas={product.printAreas} design={design} rows={roster} garmentColor={garmentHex} />}
 
         {/* Số lượng */}
-        <section className="mt-5">
+        <section className="mt-6">
           {mode === "single" ? (
             <>
               <h2 className="label">4. Số lượng</h2>
               <div className="flex items-center gap-3">
-                <div className="flex items-center overflow-hidden rounded-md border border-line">
-                  <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Giảm">
+                <div className="flex items-center overflow-hidden rounded-md bg-surface">
+                  <button type="button" className="h-11 w-11 text-lg font-bold hover:bg-ink/10" onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Giảm">
                     −
                   </button>
                   <input
@@ -284,21 +283,21 @@ export function ProductConfigurator({
                     max={1000}
                     value={qty}
                     onChange={(e) => setQty(Math.max(1, Math.min(1000, Number(e.target.value) || 1)))}
-                    className="h-10 w-16 border-x border-line text-center font-bold outline-none"
+                    className="h-11 w-16 bg-white text-center text-base font-bold tabular-nums outline-none focus:ring-2 focus:ring-brand/40"
                     aria-label="Số lượng"
                   />
-                  <button type="button" className="h-10 w-10 text-lg font-bold" onClick={() => setQty((q) => Math.min(1000, q + 1))} aria-label="Tăng">
+                  <button type="button" className="h-11 w-11 text-lg font-bold hover:bg-ink/10" onClick={() => setQty((q) => Math.min(1000, q + 1))} aria-label="Tăng">
                     +
                   </button>
                 </div>
-                <p className="text-sm text-ink/70">
-                  Tạm tính: <b className="text-ink">{formatVND(unit * qty)}</b>
+                <p className="text-base text-ink/80">
+                  Tạm tính: <b className="tabular-nums text-ink">{formatVND(unit * qty)}</b>
                 </p>
               </div>
-              {variant?.sku && <p className="mt-1 text-[11px] text-ink/50">Mã phân loại: {variant.sku}</p>}
+              {variant?.sku && <p className="mt-1.5 text-[13px] text-ink/60">Mã phân loại: {variant.sku}</p>}
             </>
           ) : (
-            <p className="rounded-lg bg-cream px-3 py-2 text-sm">
+            <p className="rounded-lg bg-surface px-4 py-3 text-base">
               {roster.length ? (
                 <>
                   <b>{roster.length} áo</b> · Tổng <b className="text-base">{formatVND(teamTotal)}</b>
@@ -314,28 +313,28 @@ export function ProductConfigurator({
           </label>
         </section>
 
-        {error && <p className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p>}
+        {error && <p className="mt-3 rounded-md bg-red-50 px-4 py-3 text-[15px] font-semibold text-red-700">{error}</p>}
 
         {quote && mode === "single" && qty >= quote.threshold && (
-          <div className="mt-4 rounded-xl border border-brand/30 bg-brand-light p-3.5 text-sm">
-            <p className="font-semibold">Đơn từ {quote.threshold} sản phẩm – nhận giá số lượng lớn</p>
-            <p className="mt-0.5 text-ink/70">
+          <div className="mt-4 rounded-lg bg-brand-light p-4 text-[15px]">
+            <p className="text-base font-bold">Đơn từ {quote.threshold} sản phẩm – nhận giá số lượng lớn</p>
+            <p className="mt-1 text-ink/80">
               Gửi yêu cầu báo giá để được giá tốt hơn, tư vấn in/khắc logo và mockup miễn phí{quote.enforce ? " (đơn số lượng này không đặt online)." : "."}
             </p>
             <AddToQuote variant="primary" className="mt-2.5" quantity={qty} product={quoteProduct} />
           </div>
         )}
 
-        <div className={`sticky bottom-0 z-10 -mx-4 mt-5 flex gap-2 border-t border-ink/10 bg-white px-4 py-3 md:static md:mx-0 md:border-0 md:p-0 ${blocked ? "hidden" : ""}`}>
-          <button type="button" onClick={addToCart} className="btn-outline flex-1">
-            {added ? "✓ Đã thêm" : "Thêm vào giỏ"}
+        <div className={`sticky bottom-0 z-10 -mx-4 mt-6 flex gap-2 bg-white px-4 py-3 md:static md:mx-0 md:p-0 ${blocked ? "hidden" : ""}`}>
+          <button type="button" onClick={addToCart} className="btn-outline flex-1 py-3.5 text-base">
+            {added ? "Đã thêm vào giỏ" : "Thêm vào giỏ"}
           </button>
           <button
             type="button"
             onClick={() => {
               if (addToCart()) router.push("/thanh-toan");
             }}
-            className="btn-primary flex-1"
+            className="btn-primary flex-1 py-3.5 text-base"
           >
             Đặt ngay
           </button>
@@ -343,20 +342,19 @@ export function ProductConfigurator({
         {quote && !(mode === "single" && qty >= quote.threshold) && (
           <AddToQuote variant="compact" className="mt-2" quantity={Math.max(qty, quote.threshold)} product={quoteProduct} />
         )}
-        {!design && <p className="mt-2 text-center text-xs text-ink/60">Đặt khi chưa có thiết kế: bên mình liên hệ qua Zalo để nhận file trước khi in.</p>}
+        {!design && <p className="mt-3 text-[15px] text-ink/70">Đặt khi chưa có thiết kế: bên mình liên hệ qua Zalo để nhận file trước khi in.</p>}
 
-        <ul className="mt-6 space-y-1.5 rounded-lg bg-cream p-4 text-sm">
-          <li>
-            <b>Chất liệu:</b> {product.material || "—"}
-          </li>
-          <li>
-            <b>Công nghệ in:</b> {product.printMethod}
-          </li>
-          <li>
-            <b>Đặt tối thiểu:</b> {product.minQty} sản phẩm
-          </li>
-          <li>✓ Duyệt mockup trước khi in · ✓ Đổi mới nếu lỗi in · ✓ COD toàn quốc</li>
-        </ul>
+        {/* thông số + cam kết: bảng 2 cột nền nhạt, không dấu tích */}
+        <dl className="mt-8 grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-2 rounded-lg bg-surface p-5 text-base">
+          <dt className="font-semibold">Chất liệu</dt>
+          <dd className="text-ink/80">{product.material || "—"}</dd>
+          <dt className="font-semibold">Công nghệ in</dt>
+          <dd className="text-ink/80">{product.printMethod}</dd>
+          <dt className="font-semibold">Đặt tối thiểu</dt>
+          <dd className="text-ink/80">{product.minQty} sản phẩm</dd>
+          <dt className="font-semibold">Cam kết</dt>
+          <dd className="text-ink/80">Duyệt mockup trước khi in · Đổi mới nếu lỗi in · COD toàn quốc</dd>
+        </dl>
       </div>
     </div>
   );
@@ -364,9 +362,9 @@ export function ProductConfigurator({
 
 function TierCell({ label, price, active }: { label: string; price: number; active: boolean }) {
   return (
-    <li className={`px-3 py-2 ${active ? "bg-brand-badge/60" : ""}`}>
-      <p className="text-xs text-ink/60">{label}</p>
-      <p className="font-extrabold">{formatVND(price)}</p>
+    <li className={`rounded-md px-3 py-2 ${active ? "bg-ink text-white" : "bg-white"}`}>
+      <p className={`text-[13px] ${active ? "text-white/80" : "text-ink/70"}`}>{label}</p>
+      <p className="text-base font-bold tabular-nums">{formatVND(price)}</p>
     </li>
   );
 }

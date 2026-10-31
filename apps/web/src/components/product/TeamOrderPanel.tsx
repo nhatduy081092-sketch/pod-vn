@@ -104,8 +104,8 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
         </select>
         <button className="btn-outline h-9 px-3 text-[13px]">+ Thêm</button>
       </form>
-      {oneErr && <p className="-mt-1 text-xs text-red-700">{oneErr}</p>}
-      <p className="text-xs text-ink/60">
+      {oneErr && <p className="-mt-1 text-[13px] text-red-700">{oneErr}</p>}
+      <p className="text-[13px] leading-relaxed text-ink/70">
         Nhập tay từng người ở trên, hoặc tải file. Cột: <b>Tên in</b> · <b>Số áo</b> · <b>Size</b> ({sizes.join(", ")}) · Ghi chú. Dòng đầu là tiêu đề. Mỗi dòng = 1 áo.
         {fileName && <> Đã đọc: <b>{fileName}</b></>}
       </p>
@@ -128,7 +128,7 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
       {issues.length > 0 && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
           <p className="font-bold">{issues.length} dòng chưa hợp lệ (đã bỏ qua):</p>
-          <ul className="mt-1 max-h-32 list-disc overflow-y-auto pl-5 text-xs">
+          <ul className="mt-1 max-h-32 list-disc overflow-y-auto pl-5 text-[13px]">
             {issues.slice(0, 50).map((i, k) => (
               <li key={k}>{i.line ? `Dòng ${i.line}: ` : ""}{i.message}</li>
             ))}
@@ -141,17 +141,17 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
           <div className="flex flex-wrap items-center gap-2 bg-brand px-3 py-2 text-sm">
             <b>{rows.length} áo</b>
             {summary.map((s) => (
-              <span key={s.size} className="rounded bg-white px-2 py-0.5 text-xs font-bold">
+              <span key={s.size} className="rounded bg-white px-2 py-0.5 text-[13px] font-bold">
                 {s.size}: {s.qty}
               </span>
             ))}
-            <button type="button" className="ml-auto text-xs font-semibold underline" onClick={() => (onChange([]), setIssues([]), setFileName(""))}>
+            <button type="button" className="ml-auto text-[13px] font-semibold underline" onClick={() => (onChange([]), setIssues([]), setFileName(""))}>
               Xoá danh sách
             </button>
           </div>
           <div className="max-h-64 overflow-y-auto">
             <table className="w-full text-left text-sm">
-              <thead className="sticky top-0 bg-cream text-xs uppercase text-ink/60">
+              <thead className="sticky top-0 bg-cream text-[13px] text-ink/70">
                 <tr>
                   <th className="px-3 py-1.5">#</th>
                   <th className="px-3 py-1.5">Tên in</th>
@@ -168,7 +168,7 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
                     <td className="px-3 py-1 font-semibold">{r.name || <span className="text-ink/40">—</span>}</td>
                     <td className="px-3 py-1">{r.number}</td>
                     <td className="px-3 py-1 font-bold">{r.size}</td>
-                    <td className="px-3 py-1 text-xs text-ink/60">{r.note}</td>
+                    <td className="px-3 py-1 text-[13px] text-ink/70">{r.note}</td>
                     <td className="px-1 py-1 text-right">
                       <button type="button" onClick={() => onChange(rows.filter((_, k) => k !== i))} className="px-1.5 text-ink/40 hover:text-red-600" aria-label={`Xoá dòng ${i + 1}`}>
                         ×

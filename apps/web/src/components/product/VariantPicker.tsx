@@ -40,9 +40,9 @@ export function VariantPicker({ variants, color, size, onChange, hideSize, sizeG
                     const avail = opts.sizesFor(c.name);
                     onChange({ color: c.name, size: avail.includes(size) ? size : (avail[0] ?? "") });
                   }}
-                  className={`flex items-center gap-2 rounded-full border-2 py-1 pl-1 pr-3 text-sm font-semibold ${on ? "border-ink bg-brand" : "border-ink/20 bg-white hover:border-ink/50"}`}
+                  className={`flex items-center gap-2 rounded-full py-1 pl-1 pr-3.5 text-[15px] font-semibold transition-colors ${on ? "bg-ink text-white" : "bg-surface text-ink hover:bg-ink/10"}`}
                 >
-                  <span className="h-6 w-6 rounded-full border border-ink/20" style={{ background: c.hex || "repeating-linear-gradient(45deg,#fff 0 4px,#e5e5e5 4px 8px)" }} aria-hidden />
+                  <span className="h-7 w-7 rounded-full ring-1 ring-inset ring-ink/20" style={{ background: c.hex || "repeating-linear-gradient(45deg,#fff 0 4px,#e5e5e5 4px 8px)" }} aria-hidden />
                   {c.name}
                 </button>
               );
@@ -55,8 +55,8 @@ export function VariantPicker({ variants, color, size, onChange, hideSize, sizeG
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="label">{step?.size ?? "Size"}</h2>
             {sizeGuide && (
-              <a href="#bang-size" className="text-xs font-bold text-ink/70 underline underline-offset-2 hover:text-ink">
-                📏 Bảng size
+              <a href="#bang-size" className="text-[15px] font-semibold text-ink underline underline-offset-4 hover:text-brand-dark">
+                Bảng size
               </a>
             )}
           </div>
@@ -70,10 +70,10 @@ export function VariantPicker({ variants, color, size, onChange, hideSize, sizeG
                   role="radio"
                   aria-checked={size === s}
                   onClick={() => onChange({ color, size: s })}
-                  className={`min-w-[48px] rounded-md border-2 px-3 py-1.5 text-sm font-bold ${size === s ? "border-ink bg-brand" : "border-ink/20 bg-white"}`}
+                  className={`min-h-[44px] min-w-[52px] rounded-md px-3 py-2 text-base font-bold transition-colors ${size === s ? "bg-ink text-white" : "bg-surface text-ink hover:bg-ink/10"}`}
                 >
                   {s}
-                  {d !== 0 && <span className="ml-1 text-[11px] font-semibold text-ink/60">{d > 0 ? "+" : ""}{formatVND(d)}</span>}
+                  {d !== 0 && <span className="ml-1 text-[13px] font-semibold opacity-75">{d > 0 ? "+" : ""}{formatVND(d)}</span>}
                 </button>
               );
             })}

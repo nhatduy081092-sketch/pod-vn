@@ -14,8 +14,8 @@ export function SortSelect({ value }: { value: string }) {
   const pathname = usePathname();
   const sp = useSearchParams();
   return (
-    <label className="flex items-center gap-1.5 text-sm">
-      <span className="hidden text-ink/60 sm:inline">Sắp xếp</span>
+    <label className="flex items-center gap-2 text-base">
+      <span className="hidden text-ink/80 sm:inline">Sắp xếp</span>
       <select
         value={value}
         onChange={(e) => {
@@ -26,7 +26,7 @@ export function SortSelect({ value }: { value: string }) {
           const str = qs.toString();
           router.push(str ? `${pathname}?${str}` : pathname);
         }}
-        className="h-9 rounded-md border border-ink/20 bg-white px-2 text-sm font-semibold"
+        className="h-11 rounded-md bg-surface px-3 text-[15px] font-semibold"
         aria-label="Sắp xếp sản phẩm"
       >
         {SORTS.map((s) => (

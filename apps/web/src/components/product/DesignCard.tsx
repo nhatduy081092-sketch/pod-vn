@@ -5,7 +5,7 @@ import { formatVND } from "@pod/shared";
 import { assetUrl } from "@/lib/config";
 import type { AttachedDesign, PrintArea } from "@/lib/types";
 import { clearAttached, readAttached } from "../editor/storage";
-import { IconBrush, IconCheck } from "../ui/icons";
+import { IconCheck } from "../ui/icons";
 
 /** Thiết kế đang gắn với sản phẩm (đọc từ sessionStorage, cập nhật khi editor lưu) */
 export function useAttachedDesign(productId: string) {
@@ -38,43 +38,44 @@ type Props = {
 export function DesignCard({ slug, productId, areas, design, step = "Thiết kế", tone = "brand", color }: Props) {
   const editHref = `/thiet-ke/${slug}${color ? `?mau=${encodeURIComponent(color)}` : ""}`;
   const extras = design ? areas.filter((a) => design.files.some((f) => f.area === a.key)).reduce((s, a) => s + a.extraPrice, 0) : 0;
-  const ring = tone === "navy" ? "border-navy" : "border-ink";
   return (
     <section id="thiet-ke" className="scroll-mt-28">
       <h2 className="label">{step}</h2>
       {design ? (
-        <div className={`rounded-lg border-2 ${ring} bg-white p-3`}>
-          <p className="flex items-center gap-1.5 text-sm font-bold text-green-700">
+        <div className="rounded-lg bg-surface p-4">
+          <p className="flex items-center gap-1.5 text-base font-bold text-green-700">
             <IconCheck className="h-4 w-4" /> Đã có thiết kế · {design.files.length} mặt in
           </p>
           <ul className="mt-2 flex gap-2 overflow-x-auto">
             {design.files.map((f) => (
               <li key={f.area} className="w-20 shrink-0 text-center">
-                <img src={assetUrl(f.previewUrl)} alt={`Xem trước ${f.name}`} className="aspect-square w-full rounded border border-ink/15 object-contain" />
-                <span className="mt-0.5 block truncate text-[11px] font-semibold">{f.name}</span>
+                <img src={assetUrl(f.previewUrl)} alt={`Xem trước ${f.name}`} className="aspect-square w-full rounded-md bg-white object-contain" />
+                <span className="mt-1 block truncate text-[13px] font-semibold">{f.name}</span>
               </li>
             ))}
           </ul>
-          {extras > 0 && <p className="mt-2 text-xs text-ink/70">Phụ phí mặt in thêm: +{formatVND(extras)}/sản phẩm (đã cộng vào giá)</p>}
-          <div className="mt-3 flex gap-2 text-sm">
-            <Link href={editHref} className="btn flex-1 border-ink/30 bg-white px-3 py-2">
+          {extras > 0 && <p className="mt-2 text-[15px] text-ink/80">Phụ phí mặt in thêm: +{formatVND(extras)}/sản phẩm (đã cộng vào giá)</p>}
+          <div className="mt-3 flex gap-2">
+            <Link href={editHref} className="btn-outline flex-1 px-3 py-2">
               Sửa thiết kế
             </Link>
-            <button type="button" onClick={() => clearAttached(productId)} className="btn border-ink/30 bg-white px-3 py-2 text-red-600">
+            <button type="button" onClick={() => clearAttached(productId)} className="btn-outline px-3 py-2 text-red-600">
               Bỏ
             </button>
           </div>
         </div>
       ) : (
-        <Link href={editHref} className={`group flex items-center gap-3 rounded-lg border-2 ${ring} ${tone === "navy" ? "bg-navy text-white" : "bg-brand text-ink"} px-4 py-3.5 shadow-hard transition hover:-translate-y-0.5`}>
-          <IconBrush className="h-7 w-7 shrink-0" />
+        <Link
+          href={editHref}
+          className={`group flex items-center gap-4 rounded-lg px-5 py-4 transition-colors ${tone === "navy" ? "bg-navy text-white hover:bg-navy-dark" : "bg-brand text-ink hover:bg-ink hover:text-white"}`}
+        >
           <span>
-            <span className="block text-base font-black">Tự thiết kế với YALA Studio</span>
-            <span className="block text-xs opacity-80">
+            <span className="block text-lg font-bold">Tự thiết kế với YALA Studio</span>
+            <span className="mt-0.5 block text-[15px] opacity-90">
               Tải ảnh, thêm chữ trên {areas.length > 1 ? `${areas.length} mặt in` : "vùng in"} · xem trước ngay trên sản phẩm
             </span>
           </span>
-          <span className="ml-auto text-xl transition group-hover:translate-x-1">→</span>
+          <span aria-hidden className="ml-auto text-2xl transition-transform duration-200 group-hover:translate-x-1">→</span>
         </Link>
       )}
     </section>

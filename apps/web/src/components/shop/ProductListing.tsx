@@ -9,10 +9,15 @@ import { FilterSheet } from "./FilterSheet";
 export type ListingParams = { q?: string; sub?: string; gia?: string; sort?: string; page?: string; category?: string; "doi-tuong"?: string; "bo-suu-tap"?: string; mau?: string };
 
 const COLLECTIONS = [
-  { v: "moi", label: "Hàng mới", dot: "bg-[#16a34a]" },
-  { v: "sale", label: "Khuyến mãi", dot: "bg-[#e11d48]" },
-  { v: "ban-chay", label: "Bán chạy", dot: "bg-brand-dark" },
+  { v: "moi", label: "Hàng mới" },
+  { v: "sale", label: "Khuyến mãi" },
+  { v: "ban-chay", label: "Bán chạy" },
 ];
+
+/* Bộ lọc (redesign 31/10/2026): chữ ≥ 15px, mục đang chọn = nền đen; không viền, không chấm màu */
+const item = (on: boolean) =>
+  `flex items-center justify-between gap-2 rounded-md px-3 py-2 text-base transition-colors ${on ? "bg-ink font-semibold text-white" : "text-ink hover:bg-surface"}`;
+const groupTitle = "mb-2 px-3 text-[15px] font-bold text-ink";
 
 type Props = {
   basePath: string;
@@ -54,18 +59,17 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
 
   const col = params["bo-suu-tap"];
   const panel = (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <p className="mb-2 text-sm font-bold text-ink/60">Bộ sưu tập</p>
+        <p className={groupTitle}>Bộ sưu tập</p>
         <ul className="space-y-0.5">
           {COLLECTIONS.map((c) => (
             <li key={c.v}>
               <Link
                 href={hrefWith(basePath, params, { "bo-suu-tap": col === c.v ? undefined : c.v, page: undefined })}
-                className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm ${col === c.v ? "bg-navy font-semibold text-white" : "hover:bg-navy-light"}`}
+                className={item(col === c.v)}
                 aria-current={col === c.v ? "true" : undefined}
               >
-                <span className={`h-2 w-2 rounded-full ${c.dot}`} aria-hidden />
                 {c.label}
               </Link>
             </li>
@@ -74,23 +78,20 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
       </div>
       {groups.length > 0 && (
         <div>
-          <p className="mb-2 text-sm font-bold text-ink/60">{mode === "category" ? "Nhóm sản phẩm" : "Danh mục"}</p>
+          <p className={groupTitle}>{mode === "category" ? "Nhóm sản phẩm" : "Danh mục"}</p>
           <ul className="space-y-0.5">
             {mode === "category" && (
               <li>
-                <Link href={allHref} className={`flex justify-between rounded-md px-2 py-1.5 text-sm ${!params.sub ? "bg-navy text-white" : "hover:bg-navy-light"}`}>
+                <Link href={allHref} className={item(!params.sub)}>
                   <span>Tất cả</span>
                 </Link>
               </li>
             )}
             {groups.map((g) => (
               <li key={g.key}>
-                <Link
-                  href={g.href}
-                  className={`flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm ${g.active ? "bg-navy font-semibold text-white" : "hover:bg-navy-light"}`}
-                >
+                <Link href={g.href} className={item(g.active)}>
                   <span className="min-w-0 truncate">{g.name}</span>
-                  <span className={`shrink-0 text-xs ${g.active ? "text-white/80" : "text-ink/40"}`}>{g.count}</span>
+                  <span className={`shrink-0 text-[15px] tabular-nums ${g.active ? "text-white/80" : "text-ink/60"}`}>{g.count}</span>
                 </Link>
               </li>
             ))}
@@ -98,13 +99,13 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
         </div>
       )}
       <div>
-        <p className="mb-2 text-sm font-bold text-ink/60">Giá</p>
+        <p className={groupTitle}>Giá</p>
         <ul className="space-y-0.5">
           {PRICE_FILTERS.map((f) => (
             <li key={f.v}>
               <Link
                 href={hrefWith(basePath, params, { gia: f.v || undefined, page: undefined })}
-                className={`block rounded-md px-2 py-1.5 text-sm ${(params.gia ?? "") === f.v ? "bg-navy font-semibold text-white" : "hover:bg-navy-light"}`}
+                className={item((params.gia ?? "") === f.v)}
               >
                 {f.label}
               </Link>
@@ -116,25 +117,23 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
   );
 
   return (
-    <div className="lg:grid lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-8">
+    <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-12">
       {/* Sidebar desktop */}
       <aside className="hidden lg:block">
-        <div className="sticky top-32">{panel}</div>
+        <div className="sticky top-32 -mx-3">{panel}</div>
       </aside>
 
       <div className="min-w-0">
-        {/* Bộ sưu tập – chip nhanh trên mobile/tablet */}
-        <div className="no-scrollbar -mx-4 mb-1 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden">
+        {/* Bộ sưu tập: chip xuống dòng; nhóm: cuộn ngang (nhiều nhóm, không đẩy sản phẩm xuống quá sâu) */}
+        <div className="mb-2 flex flex-wrap gap-2 lg:hidden">
           {COLLECTIONS.map((c) => (
             <Chip key={c.v} href={hrefWith(basePath, params, { "bo-suu-tap": col === c.v ? undefined : c.v, page: undefined })} active={col === c.v}>
-              <span className={`mr-1 inline-block h-2 w-2 rounded-full ${c.dot}`} aria-hidden />
               {c.label}
             </Chip>
           ))}
         </div>
-        {/* Chip nhóm – cuộn ngang trên mobile/tablet */}
         {groups.length > 0 && (
-          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 lg:hidden">
+          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden">
             {mode === "category" && (
               <Chip href={allHref} active={!params.sub}>
                 Tất cả
@@ -142,15 +141,15 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
             )}
             {groups.map((g) => (
               <Chip key={g.key} href={g.href} active={g.active}>
-                {g.name} <span className="opacity-60">{g.count}</span>
+                {g.name} <span className="tabular-nums opacity-70">{g.count}</span>
               </Chip>
             ))}
           </div>
         )}
 
         {/* Thanh công cụ */}
-        <div className="mt-2 flex items-center justify-between gap-2 lg:mt-0">
-          <p className="whitespace-nowrap text-sm text-ink/60">
+        <div className="mt-6 flex items-center justify-between gap-2 lg:mt-0">
+          <p className="whitespace-nowrap text-base text-ink/80">
             <b className="text-ink">{data.total.toLocaleString("vi-VN")}</b> sản phẩm
           </p>
           <div className="flex items-center gap-2">
@@ -165,7 +164,7 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
           <p className="mt-3">
             <Link
               href={hrefWith(basePath, params, { mau: undefined, page: undefined })}
-              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1 text-xs font-bold hover:bg-navy-light"
+              className="inline-flex items-center gap-1.5 rounded-md bg-surface px-3 py-1.5 text-[15px] font-semibold transition-colors hover:bg-ink hover:text-white"
               aria-label={`Bỏ lọc màu ${params.mau}`}
             >
               Màu: {params.mau} <span aria-hidden>✕</span>
@@ -173,13 +172,13 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
           </p>
         )}
 
-        <div className="mt-4">
+        <div className="mt-6">
           {data.items.length ? (
             <ProductGrid items={data.items} dense color={params.mau} />
           ) : (
-            <div className="rounded-lg border-2 border-dashed border-ink/20 px-4 py-16 text-center text-ink/60">
+            <div className="rounded-lg bg-surface px-4 py-16 text-center text-lg">
               <p>Chưa có sản phẩm phù hợp.</p>
-              <Link href={basePath} className="mt-2 inline-block font-bold text-navy underline">
+              <Link href={basePath} className="mt-2 inline-block font-bold underline underline-offset-4 hover:text-brand-dark">
                 Xoá bộ lọc
               </Link>
             </div>
@@ -187,7 +186,7 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
         </div>
 
         {pages > 1 && (
-          <nav className="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label="Phân trang">
+          <nav className="mt-14 flex flex-wrap items-center justify-center gap-2" aria-label="Phân trang">
             {data.page > 1 && (
               <PageLink href={hrefWith(basePath, params, { page: data.page - 1 > 1 ? String(data.page - 1) : undefined })} label="‹ Trước" />
             )}
@@ -196,7 +195,7 @@ export function ProductListing({ basePath, data, params, facets, mode }: Props) 
               .filter((n) => n === 1 || n === pages || Math.abs(n - data.page) <= 1)
               .map((n, idx, arr) => (
                 <span key={n} className="flex items-center gap-2">
-                  {idx > 0 && n - arr[idx - 1]! > 1 && <span className="text-ink/40">…</span>}
+                  {idx > 0 && n - arr[idx - 1]! > 1 && <span className="text-ink/60">…</span>}
                   <PageLink href={hrefWith(basePath, params, { page: n > 1 ? String(n) : undefined })} label={String(n)} active={n === data.page} />
                 </span>
               ))}
@@ -213,7 +212,7 @@ function PageLink({ href, label, active }: { href: string; label: string; active
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`flex h-10 min-w-10 items-center justify-center rounded-full border-2 px-3 text-sm font-bold transition ${active ? "border-ink bg-ink text-white" : "border-ink/15 bg-white hover:border-ink"}`}
+      className={`flex h-11 min-w-11 items-center justify-center rounded-md px-3 text-base font-semibold tabular-nums transition-colors ${active ? "bg-ink text-white" : "bg-surface hover:bg-ink hover:text-white"}`}
     >
       {label}
     </Link>
@@ -224,7 +223,7 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
   return (
     <Link
       href={href}
-      className={`shrink-0 whitespace-nowrap rounded-full border-2 px-3.5 py-1.5 text-[13px] font-bold transition ${active ? "border-ink bg-ink text-white" : "border-ink/15 bg-white text-ink hover:border-ink"}`}
+      className={`shrink-0 whitespace-nowrap rounded-md px-3.5 py-2 text-[15px] font-semibold transition-colors ${active ? "bg-ink text-white" : "bg-surface text-ink hover:bg-ink hover:text-white"}`}
     >
       {children}
     </Link>

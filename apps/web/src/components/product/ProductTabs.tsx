@@ -54,9 +54,10 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
 
   if (!tabs.length) return null;
   return (
-    <section ref={rootRef} className="mt-10 scroll-mt-28 md:mt-14" aria-label="Thông tin sản phẩm">
-      <div className="no-scrollbar -mx-4 overflow-x-auto border-b border-line px-4 md:mx-0 md:px-0" role="tablist" aria-label="Thông tin sản phẩm">
-        <div className="flex w-max gap-1 md:gap-2">
+    <section ref={rootRef} className="mt-20 scroll-mt-28 md:mt-28" aria-label="Thông tin sản phẩm">
+      {/* tab dạng nút nền nhạt, xuống dòng trên mobile (không kẻ viền, không tràn mép) */}
+      <div role="tablist" aria-label="Thông tin sản phẩm">
+        <div className="flex flex-wrap gap-2">
           {tabs.map((t, i) => {
             const on = t.id === active;
             return (
@@ -70,8 +71,8 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
                 tabIndex={on ? 0 : -1}
                 onClick={() => setActive(t.id)}
                 onKeyDown={(e) => onKey(e, i)}
-                className={`-mb-[2px] whitespace-nowrap rounded-t-md border-2 px-3.5 py-2 text-[13px] font-extrabold transition md:px-5 md:text-[15px] ${
-                  on ? "border-ink border-b-white bg-white text-ink" : "border-transparent text-ink/60 hover:text-ink"
+                className={`whitespace-nowrap rounded-md px-4 py-2.5 text-[15px] font-semibold transition-colors md:px-5 md:text-base ${
+                  on ? "bg-ink text-white" : "bg-surface text-ink hover:bg-ink/10"
                 }`}
               >
                 {t.label}
@@ -87,7 +88,7 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
           role="tabpanel"
           aria-labelledby={`${uid}-tab-${t.id}`}
           hidden={t.id !== active}
-          className="max-w-3xl pt-5"
+          className="max-w-[44rem] pt-8 text-base"
         >
           {t.content}
         </div>

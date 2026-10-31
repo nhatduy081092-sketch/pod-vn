@@ -29,8 +29,8 @@ export default async function CategoryPage({ params, searchParams }: { params: P
   ]);
   const activeSub = facets.subcategories.find((s) => s.slug === query.sub);
   return (
-    <div className="container-site py-5 md:py-8">
-      <nav className="text-sm text-ink/60" aria-label="Breadcrumb">
+    <div className="container-site pb-20 pt-6 md:pb-28 md:pt-10">
+      <nav className="text-[15px] text-ink/70" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-ink">
           Trang chủ
         </Link>{" "}
@@ -46,13 +46,16 @@ export default async function CategoryPage({ params, searchParams }: { params: P
           <span className="text-ink">{cat.name}</span>
         )}
       </nav>
-      <h1 className="font-display text-[clamp(26px,3.2vw,38px)] font-extrabold leading-[1.15] tracking-[-0.02em] [font-stretch:88%] mt-1">
-        {activeSub?.name ?? cat.name}
-        {query.q && <span className="text-ink/50"> · “{query.q}”</span>}
-        {query.mau && <span className="text-ink/50"> · màu {query.mau}</span>}
-      </h1>
-      {cat.description && !activeSub && <p className="mt-1 max-w-3xl text-sm text-ink/70 md:text-base">{cat.description}</p>}
-      <div className="mt-4">
+      {/* đầu trang danh mục: tên cỡ lớn bên trái, mô tả cột phải (redesign 31/10/2026) */}
+      <div className="mt-4 grid gap-5 md:mt-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
+        <h1 className="font-display text-[clamp(40px,5.2vw,80px)] font-bold leading-[1.02] tracking-[-0.035em] [text-wrap:balance]">
+          {activeSub?.name ?? cat.name}
+          {query.q && <span className="text-muted"> · “{query.q}”</span>}
+          {query.mau && <span className="text-muted"> · màu {query.mau}</span>}
+        </h1>
+        {cat.description && !activeSub && <p className="max-w-[36rem] text-lg leading-relaxed text-ink lg:pb-2">{cat.description}</p>}
+      </div>
+      <div className="mt-10 md:mt-14">
         <ProductListing basePath={`/danh-muc/${slug}`} data={data} params={query} facets={facets} mode="category" />
       </div>
     </div>

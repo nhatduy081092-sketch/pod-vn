@@ -15,12 +15,12 @@ export function AddToQuote({ product, quantity = 1, variant = "outline", classNa
     variant === "primary"
       ? "btn-primary w-full"
       : variant === "compact"
-        ? "flex w-full items-center justify-center gap-1 rounded-full border border-line py-2 text-[13px] font-semibold transition hover:border-ink"
+        ? "flex min-h-[44px] w-full items-center justify-center gap-1 rounded-md bg-surface py-2 text-[15px] font-semibold transition-colors hover:bg-ink hover:text-white"
         : "btn-outline w-full";
   if (inList && !added)
     return (
       <Link href="/doanh-nghiep/bao-gia" className={`${style} ${className}`}>
-        ✓ Đã trong danh sách báo giá
+        Đã trong danh sách báo giá – xem
       </Link>
     );
   return (
@@ -34,10 +34,10 @@ export function AddToQuote({ product, quantity = 1, variant = "outline", classNa
           track.lead("add_to_quote");
         }}
       >
-        {added ? "✓ Đã thêm vào báo giá" : "+ Thêm vào báo giá"}
+        {added ? "Đã thêm vào báo giá" : "+ Thêm vào báo giá"}
       </button>
       {added && (
-        <Link href="/doanh-nghiep/bao-gia" className="mt-1.5 block text-center text-[13px] font-semibold text-brand-dark underline underline-offset-4">
+        <Link href="/doanh-nghiep/bao-gia" className="mt-2 block text-center text-[15px] font-semibold text-brand-dark underline underline-offset-4">
           Xem danh sách & gửi yêu cầu →
         </Link>
       )}

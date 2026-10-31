@@ -6,7 +6,7 @@ import { assetUrl } from "@/lib/config";
 export function Thumbs({ images, active, onPick, name }: { images: string[]; active: number; onPick: (i: number) => void; name: string }) {
   if (images.length < 2) return null;
   return (
-    <ul className="no-scrollbar mt-2 flex gap-2 overflow-x-auto pb-1">
+    <ul className="mt-3 flex flex-wrap gap-2">
       {images.map((src, i) => (
         <li key={src + i} className="shrink-0">
           <button
@@ -14,7 +14,7 @@ export function Thumbs({ images, active, onPick, name }: { images: string[]; act
             onClick={() => onPick(i)}
             aria-label={`Xem ảnh ${i + 1} của ${name}`}
             aria-current={i === active}
-            className={`block h-16 w-16 overflow-hidden rounded-md border-2 bg-white md:h-[72px] md:w-[72px] ${i === active ? "border-ink" : "border-ink/15 hover:border-ink/50"}`}
+            className={`block h-16 w-16 overflow-hidden rounded-md bg-surface transition md:h-[76px] md:w-[76px] ${i === active ? "outline outline-2 outline-offset-2 outline-ink" : "opacity-80 hover:opacity-100"}`}
           >
             <img src={assetUrl(src)} alt="" className="h-full w-full object-contain" loading="lazy" />
           </button>
