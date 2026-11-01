@@ -21,6 +21,27 @@ const BY_CATEGORY: Record<string, Preset> = {
 
 const FLAG_PRESET = "oem:print-presets:v1";
 const FLAG_IMPORT = "oem:auto-import:v1";
+const FLAG_REPAIR = "oem:repair-print-areas:v1";
+
+/**
+ * Sản phẩm nguồn chưa có vùng in nào (lần nhập 02/10/2026: 168 SP tạo song song bị trùng SKU -> lỗi trước khi kịp tạo vùng in)
+ * -> thêm 1 vùng in "logo" theo ngành, giống các SP cùng ngành. Chỉ THÊM cho SP chưa có, không sửa/xoá vùng in sẵn có.
+ */
+export async function repairMissingPrintAreas(force = false): Promise<number> {
+  if (!force && (await prisma.setting.findUnique({ where: { key: FLAG_REPAIR } }))) return 0;
+  const missing = await prisma.product.findMany({
+    where: { externalId: { startsWith: "oem:" }, printAreas: { none: {} } },
+    select: { id: true, category: { select: { slug: true } } },
+  });
+  const fallback: Preset = { name: "Vị trí in logo", widthMm: 100, heightMm: 100, zoneX: 0.35, zoneY: 0.3, zoneW: 0.3, zoneH: 0.3, tips: "" };
+  const { count: n } = await prisma.printArea.createMany({
+    data: missing.map((p) => ({ productId: p.id, key: "logo", ...(BY_CATEGORY[p.category.slug] ?? fallback), dpi: 300, safeMm: 3 })),
+    skipDuplicates: true,
+  });
+  await prisma.setting.upsert({ where: { key: FLAG_REPAIR }, update: { value: { at: new Date().toISOString(), n } }, create: { key: FLAG_REPAIR, value: { at: new Date().toISOString(), n } } });
+  if (n) console.log(`[oem] đã thêm vùng in cho ${n} sản phẩm còn thiếu`);
+  return n;
+}
 
 /** Áp vùng in theo ngành cho sản phẩm nguồn còn vùng in mặc định (chưa chỉnh trong CMS) – chạy 1 lần + sau mỗi lần nhập */
 export async function applyOemPrintPresets(force = false): Promise<number> {
@@ -51,7 +72,7 @@ export async function applyOemPrintPresets(force = false): Promise<number> {
  * Sau đó cập nhật bằng nút "Đồng bộ" trong CMS.
  */
 export async function ensureOemCatalog() {
-  if (await prisma.setting.findUnique({ where: { key: FLAG_IMPORT } })) return applyOemPrintPresets();
+  if (await prisma.setting.findUnique({ where: { key: FLAG_IMPORT } })) return applyOemPrintPresets().then(() => repairMissingPrintAreas());
   const existing = await prisma.product.count({ where: { externalId: { startsWith: "oem:" } } });
   if (!existing) {
     await new Promise((r) => setTimeout(r, 20_000)); // đợi API ổn định

@@ -3,7 +3,7 @@ import { b2bPriceFor, DEFAULT_SIZES, KIDS_SIZES, mergeLanding, slugify } from "@
 import { getLanding, invalidateLanding } from "./settings";
 import { searchFields } from "./search";
 import { ensureProductParts } from "./product-parts";
-import { applyOemPrintPresets } from "./oem-blanks";
+import { applyOemPrintPresets, repairMissingPrintAreas } from "./oem-blanks";
 
 /**
  * Đồng bộ danh mục + sản phẩm từ website OEM Group (WooCommerce Store API công khai).
@@ -154,6 +154,7 @@ export async function importOemCatalog(): Promise<ImportReport> {
   report.total = all.length;
 
   // 3. Upsert theo lô nhỏ
+  const createdList: Parameters<typeof ensureProductParts>[0][] = [];
   const handle = async (p: WcProduct) => {
     const leaf = p.categories.find((c) => byId.get(c.id)?.parent) ?? p.categories[0];
     const top = leaf ? topOf(leaf.id) : undefined;
@@ -216,7 +217,7 @@ export async function importOemCatalog(): Promise<ImportReport> {
         sortOrder: 1000,
       },
     });
-    await ensureProductParts(created);
+    createdList.push(created);
     report.created++;
   };
 
@@ -228,6 +229,10 @@ export async function importOemCatalog(): Promise<ImportReport> {
         }),
       ),
     );
+  }
+  // biến thể + vùng in tạo LẦN LƯỢT: tạo song song 8 SP tên gần giống ("Sổ tay thiết kế 1/2") -> trùng SKU, lỗi cả lô
+  for (const p of createdList) {
+    await ensureProductParts(p).catch((e) => report.errors.push(`${p.name}: ${(e as Error).message}`.slice(0, 200)));
   }
 
   // 4. Dọn 3 sản phẩm mẫu B2B cũ + trỏ khối B2B sang danh mục đồng phục thật
@@ -247,6 +252,7 @@ export async function importOemCatalog(): Promise<ImportReport> {
 
   // sản phẩm mới nhập -> vùng in theo ngành (giữ nguyên vùng in đã chỉnh tay)
   await applyOemPrintPresets(true).catch(() => 0);
+  await repairMissingPrintAreas(true).catch(() => 0);
 
   report.ms = Date.now() - t0;
   report.errors = report.errors.slice(0, 20);
