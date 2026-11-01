@@ -11,6 +11,7 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { WhyChoose } from "@/components/landing/WhyChoose";
 import { B2BSection } from "@/components/landing/B2BSection";
 import { CatalogSection } from "@/components/landing/CatalogSection";
+import { ParticleBand } from "@/components/landing/ParticleBand";
 
 export const revalidate = 60;
 
@@ -37,6 +38,7 @@ export default async function HomePage() {
         <HomeHero zalo={zalo} />
         <HomeSegments />
       </div>
+      <ParticleBand line="Một thiết kế, mỗi áo một tên" />
       <HomeSteps />
       <HomeQuickStart />
       <B2BSection

@@ -218,6 +218,37 @@ html.reveal-on [data-reveal].is-in .draw-rule { animation: draw-x 0.9s cubic-bez
   html.reveal-on [data-reveal]:not(.is-in) { opacity: 1; }
 }
 
+/* ===== Đầu trang: chuyển động lấy từ mẫu Navbar v2 (giữ nguyên nội dung + 5 mục) =====
+   chấm cam dưới mục đang mở; mega menu mở theo expo-out, mục con hiện lần lượt 40ms + tan mờ. */
+.nav-dot { position: relative; }
+.nav-dot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px; /* hàng mục overflow-x-auto cắt cả trục dọc -> hàng phải self-stretch đủ 44px thì chấm mới không bị cắt */
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #E4570B;
+  transform: translateX(-50%) scale(0);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-dot[data-on]::after { transform: translateX(-50%) scale(1); }
+
+.mega-panel { transition: opacity 0.25s ease, visibility 0.25s, transform 0.25s ease; transform: translateY(-6px); }
+/* nền trắng phủ nhanh (không để trang bên dưới lộ qua), phần "hiện dần" do từng mục con đảm nhận */
+.mega-panel[data-open] { transform: none; transition: opacity 0.15s ease-out, visibility 0s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes mega-item-in {
+  from { opacity: 0; transform: translateY(-8px); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.mega-panel[data-open] .mega-item { animation: mega-item-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i, 0) * 40ms + 60ms) both; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-dot::after, .mega-panel, .mega-panel[data-open] { transition: none; transform: none; }
+  .nav-dot[data-on]::after { transform: translateX(-50%) scale(1); }
+  .mega-panel[data-open] .mega-item { animation: none; }
+}
+
 /* ===== Cá nhân hoá thứ tự khối theo lối khách (đặt bởi script đầu trang) ===== */
 .home-flow > .flow-top { order: -2; }
 html[data-lane="b2b"] .home-flow > .home-b2b { order: -1; }

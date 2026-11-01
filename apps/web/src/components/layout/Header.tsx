@@ -13,6 +13,11 @@ import { DESIGN_HUBS, SEGMENTS } from "@pod/shared";
 /** Menu chính: các nhóm khách tập thể (trừ Doanh nghiệp – có mega menu riêng) */
 const GROUP_NAV = SEGMENTS.filter((s) => s.key !== "doanh-nghiep");
 
+/** chấm cam dưới mục đang mở (.nav-dot) */
+const on = (active: boolean) => (active ? { "data-on": "" } : {});
+/** thứ tự hiện lần lượt trong mega menu (.mega-item) */
+const stagger = (i: number) => ({ ["--i" as string]: i });
+
 type Lite = { name: string; slug: string };
 type Props = {
   brandName: string;
@@ -118,17 +123,23 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
       {/* Thanh điều hướng desktop: áo nhóm theo nhóm khách | Doanh nghiệp (mega menu); mua lẻ xuống cuối */}
       <nav className="relative hidden border-t border-ink/10 lg:block" aria-label="Danh mục" onMouseLeave={() => setMega(false)}>
         <div className="container-site flex h-11 items-center gap-6 text-sm font-medium">
-          <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-7 overflow-x-auto">
+          <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-7 self-stretch overflow-x-auto">
             <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-muted">Áo nhóm</span>
             {GROUP_NAV.map((g) => (
-              <Link key={g.href} href={g.href} className={`shrink-0 whitespace-nowrap font-semibold hover:text-brand ${pathname === g.href ? "text-brand" : "text-ink"}`}>
+              <Link
+                key={g.href}
+                href={g.href}
+                {...on(pathname === g.href)}
+                aria-current={pathname === g.href ? "page" : undefined}
+                className={`nav-dot shrink-0 whitespace-nowrap font-semibold hover:text-brand ${pathname === g.href ? "text-brand" : "text-ink"}`}
+              >
                 {g.name}
               </Link>
             ))}
-            <Link href="/thiet-ke" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/thiet-ke") ? "text-brand" : "text-ink/75"}`}>
+            <Link href="/thiet-ke" {...on(pathname.startsWith("/thiet-ke"))} className={`nav-dot shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/thiet-ke") ? "text-brand" : "text-ink/75"}`}>
               Tự thiết kế
             </Link>
-            <Link href="/bo-suu-tap" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/bo-suu-tap") ? "text-brand" : "text-ink/75"}`}>
+            <Link href="/bo-suu-tap" {...on(pathname.startsWith("/bo-suu-tap"))} className={`nav-dot shrink-0 whitespace-nowrap hover:text-brand ${pathname.startsWith("/bo-suu-tap") ? "text-brand" : "text-ink/75"}`}>
               Mẫu có sẵn
             </Link>
             {campaign && (
@@ -140,7 +151,7 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
                 Quà {campaign.name}
               </Link>
             )}
-            <Link href="/san-pham" className={`shrink-0 whitespace-nowrap hover:text-brand ${pathname === "/san-pham" ? "text-brand" : "text-ink/75"}`}>
+            <Link href="/san-pham" {...on(pathname === "/san-pham")} className={`nav-dot shrink-0 whitespace-nowrap hover:text-brand ${pathname === "/san-pham" ? "text-brand" : "text-ink/75"}`}>
               Mua lẻ
             </Link>
           </div>
@@ -164,15 +175,16 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
         {/* Mega menu doanh nghiệp */}
         <div
           id="mega-b2b"
-          className={`absolute inset-x-0 top-full border-t border-line bg-white shadow-soft transition ${mega ? "visible opacity-100" : "invisible opacity-0"}`}
+          data-open={mega || undefined}
+          className={`mega-panel absolute inset-x-0 top-full border-t border-line bg-white shadow-soft ${mega ? "visible opacity-100" : "invisible opacity-0"}`}
           onKeyDown={(e) => e.key === "Escape" && setMega(false)}
         >
           <div className="container-site grid grid-cols-[1.5fr_1fr_0.9fr] gap-10 py-7">
             <div>
               <p className="eyebrow">Ngành hàng in logo</p>
               <ul className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1">
-                {industries.map((i) => (
-                  <li key={i.slug}>
+                {industries.map((i, k) => (
+                  <li key={i.slug} className="mega-item" style={stagger(Math.floor(k / 2))}>
                     <Link href={`/doanh-nghiep/san-pham?nganh=${i.slug}`} className="block rounded-md py-1.5 text-[14px] text-ink hover:text-brand">
                       {i.name}
                     </Link>
@@ -183,8 +195,8 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
             <div>
               <p className="eyebrow">Giải pháp theo dịp</p>
               <ul className="mt-3 space-y-1">
-                {solutions.map((s) => (
-                  <li key={s.key}>
+                {solutions.map((s, k) => (
+                  <li key={s.key} className="mega-item" style={stagger(k + 1)}>
                     <Link href={`/doanh-nghiep/san-pham?dip=${s.key}`} className="block rounded-md py-1.5 text-[14px] text-ink hover:text-brand">
                       {s.title}
                     </Link>
@@ -192,7 +204,7 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl bg-ink p-5 text-white">
+            <div className="mega-item rounded-2xl bg-ink p-5 text-white" style={stagger(2)}>
               <p className="text-lg font-semibold leading-snug">Cần quà tặng, đồng phục số lượng lớn?</p>
               <p className="mt-2 text-[13px] leading-relaxed text-white/70">Gửi nhu cầu – YALA tư vấn theo ngân sách và làm mockup miễn phí.</p>
               <Link href="/doanh-nghiep#bao-gia" className="btn-primary mt-4 w-full justify-center">
