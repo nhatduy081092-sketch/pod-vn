@@ -82,8 +82,18 @@ type Platform = { meta?: string; metaCustom?: boolean; tiktok?: string };
 /**
  * Gửi 1 sự kiện: dataLayer (luôn) + gửi thẳng khi không có GTM.
  * ecommerce = tham số chuẩn GA4 (items, value, currency…); extra = tham số riêng (order_type, topic…).
+ * Không bao giờ ném lỗi ra ngoài: purchase được gọi giữa lúc tạo đơn và chuyển sang trang đơn hàng –
+ * nếu pixel/GTM lỗi mà lỗi lọt ra, khách thấy "đặt hàng lỗi" dù đơn đã tạo và dễ bấm đặt lại (đơn trùng).
  */
-function emit(event: string, ecommerce: Record<string, unknown> | null, extra: Record<string, unknown> = {}, to: Platform = {}, eventId = newId()) {
+function emit(...args: Parameters<typeof send>) {
+  try {
+    send(...args);
+  } catch (e) {
+    console.warn("[track]", args[0], (e as Error)?.message);
+  }
+}
+
+function send(event: string, ecommerce: Record<string, unknown> | null, extra: Record<string, unknown> = {}, to: Platform = {}, eventId = newId()) {
   if (typeof window === "undefined") return;
   const internal = isInternal();
   const dl = (window.dataLayer = window.dataLayer || []);
@@ -91,7 +101,7 @@ function emit(event: string, ecommerce: Record<string, unknown> | null, extra: R
   dl.push({ event, event_id: eventId, ...(internal ? { traffic_type: "internal" } : {}), ...extra, ...(ecommerce ? { ecommerce } : {}) });
   if (window.__yalaGtm) return;
 
-  window.gtag?.("event", event, { ...ecommerce, ...extra, event_id: eventId, ...(internal ? { traffic_type: "internal", debug_mode: true } : {}) });
+  isolated("ga4", event, () => window.gtag?.("event", event, { ...ecommerce, ...extra, event_id: eventId, ...(internal ? { traffic_type: "internal", debug_mode: true } : {}) }));
   // máy nội bộ không gửi sang nền tảng quảng cáo (không làm bẩn tối ưu chuyển đổi)
   if (internal) return;
   const value = ecommerce?.value;
@@ -100,13 +110,24 @@ function emit(event: string, ecommerce: Record<string, unknown> | null, extra: R
     ...(value !== undefined ? { value, currency: "VND" } : {}),
     ...(items.length ? { content_ids: items.map((i) => i.item_id), content_type: "product", contents: items.map((i) => ({ id: i.item_id, quantity: i.quantity ?? 1 })) } : {}),
   };
-  if (to.meta) window.fbq?.(to.metaCustom ? "trackCustom" : "track", to.meta, { ...common, ...extra }, { eventID: eventId });
+  if (to.meta) isolated("meta", event, () => window.fbq?.(to.metaCustom ? "trackCustom" : "track", to.meta, { ...common, ...extra }, { eventID: eventId }));
   if (to.tiktok)
-    window.ttq?.track(
-      to.tiktok,
-      { ...(value !== undefined ? { value, currency: "VND" } : {}), ...(items.length ? { content_type: "product", contents: items.map((i) => ({ content_id: i.item_id, quantity: i.quantity ?? 1 })) } : {}) },
-      { event_id: eventId },
+    isolated("tiktok", event, () =>
+      window.ttq?.track(
+        to.tiktok,
+        { ...(value !== undefined ? { value, currency: "VND" } : {}), ...(items.length ? { content_type: "product", contents: items.map((i) => ({ content_id: i.item_id, quantity: i.quantity ?? 1 })) } : {}) },
+        { event_id: eventId },
+      ),
     );
+}
+
+/** Mỗi nền tảng gửi riêng: 1 nền tảng lỗi không chặn các nền tảng còn lại */
+function isolated(platform: string, event: string, fn: () => unknown) {
+  try {
+    fn();
+  } catch (e) {
+    console.warn(`[track] ${platform} ${event}`, (e as Error)?.message);
+  }
 }
 
 export const track = {
@@ -220,8 +241,12 @@ export const track = {
     if (typeof window === "undefined") return;
     (window.dataLayer = window.dataLayer || []).push({ event: "virtual_page_view", page_path: path, page_location: window.location.href, page_title: document.title });
     if (window.__yalaGtm || isInternal()) return;
-    window.fbq?.("track", "PageView");
-    window.ttq?.page();
+    try {
+      window.fbq?.("track", "PageView");
+      window.ttq?.page();
+    } catch (e) {
+      console.warn("[track] page_view", (e as Error)?.message);
+    }
   },
 };
 
