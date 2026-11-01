@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { DESIGN_HUBS, GARMENT_PRODUCT, GROUP_MIN_QTY, GROUP_STEPS, SEGMENTS, type Segment } from "@pod/shared";
+import { DESIGN_HUBS, GARMENT_PRODUCT, GROUP_MIN_QTY, GROUP_STEPS, SEGMENTS, type ColorKey, type GarmentKey, type Segment } from "@pod/shared";
+import { GarmentMockup, PrintText } from "../designs/GarmentMockup";
 import { TOOL_LINKS } from "../seo/ToolLinks";
 import { TeamLineup } from "../group/TeamLineup";
 
@@ -69,15 +70,84 @@ export function HomeHero({ zalo }: { zalo?: string }) {
   );
 }
 
-/** Ảnh người mặc cho từng nhóm khách (ảnh minh hoạ, không phải khách thật) – cắt dọc 4:5 quanh người đứng trước */
-const SEGMENT_PHOTO: Record<string, { src: string; pos: string }> = {
-  "doanh-nghiep": { src: "/showcase/so-mi-polo.webp", pos: "50% 25%" },
-  "the-thao": { src: "/showcase/the-thao.webp", pos: "45% 30%" },
-  "hoi-nhom": { src: "/showcase/ao-thun.webp", pos: "48% 30%" },
-  "su-kien": { src: "/showcase/hoodie.webp", pos: "44% 30%" },
+const INK = "#1f1f22";
+const CHALK = "#f4f2ee";
+const ORANGE = "#E4570B";
+/** phóng vào thân áo (4:5) để hình in đủ to trong ô */
+const CHEST: [number, number, number, number] = [0.2, 0.12, 0.6, 0.75];
+
+/**
+ * Mockup in trên áo trơn thật cho từng nhóm khách (thay ảnh người mẫu AI) – tên đội/lớp lấy từ lineup mẫu của nhóm,
+ * không phải khách thật. Hình in vẽ theo mm của vùng in (áo thun 300×380, hoodie 300×250).
+ */
+const SEGMENT_MOCKUP: Record<string, { garment: GarmentKey; color: ColorKey; print: ReactNode }> = {
+  // logo ngực trái (bên phải người xem), trắng + dấu cam trên áo đen
+  "doanh-nghiep": {
+    garment: "tshirt",
+    color: "den",
+    print: (
+      <g>
+        <circle cx={218} cy={46} r={22} fill={ORANGE} />
+        <path d="M205 46h26M218 33v26" stroke={CHALK} strokeWidth={4.5} />
+        <PrintText x={218} y={94} size={15} fill={CHALK} spacing={1.5}>
+          CÔNG TY BẠN
+        </PrintText>
+      </g>
+    ),
+  },
+  "the-thao": {
+    garment: "tshirt",
+    color: "navy",
+    print: (
+      <g>
+        <PrintText x={150} y={46} size={26} fill={CHALK} spacing={3}>
+          YALA FC
+        </PrintText>
+        <PrintText x={150} y={232} size={190} fill={CHALK} spacing={-6} stretch={80}>
+          10
+        </PrintText>
+        <PrintText x={150} y={290} size={40} fill={ORANGE} spacing={2}>
+          TÙNG
+        </PrintText>
+      </g>
+    ),
+  },
+  "hoi-nhom": {
+    garment: "tshirt",
+    color: "trang",
+    print: (
+      <g>
+        <PrintText x={150} y={140} size={108} fill={INK} spacing={-4}>
+          12A1
+        </PrintText>
+        <rect x={60} y={162} width={180} height={5} fill={ORANGE} />
+        <PrintText x={150} y={204} size={24} weight={700} fill={INK} spacing={5}>
+          NIÊN KHOÁ 2026
+        </PrintText>
+        <PrintText x={150} y={250} size={30} fill={INK} spacing={2}>
+          HÀ
+        </PrintText>
+      </g>
+    ),
+  },
+  "su-kien": {
+    garment: "hoodie",
+    color: "xam",
+    print: (
+      <g>
+        <path d="M70 92l52-62 30 34 22-22 56 50" fill="none" stroke={ORANGE} strokeWidth={9} strokeLinejoin="round" />
+        <PrintText x={150} y={160} size={64} fill={INK} spacing={-1}>
+          TRIP 2026
+        </PrintText>
+        <PrintText x={150} y={204} size={26} weight={700} fill={INK} spacing={6}>
+          ĐỘI XÁM
+        </PrintText>
+      </g>
+    ),
+  },
 };
 
-/** 4 lối vào theo nhóm khách: ảnh người mặc lớn + tên nhóm, không câu mô tả (mô tả nằm ở trang của từng nhóm) */
+/** 4 lối vào theo nhóm khách: mockup áo lớn + tên nhóm, không câu mô tả (mô tả nằm ở trang của từng nhóm) */
 export function HomeSegments() {
   return (
     <section className="container-site py-[clamp(72px,12vh,150px)]" aria-labelledby="don-vi">
@@ -86,20 +156,22 @@ export function HomeSegments() {
       </h2>
       <ul className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 md:mt-10 md:gap-x-5 lg:grid-cols-4">
         {SEGMENTS.map((s, i) => {
-          const ph = SEGMENT_PHOTO[s.key];
+          const mk = SEGMENT_MOCKUP[s.key];
           return (
             <li key={s.key} {...rise(i)}>
               <Link href={s.href} className="group block" title={s.pitch}>
                 <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-sun">
-                  {ph && (
-                    <img
-                      src={ph.src}
-                      alt={`Áo ${s.name.toLowerCase()} – ảnh minh hoạ`}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                      style={{ objectPosition: ph.pos }}
-                    />
+                  {mk && (
+                    <GarmentMockup
+                      id={`seg-${s.key}`}
+                      garment={mk.garment}
+                      color={mk.color}
+                      view={CHEST}
+                      label={`Mẫu áo ${s.name.toLowerCase()} in trên áo trơn`}
+                      className="h-full w-full transition-transform duration-500 group-hover:scale-[1.04]"
+                    >
+                      {mk.print}
+                    </GarmentMockup>
                   )}
                   <span className="absolute right-2 top-2 rounded bg-white/90 px-1.5 py-0.5 text-[13px] font-semibold text-ink/75">Minh hoạ</span>
                 </div>

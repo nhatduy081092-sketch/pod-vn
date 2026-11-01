@@ -1,12 +1,12 @@
-import { BASIC_COLORS, GARMENT_ZONE, type ColorKey, type LineupPerson } from "@pod/shared";
+import { BASIC_COLORS, type ColorKey, type LineupPerson } from "@pod/shared";
+import { GarmentMockup, PrintText } from "../designs/GarmentMockup";
 
 /**
- * Minh hoạ áo nhóm: 3 áo cùng thiết kế, mỗi áo in tên/số riêng (ảnh phôi thật + chữ chồng lên vùng ngực).
+ * Minh hoạ áo nhóm: 3 áo cùng thiết kế, mỗi áo in tên/số riêng (ảnh phôi thật + hình in uốn theo nếp vải, xem GarmentMockup).
  * data-ui: chữ ở đây là hình in trên áo, không phải nhãn giao diện (bộ kiểm tra thiết kế bỏ qua).
  * Đúng tính năng thật của YALA (ô tên/số trong Studio) – không phải ảnh khách hàng.
  */
 export function TeamLineup({ team, color, people, className = "" }: { team: string; color: ColorKey; people: LineupPerson[]; className?: string }) {
-  const z = GARMENT_ZONE.tshirt;
   const list = people.slice(0, 3);
   // áo giữa đứng trước, to hơn
   const pos = [
@@ -18,7 +18,7 @@ export function TeamLineup({ team, color, people, className = "" }: { team: stri
     <div data-ui className={`relative aspect-[16/10] w-full ${className}`} role="img" aria-label={`Minh hoạ áo nhóm ${team} in tên riêng từng người`}>
       {list.map((p, i) => {
         const c = p.color ?? color;
-        const dark = BASIC_COLORS[c].dark;
+        const ink = BASIC_COLORS[c].dark ? "#f4f2ee" : "#1f1f22";
         const at = pos[list.length === 1 ? 1 : i]!;
         return (
           <div
@@ -26,15 +26,25 @@ export function TeamLineup({ team, color, people, className = "" }: { team: stri
             className="absolute aspect-square drop-shadow-[0_10px_18px_rgba(0,0,0,.18)]"
             style={{ left: at.left, top: at.top, width: at.w, zIndex: at.z, transform: `rotate(${at.r}deg)` }}
           >
-            <img src={`/blanks/tshirt-${c}.webp`} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain" />
-            <div
-              className={`absolute flex flex-col items-center justify-start text-center font-display font-extrabold uppercase leading-none [container-type:inline-size] ${dark ? "text-white" : "text-ink"}`}
-              style={{ left: `${z.x * 100}%`, top: `${(z.y + 0.03) * 100}%`, width: `${z.w * 100}%`, height: `${z.h * 100}%` }}
-            >
-              <span className="block max-w-full truncate text-[length:11cqw] tracking-[0.06em] opacity-80">{team}</span>
-              {p.number && <span className="mt-[4cqw] block text-[length:52cqw] tracking-[-0.04em] [font-stretch:80%]">{p.number}</span>}
-              <span className={`block max-w-full truncate tracking-[0.04em] ${p.number ? "mt-[2cqw] text-[length:15cqw]" : `mt-[16cqw] [font-stretch:85%] ${p.name.length > 6 ? "text-[length:14cqw]" : "text-[length:19cqw]"}`}`}>{p.name}</span>
-            </div>
+            <GarmentMockup id={`tl-${i}-${c}`} garment="tshirt" color={c} className="absolute inset-0 h-full w-full">
+              <PrintText x={150} y={44} size={30} fill={ink} spacing={3}>
+                <tspan opacity={0.8}>{team.toUpperCase()}</tspan>
+              </PrintText>
+              {p.number ? (
+                <>
+                  <PrintText x={150} y={236} size={200} fill={ink} spacing={-8} stretch={80}>
+                    {p.number}
+                  </PrintText>
+                  <PrintText x={150} y={292} size={44} fill={ink} spacing={2}>
+                    {p.name.toUpperCase()}
+                  </PrintText>
+                </>
+              ) : (
+                <PrintText x={150} y={170} size={p.name.length > 6 ? 44 : 64} fill={ink} spacing={2} stretch={85}>
+                  {p.name.toUpperCase()}
+                </PrintText>
+              )}
+            </GarmentMockup>
           </div>
         );
       })}

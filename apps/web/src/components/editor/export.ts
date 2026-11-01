@@ -43,7 +43,7 @@ export async function renderPrintFile(area: PrintArea, design: AreaDesign, cache
 export async function renderPreview(area: PrintArea, design: AreaDesign, cache: ImageCache, assets: MockupAssets, px = 900, opts: MockupOptions = {}) {
   const canvas = createCanvas(px, px);
   const ctx = canvas.getContext("2d")!;
-  drawMockup(ctx, px, px, area, design, assets, cache, { background: "#ffffff", padding: px * 0.03, shading: 0.45, ...opts });
+  drawMockup(ctx, px, px, area, design, assets, cache, { background: "#ffffff", padding: px * 0.03, shading: 0.45, fabric: 0.8, ...opts });
   try {
     return await canvasToBlob(canvas, "image/jpeg", 0.88);
   } finally {

@@ -52,7 +52,7 @@ export function TeamPreview({ areas, design, rows, garmentColor }: { areas: Prin
         c.width = px;
         c.height = px;
         const ad = personalizeArea(design.json.areas[a.key]!, r);
-        drawMockup(c.getContext("2d")!, px, px, a, ad, ready.assets[a.key]!, ready.images, { background: "#ffffff", padding: 6, garmentColor, shading: 0.45 });
+        drawMockup(c.getContext("2d")!, px, px, a, ad, ready.assets[a.key]!, ready.images, { background: "#ffffff", padding: 6, garmentColor, shading: 0.45, fabric: 0.8 });
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

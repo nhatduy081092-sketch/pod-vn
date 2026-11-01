@@ -88,7 +88,7 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
       const px = 520;
       c.width = px;
       c.height = px;
-      drawMockup(c.getContext("2d")!, px, px, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45 });
+      drawMockup(c.getContext("2d")!, px, px, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45, fabric: 0.8 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [views, garmentColor]);
@@ -121,7 +121,7 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
       const x = (i % cols) * cell;
       const y = head + Math.floor(i / cols) * cell;
       const sub = createCanvas(cell, cell);
-      drawMockup(sub.getContext("2d")!, cell, cell, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: cell * 0.05, garmentColor, shading: 0.45 });
+      drawMockup(sub.getContext("2d")!, cell, cell, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: cell * 0.05, garmentColor, shading: 0.45, fabric: 0.8 });
       ctx.drawImage(sub, x, y);
       ctx.fillStyle = "#1d1d1f";
       ctx.font = `600 24px "Be Vietnam Pro", sans-serif`;

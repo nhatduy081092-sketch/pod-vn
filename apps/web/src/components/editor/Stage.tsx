@@ -93,66 +93,73 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
     const W = Math.round(size * dpr);
     const H = Math.round(sizeH * dpr);
     const M = Math.min(W, H);
-    c.width = W;
-    c.height = H;
-    const ctx = c.getContext("2d")!;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, W, H);
-    let dev: Rect;
-    if (view === "flat") {
-      dev = drawFlat(ctx, W, H, area, design, images, { background: "#e9e9ec", padding: M * 0.06 });
-    } else {
-      // cận vùng in: dựng ảnh sản phẩm trên khung ảo lớn hơn rồi dời để vùng in nằm giữa
-      let z = 1;
-      let ox = 0;
-      let oy = 0;
-      if (focus && assets.mockup && !area.warp) {
-        const ms = imgSize(assets.mockup);
-        const pad = M * 0.03;
-        const sc = Math.min((W - pad * 2) / ms.w, (H - pad * 2) / ms.h);
-        const mock = { w: ms.w * sc, h: ms.h * sc, x: (W - ms.w * sc) / 2, y: (H - ms.h * sc) / 2 };
-        const p0 = printRectOnMockup(area, mock);
-        // vùng in chiếm ~72% bề ngang / 70% chiều cao khung, phóng tối đa 2,6 lần, khung ảo không quá ~2800px (giới hạn bộ nhớ điện thoại)
-        z = Math.max(1, Math.min(2.6, (W * 0.72) / p0.w, (H * 0.7) / p0.h, 2800 / Math.max(W, H)));
-        const cx = (p0.x + p0.w / 2) * z;
-        const cy = (p0.y + p0.h / 2) * z;
-        ox = Math.max(0, Math.min(W * z - W, cx - W / 2));
-        oy = Math.max(0, Math.min(H * z - H, cy - H / 2));
+    // fabric > 0: lượt vẽ lại khi đã ngừng thao tác – hình in uốn + đổ bóng theo nếp vải ảnh phôi (applyFabric, nặng nên không chạy mỗi lần kéo)
+    const paint = (fabric = 0) => {
+      c.width = W;
+      c.height = H;
+      const ctx = c.getContext("2d")!;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      let dev: Rect;
+      if (view === "flat") {
+        dev = drawFlat(ctx, W, H, area, design, images, { background: "#e9e9ec", padding: M * 0.06 });
+      } else {
+        // cận vùng in: dựng ảnh sản phẩm trên khung ảo lớn hơn rồi dời để vùng in nằm giữa
+        let z = 1;
+        let ox = 0;
+        let oy = 0;
+        if (focus && assets.mockup && !area.warp) {
+          const ms = imgSize(assets.mockup);
+          const pad = M * 0.03;
+          const sc = Math.min((W - pad * 2) / ms.w, (H - pad * 2) / ms.h);
+          const mock = { w: ms.w * sc, h: ms.h * sc, x: (W - ms.w * sc) / 2, y: (H - ms.h * sc) / 2 };
+          const p0 = printRectOnMockup(area, mock);
+          // vùng in chiếm ~72% bề ngang / 70% chiều cao khung, phóng tối đa 2,6 lần, khung ảo không quá ~2800px (giới hạn bộ nhớ điện thoại)
+          z = Math.max(1, Math.min(2.6, (W * 0.72) / p0.w, (H * 0.7) / p0.h, 2800 / Math.max(W, H)));
+          const cx = (p0.x + p0.w / 2) * z;
+          const cy = (p0.y + p0.h / 2) * z;
+          ox = Math.max(0, Math.min(W * z - W, cx - W / 2));
+          oy = Math.max(0, Math.min(H * z - H, cy - H / 2));
+        }
+        const ZW = Math.round(W * z);
+        const ZH = Math.round(H * z);
+        ctx.save();
+        ctx.translate(-ox, -oy);
+        const r = drawMockup(ctx, ZW, ZH, area, design, assets, images, { background: "#f4f4f5", padding: Math.min(ZW, ZH) * 0.03, garmentColor, shading: 0.45, fabric });
+        ctx.restore();
+        dev = { ...r.printRect, x: r.printRect.x - ox, y: r.printRect.y - oy };
       }
-      const ZW = Math.round(W * z);
-      const ZH = Math.round(H * z);
+      // toạ độ màn hình (CSS px) cho thao tác kéo/thả và khung chọn
+      const rr: Rect = { x: dev.x / dpr, y: dev.y / dpr, w: dev.w / dpr, h: dev.h / dpr, k: dev.k / dpr };
+      const r = { printRect: rr };
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      // viền vùng in
       ctx.save();
-      ctx.translate(-ox, -oy);
-      const r = drawMockup(ctx, ZW, ZH, area, design, assets, images, { background: "#f4f4f5", padding: Math.min(ZW, ZH) * 0.03, garmentColor, shading: 0.45 });
+      ctx.setLineDash([6, 4]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(29,29,31,.55)";
+      ctx.strokeRect(r.printRect.x + 0.5, r.printRect.y + 0.5, r.printRect.w - 1, r.printRect.h - 1);
+      // đường xén (đỏ) + vùng an toàn (xanh) cho sản phẩm có viền tràn
+      const g = areaGuides(area);
+      const pk = r.printRect.k;
+      const box = (b: { left: number; top: number; right: number; bottom: number }) => [r.printRect.x + b.left * pk, r.printRect.y + b.top * pk, (b.right - b.left) * pk, (b.bottom - b.top) * pk] as const;
+      if (g.bleed > 0) {
+        ctx.strokeStyle = "rgba(225,29,72,.9)";
+        ctx.setLineDash([]);
+        ctx.strokeRect(...box(g.trim));
+      }
+      if (g.bleed + g.safeInset > 0 && g.safeInset > 0) {
+        ctx.strokeStyle = "rgba(22,163,74,.9)";
+        ctx.setLineDash([4, 3]);
+        ctx.strokeRect(...box(g.safe));
+      }
       ctx.restore();
-      dev = { ...r.printRect, x: r.printRect.x - ox, y: r.printRect.y - oy };
-    }
-    // toạ độ màn hình (CSS px) cho thao tác kéo/thả và khung chọn
-    const rr: Rect = { x: dev.x / dpr, y: dev.y / dpr, w: dev.w / dpr, h: dev.h / dpr, k: dev.k / dpr };
-    const r = { printRect: rr };
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // viền vùng in
-    ctx.save();
-    ctx.setLineDash([6, 4]);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(29,29,31,.55)";
-    ctx.strokeRect(r.printRect.x + 0.5, r.printRect.y + 0.5, r.printRect.w - 1, r.printRect.h - 1);
-    // đường xén (đỏ) + vùng an toàn (xanh) cho sản phẩm có viền tràn
-    const g = areaGuides(area);
-    const pk = r.printRect.k;
-    const box = (b: { left: number; top: number; right: number; bottom: number }) => [r.printRect.x + b.left * pk, r.printRect.y + b.top * pk, (b.right - b.left) * pk, (b.bottom - b.top) * pk] as const;
-    if (g.bleed > 0) {
-      ctx.strokeStyle = "rgba(225,29,72,.9)";
-      ctx.setLineDash([]);
-      ctx.strokeRect(...box(g.trim));
-    }
-    if (g.bleed + g.safeInset > 0 && g.safeInset > 0) {
-      ctx.strokeStyle = "rgba(22,163,74,.9)";
-      ctx.setLineDash([4, 3]);
-      ctx.strokeRect(...box(g.safe));
-    }
-    ctx.restore();
-    setPr(r.printRect);
+      setPr(r.printRect);
+    };
+    paint();
+    if (view === "flat") return;
+    const t = setTimeout(() => paint(0.8), 220);
+    return () => clearTimeout(t);
   }, [size, sizeH, area, design, assets, images, version, garmentColor, view, focus]);
 
   // ảnh xem trước nhỏ trên sản phẩm khi đang chỉnh bản phẳng
@@ -166,7 +173,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
       c.height = px * dpr;
       const ctx = c.getContext("2d")!;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawMockup(ctx, px, px, area, design, assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45 });
+      drawMockup(ctx, px, px, area, design, assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45, fabric: 0.8 });
     }, 120);
     return () => clearTimeout(t);
   }, [size, sizeH, area, design, assets, images, version, garmentColor, view]);

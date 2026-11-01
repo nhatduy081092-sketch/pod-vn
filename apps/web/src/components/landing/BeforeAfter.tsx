@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
-import { GARMENT_ZONE, type LandingSettings } from "@pod/shared";
+import type { LandingSettings } from "@pod/shared";
 import { assetUrl } from "@/lib/config";
+import { GarmentMockup } from "../designs/GarmentMockup";
 
 /**
  * Trước / sau: kéo thanh giữa để so sánh ảnh gốc của khách với áo in xong.
- * Chưa có ảnh "sau" -> tự ghép ảnh gốc vào vùng in ngực của phôi áo thun (minh hoạ, không cần chụp thật).
+ * Chưa có ảnh "sau" -> tự ghép ảnh gốc vào vùng in ngực của phôi áo thun, uốn theo nếp vải (GarmentMockup – minh hoạ, không cần chụp thật).
  */
 export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings["beforeAfter"]; steps?: LandingSettings["steps"]; /** ảnh thật áo thun trắng (AI) */ blank?: string }) {
   const box = useRef<HTMLDivElement>(null);
@@ -25,7 +26,6 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
     if (e.key === "ArrowLeft") setPos((p) => Math.max(0, p - 5));
     if (e.key === "ArrowRight") setPos((p) => Math.min(100, p + 5));
   };
-  const z = GARMENT_ZONE.tshirt;
 
   return (
     <section className="relative overflow-hidden bg-sky py-[clamp(80px,14vh,170px)]" aria-labelledby="anh-thanh-ao">
@@ -69,26 +69,15 @@ export function BeforeAfter({ data, steps = [], blank }: { data: LandingSettings
             {data.after ? (
               <img src={assetUrl(data.after)} alt={data.afterLabel} className="h-full w-full object-cover" draggable={false} />
             ) : (
-              <svg viewBox="92 58 216 216" className="h-full w-full" role="img" aria-label={data.afterLabel}>
-                <image href={blank ? assetUrl(blank) : "/shapes/basic/tshirt-trang.svg"} width="400" height="400" preserveAspectRatio="xMidYMid slice" />
+              <GarmentMockup id="ba" garment="tshirt" color="trang" src={blank ? assetUrl(blank) : undefined} view={[0.23, 0.145, 0.54, 0.54]} label={data.afterLabel} className="h-full w-full">
+                {/* ảnh khách in kín khổ ngực 300×330 mm, góc bo nhẹ như bản in DTF */}
                 <defs>
                   <clipPath id="ba-zone">
-                    <rect x={z.x * 400} y={z.y * 400} width={z.w * 400} height={z.w * 400 * 1.1} rx="3" />
+                    <rect width={300} height={330} rx={8} />
                   </clipPath>
                 </defs>
-                {data.before && (
-                  <image
-                    href={assetUrl(data.before)}
-                    x={z.x * 400}
-                    y={z.y * 400}
-                    width={z.w * 400}
-                    height={z.w * 400 * 1.1}
-                    preserveAspectRatio="xMidYMid slice"
-                    clipPath="url(#ba-zone)"
-                    style={{ mixBlendMode: "multiply" }}
-                  />
-                )}
-              </svg>
+                {data.before && <image href={assetUrl(data.before)} width={300} height={330} preserveAspectRatio="xMidYMid slice" clipPath="url(#ba-zone)" />}
+              </GarmentMockup>
             )}
           </div>
           {/* TRƯỚC: ảnh gốc, cắt theo thanh kéo */}
