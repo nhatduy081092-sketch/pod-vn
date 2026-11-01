@@ -46,8 +46,9 @@ export function optimizedImage(path: string | null | undefined): { src: string; 
 /**
  * Ảnh dùng trong <canvas> của editor phải cùng origin (không "taint" canvas):
  * ảnh ngoài (oemgroup.vn, R2) đi qua /_next/image của chính web.
+ * `width` phải nằm trong images.deviceSizes/imageSizes (next.config.ts), khác cỡ -> 400 và Studio mất ảnh nền.
  */
-export function canvasSafeImage(path: string | null | undefined, width = 1200): string {
+export function canvasSafeImage(path: string | null | undefined, width = 1280): string {
   if (!path) return "";
   if (/^https?:\/\//.test(path)) return `/_next/image?url=${encodeURIComponent(path)}&w=${width}&q=85`;
   return assetUrl(path);
