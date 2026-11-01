@@ -50,7 +50,7 @@ export default async function HomePage() {
       />
       {/* toàn bộ danh mục merchandise + phôi OEM (ảnh sản phẩm thật) */}
       <CatalogSection items={catalog} />
-      {settings.beforeAfter.enabled && <BeforeAfter data={settings.beforeAfter} steps={settings.steps} blank={settings.media.blanks["tshirt-trang"]} />}
+      {settings.beforeAfter.enabled && <BeforeAfter data={settings.beforeAfter} blank={settings.media.blanks["tshirt-trang"]} />}
       <Testimonials title={settings.sectionTitles.reviews} items={testimonials} />
       <WhyChoose data={settings.whyChoose} />
       {/* Khu mua lẻ */}

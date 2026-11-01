@@ -58,7 +58,8 @@
     @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-transparent px-5 py-2.5 text-[15px] font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn border-brand bg-brand text-white hover:border-brand-dark hover:bg-brand-dark;
+    /* cam cháy (#C2410C) chữ trắng = 5.2:1 đạt AA; cam #E4570B chữ trắng chỉ 3.7:1 */
+    @apply btn border-brand-dark bg-brand-dark text-white hover:border-ink hover:bg-ink;
   }
   .btn-dark {
     @apply btn border-ink bg-ink text-white hover:bg-black;

@@ -69,27 +69,50 @@ export function HomeHero({ zalo }: { zalo?: string }) {
   );
 }
 
-/** 4 lối vào theo nhóm khách: danh sách chữ lớn, mô tả ở cột phải */
+/** Ảnh người mặc cho từng nhóm khách (ảnh minh hoạ, không phải khách thật) – cắt dọc 4:5 quanh người đứng trước */
+const SEGMENT_PHOTO: Record<string, { src: string; pos: string }> = {
+  "doanh-nghiep": { src: "/showcase/so-mi-polo.webp", pos: "50% 25%" },
+  "the-thao": { src: "/showcase/the-thao.webp", pos: "45% 30%" },
+  "hoi-nhom": { src: "/showcase/ao-thun.webp", pos: "48% 30%" },
+  "su-kien": { src: "/showcase/hoodie.webp", pos: "44% 30%" },
+};
+
+/** 4 lối vào theo nhóm khách: ảnh người mặc lớn + tên nhóm, không câu mô tả (mô tả nằm ở trang của từng nhóm) */
 export function HomeSegments() {
   return (
     <section className="container-site py-[clamp(72px,12vh,150px)]" aria-labelledby="don-vi">
-      <h2 id="don-vi" className="font-display text-[clamp(30px,4.4vw,64px)] font-bold leading-[1.04] tracking-[-0.03em] text-muted">
+      <h2 id="don-vi" className="font-display text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.025em]">
         Chọn theo đơn vị của bạn
       </h2>
-      <ul className="mt-6 md:mt-8">
-        {SEGMENTS.map((s, i) => (
-          <li key={s.key} {...rise(i)}>
-            <Link href={s.href} className="group grid gap-x-10 gap-y-1.5 py-3 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:items-baseline md:py-4">
-              <span className="font-display text-[clamp(30px,4.4vw,64px)] font-bold leading-[1.04] tracking-[-0.03em] transition-colors group-hover:text-brand-dark">
-                {s.name}
-                <span aria-hidden className="ml-3 inline-block text-[0.6em] transition-transform duration-200 group-hover:translate-x-2">
-                  →
-                </span>
-              </span>
-              <span className="max-w-md text-base leading-relaxed text-ink/80 md:text-lg">{s.pitch}</span>
-            </Link>
-          </li>
-        ))}
+      <ul className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 md:mt-10 md:gap-x-5 lg:grid-cols-4">
+        {SEGMENTS.map((s, i) => {
+          const ph = SEGMENT_PHOTO[s.key];
+          return (
+            <li key={s.key} {...rise(i)}>
+              <Link href={s.href} className="group block" title={s.pitch}>
+                <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-sun">
+                  {ph && (
+                    <img
+                      src={ph.src}
+                      alt={`Áo ${s.name.toLowerCase()} – ảnh minh hoạ`}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      style={{ objectPosition: ph.pos }}
+                    />
+                  )}
+                  <span className="absolute right-2 top-2 rounded bg-white/90 px-1.5 py-0.5 text-[13px] font-semibold text-ink/75">Minh hoạ</span>
+                </div>
+                <p className="mt-3 font-display text-[clamp(20px,1.9vw,28px)] font-bold leading-tight tracking-[-0.02em] transition-colors group-hover:text-brand-dark">
+                  {s.name}
+                  <span aria-hidden className="ml-2 inline-block transition-transform duration-200 group-hover:translate-x-1.5">
+                    →
+                  </span>
+                </p>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
@@ -117,8 +140,7 @@ export function HomeSteps() {
               <p aria-hidden className="font-display text-[clamp(30px,2.6vw,40px)] font-bold leading-[1.05] tracking-[-0.03em]">
                 {VERBS[i]}
               </p>
-              <h3 className="mt-4 text-[17px] font-bold leading-snug">{st.title}</h3>
-              <p className="mt-2 max-w-sm text-base leading-relaxed text-[#e8e6e3]/70">{st.desc}</p>
+              <h3 className="mt-3 max-w-xs text-[17px] font-semibold leading-snug text-[#e8e6e3]/80">{st.title}</h3>
             </li>
           ))}
         </ol>
@@ -168,10 +190,7 @@ export function HomeQuickStart() {
           {TOOL_LINKS.map((l, i) => (
             <li key={l.href} {...rise(i)}>
               <Link href={l.href} className={row}>
-                <span>
-                  <span className="block text-lg font-semibold">{l.title}</span>
-                  <span className="mt-0.5 block text-[15px] opacity-80">{l.desc}</span>
-                </span>
+                <span className="text-lg font-semibold">{l.title}</span>
                 {arrow}
               </Link>
             </li>

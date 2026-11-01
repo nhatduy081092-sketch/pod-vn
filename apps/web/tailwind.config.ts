@@ -26,14 +26,14 @@ export default {
         zalo: "#0068FF",
         navy: { DEFAULT: "#1d1d1f", dark: "#000000", light: "#f1eee9" },
         accent: "#E4570B",
-        /* Màu nền khối (định vị 10/2026 – khách tập thể, giao diện chững chạc): sắc vải trầm, không còn pastel GenZ.
-           Giữ tên cũ (sun, sky…) để toàn site đổi đồng loạt; cam đậm vẫn là màu hành động. */
-        sun: "#ece6da", // vải mộc
-        sky: "#e3e9ef", // chambray
-        bubble: "#efe5e1", // hồng đất nhạt
-        mint: "#e2eae3", // xanh xám
-        lilac: "#e7e6ee", // ghi tím
-        peach: "#f3e8de", // be
+        /* Màu nền khối (11/2026 – tông cam đen chững chạc): chỉ còn 3 bậc ghi ấm, bỏ hẳn xanh/hồng/tím.
+           Giữ tên cũ (sun, sky…) để toàn site đổi đồng loạt; cam chỉ ở nút, vạch nhấn và khối nhấn. */
+        sun: "#ebe7e1", // vải mộc
+        sky: "#e4e1dc", // ghi ấm
+        bubble: "#efebe6", // ghi sáng
+        mint: "#e4e1dc",
+        lilac: "#ebe7e1",
+        peach: "#efebe6",
         sale: "#D62828", // đỏ – tách khỏi cam thương hiệu
       },
       fontFamily: {
