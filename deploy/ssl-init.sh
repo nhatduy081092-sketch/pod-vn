@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# SSL Let's Encrypt cho yala.vn, www.yala.vn, admin.yala.vn + cài cấu hình Nginx
+# SSL Let's Encrypt cho yala.vn, www.yala.vn, cms.yala.vn (+ tên cũ admin.yala.vn nếu còn DNS) + cài cấu hình Nginx
 #   sudo bash deploy/ssl-init.sh            # thật
 #   sudo bash deploy/ssl-init.sh --staging  # thử (chứng chỉ test, không tính hạn mức)
 # Chỉ chạy certbot khi DNS đã trỏ đúng về VPS.
@@ -9,7 +9,8 @@ source "$(dirname "$0")/lib.sh"
 [ "$(id -u)" = 0 ] || die "Chạy bằng root: sudo bash deploy/ssl-init.sh"
 
 DOMAINS=(yala.vn www.yala.vn)
-ADMIN_DOMAIN=admin.yala.vn
+ADMIN_DOMAIN=cms.yala.vn
+OLD_ADMIN_DOMAIN=admin.yala.vn  # tên cũ của CMS: còn trỏ về VPS thì giữ trong chứng chỉ để chuyển hướng 301
 STAGING=""; [ "${1:-}" = "--staging" ] && STAGING="--staging"
 EMAIL="$(env_get CERTBOT_EMAIL)"
 [ -n "$EMAIL" ] && [[ "$EMAIL" != *"<"* ]] || die "Điền CERTBOT_EMAIL trong .env.production"
@@ -23,12 +24,17 @@ for d in "${DOMAINS[@]}"; do
   if [ "$got" = "$IP" ]; then log "✓ DNS $d -> $got"; else log "✗ DNS $d -> ${got:-(chưa có)} (cần $IP)"; bad=1; fi
 done
 [ "$bad" = 0 ] || die "DNS chưa trỏ về VPS – tạo bản ghi A cho các tên miền trên rồi chạy lại (có thể mất 5–30 phút)"
-# CMS (admin.yala.vn): có DNS thì cấp SSL luôn; chưa có thì bỏ qua, thêm sau bằng cách chạy lại script này
+# CMS (cms.yala.vn): có DNS thì cấp SSL luôn; chưa có thì bỏ qua, thêm sau bằng cách chạy lại script này
 got="$(getent ahostsv4 "$ADMIN_DOMAIN" 2>/dev/null | awk 'NR==1{print $1}' || true)"
 if [ "$got" = "$IP" ]; then
   DOMAINS+=("$ADMIN_DOMAIN"); WITH_ADMIN=1; log "✓ DNS $ADMIN_DOMAIN -> $got"
 else
   WITH_ADMIN=0; log "! $ADMIN_DOMAIN chưa trỏ về $IP – tạm chưa mở CMS ra Internet (thêm DNS rồi chạy lại ssl-init.sh)"
+fi
+WITH_OLD_ADMIN=0
+got="$(getent ahostsv4 "$OLD_ADMIN_DOMAIN" 2>/dev/null | awk 'NR==1{print $1}' || true)"
+if [ "$WITH_ADMIN" = 1 ] && [ "$got" = "$IP" ]; then
+  DOMAINS+=("$OLD_ADMIN_DOMAIN"); WITH_OLD_ADMIN=1; log "✓ DNS $OLD_ADMIN_DOMAIN -> $got (chuyển hướng sang $ADMIN_DOMAIN)"
 fi
 
 # 2) Nginx tạm (chỉ HTTP) để Let's Encrypt xác minh
@@ -42,8 +48,8 @@ if [ ! -f /etc/letsencrypt/live/yala.vn/fullchain.pem ]; then
   rm -f /etc/nginx/sites-enabled/default
   nginx -t && systemctl reload nginx
 fi
-# Đã có chứng chỉ nhưng cấu hình đang chạy chưa có admin.yala.vn (lần đầu cài chưa có DNS admin)
-# -> mở tạm cổng 80 cho admin.yala.vn để Let's Encrypt xác minh, xong bước 4 sẽ xoá
+# Đã có chứng chỉ nhưng cấu hình đang chạy chưa có cms.yala.vn (lần đầu cài chưa có DNS, hoặc vừa đổi tên từ admin.yala.vn)
+# -> mở tạm cổng 80 cho cms.yala.vn để Let's Encrypt xác minh, xong bước 4 sẽ xoá
 ACME_TMP=/etc/nginx/sites-enabled/yala-acme-admin.conf
 if [ "$WITH_ADMIN" = 1 ] && ! grep -q "server_name $ADMIN_DOMAIN" /etc/nginx/sites-available/yala.vn.conf 2>/dev/null; then
   cat > "$ACME_TMP" <<ACME
@@ -70,10 +76,12 @@ fi
 # 4) Cấu hình Nginx chính thức (HTTPS, www -> apex, admin)
 SITE=/etc/nginx/sites-available/yala.vn.conf
 cp -f "$SITE" "$SITE.bak" 2>/dev/null || true
-if [ "$WITH_ADMIN" = 1 ]; then
-  install -m 644 deploy/nginx/yala.vn.conf "$SITE"
+if [ "$WITH_ADMIN" = 0 ]; then
+  sed -e '/^# >>> ADMIN/,/^# <<< ADMIN/d' -e '/^# >>> OLD_ADMIN/,/^# <<< OLD_ADMIN/d' deploy/nginx/yala.vn.conf > "$SITE"
+elif [ "$WITH_OLD_ADMIN" = 0 ]; then
+  sed '/^# >>> OLD_ADMIN/,/^# <<< OLD_ADMIN/d' deploy/nginx/yala.vn.conf > "$SITE"
 else
-  sed '/^# >>> ADMIN/,/^# <<< ADMIN/d' deploy/nginx/yala.vn.conf > "$SITE"
+  install -m 644 deploy/nginx/yala.vn.conf "$SITE"
 fi
 ln -sf "$SITE" /etc/nginx/sites-enabled/yala.vn.conf
 rm -f "$ACME_TMP"
@@ -94,4 +102,4 @@ if ! systemctl list-timers 2>/dev/null | grep -q certbot; then
   { crontab -l 2>/dev/null | grep -vF "certbot renew" || true; echo "17 3 * * * certbot renew --quiet"; } | crontab -
 fi
 certbot renew --dry-run --cert-name yala.vn && log "✓ Gia hạn tự động hoạt động"
-log "✓ SSL xong: https://yala.vn$([ "$WITH_ADMIN" = 1 ] && echo '  ·  https://admin.yala.vn')"
+log "✓ SSL xong: https://yala.vn$([ "$WITH_ADMIN" = 1 ] && echo "  ·  https://$ADMIN_DOMAIN")"

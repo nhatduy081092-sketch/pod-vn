@@ -13,7 +13,7 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 ---
 
 ## 1. Dự án là gì
-- **YALA** – website in theo yêu cầu (POD): áo, túi, cốc, quà in logo… Domain production **yala.vn**, CMS **admin.yala.vn**.
+- **YALA** – website in theo yêu cầu (POD): áo, túi, cốc, quà in logo… Domain production **yala.vn**, CMS **cms.yala.vn**.
 - Ban đầu clone bố cục Printdoors (allOverPrint), rồi đổi tên OEM → YALA, rồi định vị lại.
 - **Định vị hiện tại (11/10/2026)** – khách **tập thể**:
   - Doanh nghiệp (`/doanh-nghiep`) · CLB & đội thể thao (`/dong-phuc-the-thao`) · Hội nhóm, lớp, gia đình (`/ao-nhom`) · Team building & sự kiện (`/team-building`).
@@ -31,7 +31,7 @@ Cập nhật: 11/10/2026 · Commit mới nhất: `bc50ca2` (build GitHub Actions
 | Repo | github.com/nhatduy081092-sketch/pod-vn (private) · máy chủ nhân: `C:\Users\Admin\dev\pod-vn` |
 | Monorepo | pnpm 10 + turbo · Node ≥ 20.12 |
 | `apps/web` | Next.js 15 storefront (port 3000) |
-| `apps/cms` | Next.js 15 quản trị – admin.yala.vn (port 3001) |
+| `apps/cms` | Next.js 15 quản trị – cms.yala.vn (port 3001) |
 | `apps/api` | Hono + Prisma, chạy bằng tsx (port 4000), không mở ra Internet |
 | `packages/db` | Prisma schema, migrations, seed |
 | `packages/shared` | types, zod, giá, render canvas dùng chung, nội dung (segments, mẫu có sẵn, chiến dịch…) |

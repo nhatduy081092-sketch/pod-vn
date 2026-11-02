@@ -5,7 +5,7 @@ Kiến trúc chạy thật (1 VPS, không đổi kiến trúc monorepo):
 ```
 Internet ──443──► Nginx (VPS, SSL Let's Encrypt)
                    ├─ yala.vn        ─► 127.0.0.1:3000  web (Next.js standalone, Docker)
-                   ├─ admin.yala.vn  ─► 127.0.0.1:3001  cms (Next.js standalone, Docker)
+                   ├─ cms.yala.vn  ─► 127.0.0.1:3001  cms (Next.js standalone, Docker)
                    └─ www.yala.vn    ─► 301 https://yala.vn
 web / cms ──(mạng Docker nội bộ)──► api:4000 (Hono + Prisma) ──► PostgreSQL (Neon/Supabase hoặc Postgres nội bộ)
                                      └─ volume "uploads" (hoặc Cloudflare R2)
@@ -31,7 +31,7 @@ git clone git@github.com:nhatduy081092-sketch/pod-vn.git /opt/yala
 cd /opt/yala && bash deploy/bootstrap.sh
 ```
 
-`bootstrap.sh` hỏi 3 thứ (database – Enter để dùng Postgres trên VPS, email + mật khẩu admin), tự sinh mọi secret, rồi chạy lần lượt các bước bên dưới. `admin.yala.vn` chưa có DNS thì CMS tạm chưa mở ra Internet – thêm bản ghi A rồi chạy lại `sudo bash deploy/ssl-init.sh`.
+`bootstrap.sh` hỏi 3 thứ (database – Enter để dùng Postgres trên VPS, email + mật khẩu admin), tự sinh mọi secret, rồi chạy lần lượt các bước bên dưới. `cms.yala.vn` chưa có DNS thì CMS tạm chưa mở ra Internet – thêm bản ghi A rồi chạy lại `sudo bash deploy/ssl-init.sh`.
 
 ## Lần đầu – từng bước (≈ 20 phút)
 
@@ -46,7 +46,7 @@ nano .env.production                              # điền mọi giá trị <..
 chmod 600 .env.production
 
 # 3. DNS (tại nơi mua tên miền): bản ghi A
-#    yala.vn, www.yala.vn, admin.yala.vn  ->  IP VPS
+#    yala.vn, www.yala.vn, cms.yala.vn  ->  IP VPS
 
 # 4. SSL + Nginx (tự kiểm tra DNS trước, chưa trỏ đúng thì dừng)
 sudo bash deploy/ssl-init.sh --staging            # thử trước (không tính hạn mức Let's Encrypt)
@@ -59,7 +59,7 @@ bash deploy/deploy.sh --seed
 sudo bash deploy/install-cron.sh
 ```
 
-Sau đó: đăng nhập `https://admin.yala.vn` bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD`, đổi thông tin thương hiệu (tên YALA, hotline, Zalo, VietQR) trong CMS → Nội dung.
+Sau đó: đăng nhập `https://cms.yala.vn` bằng `ADMIN_EMAIL` / `ADMIN_PASSWORD`, đổi thông tin thương hiệu (tên YALA, hotline, Zalo, VietQR) trong CMS → Nội dung.
 
 ## Các lần deploy sau
 
@@ -79,7 +79,7 @@ Quy trình tự động: `git pull` → **sao lưu DB + ảnh** → build image 
 | Sao lưu ngay | `bash deploy/backup.sh` → `backups/db-*.dump`, `backups/uploads-*.tgz` |
 | Quay về bản trước | `bash deploy/rollback.sh` (hoặc `rollback.sh <tag>`, xem `.deploy/history`) |
 | Khôi phục database | `bash deploy/restore.sh backups/db-....dump [backups/uploads-....tgz]` (tự sao lưu hiện trạng trước, yêu cầu gõ xác nhận) |
-| Health endpoint | `https://yala.vn/healthz` (web) · `https://yala.vn/api/health` (api + DB) · `https://admin.yala.vn/healthz` |
+| Health endpoint | `https://yala.vn/healthz` (web) · `https://yala.vn/api/health` (api + DB) · `https://cms.yala.vn/healthz` |
 
 ## An toàn dữ liệu
 

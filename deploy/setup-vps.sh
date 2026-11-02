@@ -44,7 +44,7 @@ cat <<'MSG'
   1) Tải mã nguồn (repo private -> dùng deploy key hoặc token chỉ đọc):
        git clone git@github.com:nhatduy081092-sketch/pod-vn.git /opt/yala
   2) cd /opt/yala && cp .env.production.example .env.production && nano .env.production
-  3) Trỏ DNS: yala.vn, www.yala.vn, admin.yala.vn  ->  A record = IP VPS này
+  3) Trỏ DNS: yala.vn, www.yala.vn, cms.yala.vn  ->  A record = IP VPS này
   4) sudo bash deploy/ssl-init.sh          (xin SSL, cấu hình Nginx)
   5) bash deploy/deploy.sh --seed          (lần đầu) – các lần sau: bash deploy/deploy.sh
   6) Sao lưu hằng ngày: sudo bash deploy/install-cron.sh

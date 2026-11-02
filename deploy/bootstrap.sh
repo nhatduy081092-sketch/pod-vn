@@ -54,7 +54,7 @@ else
   cat > "$ENV_FILE" <<EOF
 # Tạo bởi deploy/bootstrap.sh lúc $(date -Is) – KHÔNG commit, KHÔNG gửi file này cho ai
 NEXT_PUBLIC_SITE_URL='https://yala.vn'
-CORS_ORIGINS='https://yala.vn,https://admin.yala.vn'
+CORS_ORIGINS='https://yala.vn,https://cms.yala.vn'
 DATABASE_URL='${DB_URL}'
 POSTGRES_PASSWORD='${PG_PASS}'
 JWT_SECRET='$(rand 48)'
@@ -99,7 +99,7 @@ bash deploy/health.sh || true
 cat <<'MSG'
 
 ✓ HOÀN TẤT. Website: https://yala.vn
-  CMS: https://admin.yala.vn (nếu đã có DNS admin.yala.vn)
+  CMS: https://cms.yala.vn (nếu đã có DNS cms.yala.vn)
        chưa có DNS -> từ máy bạn: ssh -L 3181:127.0.0.1:3181 root@<IP-VPS>  rồi mở http://localhost:3181
   Deploy bản mới: cd /opt/yala && bash deploy/deploy.sh
   Bảo mật: đổi mật khẩu root (passwd) và chuyển sang đăng nhập SSH bằng key.

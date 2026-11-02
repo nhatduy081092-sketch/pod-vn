@@ -19,7 +19,7 @@ Mỗi yêu cầu báo giá / liên hệ doanh nghiệp trên website sẽ:
    ```
    QUOTE_WEBHOOK_URL="https://script.google.com/macros/s/…/exec"
    QUOTE_WEBHOOK_SECRET="<chuỗi SECRET ở bước 3>"
-   CMS_URL="https://admin.yala.vn"
+   CMS_URL="https://cms.yala.vn"
    ```
    rồi chạy `cd /opt/yala && bash deploy/deploy.sh` (hoặc `docker compose … up -d api` để nạp lại biến).
 6. CMS → Cài đặt → **Báo giá doanh nghiệp** → bấm **Gửi thử**: sheet có dòng `BG-TEST` và email về hộp thư là xong.
