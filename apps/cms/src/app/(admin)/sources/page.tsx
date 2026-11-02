@@ -22,68 +22,106 @@ export default async function SourcesPage({ searchParams }: { searchParams: Prom
   });
   return (
     <>
-      <PageHeader title="Nguồn khách" />
-      <p className="mb-3 max-w-3xl text-sm text-neutral-600">
-        Đơn đến từ đâu, tính từ dữ liệu lưu cùng đơn (không phụ thuộc Google Analytics hay trình chặn quảng cáo). Không gồm đơn seller và đơn thử. Doanh thu = đơn chưa huỷ; &quot;đã thu&quot; = đơn đã chuyển sang Đã thanh toán.
-      </p>
-      <div className="mb-3 flex flex-wrap gap-2">
-        {PERIODS.map((d) => (
-          <Link key={d} href={href(d, r.touch)} className={`btn-ghost ${r.days === d ? "bg-brand-light" : ""}`}>
-            {d === 365 ? "1 năm" : `${d} ngày`}
+      <PageHeader
+        title="Nguồn khách"
+        description={
+          <>
+            Đơn đến từ đâu, tính từ dữ liệu lưu cùng đơn (không phụ thuộc Google Analytics hay trình chặn quảng cáo). Không gồm đơn seller và đơn thử. Doanh thu = đơn chưa huỷ; &quot;đã thu&quot; = đơn đã chuyển sang Đã thanh toán.
+          </>
+        }
+      />
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Khoảng thời gian">
+          {PERIODS.map((d) => (
+            <Link key={d} href={href(d, r.touch)} aria-current={r.days === d ? "true" : undefined} className={`btn-ghost px-3 ${r.days === d ? "btn-on" : ""}`}>
+              {d === 365 ? "1 năm" : `${d} ngày`}
+            </Link>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Cách tính nguồn">
+          <Link href={href(r.days, "last")} aria-current={r.touch === "last" ? "true" : undefined} className={`btn-ghost px-3 ${r.touch === "last" ? "btn-on" : ""}`}>
+            Lần chạm gần nhất
           </Link>
-        ))}
-        <span className="mx-1 w-px self-stretch bg-neutral-200" />
-        <Link href={href(r.days, "last")} className={`btn-ghost ${r.touch === "last" ? "bg-brand-light" : ""}`}>
-          Lần chạm gần nhất
-        </Link>
-        <Link href={href(r.days, "first")} className={`btn-ghost ${r.touch === "first" ? "bg-brand-light" : ""}`}>
-          Lần chạm đầu
-        </Link>
+          <Link href={href(r.days, "first")} aria-current={r.touch === "first" ? "true" : undefined} className={`btn-ghost px-3 ${r.touch === "first" ? "btn-on" : ""}`}>
+            Lần chạm đầu
+          </Link>
+        </div>
       </div>
-      <div className="card overflow-x-auto p-0">
-        <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
+
+      {/* Điện thoại: mỗi nguồn một thẻ, số tiền thẳng hàng bên phải */}
+      <div className="card p-0 md:hidden">
+        {r.rows.length ? (
+          <ul className="divide-y divide-neutral-100">
+            {r.rows.map((x) => (
+              <li key={x.group} className="px-4 py-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-medium">{x.label}</span>
+                  <span className="font-semibold tabular-nums">{formatVND(x.revenue)}</span>
+                </div>
+                <div className="mt-0.5 flex justify-between gap-3 text-xs tabular-nums text-neutral-500">
+                  <span>
+                    {x.orders} đơn · {x.quotes} báo giá · {x.cancelled} huỷ
+                  </span>
+                  <span>
+                    đã thu {formatVND(x.paidRevenue)} ({x.paidOrders})
+                  </span>
+                </div>
+              </li>
+            ))}
+            <li className="flex items-baseline justify-between gap-3 bg-neutral-50 px-4 py-3 font-semibold">
+              <span>Tổng · {sum.orders} đơn</span>
+              <span className="tabular-nums">{formatVND(sum.revenue)}</span>
+            </li>
+          </ul>
+        ) : (
+          <p className="px-4 py-8 text-center text-sm text-neutral-500">Chưa có đơn trong khoảng này.</p>
+        )}
+      </div>
+
+      <div className="card hidden overflow-x-auto p-0 md:block md:p-0">
+        <table className="table min-w-[720px]">
+          <thead>
             <tr>
-              <th className="px-3 py-2">Nguồn</th>
-              <th className="px-3 py-2 text-right">Đơn</th>
-              <th className="px-3 py-2 text-right">Doanh thu</th>
-              <th className="px-3 py-2 text-right">Đã thu</th>
-              <th className="px-3 py-2 text-right">Báo giá</th>
-              <th className="px-3 py-2 text-right">Huỷ</th>
+              <th className="pl-5">Nguồn</th>
+              <th className="text-right">Đơn</th>
+              <th className="text-right">Doanh thu</th>
+              <th className="text-right">Đã thu</th>
+              <th className="text-right">Báo giá</th>
+              <th className="pr-5 text-right">Huỷ</th>
             </tr>
           </thead>
           <tbody>
             {r.rows.map((x) => (
-              <tr key={x.group} className="border-t border-neutral-100">
-                <td className="px-3 py-2 font-medium">{x.label}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{x.orders}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatVND(x.revenue)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">
+              <tr key={x.group}>
+                <td className="pl-5 font-medium">{x.label}</td>
+                <td className="text-right">{x.orders}</td>
+                <td className="text-right">{formatVND(x.revenue)}</td>
+                <td className="text-right">
                   {formatVND(x.paidRevenue)} <span className="text-neutral-400">({x.paidOrders})</span>
                 </td>
-                <td className="px-3 py-2 text-right tabular-nums">{x.quotes}</td>
-                <td className="px-3 py-2 text-right tabular-nums text-neutral-500">{x.cancelled}</td>
+                <td className="text-right">{x.quotes}</td>
+                <td className="pr-5 text-right text-neutral-500">{x.cancelled}</td>
               </tr>
             ))}
             {!r.rows.length && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-neutral-500">
+                <td colSpan={6} className="py-8 text-center text-neutral-500">
                   Chưa có đơn trong khoảng này.
                 </td>
               </tr>
             )}
           </tbody>
           {r.rows.length > 0 && (
-            <tfoot className="border-t-2 border-neutral-200 font-bold">
-              <tr>
-                <td className="px-3 py-2">Tổng</td>
-                <td className="px-3 py-2 text-right tabular-nums">{sum.orders}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{formatVND(sum.revenue)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">
+            <tfoot className="font-semibold">
+              <tr className="border-t border-neutral-200">
+                <td className="py-3 pl-5">Tổng</td>
+                <td className="px-3 py-3 text-right tabular-nums">{sum.orders}</td>
+                <td className="px-3 py-3 text-right tabular-nums">{formatVND(sum.revenue)}</td>
+                <td className="px-3 py-3 text-right tabular-nums">
                   {formatVND(sum.paidRevenue)} <span className="font-normal text-neutral-400">({sum.paidOrders})</span>
                 </td>
-                <td className="px-3 py-2 text-right tabular-nums">{sum.quotes}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{sum.cancelled}</td>
+                <td className="px-3 py-3 text-right tabular-nums">{sum.quotes}</td>
+                <td className="py-3 pl-3 pr-5 text-right tabular-nums">{sum.cancelled}</td>
               </tr>
             </tfoot>
           )}
@@ -91,7 +129,7 @@ export default async function SourcesPage({ searchParams }: { searchParams: Prom
       </div>
       <div className="mt-3 space-y-1 text-sm text-neutral-600">
         <p>
-          <b>Đơn thử đã loại ra:</b> {r.tests.orders} đơn ({formatVND(r.tests.revenue)}), {r.tests.quotes} báo giá. Đơn thử = đặt ở chế độ yala.vn/?yala_test=1 hoặc dùng email/SĐT trong biến TEST_ORDER_CONTACTS của máy chủ.
+          <b className="font-semibold text-ink">Đơn thử đã loại ra:</b> {r.tests.orders} đơn ({formatVND(r.tests.revenue)}), {r.tests.quotes} báo giá. Đơn thử = đặt ở chế độ yala.vn/?yala_test=1 hoặc dùng email/SĐT trong biến TEST_ORDER_CONTACTS của máy chủ.
         </p>
         {r.legacy > 0 && <p>{r.legacy} đơn đặt trước khi có cột nguồn: nhóm được tính tạm từ UTM còn lưu, đơn không có UTM vào &quot;Trực tiếp / không rõ&quot;.</p>}
       </div>

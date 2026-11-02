@@ -15,11 +15,11 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
     <>
       <PageHeader title={`Khách để lại SĐT (${data.total})`} />
       <div className="mb-3 flex flex-wrap gap-2">
-        <Link href="/leads" className={`btn-ghost ${!sp.status ? "bg-brand-light" : ""}`}>
+        <Link href="/leads" className={`btn-ghost ${!sp.status ? "btn-on" : ""}`}>
           Tất cả
         </Link>
         {LEAD_STATUSES.map((s) => (
-          <Link key={s} href={`/leads?status=${s}`} className={`btn-ghost ${sp.status === s ? "bg-brand-light" : ""}`}>
+          <Link key={s} href={`/leads?status=${s}`} className={`btn-ghost ${sp.status === s ? "btn-on" : ""}`}>
             {LEAD_STATUS_LABEL[s]}
           </Link>
         ))}

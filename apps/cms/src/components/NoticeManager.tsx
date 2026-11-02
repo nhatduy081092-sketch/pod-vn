@@ -72,7 +72,7 @@ export function NoticeManager({ initial }: { initial: AdminNotice[] }) {
             <div key={n.id} className="card flex flex-wrap items-start gap-3">
               <div className="min-w-0 flex-1">
                 <p className="font-semibold">
-                  {n.level === "warning" ? "⚠️ " : "ℹ️ "}
+                  {n.level === "warning" ? "Cảnh báo · " : "Thông tin · "}
                   {n.title}
                 </p>
                 <p className="text-xs text-neutral-500">

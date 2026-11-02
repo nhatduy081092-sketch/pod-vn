@@ -20,11 +20,11 @@ export default async function SellersPage({ searchParams }: { searchParams: Prom
         Duyệt seller → seller có khu <b>/seller</b> (mẫu sản phẩm, tạo đơn, nhập CSV, API key, webhook). Chiết khấu % trừ trên giá bán lẻ (sau KM/giá sỉ).
       </p>
       <div className="mb-3 flex flex-wrap gap-2">
-        <Link href="/sellers" className={`btn-ghost ${!sp.status ? "bg-brand-light" : ""}`}>
+        <Link href="/sellers" className={`btn-ghost ${!sp.status ? "btn-on" : ""}`}>
           Tất cả
         </Link>
         {SELLER_STATUSES.map((s) => (
-          <Link key={s} href={`/sellers?status=${s}`} className={`btn-ghost ${sp.status === s ? "bg-brand-light" : ""}`}>
+          <Link key={s} href={`/sellers?status=${s}`} className={`btn-ghost ${sp.status === s ? "btn-on" : ""}`}>
             {SELLER_STATUS_LABEL[s]}
           </Link>
         ))}

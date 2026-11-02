@@ -19,7 +19,7 @@ export default async function BatchesPage({ searchParams }: { searchParams: Prom
           ["PAID", "Đã nhận"],
           ["CANCELLED", "Đã huỷ"],
         ].map(([v, l]) => (
-          <Link key={v} href={v ? `/batches?status=${v}` : "/batches"} className={`btn-ghost ${(sp.status ?? "") === v ? "bg-brand-light" : ""}`}>
+          <Link key={v} href={v ? `/batches?status=${v}` : "/batches"} className={`btn-ghost ${(sp.status ?? "") === v ? "btn-on" : ""}`}>
             {l}
           </Link>
         ))}

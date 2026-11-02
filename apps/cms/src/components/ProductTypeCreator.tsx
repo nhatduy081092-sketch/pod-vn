@@ -60,7 +60,7 @@ export function ProductTypeCreator({ categories }: { categories: AdminCategory[]
   return (
     <div className="space-y-4">
       <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-        ⚠️ Kích thước vùng in, DPI, viền tràn trong các mẫu là <b>số liệu tham khảo</b> phổ biến – không phải thông số xưởng của bạn. Sản phẩm được tạo ở trạng thái <b>ẩn</b>: đối chiếu với xưởng, sửa ở mục “Mặt in”, nhập giá, thay ảnh thật rồi mới bật hiển thị.
+        Lưu ý: kích thước vùng in, DPI, viền tràn trong các mẫu là <b>số liệu tham khảo</b> phổ biến – không phải thông số xưởng của bạn. Sản phẩm được tạo ở trạng thái <b>ẩn</b>: đối chiếu với xưởng, sửa ở mục “Mặt in”, nhập giá, thay ảnh thật rồi mới bật hiển thị.
       </p>
       {GROUPS.map((g) => (
         <section key={g} className="card">

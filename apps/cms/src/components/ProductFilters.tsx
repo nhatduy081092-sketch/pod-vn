@@ -62,7 +62,7 @@ export function Pager({ basePath, qs, page, pages }: { basePath: string; qs: URL
         return (
           <span key={n} className="flex items-center gap-2">
             {gap && <span className="text-neutral-400">…</span>}
-            <Link href={`${basePath}?${q.toString()}`} className={`btn-ghost px-3 ${page === n ? "bg-brand-light" : ""}`}>
+            <Link href={`${basePath}?${q.toString()}`} className={`btn-ghost px-3 ${page === n ? "btn-on" : ""}`}>
               {n}
             </Link>
           </span>
