@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatDateTimeVN, formatVND, PAYMENT_METHOD_LABEL, PRINT_MODE_LABEL } from "@pod/shared";
+import { formatDateTimeVN, formatVND, PAYMENT_METHOD_LABEL, PRINT_MODE_LABEL, SOURCE_GROUPS, type SourceGroup } from "@pod/shared";
 import { adminFetch } from "@/lib/api";
 import { assetUrl } from "@/lib/config";
 import type { AdminOrder } from "@/lib/types";
@@ -167,11 +167,27 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
             items={(o.items ?? []).map((it) => ({ id: it.id, productName: it.productName, color: it.color, size: it.size, quantity: it.quantity, sku: it.sku ?? null, design: it.design, roster: it.roster ?? null }))}
           />
 
-          {o.utm && (
+          {(o.utm || o.sourceGroup || o.isTest) && (
             <section className="card text-sm">
-              <h2 className="mb-2 font-bold">Nguồn đơn (UTM)</h2>
+              <h2 className="mb-2 font-bold">
+                Nguồn đơn {o.isTest && <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Đơn thử – không tính báo cáo</span>}
+              </h2>
+              {o.sourceGroup && (
+                <dl className="mb-2 grid grid-cols-2 gap-1">
+                  <dt className="text-neutral-500">Nhóm (gần nhất)</dt>
+                  <dd>{SOURCE_GROUPS[o.sourceGroup as SourceGroup] ?? o.sourceGroup}</dd>
+                  <dt className="text-neutral-500">Nhóm (lần đầu)</dt>
+                  <dd>{SOURCE_GROUPS[o.firstSourceGroup as SourceGroup] ?? o.firstSourceGroup}</dd>
+                  {o.referrerHost && (
+                    <>
+                      <dt className="text-neutral-500">Trang dẫn tới</dt>
+                      <dd className="truncate">{o.referrerHost}</dd>
+                    </>
+                  )}
+                </dl>
+              )}
               <dl className="grid grid-cols-2 gap-1">
-                {Object.entries(o.utm).map(([k, v]) => (
+                {Object.entries(o.utm ?? {}).map(([k, v]) => (
                   <div key={k} className="contents">
                     <dt className="text-neutral-500">{k}</dt>
                     <dd className="truncate">{v}</dd>

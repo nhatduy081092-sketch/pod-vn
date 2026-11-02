@@ -178,8 +178,15 @@ model Order {
   whiteLabel    Boolean       @default(false)
   batch         PaymentBatch? @relation(fields: [batchId], references: [id], onDelete: SetNull)
   batchId       String?
-  /// utm_source, utm_campaign, fbclid, gclid... để đo attribution
+  /// utm_source, utm_campaign, fbclid, gclid, ref (tên miền dẫn tới)... để đo attribution – chi tiết, dọn sau 90 ngày
   utm           Json?
+  /// Nhóm nguồn lần chạm gần nhất / lần chạm đầu (SOURCE_GROUPS trong @pod/shared); '' = đơn trước 11/2026
+  sourceGroup   String        @default("")
+  firstSourceGroup String     @default("")
+  /// Tên miền dẫn tới của lần chạm gần nhất (không đường dẫn)
+  referrerHost  String        @default("")
+  /// Đơn thử (email/SĐT trong TEST_ORDER_CONTACTS hoặc đặt ở chế độ ?yala_test=1) – báo cáo nguồn không tính
+  isTest        Boolean       @default(false)
   ip            String        @default("")
   items         OrderItem[]
   createdAt     DateTime      @default(now())

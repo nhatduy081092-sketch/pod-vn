@@ -10,6 +10,7 @@ import { notifyNewOrder, notifyQuote, notifyQuoteCart } from "../lib/notify";
 import { cmsLink, dispatchQuote, sourceOf } from "../lib/quote-dispatch";
 import { assertDesign, loadProducts, priceLines, quoteShipping, withUniqueCode } from "../lib/order-service";
 import { currentCustomer } from "../lib/customer-auth";
+import { orderSource } from "../lib/attribution";
 
 export const checkoutRoutes = new Hono();
 
@@ -87,6 +88,7 @@ checkoutRoutes.post("/orders", rateLimit({ key: "order", limit: 10, windowMs: 10
         customerId: customer?.id,
         utm: input.utm ?? undefined,
         ip: clientIp(c),
+        ...orderSource(input.utm, input),
         items: { create: priced.lines.map((l) => l.data) },
       },
       select: { code: true, total: true, paymentMethod: true, shippingFee: true },
@@ -146,6 +148,7 @@ checkoutRoutes.post("/quotes", rateLimit({ key: "quote", limit: 10, windowMs: 10
         customerId: customer?.id,
         utm: input.utm ?? undefined,
         ip: clientIp(c),
+        ...orderSource(input.utm, input),
         items: {
           create: [
             {
@@ -235,6 +238,7 @@ checkoutRoutes.post("/quotes/cart", rateLimit({ key: "quote-cart", limit: 6, win
         customerId: customer?.id,
         utm: input.utm ?? undefined,
         ip: clientIp(c),
+        ...orderSource(input.utm, input),
         items: {
           create: lines.map(({ p, quantity, note: n }) => ({
             productId: p!.id,

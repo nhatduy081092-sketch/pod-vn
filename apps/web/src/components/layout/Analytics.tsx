@@ -1,8 +1,8 @@
 "use client";
 import Script from "next/script";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
-import { captureUtm, track } from "@/lib/track";
+import { useEffect, useRef, useState } from "react";
+import { captureUtm, measurementOff, track } from "@/lib/track";
 
 const GTM = process.env.NEXT_PUBLIC_GTM_ID;
 const GA4 = process.env.NEXT_PUBLIC_GA4_ID;
@@ -12,11 +12,17 @@ const TIKTOK = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID;
 /**
  * Nạp mã đo lường. Có GTM -> chỉ nạp GTM (GA4/Meta/TikTok/Google Ads cấu hình trong GTM, đọc dataLayer).
  * Không có GTM -> nạp thẳng GA4 / Meta Pixel / TikTok Pixel theo ID có sẵn. Không ID nào -> không nạp gì.
+ * Chế độ thử (?yala_test=1) hoặc khách đã tắt đo lường (/do-luong) -> không nạp gì.
  */
 export function Analytics() {
   const path = usePathname();
   const first = useRef(true);
-  useEffect(() => captureUtm(), []);
+  // Cờ nằm trong localStorage nên chỉ đọc được sau khi gắn: mã đo lường nạp chậm hơn 1 lượt render, không đáng kể
+  const [allowed, setAllowed] = useState(false);
+  useEffect(() => {
+    captureUtm(); // đọc ?yala_test= trước khi quyết định nạp
+    setAllowed(!measurementOff());
+  }, []);
   // Next.js chuyển trang không tải lại: báo lượt xem trang mới (lần đầu đã do mã nạp tự gửi)
   useEffect(() => {
     if (first.current) {
@@ -26,6 +32,7 @@ export function Analytics() {
     track.pageView(path);
   }, [path]);
 
+  if (!allowed) return null;
   if (GTM)
     return (
       <Script id="gtm" strategy="afterInteractive">

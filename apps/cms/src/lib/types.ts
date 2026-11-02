@@ -128,6 +128,10 @@ export type AdminOrder = {
   isQuote: boolean;
   company: string;
   utm: Record<string, string> | null;
+  sourceGroup?: string;
+  firstSourceGroup?: string;
+  referrerHost?: string;
+  isTest?: boolean;
   shippingMethod: string;
   weightGram: number;
   codAmount: number;
@@ -168,3 +172,11 @@ export type Stats = {
 };
 
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
+
+export interface SourceReport {
+  days: number;
+  touch: "first" | "last";
+  rows: { group: string; label: string; orders: number; revenue: number; paidOrders: number; paidRevenue: number; quotes: number; cancelled: number }[];
+  tests: { orders: number; quotes: number; revenue: number };
+  legacy: number;
+}

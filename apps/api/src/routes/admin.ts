@@ -34,6 +34,9 @@ import {
   MODEL_SLOTS,
   modelAiPrompt,
   modelPrompt,
+  SOURCE_GROUPS,
+  sourceGroups,
+  type SourceGroup,
 } from "@pod/shared";
 import { z } from "zod";
 import { hashPassword } from "@pod/db/password";
@@ -465,6 +468,51 @@ adminRoutes.patch("/orders/:id", async (c) => {
     void emitOrderEvent(order.id, ev).catch(() => undefined);
   }
   return c.json(order);
+});
+
+/* ---------- Báo cáo nguồn khách (đơn của khách lẻ/doanh nghiệp, không gồm đơn seller) ---------- */
+adminRoutes.get("/reports/sources", async (c) => {
+  const days = [7, 30, 90, 365].includes(Number(c.req.query("days"))) ? Number(c.req.query("days")) : 30;
+  const touch = c.req.query("touch") === "first" ? "first" : "last";
+  const orders = await prisma.order.findMany({
+    where: { createdAt: { gte: new Date(Date.now() - days * 86400_000) }, sellerId: null },
+    select: { sourceGroup: true, firstSourceGroup: true, utm: true, total: true, status: true, paymentStatus: true, isQuote: true, isTest: true },
+  });
+  type Row = { group: string; orders: number; revenue: number; paidOrders: number; paidRevenue: number; quotes: number; cancelled: number };
+  const rows = new Map<string, Row>();
+  const tests = { orders: 0, quotes: 0, revenue: 0 };
+  let legacy = 0;
+  for (const o of orders) {
+    if (o.isTest) {
+      if (o.isQuote) tests.quotes++;
+      else {
+        tests.orders++;
+        tests.revenue += o.total;
+      }
+      continue;
+    }
+    // đơn trước khi có cột nguồn: tính tạm từ utm còn lưu
+    const stored = touch === "first" ? o.firstSourceGroup : o.sourceGroup;
+    if (!stored) legacy++;
+    const fallback = sourceGroups(o.utm as Record<string, string> | null);
+    const group = stored || fallback[touch];
+    const r = rows.get(group) ?? { group, orders: 0, revenue: 0, paidOrders: 0, paidRevenue: 0, quotes: 0, cancelled: 0 };
+    if (o.isQuote) r.quotes++;
+    else if (o.status === "CANCELLED") r.cancelled++;
+    else {
+      r.orders++;
+      r.revenue += o.total;
+      if (o.paymentStatus === "PAID") {
+        r.paidOrders++;
+        r.paidRevenue += o.total;
+      }
+    }
+    rows.set(group, r);
+  }
+  const list = [...rows.values()]
+    .map((r) => ({ ...r, label: SOURCE_GROUPS[r.group as SourceGroup] ?? r.group }))
+    .sort((a, b) => b.revenue - a.revenue || b.orders + b.quotes - (a.orders + a.quotes));
+  return c.json({ days, touch, rows: list, tests, legacy });
 });
 
 /* ---------- Chiến dịch theo dịp: áp / gỡ giá ưu đãi cho sản phẩm trong các tab ---------- */

@@ -45,11 +45,46 @@ export function isInternal() {
     return false;
   }
 }
-function syncInternalFlag(url: URL) {
-  const v = url.searchParams.get(INTERNAL_KEY);
+/** Bật/tắt cờ lưu trên máy bằng tham số URL: ?key=1 bật, ?key=0 tắt */
+function syncFlag(url: URL, key: string) {
+  const v = url.searchParams.get(key);
   try {
-    if (v === "1") localStorage.setItem(INTERNAL_KEY, "1");
-    if (v === "0") localStorage.removeItem(INTERNAL_KEY);
+    if (v === "1") localStorage.setItem(key, "1");
+    if (v === "0") localStorage.removeItem(key);
+  } catch {
+    /* private mode */
+  }
+}
+const flag = (key: string) => {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const TEST_KEY = "yala_test";
+const OPTOUT_KEY = "yala_optout";
+/**
+ * Chế độ thử (?yala_test=1, tắt: =0): không nạp GTM/GA4/Pixel, không đẩy gì vào dataLayer – sự kiện chỉ in ra console.
+ * Đơn đặt trong chế độ này mang cờ test -> máy chủ đánh dấu đơn thử, báo cáo nguồn không tính.
+ */
+export function isTestMode() {
+  // URL đọc trước localStorage: component con bắn sự kiện (view_item_list…) trước khi Analytics kịp lưu cờ từ URL
+  const v = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get(TEST_KEY);
+  return v === "1" || (v !== "0" && flag(TEST_KEY));
+}
+/** Khách tắt đo lường ở trang /do-luong: không nạp mã đo lường, không lưu nguồn khách */
+export const isOptedOut = () => flag(OPTOUT_KEY);
+/** Đọc lại mỗi lần gửi (không nhớ trong biến): khách vừa bấm tắt thì sự kiện kế tiếp đã dừng, không cần tải lại trang */
+export const measurementOff = () => isTestMode() || isOptedOut();
+export function setOptOut(off: boolean) {
+  try {
+    if (off) {
+      localStorage.setItem(OPTOUT_KEY, "1");
+      localStorage.removeItem(UTM_STORE);
+      localStorage.removeItem(UTM_LAST);
+    } else localStorage.removeItem(OPTOUT_KEY);
   } catch {
     /* private mode */
   }
@@ -95,6 +130,10 @@ function emit(...args: Parameters<typeof send>) {
 
 function send(event: string, ecommerce: Record<string, unknown> | null, extra: Record<string, unknown> = {}, to: Platform = {}, eventId = newId()) {
   if (typeof window === "undefined") return;
+  if (measurementOff()) {
+    if (isTestMode()) console.info(`[track:test] ${event}`, { event_id: eventId, ...extra, ...(ecommerce ? { ecommerce } : {}) });
+    return;
+  }
   const internal = isInternal();
   const dl = (window.dataLayer = window.dataLayer || []);
   if (ecommerce) dl.push({ ecommerce: null }); // xoá ecommerce của sự kiện trước (khuyến nghị GA4)
@@ -238,7 +277,7 @@ export const track = {
   },
   /** Chuyển trang trong web (Next.js không tải lại trang): Meta/TikTok cần PageView thủ công, GTM nhận "virtual_page_view" */
   pageView(path: string) {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || measurementOff()) return;
     (window.dataLayer = window.dataLayer || []).push({ event: "virtual_page_view", page_path: path, page_location: window.location.href, page_title: document.title });
     if (window.__yalaGtm || isInternal()) return;
     try {
@@ -253,24 +292,43 @@ export const track = {
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid", "gclid", "gbraid", "wbraid", "ttclid"];
 const UTM_STORE = "pod_utm_v1";
 const UTM_LAST = "pod_utm_last_v1";
+/** Giữ nguồn khách 90 ngày – trang /do-luong ghi đúng con số này, đổi ở đây thì sửa cả trang đó */
+export const SOURCE_DAYS = 90;
+
+/** Trang dẫn khách tới: chỉ lấy tên miền (bỏ đường dẫn, tham số – có thể chứa từ khoá tìm kiếm hay mã riêng), bỏ qua chính yala.vn */
+function referrerHost() {
+  try {
+    if (!document.referrer) return "";
+    const host = new URL(document.referrer).hostname.replace(/^www\./, "");
+    return host && host !== window.location.hostname.replace(/^www\./, "") ? host.slice(0, 100) : "";
+  } catch {
+    return "";
+  }
+}
 
 /**
- * Lưu nguồn khách 30 ngày: lần chạm đầu (first-touch, không ghi đè) + lần chạm gần nhất (last-touch).
- * Gửi kèm đơn hàng / yêu cầu báo giá -> CMS biết đơn đến từ quảng cáo nào, kể cả khi trình chặn quảng cáo chặn GA/Pixel.
+ * Lưu nguồn khách 90 ngày: lần chạm đầu (first-touch, không ghi đè) + lần chạm gần nhất (last-touch).
+ * Một lần chạm = vào web có UTM / mã click quảng cáo, hoặc từ trang khác dẫn sang (Google, Facebook, Zalo…).
+ * Gửi kèm đơn hàng / yêu cầu báo giá -> CMS biết đơn đến từ đâu, kể cả khi trình chặn quảng cáo chặn GA/Pixel.
+ * Khách đã tắt đo lường: không lưu gì.
  */
 export function captureUtm() {
   try {
     const url = new URL(window.location.href);
-    syncInternalFlag(url);
+    syncFlag(url, INTERNAL_KEY);
+    syncFlag(url, TEST_KEY);
+    if (isOptedOut()) return;
     const found: Record<string, string> = {};
     for (const k of UTM_KEYS) {
       const v = url.searchParams.get(k);
       if (v) found[k] = v.slice(0, 200);
     }
+    const ref = referrerHost();
+    if (ref) found.ref = ref;
     if (!Object.keys(found).length) return;
     const touch = JSON.stringify({ ...found, landing: url.pathname, at: Date.now() });
     localStorage.setItem(UTM_LAST, touch);
-    if (!readUtm()) localStorage.setItem(UTM_STORE, touch);
+    if (!readTouch(UTM_STORE)) localStorage.setItem(UTM_STORE, touch);
   } catch {
     /* private mode */
   }
@@ -281,7 +339,7 @@ function readTouch(key: string): Record<string, string> | undefined {
     const raw = localStorage.getItem(key);
     if (!raw) return undefined;
     const data = JSON.parse(raw) as Record<string, string | number>;
-    if (Date.now() - Number(data.at) > 30 * 86400_000) return undefined;
+    if (Date.now() - Number(data.at) > SOURCE_DAYS * 86400_000) return undefined;
     const out: Record<string, string> = {};
     for (const [k, v] of Object.entries(data)) if (k !== "at") out[k] = String(v);
     return out;
@@ -290,12 +348,13 @@ function readTouch(key: string): Record<string, string> | undefined {
   }
 }
 
-/** Nguồn khách lưu kèm đơn: first-touch + các khoá last_* của lần chạm gần nhất (nếu khác) */
+/** Nguồn khách lưu kèm đơn: first-touch + các khoá last_* của lần chạm gần nhất (nếu khác); chế độ thử thêm test=1 */
 export function readUtm(): Record<string, string> | undefined {
-  const first = readTouch(UTM_STORE);
-  if (!first) return undefined;
+  const test = isTestMode() ? { test: "1" } : undefined;
+  const first = isOptedOut() ? undefined : readTouch(UTM_STORE);
+  if (!first) return test;
   const last = readTouch(UTM_LAST);
-  const out = { ...first };
+  const out: Record<string, string> = { ...first, ...test };
   if (last && JSON.stringify(last) !== JSON.stringify(first)) for (const [k, v] of Object.entries(last)) out[`last_${k}`] = v;
   return out;
 }

@@ -83,6 +83,11 @@ export function Footer({ brand, categories, pages }: Props) {
                 Tất cả sản phẩm
               </Link>
             </li>
+            <li>
+              <Link href="/do-luong" className="hover:text-brand">
+                Đo lường &amp; quyền chọn
+              </Link>
+            </li>
             {pages
               .filter((p) => p.showInFooter)
               .map((p) => (
