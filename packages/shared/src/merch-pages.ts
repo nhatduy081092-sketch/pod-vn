@@ -27,6 +27,8 @@ export type MerchPage = {
   noun: string;
   /** giải pháp B2B (b2bHub.solutions.key) gắn vào link báo giá */
   dip: string;
+  /** hợp làm quà Tết – hiện liên kết ở trang Quà Tết doanh nghiệp */
+  tetGift?: boolean;
   methods: { name: string; fit: string; note: string }[];
   tips: { title: string; body: string }[];
   faq: { q: string; a: string }[];
@@ -35,6 +37,15 @@ export type MerchPage = {
 const FAQ_PREVIEW = {
   q: "Có xem logo trên sản phẩm trước khi đặt không?",
   a: "Có, miễn phí. Bấm “Đặt logo, xem mockup” để tự đặt logo lên sản phẩm trong YALA Studio, hoặc gửi file logo để YALA làm mockup giúp – chỉnh đến khi duyệt mới sản xuất.",
+};
+/** "[sản phẩm] in logo giá bao nhiêu?" – giá đi qua báo giá, thời gian phản hồi lấy từ CMS */
+const faqPrice = (noun: string, by: string) => ({
+  q: `${noun} in logo giá bao nhiêu?`,
+  a: `Giá tuỳ ${by} và số lượng. Bấm “+ Thêm vào báo giá” ở các mẫu muốn so rồi gửi một yêu cầu – YALA {response}.`,
+});
+const FAQ_TIME = {
+  q: "Đặt bao lâu thì nhận được hàng?",
+  a: "YALA báo thời gian theo từng đơn khi gửi báo giá. Đơn số lượng lớn hoặc cần đóng hộp nên gửi yêu cầu trước 2–3 tuần để kịp mockup, làm mẫu và sản xuất.",
 };
 const FAQ_VAT = {
   q: "Có xuất hoá đơn VAT và giao nhiều chi nhánh không?",
@@ -53,6 +64,7 @@ export const MERCH_PAGES: MerchPage[] = [
     sub: "binh-giu-nhiet",
     noun: "bình giữ nhiệt",
     dip: "tri-an",
+    tetGift: true,
     methods: [
       { name: "Khắc laser", fit: "Logo 1 màu trên thân inox", note: "Tia laser bóc lớp sơn, lộ màu kim loại – không bong tróc khi rửa. Hợp logo nét đơn giản, nổi nhất trên bình màu tối." },
       { name: "In UV", fit: "Logo nhiều màu, đúng màu nhận diện", note: "Mực in thẳng lên thân bình, giữ đủ màu của logo. Cần file logo rõ nét (vector hoặc ảnh độ phân giải cao)." },
@@ -83,6 +95,7 @@ export const MERCH_PAGES: MerchPage[] = [
     sub: "lich-ban-lich-tuong",
     noun: "lịch để bàn, lịch tường",
     dip: "qua-tet",
+    tetGift: true,
     methods: [
       { name: "In offset", fit: "Số lượng lớn", note: "Màu chuẩn và đều trên cả lô, giá mỗi cuốn giảm khi số lượng tăng." },
       { name: "In kỹ thuật số", fit: "Số lượng ít, cần nhanh", note: "Không cần làm khuôn in – hợp đơn vài chục cuốn hoặc in thử trước khi in số lượng lớn." },
@@ -99,6 +112,187 @@ export const MERCH_PAGES: MerchPage[] = [
       { q: "In lịch Tết có logo giá bao nhiêu?", a: "Giá tuỳ loại lịch, số tờ, cách in và số lượng. Bấm “+ Thêm vào báo giá” ở các mẫu muốn so rồi gửi một yêu cầu – YALA {response}." },
       { q: "Nội dung 12 tháng ai làm?", a: "Doanh nghiệp gửi logo, ảnh, thông điệp muốn đưa lên lịch. YALA dàn trang và gửi bản mockup để duyệt từng tờ trước khi in." },
       FAQ_PREVIEW,
+      FAQ_VAT,
+    ],
+  },
+  {
+    slug: "so-tay-in-logo",
+    name: "Sổ tay in logo",
+    title: "Sổ tay in logo, sổ bìa da dập logo làm quà tặng doanh nghiệp",
+    h1: "Sổ tay in logo",
+    description: "Sổ tay in logo, sổ bìa da dập logo làm quà tặng nhân viên, khách hàng, hội nghị. Đặt logo xem mockup ngay, báo giá theo số lượng, hoá đơn VAT.",
+    lead: "Món quà được mở ra trong mọi cuộc họp. Chọn kiểu bìa, đặt logo xem mockup ngay, gửi một yêu cầu để nhận báo giá theo số lượng.",
+    category: "van-phong-pham",
+    sub: "so-tay",
+    noun: "sổ tay",
+    dip: "welcome-kit",
+    tetGift: true,
+    methods: [
+      { name: "Dập nổi / dập chìm", fit: "Bìa da, giả da", note: "Logo nổi hoặc lõm trên bìa, không dùng mực – trông chững chạc, không phai theo thời gian." },
+      { name: "Ép kim", fit: "Logo nhũ vàng, bạc", note: "Lớp nhũ ép nhiệt lên bìa, hợp sổ quà Tết, quà tri ân cần nét sang." },
+      { name: "In màu bìa", fit: "Bìa giấy, logo nhiều màu", note: "In cả bìa theo thiết kế riêng: logo, màu nhận diện, hình ảnh thương hiệu." },
+    ],
+    tips: [
+      { title: "Bìa da cho quà đối tác", body: "Sổ bìa da dập logo hợp quà tri ân, quà Tết. Sổ bìa giấy in màu hợp hội nghị, welcome kit số lượng lớn." },
+      { title: "Lò xo hay dán gáy", body: "Sổ lò xo mở phẳng, dễ ghi trên bàn họp. Sổ dán gáy gọn, trông chỉn chu hơn khi trao tay." },
+      { title: "Đi kèm bút cùng logo", body: "Sổ và bút in cùng logo thành một bộ quà hoàn chỉnh. Ghi “kèm bút” trong yêu cầu để YALA báo giá trọn bộ." },
+      { title: "Trang đầu in thông điệp", body: "Trang lót đầu sổ có thể in lời chào, giá trị công ty hoặc lịch năm – thứ người nhận đọc đầu tiên khi mở sổ." },
+    ],
+    faq: [
+      faqPrice("Sổ tay", "kiểu bìa, số trang, cách làm logo"),
+      { q: "Dập logo hay in logo lên sổ thì đẹp hơn?", a: "Bìa da: dập nổi hoặc ép kim cho cảm giác cao cấp, bền lâu. Bìa giấy: in màu để đúng màu nhận diện. Kỹ thuật phù hợp tuỳ chất liệu từng mẫu – YALA ghi rõ khi gửi mockup." },
+      FAQ_PREVIEW,
+      FAQ_TIME,
+      FAQ_VAT,
+    ],
+  },
+  {
+    slug: "balo-in-logo",
+    name: "Balo in logo",
+    title: "Balo in logo công ty, balo laptop làm quà tặng doanh nghiệp",
+    h1: "Balo in logo công ty",
+    description: "Balo laptop in logo, thêu logo làm quà tặng nhân viên, đối tác, welcome kit. Nhiều mẫu, đặt logo xem mockup ngay, báo giá theo số lượng, hoá đơn VAT.",
+    lead: "Quà mang theo mỗi ngày đi làm, đi công tác. Chọn mẫu balo, đặt logo xem mockup ngay, gửi một yêu cầu để nhận báo giá theo số lượng.",
+    category: "balo-tui-phu-kien",
+    sub: "balo-laptop",
+    noun: "balo laptop",
+    dip: "welcome-kit",
+    methods: [
+      { name: "Thêu", fit: "Logo trên vải dày", note: "Chỉ thêu bền, không bong khi cọ xát – trông chỉn chu trên balo công sở." },
+      { name: "In", fit: "Logo nhiều màu", note: "In lên mặt vải theo đúng màu logo. Hợp logo có chi tiết nhỏ, khó thêu." },
+      { name: "Tem gắn", fit: "Tem da, cao su, kim loại", note: "Logo làm thành tem rồi may hoặc gắn lên balo – nổi khối, hợp balo cao cấp." },
+    ],
+    tips: [
+      { title: "Chọn theo cỡ laptop", body: "Hỏi trước cỡ máy của người nhận: balo 14 inch gọn nhẹ, 15.6–16 inch vừa phần lớn laptop văn phòng." },
+      { title: "Logo vừa phải, đúng chỗ", body: "Balo công sở đẹp nhất với logo vừa phải ở mặt trước hoặc quai đeo – người nhận vẫn dùng hằng ngày mà không ngại." },
+      { title: "Một mẫu cho cả công ty", body: "Cả công ty dùng chung một mẫu, một màu – đồng bộ hình ảnh khi đi sự kiện, công tác." },
+      { title: "Đựng sẵn welcome kit", body: "Balo đựng sẵn sổ, bình nước, áo đồng phục cho nhân viên mới. Gửi danh sách món cần – YALA báo giá trọn bộ." },
+    ],
+    faq: [
+      faqPrice("Balo", "mẫu balo, vị trí và cách làm logo"),
+      { q: "Thêu hay in logo lên balo?", a: "Logo ít màu, muốn bền: thêu. Logo nhiều màu, chi tiết nhỏ: in. Vị trí và kỹ thuật làm logo tuỳ chất liệu từng mẫu – YALA ghi rõ khi gửi mockup." },
+      FAQ_PREVIEW,
+      FAQ_TIME,
+      FAQ_VAT,
+    ],
+  },
+  {
+    slug: "tui-tote-in-logo",
+    name: "Túi tote in logo",
+    title: "Túi tote in logo, túi canvas in theo yêu cầu cho doanh nghiệp",
+    h1: "Túi tote in logo",
+    description: "Túi tote vải canvas in logo cho sự kiện, hội thảo, welcome kit, quà khách hàng. Đặt logo xem mockup ngay, báo giá theo số lượng, xuất hoá đơn VAT.",
+    lead: "Túi vải được mang đi làm, đi chợ, đi cà phê – logo đi theo khắp nơi. Chọn mẫu, đặt logo xem mockup ngay, gửi một yêu cầu để nhận báo giá.",
+    category: "balo-tui-phu-kien",
+    sub: "tui-tote-tui-rut",
+    noun: "túi tote, túi rút",
+    dip: "su-kien",
+    methods: [
+      { name: "In lụa", fit: "Số lượng lớn, logo 1–2 màu", note: "Màu đậm, bền trên vải canvas; mỗi màu một khuôn – tiết kiệm khi in nhiều túi cùng một logo." },
+      { name: "In chuyển nhiệt", fit: "Logo nhiều màu, số lượng ít", note: "In đủ màu, chi tiết nhỏ, không cần làm khuôn – hợp đơn vài chục túi." },
+      { name: "Thêu", fit: "Logo nhỏ, cần nét sang", note: "Logo thêu ở góc túi cho cảm giác cao cấp hơn bản in." },
+    ],
+    tips: [
+      { title: "Có khoá kéo cho dân văn phòng", body: "Túi tote có khoá kéo giữ đồ an toàn khi đi làm, đi công tác – người nhận dùng lâu hơn." },
+      { title: "Thiết kế để người ta muốn mang", body: "Câu chữ hay, hình vẽ đẹp kèm logo nhỏ khiến túi được mang ra đường nhiều hơn một logo to giữa túi." },
+      { title: "Túi sự kiện: đặt sớm", body: "Túi phát ở hội thảo, sự kiện cần có trước ngày diễn ra – gửi yêu cầu sớm để kịp duyệt mẫu." },
+      { title: "Đựng sẵn cả bộ quà", body: "Túi tote là bao bì cho cả bộ quà: sổ, bút, bình nước. Gửi danh sách món cần – YALA báo giá trọn bộ." },
+    ],
+    faq: [
+      faqPrice("Túi tote", "chất vải, kích thước, cách in"),
+      { q: "Túi tote khác gì túi canvas?", a: "Tote là kiểu dáng – túi xách tay hai quai, miệng rộng. Canvas là chất vải dày, bền, in đẹp. Phần lớn túi tote in logo làm bằng vải canvas." },
+      FAQ_PREVIEW,
+      FAQ_TIME,
+      FAQ_VAT,
+    ],
+  },
+  {
+    slug: "o-du-in-logo",
+    name: "Ô dù in logo",
+    title: "Ô dù in logo làm quà tặng, dù cầm tay in logo theo yêu cầu",
+    h1: "Ô dù in logo",
+    description: "Ô dù cầm tay, dù gấp gọn in logo làm quà tặng khách hàng, quà sự kiện, quảng bá thương hiệu. Đặt logo xem mockup ngay, báo giá theo số lượng.",
+    lead: "Mỗi lần mở ra là một lần thương hiệu xuất hiện giữa phố. Chọn mẫu dù, đặt logo xem mockup ngay, gửi một yêu cầu để nhận báo giá theo số lượng.",
+    category: "mu-non-ao-mua-o-du",
+    sub: "o-du",
+    noun: "ô dù",
+    dip: "tri-an",
+    methods: [
+      { name: "In lụa từng múi", fit: "Logo 1–2 màu", note: "In logo lên một hoặc vài múi dù – màu đậm, cách in dù phổ biến nhất." },
+      { name: "In tràn", fit: "Thiết kế phủ cả mặt dù", note: "In hình ảnh, hoạ tiết theo nhận diện thương hiệu trên toàn bộ mặt dù." },
+      { name: "In bao dù", fit: "Thêm một chỗ cho logo", note: "Logo trên túi đựng dù – thấy ngay cả khi dù đang gấp." },
+    ],
+    tips: [
+      { title: "Gấp gọn cho dân văn phòng", body: "Dù gấp gọn bỏ vừa túi xách, balo – được mang theo thường xuyên hơn dù cán dài." },
+      { title: "Bật tự động tiện hơn", body: "Dù bật, gập tự động mở bằng một tay – hợp người hay xách đồ, đi xe." },
+      { title: "Dù cán dài cho khách VIP", body: "Dù cán thẳng, tán rộng che được nhiều người – hợp làm quà khách VIP, dùng ở sảnh, sự kiện ngoài trời." },
+      { title: "Logo ở hai múi đối diện", body: "In logo ở 2 múi đối diện nhau để người xung quanh nhìn thấy dù người cầm quay hướng nào." },
+    ],
+    faq: [
+      faqPrice("Ô dù", "loại dù, số múi in, số màu logo"),
+      { q: "Logo in trên dù có bị phai khi gặp mưa không?", a: "In lụa là cách in dù phổ biến vì bám vải tốt. Độ bền tuỳ chất vải và cách in từng mẫu – YALA ghi rõ khi gửi mockup và báo giá." },
+      FAQ_PREVIEW,
+      FAQ_TIME,
+      FAQ_VAT,
+    ],
+  },
+  {
+    slug: "mu-non-in-logo",
+    name: "Mũ nón in logo",
+    title: "Mũ nón in logo, nón lưỡi trai thêu logo cho công ty, sự kiện",
+    h1: "Mũ nón in logo",
+    description: "Mũ lưỡi trai, nón bucket thêu logo, in logo cho đồng phục công ty, team building, sự kiện. Đặt logo xem mockup ngay, báo giá theo số lượng.",
+    lead: "Đi cùng áo đồng phục trong team building, sự kiện ngoài trời. Chọn kiểu mũ, đặt logo xem mockup ngay, gửi một yêu cầu để nhận báo giá theo số lượng.",
+    category: "mu-non-ao-mua-o-du",
+    sub: "mu-non",
+    noun: "mũ nón",
+    dip: "dong-phuc",
+    methods: [
+      { name: "Thêu phẳng", fit: "Logo ít màu", note: "Cách làm logo phổ biến nhất trên mũ – bền, không bong, giặt được." },
+      { name: "Thêu nổi 3D", fit: "Logo khối, chữ đậm", note: "Đường thêu có lớp đệm cho logo nổi khối ở mặt trước – hợp mũ snapback, lưỡi trai thể thao." },
+      { name: "In", fit: "Logo nhiều màu, chi tiết nhỏ", note: "In đủ màu logo – hợp hình ảnh, chi tiết nhỏ khó thêu." },
+    ],
+    tips: [
+      { title: "Lưỡi trai cho đồng phục", body: "Mũ lưỡi trai đi cùng áo polo, áo thun đồng phục – kiểu dáng quen thuộc, hợp nhiều lứa tuổi." },
+      { title: "Bucket cho team building", body: "Nón bucket che nắng bốn phía, hợp hoạt động ngoài trời, du lịch công ty." },
+      { title: "Cùng tông với áo", body: "Chọn màu mũ cùng tông áo đồng phục – cả đội lên ảnh đồng bộ hơn." },
+      { title: "Logo trước, slogan sau", body: "Logo ở mặt trước; tên sự kiện hoặc slogan thêu thêm ở bên hông, phía sau." },
+    ],
+    faq: [
+      faqPrice("Mũ nón", "kiểu mũ, số vị trí và cách làm logo"),
+      { q: "Nên thêu hay in logo lên mũ?", a: "Logo ít màu, muốn bền: thêu – muốn nổi khối thì thêu 3D. Logo nhiều màu, chi tiết nhỏ: in. YALA ghi rõ kỹ thuật phù hợp từng mẫu khi gửi mockup." },
+      FAQ_PREVIEW,
+      FAQ_TIME,
+      FAQ_VAT,
+    ],
+  },
+  {
+    slug: "vali-in-logo",
+    name: "Vali in logo",
+    title: "Vali in logo làm quà tặng doanh nghiệp, vali gắn logo kim loại",
+    h1: "Vali in logo",
+    description: "Vali gắn logo kim loại, in logo làm quà cho nhân viên, đối tác, khách hàng thân thiết, du lịch công ty. Mockup miễn phí, báo giá theo số lượng.",
+    lead: "Quà giá trị cho người nhận quan trọng. Chọn mẫu vali, gửi logo để xem mockup, gửi một yêu cầu để nhận báo giá theo số lượng.",
+    category: "vali-du-lich",
+    sub: "vali-nhua-pp-pc-abs",
+    noun: "vali",
+    dip: "tri-an",
+    methods: [
+      { name: "Gắn logo kim loại", fit: "Vali cao cấp", note: "Logo kim loại gắn lên thân vali – nổi khối, sang, đi cùng vali suốt thời gian dùng." },
+      { name: "In UV lên vỏ", fit: "Logo nhiều màu", note: "In thẳng lên vỏ nhựa theo màu logo – hợp vali thiết kế riêng." },
+      { name: "Thẻ treo hành lý", fit: "Thêm một chỗ cho logo", note: "Thẻ treo in hoặc khắc logo đi kèm vali – dễ nhận ra hành lý ở băng chuyền." },
+    ],
+    tips: [
+      { title: "Xách tay hay ký gửi", body: "Vali 20 inch thường vừa hành lý xách tay, hợp người hay công tác ngắn ngày. 24–28 inch cho chuyến đi dài, du lịch gia đình." },
+      { title: "Vỏ PC, PP hay ABS", body: "PC dẻo, nhẹ, chịu va đập tốt; PP bền, ít trầy; ABS cứng, giá mềm hơn. Hỏi YALA mẫu hợp ngân sách." },
+      { title: "Quà cho người nhận quan trọng", body: "Vali hợp quà tri ân khách hàng thân thiết, quà nhân viên xuất sắc, quà chuyến du lịch công ty." },
+      { title: "Logo kín đáo trông sang hơn", body: "Logo kim loại nhỏ ở góc vali trông sang hơn logo in to – người nhận dùng cả cho việc riêng." },
+    ],
+    faq: [
+      faqPrice("Vali", "mẫu vali, kích cỡ, cách gắn logo"),
+      { q: "Logo gắn lên vali có bền không?", a: "Logo kim loại gắn cố định lên thân vali, đi cùng vali suốt thời gian sử dụng. Cách gắn tuỳ từng mẫu – YALA ghi rõ khi gửi mockup." },
+      FAQ_PREVIEW,
+      FAQ_TIME,
       FAQ_VAT,
     ],
   },

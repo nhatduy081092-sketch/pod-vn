@@ -147,7 +147,7 @@ export default async function YearEndGiftsPage() {
           </div>
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[15px] font-semibold">
             <Link href={QUOTE} className="text-brand hover:underline">Gửi yêu cầu báo giá →</Link>
-            {MERCH_PAGES.map((m) => (
+            {MERCH_PAGES.filter((m) => m.tetGift).map((m) => (
               <Link key={m.slug} href={`/${m.slug}`} className="underline underline-offset-4 hover:text-brand">{fillMerch(m.h1)}</Link>
             ))}
             <Link href="/dip/tet-2027" className="underline underline-offset-4 hover:text-brand">Áo gia đình Tết 2027</Link>
