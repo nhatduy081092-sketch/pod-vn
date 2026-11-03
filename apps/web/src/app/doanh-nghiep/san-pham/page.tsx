@@ -26,7 +26,12 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }): 
   const filtered = !!(sp.q || sp["ngan-sach"] || sp.sort || sp.page || (ind && dip));
   return {
     title,
-    description: ind?.blurb ? `${ind.blurb}. In / thêu / khắc logo theo yêu cầu, báo giá theo số lượng, mockup miễn phí.` : "Quà tặng doanh nghiệp, merchandise, đồng phục in logo – lọc theo ngành hàng, dịp và ngân sách mỗi phần quà.",
+    // mỗi ngành / dịp một mô tả riêng (dịp lấy lời mô tả trong CMS) – tránh nhiều URL trùng một mô tả
+    description: ind?.blurb
+      ? `${ind.blurb}. In / thêu / khắc logo theo yêu cầu, báo giá theo số lượng, mockup miễn phí.`
+      : dip?.desc
+        ? `${dip.title}: ${dip.desc.replace(/\.$/, "")}. In logo theo yêu cầu, mockup miễn phí, báo giá theo ngân sách.`
+        : "Quà tặng doanh nghiệp, merchandise, đồng phục in logo – lọc theo ngành hàng, dịp và ngân sách mỗi phần quà.",
     // quà Tết có trang tĩnh /doanh-nghiep/qua-cuoi-nam – dồn tín hiệu SEO về đó
     alternates: { canonical: ind && !dip ? `${BASE}?nganh=${ind.slug}` : dip && !ind ? (dip.key === "qua-tet" ? "/doanh-nghiep/qua-cuoi-nam" : `${BASE}?dip=${dip.key}`) : BASE },
     ...(filtered ? { robots: { index: false, follow: true } } : {}),

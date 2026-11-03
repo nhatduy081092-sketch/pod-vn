@@ -364,7 +364,7 @@ const EXTRA: Record<string, Spec[]> = {
 
 /** Nhóm bộ sưu tập để duyệt nhanh */
 export const DESIGN_GROUPS: { key: string; name: string; slugs: string[] }[] = [
-  { key: "dong-phuc", name: "Đồng phục nhóm (in tên từng người)", slugs: ["ao-lop", "hop-lop", "doi-bong", "dong-phuc-cong-ty", "team-building"] },
+  { key: "dong-phuc", name: "Đồng phục nhóm (in tên từng người)", slugs: ["ao-lop", "hop-lop", "di-choi", "doi-bong", "dong-phuc-cong-ty", "team-building"] },
   { key: "mua-le", name: "Dịp lễ sắp tới", slugs: ["20-10", "halloween", "20-11", "noel", "tet-li-xi"] },
   { key: "dip-le", name: "Mùa & du lịch", slugs: ["mua-thu-ha-noi", "mua-he-bien", "viet-nam-du-lich", "tu-hao-viet-nam"] },
   { key: "so-thich", name: "Sở thích", slugs: ["chuyen-phong-gym", "pickleball", "chay-bo", "ca-phe-tra-sua", "doi-game-thu", "karaoke", "foodie", "hoang-thuong-meo-cun"] },
@@ -396,6 +396,19 @@ export const DESIGN_COLLECTIONS: DesignCollection[] = [
     ["Tóc bạc lớp vẫn xanh", "script", "Họp lớp 25 năm", "Tóc đã bạc\nlớp vẫn xanh", "khoá 1999 – 2002", "sweater", "den"],
     ["Hội bàn cuối", "badge", "Ngày xưa", "Bàn cuối", "giờ vẫn ngồi chung", "tshirt", "trang"],
     ["Lớp cũ tình chưa cũ", "lobster", "Họp lớp 2027", "Lớp cũ\ntình chưa cũ", "gặp lại là vui", "tshirt", "kem"],
+  ]),
+  // Nhóm đi chơi, đi biển, company trip (trang /ao-nhom-di-choi): tên nhóm + điểm đến + tên/số từng người
+  C("di-choi", "Đi chơi & đi biển", "Tên nhóm, điểm đến và tên từng người – cả nhóm chung một đơn.", "#dff0ef", "#0e7490", "tshirt", "trang", [
+    ["Nhóm mình đi chơi", "classTee", "Trip", "Nhóm mình đi chơi · Đà Lạt", "Tên bạn"],
+    ["Đi biển cả nhóm", "classTee", "Đi biển", "Hè này cả nhóm cùng đi", "Tên bạn", "tshirt", "navy"],
+    ["Số áo chuyến đi", "jersey", "Hội đi biển", "01", "Tên bạn", "tshirt", "trang"],
+    ["Gia đình đi biển", "classTee", "Family", "Gia đình đi biển · Nha Trang", "Team bố", "tshirt", "kem"],
+    ["Tên nhóm & điểm đến", "corpCenter", "Hội bạn thân\nPhú Quốc", "Chuyến đi đáng nhớ", "Tên bạn", "tshirt", "trang"],
+    ["Company trip", "corpCenter", "Tên công ty", "Company trip · Vũng Tàu", "Tên bạn", "tshirt", "navy"],
+    ["Hội đi phượt", "jersey", "Hội đi phượt", "99", "Tên bạn", "tshirt", "den"],
+    ["Ba ngày hai đêm", "classTee", "3N2Đ", "Kỳ nghỉ của nhóm mình", "Tên bạn", "tshirt", "trang"],
+    ["Lịch trình đã chốt", "note", "Lịch trình\nđã chốt\nai trễ tự về", "— trưởng đoàn", "", "tshirt", "kem"],
+    ["Đi là phải vui", "stack", "Đi là\nphải vui", "về rồi tính tiếp", "", "tshirt", "xam"],
   ]),
   C("doi-bong", "Đội bóng & CLB thể thao", "Tên đội, số áo và tên từng thành viên – in riêng từng áo.", "#e3ebe6", "#16a34a", "tshirt", "navy", [
     ["Áo đội số lớn", "jersey", "FC Anh Em", "10", "Tên"],

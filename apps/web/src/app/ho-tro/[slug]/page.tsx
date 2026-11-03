@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { formatDateVN, HELP_CATEGORIES } from "@pod/shared";
+import { contentExcerpt, formatDateVN, HELP_CATEGORIES } from "@pod/shared";
 import { ContentRenderer } from "@/components/ContentRenderer";
 import { getHelpArticle } from "@/lib/api";
 
@@ -10,7 +10,8 @@ type Params = Promise<{ slug: string }>;
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const a = await getHelpArticle((await params).slug);
   if (!a) return { title: "Không tìm thấy" };
-  return { title: a.title, alternates: { canonical: `/ho-tro/${a.slug}` } };
+  // mô tả riêng từ nội dung – không có thì Google dùng mô tả chung của trang chủ (trùng trên nhiều trang)
+  return { title: a.title, description: contentExcerpt(a.content) || undefined, alternates: { canonical: `/ho-tro/${a.slug}` } };
 }
 
 export default async function HelpArticlePage({ params }: { params: Params }) {

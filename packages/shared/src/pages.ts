@@ -196,3 +196,16 @@ export function parseContent(src: string): Block[] {
   flush();
   return blocks;
 }
+
+/** Mô tả cho Google từ nội dung CMS: chữ của đoạn văn + gạch đầu dòng (bỏ tiêu đề), cắt ở ranh giới từ, ≤ max ký tự */
+export function contentExcerpt(src: string, max = 155): string {
+  const text = parseContent(src)
+    .flatMap((b) => (b.type === "p" ? [b.inlines] : b.type === "ul" ? b.items : []))
+    .map((inl) => inl.map((x) => x.text).join("").trim().replace(/[;:,]$/, "").replace(/([^.!?…])$/, "$1."))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), max * 0.6)).replace(/[\s.,;:–-]+$/, "")}…`;
+}

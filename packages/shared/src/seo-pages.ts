@@ -186,6 +186,33 @@ export const DESIGN_HUBS: DesignHub[] = [
       FAQ_MIN,
     ],
   },
+  {
+    slug: "ao-nhom-di-choi",
+    name: "Áo nhóm đi chơi",
+    keyword: "mẫu áo nhóm đi chơi đẹp",
+    // cụm "áo đồng phục nhóm đi chơi / áo nhóm đi biển / áo gia đình đi biển" (yala-tu-khoa-seo-v2.md) – mùa du lịch hè
+    titleTemplate: "{n} mẫu áo đồng phục nhóm đi chơi, đi biển {year} – in tên từng người",
+    intro:
+      "Mẫu áo nhóm đi chơi, đi biển, du lịch cùng hội bạn, gia đình hay company trip: tên nhóm, điểm đến và tên hoặc số của từng người in riêng trên mỗi áo. Bấm vào mẫu để sửa chữ, đổi màu áo – cả nhóm tự ghi size qua một link.",
+    collections: ["di-choi", "mua-he-bien", "viet-nam-du-lich"],
+    segment: "hoi-nhom",
+    garments: ["tshirt", "sweater", "hoodie"],
+    tips: [
+      { title: "Nội dung nên có", body: "Tên nhóm và điểm đến ở mặt trước – thêm tháng, năm của chuyến đi để giữ làm kỷ niệm. Mặt sau in tên, biệt danh hoặc số riêng của từng người: ảnh cả nhóm vừa đồng bộ vừa nhận ra từng người." },
+      { title: "Chọn màu cho ảnh ngoài trời", body: "Đi biển hợp áo trắng, kem với chữ màu nhấn; ảnh nhóm đông người nổi bật hơn với navy hoặc đen chữ sáng. Lên Đà Lạt, Sa Pa trời lạnh thì chọn sweater, hoodie – cùng thiết kế in được trên cả ba dáng áo." },
+      { title: "Thu size cả nhóm qua một link", body: "Tạo link gom đơn từ thiết kế, gửi vào nhóm chat của chuyến đi: mỗi người tự ghi tên, số và size, trưởng đoàn xem danh sách đếm sẵn theo size rồi đặt một đơn." },
+      { title: "Chốt áo trước ngày đi", body: "Chọn mẫu và gom size ngay khi chốt lịch trình, để áo về trước ngày khởi hành. Thời gian sản xuất và giao hàng xem ở tab Vận chuyển trên trang sản phẩm." },
+    ],
+    faq: [
+      FAQ_EDIT,
+      FAQ_NAMES,
+      { q: "Cả gia đình đi biển đặt áo chung được không?", a: "Được. Dùng mẫu có ô tên, ghi Team bố, Team mẹ, Team con hoặc tên từng người vào ô tên của mỗi áo – mỗi áo in đúng chữ của người đó, vẫn là một đơn. Xem thêm mẫu ở trang Mẫu áo gia đình." },
+      { q: "Công ty đi du lịch (company trip) đặt áo thế nào?", a: "Chọn mẫu Company trip, sửa tên công ty và điểm đến, thêm logo trong YALA Studio. Cần số lượng lớn, in logo lên quà tặng hoặc xuất hoá đơn VAT: gửi yêu cầu báo giá ở trang Doanh nghiệp." },
+      FAQ_LINK,
+      { q: "Nên đặt áo trước chuyến đi bao lâu?", a: "Nên chốt mẫu và size ngay khi có lịch trình, nhất là mùa hè và các dịp nghỉ lễ khi xưởng in đông đơn. Thời gian sản xuất, giao hàng xem ở tab Vận chuyển trên trang sản phẩm." },
+      FAQ_MIN,
+    ],
+  },
 ];
 
 export const findDesignHub = (slug: string) => DESIGN_HUBS.find((h) => h.slug === slug);

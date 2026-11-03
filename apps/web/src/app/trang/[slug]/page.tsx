@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { contentExcerpt } from "@pod/shared";
 import { getPage } from "@/lib/api";
 import { ContentRenderer } from "@/components/ContentRenderer";
 
@@ -10,7 +11,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { slug } = await params;
   const page = await getPage(slug);
   if (!page) return {};
-  return { title: page.title, alternates: { canonical: `/trang/${page.slug}` } };
+  // mô tả riêng từ nội dung – không có thì Google dùng mô tả chung của trang chủ (trùng trên nhiều trang)
+  return { title: page.title, description: contentExcerpt(page.content) || undefined, alternates: { canonical: `/trang/${page.slug}` } };
 }
 
 export default async function ContentPageView({ params }: { params: Params }) {
