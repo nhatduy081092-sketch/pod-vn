@@ -164,13 +164,19 @@ function pocket(word: string, sub: string, ink: Ink): DesignLayer[] {
 
 /* ---------- Đồng phục nhóm: ô tên / số in riêng từng người (field) ---------- */
 
-/** Áo đội: tên đội phía trên + số áo lớn (ô số) + tên cầu thủ (ô tên) */
-function jersey(team: string, num: string, name: string, ink: Ink): DesignLayer[] {
+/** Font số áo đấu (trang /font-so-ao-bong-da) – chỉ các font có trong Studio */
+export type NumberFont = "Anton" | "Oswald" | "Montserrat" | "Be Vietnam Pro" | "Playfair Display" | "Nunito" | "Lobster";
+const SINGLE_WEIGHT = new Set<string>(["Anton", "Lobster"]);
+
+/** Áo đội: tên đội phía trên + số áo lớn (ô số) + tên cầu thủ (ô tên). Không truyền font -> giữ nguyên mẫu cũ (Anton + Oswald) */
+function jersey(team: string, num: string, name: string, ink: Ink, font?: NumberFont): DesignLayer[] {
   const tm = team.toLocaleUpperCase("vi");
+  const nameFont = font && font !== "Anton" ? font : "Oswald";
+  const bold = font && !SINGLE_WEIGHT.has(font) ? { bold: true } : {};
   return [
     t({ text: tm, font: "Oswald", fontSize: fit(tm, "Oswald", 30, 0.8, 0.08), color: ink.main, bold: true, x: W / 2, y: 52, letterSpacing: 0.08 }),
-    ...(num ? [t({ text: num, field: "number", font: "Anton", fontSize: 160, color: ink.accent, x: W / 2, y: 172 })] : []),
-    ...(name ? [t({ text: name.toLocaleUpperCase("vi"), field: "name", font: "Oswald", fontSize: 38, color: ink.main, bold: true, x: W / 2, y: 292, letterSpacing: 0.06 })] : []),
+    ...(num ? [t({ text: num, field: "number", font: font ?? "Anton", fontSize: font ? fit(num, font, 160, 0.62) : 160, color: ink.accent, x: W / 2, y: 172, ...bold })] : []),
+    ...(name ? [t({ text: name.toLocaleUpperCase("vi"), field: "name", font: nameFont, fontSize: 38, color: ink.main, bold: !SINGLE_WEIGHT.has(nameFont), x: W / 2, y: 292, letterSpacing: 0.06 })] : []),
   ];
 }
 
@@ -211,10 +217,10 @@ function corpCenter(company: string, slogan: string, name: string, ink: Ink): De
 }
 
 type Recipe = "stack" | "stackO" | "script" | "pacifico" | "lobster" | "badge" | "note" | "pocket" | "jersey" | "classTee" | "corp" | "corpCenter";
-type Spec = [title: string, recipe: Recipe, a: string, b?: string, c?: string, garment?: GarmentKey, color?: ColorKey];
+type Spec = [title: string, recipe: Recipe, a: string, b?: string, c?: string, garment?: GarmentKey, color?: ColorKey, font?: NumberFont];
 
 function build(slug: string, s: Spec, accent: string, defGarment: GarmentKey, defColor: ColorKey, i: number): ReadyDesign {
-  const [title, recipe, a, b = "", c = "", g = defGarment, col = defColor] = s;
+  const [title, recipe, a, b = "", c = "", g = defGarment, col = defColor, font] = s;
   const ink = inkFor(BASIC_COLORS[col].dark, accent);
   const layers =
     recipe === "stack" ? bigStack(a, b, ink)
@@ -224,7 +230,7 @@ function build(slug: string, s: Spec, accent: string, defGarment: GarmentKey, de
     : recipe === "lobster" ? scriptMid(a, b, c, ink, "Lobster")
     : recipe === "badge" ? badge(a, b, c, ink)
     : recipe === "note" ? note(a, b, ink)
-    : recipe === "jersey" ? jersey(a, b, c, ink)
+    : recipe === "jersey" ? jersey(a, b, c, ink, font)
     : recipe === "classTee" ? classTee(a, b, c, ink)
     : recipe === "corp" ? corp(a, b, c, ink)
     : recipe === "corpCenter" ? corpCenter(a, b, c, ink)
@@ -417,6 +423,16 @@ export const DESIGN_COLLECTIONS: DesignCollection[] = [
     ["CLB chạy bộ", "classTee", "Run Club", "Chạy mỗi sáng · về đích cùng nhau", "Tên", "tshirt", "den"],
     ["CLB pickleball", "jersey", "Pickle Club", "1", "Tên", "tshirt", "kem"],
     ["CLB cầu lông", "classTee", "Badminton Club", "Sân 3 · 6 giờ sáng", "Tên", "tshirt", "trang"],
+  ]),
+  // Font số áo đấu (trang /font-so-ao-bong-da): mỗi mẫu một font số, cùng bố cục tên đội + số + tên
+  C("font-so", "Font số áo đấu", "Mỗi mẫu một kiểu số – số và tên in riêng cho từng thành viên.", "#e3ebe6", "#16a34a", "tshirt", "trang", [
+    ["Số kiểu Anton", "jersey", "FC Anh Em", "10", "Tên", "tshirt", "trang", "Anton"],
+    ["Số kiểu Oswald", "jersey", "FC Văn Phòng", "7", "Tên", "tshirt", "navy", "Oswald"],
+    ["Số kiểu Montserrat", "jersey", "Team Kinh Doanh", "23", "Tên", "tshirt", "den", "Montserrat"],
+    ["Số kiểu Be Vietnam Pro", "jersey", "FC Đồng Nghiệp", "9", "Tên", "tshirt", "trang", "Be Vietnam Pro"],
+    ["Số kiểu cổ điển", "jersey", "Old Boys", "11", "Tên", "tshirt", "kem", "Playfair Display"],
+    ["Số kiểu bo tròn", "jersey", "Đội Nhí", "5", "Tên", "tshirt", "trang", "Nunito"],
+    ["Số kiểu retro", "jersey", "Hội Cổ Động", "88", "Tên", "tshirt", "navy", "Lobster"],
   ]),
   C("dong-phuc-cong-ty", "Đồng phục công ty", "Tên công ty ngực trái, phòng ban, tên nhân viên – gọn và chuyên nghiệp.", "#e8e8ea", "#c2410c", "tshirt", "trang", [
     ["Logo ngực trái", "corp", "Công ty", "Since 2026", "Tên nhân viên"],
