@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { fillMerch, MERCH_PAGES } from "@pod/shared";
 import { getCategory, getFacets, getProducts } from "@/lib/api";
 import { ProductListing, type ListingParams } from "@/components/shop/ProductListing";
 
@@ -28,6 +29,8 @@ export default async function CategoryPage({ params, searchParams }: { params: P
     getFacets({ category: slug, q: query.q, gia: query.gia, sub: query.sub, "doi-tuong": query["doi-tuong"], "bo-suu-tap": query["bo-suu-tap"], mau: query.mau }),
   ]);
   const activeSub = facets.subcategories.find((s) => s.slug === query.sub);
+  // trang "[sản phẩm] in logo" cùng nhóm: cách in, mẹo chọn, báo giá – liên kết nội bộ cho SEO
+  const guide = MERCH_PAGES.find((m) => m.category === slug && (!query.sub || m.sub === query.sub));
   return (
     <div className="container-site pb-20 pt-6 md:pb-28 md:pt-10">
       <nav className="text-[15px] text-ink/70" aria-label="Breadcrumb">
@@ -54,6 +57,11 @@ export default async function CategoryPage({ params, searchParams }: { params: P
           {query.mau && <span className="text-muted"> · màu {query.mau}</span>}
         </h1>
         {cat.description && !activeSub && <p className="max-w-[36rem] text-lg leading-relaxed text-ink lg:pb-2">{cat.description}</p>}
+        {guide && (
+          <Link href={`/${guide.slug}`} className="text-[17px] font-semibold underline underline-offset-4 hover:text-brand-dark lg:col-start-2">
+            {fillMerch(guide.h1)}: cách làm logo, báo giá →
+          </Link>
+        )}
       </div>
       <div className="mt-10 md:mt-14">
         <ProductListing basePath={`/danh-muc/${slug}`} data={data} params={query} facets={facets} mode="category" />

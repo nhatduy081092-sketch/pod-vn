@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { B2B_BUDGETS } from "@pod/shared";
+import { B2B_BUDGETS, fillMerch, MERCH_PAGES } from "@pod/shared";
 import { getProducts, getSettings } from "@/lib/api";
 import { ProductGrid, priceLabelOf } from "@/components/shop/ProductCard";
 import { AddToQuote } from "@/components/b2b/AddToQuote";
@@ -147,6 +147,9 @@ export default async function YearEndGiftsPage() {
           </div>
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[15px] font-semibold">
             <Link href={QUOTE} className="text-brand hover:underline">Gửi yêu cầu báo giá →</Link>
+            {MERCH_PAGES.map((m) => (
+              <Link key={m.slug} href={`/${m.slug}`} className="underline underline-offset-4 hover:text-brand">{fillMerch(m.h1)}</Link>
+            ))}
             <Link href="/dip/tet-2027" className="underline underline-offset-4 hover:text-brand">Áo gia đình Tết 2027</Link>
             <Link href="/doanh-nghiep" className="underline underline-offset-4 hover:text-brand">Giải pháp doanh nghiệp khác</Link>
           </div>
