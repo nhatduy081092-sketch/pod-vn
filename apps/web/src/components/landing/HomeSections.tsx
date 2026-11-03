@@ -4,6 +4,8 @@ import { DESIGN_HUBS, GARMENT_PRODUCT, GROUP_MIN_QTY, GROUP_STEPS, SEGMENTS, typ
 import { GarmentMockup, PrintText } from "../designs/GarmentMockup";
 import { TOOL_LINKS } from "../seo/ToolLinks";
 import { TeamLineup } from "../group/TeamLineup";
+import { assetUrl } from "@/lib/config";
+import type { RealPick } from "./realPicks";
 
 /*
  * Trang chủ (redesign 31/10/2026 – hướng "vật thể thật to"): áo nhóm in tên từng người là vật thể chính,
@@ -17,7 +19,22 @@ export const rise = (i: number) => ({ "data-reveal": "rise", style: { ["--d" as 
  * Khuôn đầu trang "vật thể thật to" (trang chủ, trang SEO mẫu áo, trang nhóm khách): tiêu đề + nội dung bên trái,
  * 3 áo in tên/số phóng to tràn mép phải, mở kiểu màn trập. `before` = đường dẫn (breadcrumb) phía trên tiêu đề.
  */
-export function ObjectHero({ id, title, lineup, before, children }: { id: string; title: ReactNode; lineup: Segment["lineup"]; before?: ReactNode; children: ReactNode }) {
+export function ObjectHero({
+  id,
+  title,
+  lineup,
+  visual,
+  before,
+  children,
+}: {
+  id: string;
+  title: ReactNode;
+  lineup: Segment["lineup"];
+  /** thay áo minh hoạ bằng nội dung khác (trang chủ: ảnh sản phẩm thật) */
+  visual?: ReactNode;
+  before?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section className="relative overflow-hidden bg-surface" aria-labelledby={id}>
       <div className="container-site grid items-center gap-6 pt-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:gap-4 md:pt-16 lg:min-h-[min(74svh,720px)]">
@@ -28,15 +45,46 @@ export function ObjectHero({ id, title, lineup, before, children }: { id: string
           </h1>
           {children}
         </div>
-        {/* vật thể: rộng hơn cột, tràn mép phải + bị cắt đáy */}
-        <div className="home-shutter relative -mx-4 -mb-[6%] md:-mr-[6vw] md:ml-0 md:self-end">
-          <div className="w-[118%] max-w-none md:w-[112%]">
-            <TeamLineup team={lineup.team} color={lineup.color} people={lineup.people} />
+        {visual ?? (
+          /* vật thể: rộng hơn cột, tràn mép phải + bị cắt đáy */
+          <div className="home-shutter relative -mx-4 -mb-[6%] md:-mr-[6vw] md:ml-0 md:self-end">
+            <div className="w-[118%] max-w-none md:w-[112%]">
+              <TeamLineup team={lineup.team} color={lineup.color} people={lineup.people} />
+            </div>
+            <span className="absolute bottom-[12%] left-4 z-10 rounded-md bg-white px-2 py-0.5 text-[13px] font-semibold text-ink/80 md:left-2">Minh hoạ</span>
           </div>
-          <span className="absolute bottom-[12%] left-4 z-10 rounded-md bg-white px-2 py-0.5 text-[13px] font-semibold text-ink/80 md:left-2">Minh hoạ</span>
-        </div>
+        )}
       </div>
     </section>
+  );
+}
+
+/** Đầu trang chủ: 4 ảnh chụp sản phẩm đồng phục thật trong danh mục, mỗi ảnh mở đúng trang sản phẩm */
+function RealProducts({ items }: { items: RealPick[] }) {
+  return (
+    <div className="pb-10 md:pb-16">
+      <ul className="grid grid-cols-2 gap-3 md:gap-4">
+        {items.map((p, i) => (
+          <li key={p.slug} {...rise(i)}>
+            <Link href={`/san-pham/${p.slug}`} className="group block">
+              <span className="block aspect-square overflow-hidden rounded-lg bg-white">
+                <img
+                  src={assetUrl(p.image)}
+                  alt={p.name}
+                  loading={i < 2 ? "eager" : "lazy"}
+                  decoding="async"
+                  className="h-full w-full object-contain p-[7%] transition-transform duration-500 group-hover:scale-[1.04]"
+                />
+              </span>
+              <span className="mt-2 block truncate text-[15px] font-semibold transition-colors group-hover:text-brand-dark">{p.name}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link href="/danh-muc/dong-phuc-may-mac" className="mt-5 inline-flex items-center gap-2 text-base font-semibold underline underline-offset-4 hover:text-brand-dark">
+        Xem tất cả mẫu đồng phục <span aria-hidden>→</span>
+      </Link>
+    </div>
   );
 }
 
@@ -44,11 +92,11 @@ export function ObjectHero({ id, title, lineup, before, children }: { id: string
 export const heroLead = "mt-6 max-w-[34rem] text-lg leading-relaxed text-ink md:text-xl";
 export const heroActions = "mt-8 flex flex-wrap items-center gap-3";
 
-/** Đầu trang chủ: áo đội in tên/số */
-export function HomeHero({ zalo }: { zalo?: string }) {
+/** Đầu trang chủ: ảnh sản phẩm thật (đủ 4 ảnh), thiếu thì giữ áo đội minh hoạ */
+export function HomeHero({ zalo, products = [] }: { zalo?: string; products?: RealPick[] }) {
   const sport = SEGMENTS.find((s) => s.key === "the-thao")!;
   return (
-    <ObjectHero id="home-title" title="Áo nhóm, mỗi người đúng tên" lineup={sport.lineup}>
+    <ObjectHero id="home-title" title="Áo nhóm, mỗi người đúng tên" lineup={sport.lineup} visual={products.length >= 4 ? <RealProducts items={products.slice(0, 4)} /> : undefined}>
       <p className={heroLead}>
         Doanh nghiệp, CLB, lớp, team building: thiết kế trên web, gửi 1 link để cả nhóm tự ghi tên – size. YALA in và giao tận nơi, đơn nhóm từ {GROUP_MIN_QTY} sản phẩm.
       </p>
@@ -147,8 +195,8 @@ const SEGMENT_MOCKUP: Record<string, { garment: GarmentKey; color: ColorKey; pri
   },
 };
 
-/** 4 lối vào theo nhóm khách: mockup áo lớn + tên nhóm, không câu mô tả (mô tả nằm ở trang của từng nhóm) */
-export function HomeSegments() {
+/** 4 lối vào theo nhóm khách: ảnh sản phẩm thật của nhóm (thiếu thì mockup áo minh hoạ) + tên nhóm, không câu mô tả */
+export function HomeSegments({ photos = {} }: { photos?: Record<string, RealPick> }) {
   return (
     <section className="container-site py-[clamp(72px,12vh,150px)]" aria-labelledby="don-vi">
       <h2 id="don-vi" className="font-display text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.025em]">
@@ -157,11 +205,21 @@ export function HomeSegments() {
       <ul className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 md:mt-10 md:gap-x-5 lg:grid-cols-4">
         {SEGMENTS.map((s, i) => {
           const mk = SEGMENT_MOCKUP[s.key];
+          const photo = photos[s.key];
           return (
             <li key={s.key} {...rise(i)}>
               <Link href={s.href} className="group block" title={s.pitch}>
-                <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-sun">
-                  {mk && (
+                <div className={`relative aspect-[4/5] overflow-hidden rounded-lg ${photo ? "bg-surface" : "bg-sun"}`}>
+                  {photo ? (
+                    <img
+                      src={assetUrl(photo.image)}
+                      alt={photo.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-contain p-[8%] mix-blend-multiply transition-transform duration-500 group-hover:scale-[1.04]"
+                    />
+                  ) : (
+                    mk && (
                     <GarmentMockup
                       id={`seg-${s.key}`}
                       garment={mk.garment}
@@ -172,8 +230,9 @@ export function HomeSegments() {
                     >
                       {mk.print}
                     </GarmentMockup>
+                    )
                   )}
-                  <span className="absolute right-2 top-2 rounded bg-white/90 px-1.5 py-0.5 text-[13px] font-semibold text-ink/75">Minh hoạ</span>
+                  {!photo && <span className="absolute right-2 top-2 rounded bg-white/90 px-1.5 py-0.5 text-[13px] font-semibold text-ink/75">Minh hoạ</span>}
                 </div>
                 <p className="mt-3 font-display text-[clamp(20px,1.9vw,28px)] font-bold leading-tight tracking-[-0.02em] transition-colors group-hover:text-brand-dark">
                   {s.name}

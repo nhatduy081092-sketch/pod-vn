@@ -12,6 +12,7 @@ import { WhyChoose } from "@/components/landing/WhyChoose";
 import { B2BSection } from "@/components/landing/B2BSection";
 import { CatalogSection } from "@/components/landing/CatalogSection";
 import { ParticleBand } from "@/components/landing/ParticleBand";
+import { getRealPicks } from "@/components/landing/realPicks";
 
 export const revalidate = 60;
 
@@ -22,8 +23,9 @@ export const revalidate = 60;
  */
 export default async function HomePage() {
   let home: HomeData | null = null;
+  let picks: Awaited<ReturnType<typeof getRealPicks>> = { hero: [], segments: {} };
   try {
-    home = await getHome();
+    [home, picks] = await Promise.all([getHome(), getRealPicks()]);
   } catch (e) {
     // Lúc build Docker chưa có API: chuyển trang sang render khi có request thay vì làm hỏng build.
     await connection();
@@ -35,8 +37,8 @@ export default async function HomePage() {
     <div className="home-flow flex flex-col">
       <div className="flow-top">
         <SloganRibbon data={settings.slogan} />
-        <HomeHero zalo={zalo} />
-        <HomeSegments />
+        <HomeHero zalo={zalo} products={picks.hero} />
+        <HomeSegments photos={picks.segments} />
       </div>
       <ParticleBand line="Một thiết kế, mỗi áo một tên" />
       <HomeSteps />
