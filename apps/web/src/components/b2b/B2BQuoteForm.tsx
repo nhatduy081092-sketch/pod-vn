@@ -74,7 +74,9 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
     return (
       <div className="rounded-3xl bg-surface p-6 md:p-8" role="status">
         <p className="text-xl font-semibold">Đã nhận yêu cầu của bạn ✓</p>
-        <p className="mt-2 text-[15px] text-muted">YALA sẽ liên hệ trong giờ làm việc để tư vấn và gửi mockup. Cần gấp? Nhắn Zalo kèm nội dung bên dưới.</p>
+        <p className="mt-2 text-[15px] text-muted">
+          YALA sẽ liên hệ trong giờ làm việc để tư vấn và gửi mockup. Cần gấp? Nhắn Zalo kèm nội dung bên dưới{zalo ? " và file logo – có logo YALA làm mockup nhanh hơn" : ""}.
+        </p>
         <pre className="mt-4 whitespace-pre-wrap rounded-xl bg-white p-4 text-sm">{summary}</pre>
         <div className="mt-4 flex flex-wrap gap-2.5">
           <button type="button" className="btn-outline" onClick={() => void navigator.clipboard?.writeText(summary)}>
@@ -96,7 +98,7 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
 
   const input = "input";
   return (
-    <form onSubmit={submit} className="rounded-3xl bg-surface p-5 md:p-8" noValidate>
+    <form onSubmit={submit} className="rounded-3xl bg-surface p-5 md:p-8" noValidate data-quote-form>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="block">
           <span className="label">Họ tên *</span>
@@ -174,6 +176,8 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
         <span className="label">Mô tả thêm</span>
         <textarea className={input} rows={3} value={f.note} onChange={up("note")} placeholder={notePlaceholder ?? "VD: 300 hộp quà Tết cho nhân viên, có bình giữ nhiệt + lịch, in logo 1 màu…"} maxLength={500} />
       </label>
+      {/* form chưa nhận file: quy trình bước 1 nhắc "file logo" nên nói rõ gửi logo ở đâu */}
+      {zalo && <p className="mt-2 text-sm text-muted">Có file logo? Gửi form xong, bấm &quot;Nhắn Zalo ngay&quot; để gửi kèm logo.</p>}
       <input className="hidden" tabIndex={-1} autoComplete="off" value={f.website} onChange={up("website")} aria-hidden />
       {err && <p className="mt-3 text-sm text-sale">{err}</p>}
       <div className="mt-5 flex flex-wrap items-center gap-3">

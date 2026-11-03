@@ -46,6 +46,7 @@ export default async function BusinessPage() {
   const bySlug = new Map(catalog.map((c) => [c.slug, c]));
   const zalo = brand.zalo ? `https://zalo.me/${brand.zalo.replace(/\D/g, "")}` : "";
   const clients = settings.b2b.clients;
+  const stats = settings.b2b.stats;
   // ảnh thật sản phẩm từng ngành (đã nhập từ nguồn) cho khối minh hoạ đầu trang
   const photos = hub.industries.flatMap((i) => {
     const c = bySlug.get(i.slug);
@@ -91,15 +92,18 @@ export default async function BusinessPage() {
                   </a>
                 )}
               </div>
-              {/* điều kiện đặt hàng nói rõ ngay đầu trang – khách so sánh với đơn vị khác không cần hỏi; giá trị trước, tên điều kiện sau */}
-              <ul className="mt-12 grid max-w-xl grid-cols-2 gap-x-8 gap-y-7">
-                {(hub.terms.length ? hub.terms.slice(0, 4).map((t) => ({ value: t.value, label: t.label })) : settings.b2b.stats).map((s) => (
-                  <li key={s.label}>
-                    <p className="font-display text-[22px] font-bold leading-tight tracking-[-0.015em] md:text-2xl">{s.value}</p>
-                    <p className="mt-1 text-base leading-snug text-white/70">{s.label}</p>
-                  </li>
-                ))}
-              </ul>
+              {/* điều kiện đặt hàng nói rõ ngay đầu trang – khách so sánh với đơn vị khác không cần hỏi;
+                  tên điều kiện nhỏ trước, giá trị sau để đọc liền thành câu ("Giá" → "Hiện ngay trên web") */}
+              {hub.terms.length > 0 && (
+                <dl className="mt-12 grid max-w-xl grid-cols-2 gap-x-8 gap-y-7">
+                  {hub.terms.slice(0, 4).map((t) => (
+                    <div key={t.label}>
+                      <dt className="text-base leading-snug text-white/70">{t.label}</dt>
+                      <dd className="mt-1 font-display text-[22px] font-bold leading-tight tracking-[-0.015em] md:text-2xl">{t.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
             </div>
             {photos.length >= 4 ? (
               <ul className="grid grid-cols-2 gap-3 md:gap-4" aria-label="Sản phẩm in logo tiêu biểu">
@@ -115,6 +119,17 @@ export default async function BusinessPage() {
               </div>
             )}
           </div>
+          {/* số liệu năng lực – cùng nguồn khối doanh nghiệp trang chủ (CMS → b2b.stats), lý do để tin trước khi để lại SĐT */}
+          {stats.length > 0 && (
+            <ul className="mt-12 grid grid-cols-2 gap-x-8 gap-y-8 border-t border-white/15 pt-10 md:mt-16 lg:grid-cols-4" aria-label="Năng lực YALA">
+              {stats.map((s) => (
+                <li key={s.label}>
+                  <p className="whitespace-nowrap font-display text-[clamp(30px,3.4vw,48px)] font-bold leading-none tracking-[-0.035em] [font-variant-numeric:tabular-nums]">{s.value}</p>
+                  <p className="mt-2 max-w-[15rem] text-base leading-snug text-white/75">{s.label}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
@@ -363,6 +378,17 @@ export default async function BusinessPage() {
             <p className="mt-3 text-base leading-relaxed text-muted">
               Đơn nhỏ có thể đặt ngay trên website. Đơn số lượng lớn, quà tặng nhiều món hoặc cần đóng hộp – để lại thông tin, YALA tư vấn theo ngân sách và gửi mockup miễn phí.
             </p>
+            {/* nhắc lại số liệu năng lực ngay cạnh form – lúc khách quyết định có để lại SĐT hay không */}
+            {stats.length > 0 && (
+              <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 border-y border-line py-5">
+                {stats.map((s) => (
+                  <li key={s.label}>
+                    <p className="font-display text-2xl font-bold leading-none tracking-[-0.02em] [font-variant-numeric:tabular-nums]">{s.value}</p>
+                    <p className="mt-1 text-sm leading-snug text-muted">{s.label}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
             <ul className="mt-5 space-y-2 text-base">
               {brand.hotline && (
                 <li>
