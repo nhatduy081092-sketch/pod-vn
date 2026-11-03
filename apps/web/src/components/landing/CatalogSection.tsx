@@ -18,7 +18,12 @@ export function CatalogSection({ items }: { items: CatalogItem[] }) {
           <li key={c.id} data-reveal="rise" style={{ ["--d" as string]: `${(i % 5) * 60}ms` }}>
             <Link href={`/danh-muc/${c.slug}`} className="group block">
               <div className="aspect-square overflow-hidden rounded-lg bg-surface">
-                {c.image && <img src={assetUrl(c.image)} alt={c.name} loading="lazy" decoding="async" className="h-full w-full object-contain p-[8%] mix-blend-multiply transition duration-500 group-hover:scale-105" />}
+                {c.image ? (
+                  <img src={assetUrl(c.image)} alt={c.name} loading="lazy" decoding="async" className="h-full w-full object-contain p-[8%] mix-blend-multiply transition duration-500 group-hover:scale-105" />
+                ) : (
+                  // chưa có ảnh chụp thật: hiện tên dòng hàng thay vì ảnh minh hoạ
+                  <span className="flex h-full items-end p-[10%] font-display text-[clamp(24px,2.6vw,36px)] font-bold leading-[1.05] tracking-[-0.02em] text-ink/85">{c.name}</span>
+                )}
               </div>
               <p className="mt-3 font-display text-base font-bold leading-tight transition-colors group-hover:text-brand-dark md:text-[17px]">{c.name}</p>
               <p className="mt-0.5 text-[15px] tabular-nums text-ink/70">{c.count.toLocaleString("vi-VN")} sản phẩm</p>

@@ -1,4 +1,5 @@
 import { connection } from "next/server";
+import { isAiImage } from "@pod/shared";
 import { getHome } from "@/lib/api";
 import type { HomeData } from "@/lib/types";
 import { SloganRibbon } from "@/components/landing/SloganRibbon";
@@ -31,7 +32,11 @@ export default async function HomePage() {
     await connection();
     throw e;
   }
-  const { settings, bestSellers, testimonials, b2bProducts = [], catalog = [] } = home;
+  const { settings, testimonials, b2bProducts = [] } = home;
+  // trang chủ chỉ hiện ảnh chụp sản phẩm thật: bỏ ảnh AI / ảnh phôi minh hoạ (/blanks)
+  const bestSellers = home.bestSellers.filter((p) => !isAiImage(p.images[0]));
+  const catalog = (home.catalog ?? []).map((c) => (isAiImage(c.image) ? { ...c, image: "" } : c));
+  const realAfter = !!settings.beforeAfter.after && !isAiImage(settings.beforeAfter.after);
   const zalo = settings.brand.zalo ? `https://zalo.me/${settings.brand.zalo.replace(/\D/g, "")}` : "";
   return (
     <div className="home-flow flex flex-col">
@@ -54,7 +59,8 @@ export default async function HomePage() {
       />
       {/* toàn bộ danh mục merchandise + phôi OEM (ảnh sản phẩm thật) */}
       <CatalogSection items={catalog} />
-      {settings.beforeAfter.enabled && <BeforeAfter data={settings.beforeAfter} blank={settings.media.blanks["tshirt-trang"]} />}
+      {/* khối Trước/Sau chỉ hiện khi CMS có ảnh chụp áo in xong thật (không ghép mockup) */}
+      {settings.beforeAfter.enabled && realAfter && <BeforeAfter data={settings.beforeAfter} blank={settings.media.blanks["tshirt-trang"]} />}
       <Testimonials title={settings.sectionTitles.reviews} items={testimonials} />
       <WhyChoose data={settings.whyChoose} />
       {/* Khu mua lẻ */}
@@ -63,7 +69,7 @@ export default async function HomePage() {
           <h2 className="font-display text-[clamp(30px,4.4vw,64px)] font-bold leading-[1.04] tracking-[-0.03em]">Đặt lẻ cho riêng bạn?</h2>
           <p className="mt-3 max-w-2xl text-base text-ink/80 md:text-lg">Ít hơn 10 sản phẩm vẫn đặt được, tính như mua lẻ: chọn mẫu có sẵn hoặc tự thiết kế.</p>
         </div>
-        {settings.collections.enabled && <CollectionGrid title={settings.collections.title} />}
+        {settings.collections.enabled && <CollectionGrid title={settings.collections.title} plain />}
         <BestSellers title={settings.sectionTitles.bestSellers} items={bestSellers} />
         <RecentlyViewed />
       </div>
