@@ -29,7 +29,9 @@ export async function MerchLanding({ page: m }: { page: MerchPage }) {
   const h1 = fill(m.h1);
   const faq = m.faq.map((f) => ({ q: fill(f.q), a: fill(f.a) }));
   const terms = s.b2bHub.terms.filter((t) => ["Mockup", "Hoá đơn", "Giao hàng"].includes(t.label));
-  const others = MERCH_PAGES.filter((x) => x.slug !== m.slug);
+  // 6 trang gần nhất: cùng dịp tặng trước, rồi đến các trang còn lại (toàn bộ vẫn có trong sitemap và trang danh mục)
+  const rest = MERCH_PAGES.filter((x) => x.slug !== m.slug);
+  const others = [...rest.filter((x) => x.dip === m.dip), ...rest.filter((x) => x.dip !== m.dip)].slice(0, 6);
 
   const jsonLd = [
     {
