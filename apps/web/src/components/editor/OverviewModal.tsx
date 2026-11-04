@@ -13,6 +13,10 @@ type Props = {
   design: DesignJson;
   images: ImageCache;
   garmentColor?: string | null;
+  /** bình, ly chụp thật: logo uốn theo thân trụ */
+  curve?: number;
+  /** Xem kiểu khắc laser (MockupOptions.engrave) */
+  engrave?: boolean;
   colorName?: string;
   /** dữ liệu mẫu cho ô tên/số (xem trước như áo thật) */
   sample?: { name?: string; number?: string };
@@ -44,7 +48,7 @@ function rotateWrap(ad: AreaDesign, widthMm: number, shiftMm: number): AreaDesig
 type View = { id: string; area: PrintArea; assets: MockupAssets; label: string; shift: number };
 
 /** Xem tất cả mặt cùng lúc + tải ảnh ghép / chia sẻ (Zalo, Messenger qua menu chia sẻ của điện thoại) */
-export function OverviewModal({ productName, areas, design, images, garmentColor, colorName, sample, onClose }: Props) {
+export function OverviewModal({ productName, areas, design, images, garmentColor, curve = 0, engrave = false, colorName, sample, onClose }: Props) {
   const [items, setItems] = useState<{ area: PrintArea; assets: MockupAssets }[] | null>(null);
   const [busy, setBusy] = useState("");
   const [msg, setMsg] = useState("");
@@ -88,10 +92,10 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
       const px = 520;
       c.width = px;
       c.height = px;
-      drawMockup(c.getContext("2d")!, px, px, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45, fabric: 0.8 });
+      drawMockup(c.getContext("2d")!, px, px, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45, fabric: 0.8, curve, engrave });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [views, garmentColor]);
+  }, [views, garmentColor, curve, engrave]);
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -121,7 +125,7 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
       const x = (i % cols) * cell;
       const y = head + Math.floor(i / cols) * cell;
       const sub = createCanvas(cell, cell);
-      drawMockup(sub.getContext("2d")!, cell, cell, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: cell * 0.05, garmentColor, shading: 0.45, fabric: 0.8 });
+      drawMockup(sub.getContext("2d")!, cell, cell, v.area, adView(v), v.assets, images, { background: "#ffffff", padding: cell * 0.05, garmentColor, shading: 0.45, fabric: 0.8, curve, engrave });
       ctx.drawImage(sub, x, y);
       ctx.fillStyle = "#1d1d1f";
       ctx.font = `600 24px "Be Vietnam Pro", sans-serif`;
@@ -173,7 +177,7 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/50 sm:items-center sm:p-4" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-labelledby="ov-title" className="flex max-h-[92vh] w-full max-w-4xl flex-col rounded-t-2xl bg-white sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-labelledby="ov-title" className="flex max-h-[92vh] w-full max-w-4xl flex-col rounded-t-2xl bg-white sm:rounded-lg" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 border-b border-ink/10 px-4 py-3">
           <h2 id="ov-title" className="mr-auto font-black">
             Xem tổng thể {colorName ? `· ${colorName}` : ""}
@@ -184,7 +188,7 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
         </div>
         <div className="overflow-y-auto p-4">
           {!items ? (
-            <p className="py-10 text-center text-sm text-ink/60">Đang dựng ảnh xem trước…</p>
+            <p className="py-10 text-center text-sm text-ink/65">Đang dựng ảnh xem trước…</p>
           ) : (
             <ul className={`grid gap-3 ${views.length > 1 ? "grid-cols-2 md:grid-cols-3" : "mx-auto max-w-md grid-cols-1"}`}>
               {views.map((v) => (
@@ -195,7 +199,7 @@ export function OverviewModal({ productName, areas, design, images, garmentColor
               ))}
             </ul>
           )}
-          {sample && (sample.name || sample.number) && <p className="mt-3 text-xs text-ink/60">Ô tên/số đang hiển thị dữ liệu mẫu – khi in sẽ thay bằng tên, số của từng thành viên.</p>}
+          {sample && (sample.name || sample.number) && <p className="mt-3 text-xs text-ink/65">Ô tên/số đang hiển thị dữ liệu mẫu – khi in sẽ thay bằng tên, số của từng người.</p>}
           {msg && <p className="mt-3 rounded bg-amber-50 px-3 py-2 text-sm text-amber-900">{msg}</p>}
         </div>
         <div className="grid grid-cols-2 gap-2 border-t border-ink/10 p-3">

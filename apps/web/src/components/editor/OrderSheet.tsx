@@ -136,7 +136,7 @@ export function OrderSheet({
                 {design.files.map((f) => (
                   <figure key={f.area} className={`shrink-0 snap-center ${design.files.length > 1 ? "w-[78%]" : "w-full"}`}>
                     <img src={assetUrl(f.previewUrl)} alt={`Xem trước ${f.name}`} className="mx-auto aspect-square max-h-[34vh] w-full rounded-xl border border-ink/10 bg-surface object-contain" />
-                    {design.files.length > 1 && <figcaption className="mt-0.5 text-center text-[11px] font-bold text-ink/60">{f.name}</figcaption>}
+                    {design.files.length > 1 && <figcaption className="mt-0.5 text-center text-[12px] font-bold text-ink/65">{f.name}</figcaption>}
                   </figure>
                 ))}
               </div>
@@ -169,7 +169,7 @@ export function OrderSheet({
                             setColor(c);
                             setQty({});
                           }}
-                          className={`flex items-center gap-1 rounded-full border-2 px-2 py-0.5 text-xs font-bold ${color === c ? "border-ink bg-brand" : "border-ink/15"}`}
+                          className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold ${color === c ? "border-ink bg-ink text-white" : "border-ink/15"}`}
                         >
                           {h && /^#[0-9a-f]{6}$/i.test(h) && <span className="h-3.5 w-3.5 rounded-full border border-ink/20" style={{ background: h }} />}
                           {c}
@@ -177,7 +177,7 @@ export function OrderSheet({
                       );
                     })}
                   </div>
-                  {hex && <p className="mt-1 text-[11px] text-ink/55">Ảnh xem trước được tạo với màu đã chọn trong công cụ thiết kế.</p>}
+                  {hex && <p className="mt-1 text-[12px] text-ink/65">Ảnh xem trước được tạo với màu đã chọn trong công cụ thiết kế.</p>}
                 </div>
               )}
 
@@ -187,7 +187,7 @@ export function OrderSheet({
                   {variants.map((v) => (
                     <li key={v.id} className="flex items-center gap-2 px-3 py-1.5 text-sm">
                       <span className="w-24 truncate font-bold">{v.size || "Free size"}</span>
-                      <span className="flex-1 text-xs text-ink/60">
+                      <span className="flex-1 text-xs text-ink/65">
                         {formatVND(unit(v.priceDelta))}
                         {v.priceDelta ? ` (+${formatVND(v.priceDelta)})` : ""}
                       </span>
@@ -234,7 +234,7 @@ export function OrderSheet({
                 )}
               </>
             )}
-            <div className="mt-2 flex justify-center gap-4 text-xs text-ink/60">
+            <div className="mt-2 flex justify-center gap-4 text-xs text-ink/65">
               <button type="button" className="underline" onClick={onClose}>
                 Quay lại chỉnh thiết kế
               </button>

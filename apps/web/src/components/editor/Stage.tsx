@@ -21,6 +21,12 @@ type Props = {
   version: number;
   selectedId: string | null;
   garmentColor?: string | null;
+  /** Bình, ly chụp thật: logo uốn theo thân trụ (MockupOptions.curve) */
+  curve?: number;
+  /** Xem kiểu khắc laser (MockupOptions.engrave) */
+  engrave?: boolean;
+  /** "áo" / "sản phẩm" – nút xem cả */
+  noun?: string;
   /** Size đang xem: hệ số phóng từ vùng in gốc -> DPI thực tế = DPI / dpiScale */
   dpiScale?: number;
   /** Nhãn kích thước in đang hiển thị (theo size) */
@@ -56,7 +62,7 @@ function snapAxis(center: number, halfExtent: number, size: number, tol: number)
   return best ? { v: best.c, guide: best.g } : { v: center, guide: null };
 }
 
-export function Stage({ area, design, assets, images, version, selectedId, garmentColor, dpiScale = 1, sizeLabel, view = "mockup", onSelect, onChangeLayer, onCommit }: Props) {
+export function Stage({ area, design, assets, images, version, selectedId, garmentColor, curve = 0, engrave = false, noun = "áo", dpiScale = 1, sizeLabel, view = "mockup", onSelect, onChangeLayer, onCommit }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const miniRef = useRef<HTMLCanvasElement>(null);
@@ -125,7 +131,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
         const ZH = Math.round(H * z);
         ctx.save();
         ctx.translate(-ox, -oy);
-        const r = drawMockup(ctx, ZW, ZH, area, design, assets, images, { background: "#f4f4f5", padding: Math.min(ZW, ZH) * 0.03, garmentColor, shading: 0.45, fabric });
+        const r = drawMockup(ctx, ZW, ZH, area, design, assets, images, { background: "#f4f4f5", padding: Math.min(ZW, ZH) * 0.03, garmentColor, shading: 0.45, fabric, curve, engrave });
         ctx.restore();
         dev = { ...r.printRect, x: r.printRect.x - ox, y: r.printRect.y - oy };
       }
@@ -160,7 +166,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
     if (view === "flat") return;
     const t = setTimeout(() => paint(0.8), 220);
     return () => clearTimeout(t);
-  }, [size, sizeH, area, design, assets, images, version, garmentColor, view, focus]);
+  }, [size, sizeH, area, design, assets, images, version, garmentColor, curve, engrave, view, focus]);
 
   // ảnh xem trước nhỏ trên sản phẩm khi đang chỉnh bản phẳng
   useEffect(() => {
@@ -173,10 +179,10 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
       c.height = px * dpr;
       const ctx = c.getContext("2d")!;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawMockup(ctx, px, px, area, design, assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45, fabric: 0.8 });
+      drawMockup(ctx, px, px, area, design, assets, images, { background: "#ffffff", padding: px * 0.04, garmentColor, shading: 0.45, fabric: 0.8, curve, engrave });
     }, 120);
     return () => clearTimeout(t);
-  }, [size, sizeH, area, design, assets, images, version, garmentColor, view]);
+  }, [size, sizeH, area, design, assets, images, version, garmentColor, curve, engrave, view]);
 
   const pointMm = useCallback(
     (e: { clientX: number; clientY: number }) => {
@@ -345,7 +351,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
             style={{ left: box.cx - box.w / 2, top: box.cy - box.h / 2, width: box.w, height: box.h, transform: `rotate(${box.rot}deg)` }}
           >
             {locked ? (
-              <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">🔒 Đã khoá</span>
+              <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[12px] font-bold text-white">Đã khoá</span>
             ) : (
               <>
                 {/* nút xoay */}
@@ -377,7 +383,7 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
       </div>
       {dpi !== null && (
         <span
-          className={`pointer-events-none absolute bottom-2 left-2 rounded px-2 py-0.5 text-[11px] font-bold text-white max-lg:bottom-11 ${
+          className={`pointer-events-none absolute bottom-2 left-2 rounded px-2 py-0.5 text-[12px] font-bold text-white max-lg:bottom-11 ${
             { good: "bg-green-600", ok: "bg-amber-500", low: "bg-red-600" }[dpiLevel(dpi, area.dpi)]
           }`}
         >
@@ -396,18 +402,18 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
         <button
           type="button"
           onClick={() => setFocus((f) => !f)}
-          className="absolute left-2 top-2 rounded-full border-2 border-ink/15 bg-white/95 px-2.5 py-0.5 text-[11px] font-bold shadow-sm hover:border-ink"
+          className="absolute left-2 top-2 rounded-full border border-ink/15 bg-white px-2.5 py-0.5 text-[12px] font-semibold hover:border-ink/40"
           aria-pressed={focus}
-          title={focus ? "Xem cả sản phẩm" : "Phóng to vùng in"}
+          title={focus ? `Xem cả ${noun}` : "Phóng to vùng in"}
         >
-          {focus ? "⤢ Cả áo" : "⊕ Cận vùng in"}
+          {focus ? `⤢ Cả ${noun}` : "⊕ Cận vùng in"}
         </button>
       )}
-      <span className="pointer-events-none absolute right-2 top-2 rounded bg-ink/80 px-2 py-0.5 text-[11px] font-semibold text-white">
+      <span className="pointer-events-none absolute right-2 top-2 rounded bg-ink/80 px-2 py-0.5 text-[12px] font-semibold text-white">
         {area.name} · {sizeLabel ?? `${area.widthMm / 10}×${area.heightMm / 10} cm`}
       </span>
       {(area.bleedMm ?? 0) + (area.safeMm ?? 0) > 0 && (
-        <span className="pointer-events-none absolute bottom-2 right-2 flex gap-2 rounded bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-ink/80 max-lg:bottom-auto max-lg:top-9">
+        <span className="pointer-events-none absolute bottom-2 right-2 flex gap-2 rounded bg-white/90 px-2 py-0.5 text-[12px] font-semibold text-ink/80 max-lg:bottom-auto max-lg:top-9">
           {(area.bleedMm ?? 0) > 0 && (
             <span className="flex items-center gap-1">
               <i className="inline-block h-0.5 w-3 bg-[#e11d48]" /> đường xén

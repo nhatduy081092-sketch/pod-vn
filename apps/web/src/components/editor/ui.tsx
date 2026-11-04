@@ -117,7 +117,7 @@ export function ColorPicker({ value, onChange, label, none }: { value: string | 
       {label && <p className="text-xs font-bold text-ink/70">{label}</p>}
       <div className="flex flex-wrap gap-1.5" role="group" aria-label={label ?? "Màu"}>
         {none && (
-          <button type="button" onClick={() => pick(null)} className={`h-7 rounded-full border-2 px-2.5 text-[11px] font-bold ${!value ? "border-ink bg-brand" : "border-ink/20"}`}>
+          <button type="button" onClick={() => pick(null)} className={`h-7 rounded-full border px-2.5 text-[12px] font-bold ${!value ? "border-ink bg-ink text-white" : "border-ink/20"}`}>
             {none}
           </button>
         )}
@@ -125,7 +125,7 @@ export function ColorPicker({ value, onChange, label, none }: { value: string | 
       </div>
       {custom.length > 0 && (
         <div>
-          <p className="flex items-center justify-between text-[11px] font-semibold text-ink/60">
+          <p className="flex items-center justify-between text-[12px] font-semibold text-ink/65">
             Màu của tôi ({custom.length}/{MAX_CUSTOM})
             <button type="button" className="underline" onClick={() => setEditing((v) => !v)}>
               {editing ? "Xong" : "Sửa"}
@@ -137,7 +137,7 @@ export function ColorPicker({ value, onChange, label, none }: { value: string | 
                 c,
                 value?.toLowerCase() === c,
                 () => (editing ? remove(c) : pick(c)),
-                editing ? <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ink text-[9px] text-white">×</span> : null,
+                editing ? <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-ink text-[12px] text-white">×</span> : null,
               ),
             )}
           </div>
@@ -159,11 +159,11 @@ export function ColorPicker({ value, onChange, label, none }: { value: string | 
           aria-label="Mã màu HEX"
         />
         {dropper && (
-          <button type="button" onClick={() => void eyedrop()} className="btn-sm h-8 text-[11px] font-bold" title="Hút màu ở bất kỳ đâu trên màn hình">
-            💧 Hút màu
+          <button type="button" onClick={() => void eyedrop()} className="btn-sm h-8 text-[12px] font-bold" title="Hút màu ở bất kỳ đâu trên màn hình">
+            Hút màu
           </button>
         )}
-        <button type="button" onClick={save} disabled={!value} className="btn-sm h-8 text-[11px] font-bold" title="Lưu vào Màu của tôi">
+        <button type="button" onClick={save} disabled={!value} className="btn-sm h-8 text-[12px] font-bold" title="Lưu vào Màu của tôi">
           + Lưu
         </button>
       </div>

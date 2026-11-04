@@ -68,7 +68,7 @@ export function CropModal({ src, natW, natH, initial, onApply, onClose }: { src:
         <h2 id="crop-title" className="text-lg font-black">
           Cắt ảnh
         </h2>
-        <div className="mt-2 flex flex-wrap gap-1 text-[11px] font-bold">
+        <div className="mt-2 flex flex-wrap gap-1 text-[12px] font-bold">
           {RATIOS.map((x) => (
             <button
               key={x.label}
@@ -77,7 +77,7 @@ export function CropModal({ src, natW, natH, initial, onApply, onClose }: { src:
                 setRatio(x.r);
                 setBox((b) => fitRatio(x.r ? { ...b, x: 0, y: 0, w: 1 } : b, x.r));
               }}
-              className={`rounded-full border-2 px-2.5 py-0.5 ${ratio === x.r ? "border-ink bg-brand" : "border-ink/15"}`}
+              className={`rounded-full border px-2.5 py-0.5 ${ratio === x.r ? "border-ink bg-ink text-white" : "border-ink/15"}`}
             >
               {x.label}
             </button>
@@ -108,7 +108,7 @@ export function CropModal({ src, natW, natH, initial, onApply, onClose }: { src:
             </div>
           </div>
         </div>
-        <p className="mt-2 text-xs text-ink/60">
+        <p className="mt-2 text-xs text-ink/65">
           Giữ lại {pxW}×{pxH} px. Cắt càng nhỏ thì ảnh in càng dễ vỡ.
         </p>
         <div className="mt-3 grid grid-cols-3 gap-2">

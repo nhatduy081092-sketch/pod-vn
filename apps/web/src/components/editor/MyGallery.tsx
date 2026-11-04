@@ -75,7 +75,7 @@ export function MyGallery({ session, refreshKey, onPick, loginHref }: { session:
 
   if (!all.length && logged === false)
     return (
-      <p className="rounded-lg bg-cream px-3 py-2 text-[11px] text-ink/70">
+      <p className="rounded-lg bg-cream px-3 py-2 text-[12px] text-ink/70">
         <Link href={loginHref} className="font-bold underline">
           Đăng nhập
         </Link>{" "}
@@ -93,7 +93,7 @@ export function MyGallery({ session, refreshKey, onPick, loginHref }: { session:
         {logged && (
           <button
             type="button"
-            className="text-[11px] font-bold underline"
+            className="text-[12px] font-bold underline"
             onClick={() => {
               setEditing((v) => !v);
               setSel(null);
@@ -105,9 +105,9 @@ export function MyGallery({ session, refreshKey, onPick, loginHref }: { session:
       </div>
       {all.length > 8 && <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm theo tên, nhãn…" className="w-full rounded-md border border-ink/15 px-2 py-1 text-xs" aria-label="Tìm ảnh" />}
       {labels.length > 0 && (
-        <div className="no-scrollbar flex gap-1 overflow-x-auto text-[10px] font-bold">
+        <div className="no-scrollbar flex gap-1 overflow-x-auto text-[12px] font-bold">
           {["", ...labels].map((l) => (
-            <button key={l || "all"} type="button" onClick={() => setLabel(l)} className={`shrink-0 rounded-full border px-2 py-0.5 ${label === l ? "border-ink bg-brand" : "border-ink/15"}`}>
+            <button key={l || "all"} type="button" onClick={() => setLabel(l)} className={`shrink-0 rounded-full border px-2 py-0.5 ${label === l ? "border-ink bg-ink text-white" : "border-ink/15"}`}>
               {l || "Tất cả"}
             </button>
           ))}
@@ -130,8 +130,8 @@ export function MyGallery({ session, refreshKey, onPick, loginHref }: { session:
       {editing && sel && (
         <EditRow key={sel.url} item={sel} labels={labels} onSave={(p) => void update(sel, p)} onDelete={() => void remove(sel)} />
       )}
-      {editing && !sel && <p className="text-[11px] text-ink/55">Bấm vào ảnh để đổi tên, gắn nhãn hoặc xoá.</p>}
-      {err && <p className="text-[11px] text-red-700">{err}</p>}
+      {editing && !sel && <p className="text-[12px] text-ink/65">Bấm vào ảnh để đổi tên, gắn nhãn hoặc xoá.</p>}
+      {err && <p className="text-[12px] text-red-700">{err}</p>}
     </div>
   );
 }

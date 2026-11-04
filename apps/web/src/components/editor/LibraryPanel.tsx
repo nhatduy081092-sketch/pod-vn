@@ -206,7 +206,7 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
               setTab(t);
               setCat("");
             }}
-            className={`rounded-md px-2 py-1.5 ${tab === t ? "bg-white shadow-sm" : "text-ink/60"}`}
+            className={`rounded-md px-2 py-1.5 ${tab === t ? "bg-white shadow-sm" : "text-ink/65"}`}
           >
             {label}
           </button>
@@ -224,16 +224,16 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
                 setSrc(p.id);
                 setCat("");
               }}
-              className={`rounded-full border-2 px-2.5 py-0.5 text-[11px] font-bold ${activeSrc === p.id ? "border-ink bg-sun" : "border-ink/15"}`}
+              className={`rounded-full border px-2.5 py-0.5 text-[12px] font-bold ${activeSrc === p.id ? "border-ink bg-ink text-white" : "border-ink/15"}`}
             >
               {p.label}
             </button>
           ))}
         </div>
       )}
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tab === "clipart" ? "Tìm: tim, hoa, bánh, mèo, ngôi sao…" : "Tìm: 20/10, cặp đôi, sinh nhật, gym…"} className="w-full rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm focus:border-ink focus:outline-none" aria-label="Tìm trong thư viện" />
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tab === "clipart" ? "Tìm: tim, hoa, bánh, mèo, ngôi sao…" : "Tìm: 20/10, cặp đôi, sinh nhật, gym…"} className="w-full rounded-md border border-ink/15 px-3 py-1.5 text-sm focus:border-ink focus:outline-none" aria-label="Tìm trong thư viện" />
       {cats.length > 10 ? (
-        <select value={cat} onChange={(e) => setCat(e.target.value)} className="w-full rounded-md border-2 border-ink/15 bg-white px-2 py-1.5 text-sm font-semibold focus:border-ink focus:outline-none" aria-label="Chủ đề">
+        <select value={cat} onChange={(e) => setCat(e.target.value)} className="w-full rounded-md border border-ink/15 bg-white px-2 py-1.5 text-sm font-semibold focus:border-ink focus:outline-none" aria-label="Chủ đề">
           <option value="">Tất cả chủ đề ({list.length})</option>
           {cats.map((c) => (
             <option key={c} value={c}>
@@ -244,7 +244,7 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
       ) : cats.length > 1 && (
         <div className="no-scrollbar -mx-1 flex gap-1 overflow-x-auto px-1">
           {["", ...cats].map((c) => (
-            <button key={c || "all"} type="button" onClick={() => setCat(c)} className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${cat === c ? "border-ink bg-ink text-white" : "border-ink/20"}`}>
+            <button key={c || "all"} type="button" onClick={() => setCat(c)} className={`shrink-0 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[12px] font-bold ${cat === c ? "border-ink bg-ink text-white" : "border-ink/20"}`}>
               {c || "Tất cả"}
             </button>
           ))}
@@ -259,7 +259,7 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
               role="radio"
               aria-checked={shape === s}
               onClick={() => setShape(s)}
-              className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold ${shape === s ? "border-ink bg-brand" : "border-ink/15"}`}
+              className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[12px] font-bold ${shape === s ? "border-ink bg-ink text-white" : "border-ink/15"}`}
             >
               {s && <ShapeIcon s={s} />}
               {s ? ASSET_SHAPE_LABEL[s] : "Mọi dáng"}
@@ -268,9 +268,9 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
         </div>
       )}
       {(!data && tab === "clipart") || (tab === "clipart" && activeSrc && !pack) ? (
-        <p className="text-xs text-ink/60">Đang tải…</p>
+        <p className="text-xs text-ink/65">Đang tải…</p>
       ) : !shown.length ? (
-        <p className="text-xs text-ink/60">{tab === "clipart" && !list.length ? "Thư viện hình đang được cập nhật. Bạn có thể tải ảnh của mình ở mục Tải ảnh." : "Không có kết quả phù hợp."}</p>
+        <p className="text-xs text-ink/65">{tab === "clipart" && !list.length ? "Thư viện hình đang được cập nhật. Bạn có thể tải ảnh của mình ở mục Tải ảnh." : "Không có kết quả phù hợp."}</p>
       ) : (
         <ul className="grid grid-cols-3 gap-1.5 pr-0.5 sm:grid-cols-4 lg:max-h-[52vh] lg:grid-cols-3 lg:overflow-y-auto">
           {shown.slice(0, limit).map((x) => (
@@ -282,7 +282,7 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
                 className="block w-full overflow-hidden rounded-md border border-ink/15 bg-[#f4f4f5] text-left hover:border-ink"
               >
                 {x.image ? <img src={assetUrl(x.image)} alt="" loading="lazy" className="aspect-square w-full object-contain" /> : <PresetThumb data={(x as (typeof templates)[number]).data} />}
-                <span className="block truncate bg-white px-1 py-0.5 text-[10px] font-semibold">{x.name}</span>
+                <span className="block truncate bg-white px-1 py-0.5 text-[12px] font-semibold">{x.name}</span>
               </button>
             </li>
           ))}
@@ -293,7 +293,7 @@ export function LibraryPanel({ onTemplate, onClipart, garmentDark = false }: Pro
           Xem thêm ({shown.length - limit})
         </button>
       )}
-      <p className="text-[11px] text-ink/55">
+      <p className="text-[12px] text-ink/65">
         Bấm để thêm vào mặt đang chọn, sau đó sửa chữ, màu, vị trí tuỳ ý.
         {tab === "clipart" && activeSrc && " Bộ hình mã nguồn mở (MIT) – dùng in thương mại được."}
       </p>

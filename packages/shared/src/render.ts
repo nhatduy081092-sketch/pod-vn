@@ -470,6 +470,13 @@ export type MockupOptions = {
    * nên áo đen cũng ra nếp rõ như áo trắng. Áp được thì bỏ qua `shading`; ảnh khác domain (canvas bẩn) thì dùng `shading`.
    */
   fabric?: number;
+  /**
+   * 0–1: sin nửa góc cung thân trụ mà vùng in phủ (bình, ly chụp thật, vùng in không cuộn quanh thân) –
+   * logo ép dần về 2 mép + sáng giữa/tối mép. Bỏ qua vân vải (ảnh inox, sứ có phản chiếu sẽ làm logo méo).
+   */
+  curve?: number;
+  /** Xem kiểu khắc laser: thiết kế thành 1 màu kim loại (lộ lớp inox dưới sơn), không đổ bóng theo ảnh */
+  engrave?: boolean;
 };
 
 /**
@@ -479,6 +486,9 @@ export type MockupOptions = {
 export function drawMockup(ctx: Ctx, canvasW: number, canvasH: number, area: AreaGeom, design: AreaDesign, assets: MockupAssets, images: ImageCache, opts: MockupOptions = {}) {
   const pad = opts.padding ?? 0;
   ctx.save();
+  // phóng/thu ảnh chụp: nội suy chất lượng cao (mặc định của trình duyệt là "low", ảnh nhoè khi phóng to)
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   if (opts.background) {
     ctx.fillStyle = opts.background;
     ctx.fillRect(0, 0, canvasW, canvasH);
@@ -510,27 +520,54 @@ export function drawMockup(ctx: Ctx, canvasW: number, canvasH: number, area: Are
   // thiết kế vẽ lên canvas phụ để áp mask mà không ảnh hưởng ảnh sản phẩm
   const off = createCanvas(canvasW, canvasH);
   const octx = off.getContext("2d")!;
+  octx.imageSmoothingQuality = "high";
   if (assets.mask) {
     // In toàn thân: phần vải chưa có thiết kế là vải trơn (màu đã chọn hoặc trắng), không phải hoa văn của ảnh mẫu
     octx.fillStyle = opts.garmentColor || "#ffffff";
     octx.fillRect(mock.x, mock.y, mock.w, mock.h);
   }
-  if (area.warp === "cylinder") drawCylinder(octx, area, design, mock, images);
-  else {
+  const curve = area.warp ? 0 : Math.min(0.95, Math.max(0, opts.curve ?? 0));
+  // ảnh chụp thật: đo thân bình/ly trên ảnh -> cong đúng theo bề rộng thân và vị trí logo; đo không được thì cong đều ±curve
+  const span: [number, number] | null = curve > 0 ? ((assets.mockupIsPhoto && assets.mockup && bodySpan(assets.mockup, area, pr, mock)) || [-curve, curve]) : null;
+  let light: { x: number; y: number; w: number; h: number; edge: [number, number]; wrap?: boolean } | null = null;
+  if (area.warp === "cylinder") {
+    const z = drawCylinder(octx, area, design, mock, images);
+    if (z) light = { ...z, edge: [0.32, 0.36], wrap: true };
+  } else if (span) {
+    drawCurvedPatch(octx, area, design, pr, span, images);
+    light = { ...pr, edge: [0.3 * Math.abs(span[0]), 0.36 * Math.abs(span[1])] };
+  } else {
     octx.translate(pr.x, pr.y);
     drawArea(octx, design, area.widthMm, area.heightMm, pr.k, images);
   }
   octx.setTransform(1, 0, 0, 1, 0, 0);
+  const engrave = !!opts.engrave && !assets.mask;
+  if (engrave) {
+    // khắc laser: giữ hình dạng nét (alpha), đổi hết sang màu inox xước ngang
+    const r = light ?? pr;
+    octx.save();
+    octx.globalCompositeOperation = "source-atop";
+    const g = octx.createLinearGradient(r.x, r.y, r.x + r.w, r.y + r.h * 0.35);
+    g.addColorStop(0, "#9aa0a6");
+    g.addColorStop(0.38, "#dfe2e5");
+    g.addColorStop(0.5, "#f3f4f5");
+    g.addColorStop(0.64, "#cfd3d7");
+    g.addColorStop(1, "#949aa0");
+    octx.fillStyle = g;
+    octx.fillRect(r.x, r.y, r.w, r.h);
+    octx.restore();
+  }
+  if (light) shadeCylinder(octx, light, light.edge, light.wrap);
   if (assets.mask) {
     octx.globalCompositeOperation = "destination-in";
     octx.drawImage(assets.mask, mock.x, mock.y, mock.w, mock.h);
     octx.globalCompositeOperation = "source-over";
   }
-  const fabricDone = !!opts.fabric && !!assets.mockup && !!assets.mockupIsPhoto && applyFabric(off, assets.mockup, mock, pr, opts.fabric);
+  const fabricDone = !curve && !engrave && !!opts.fabric && !!assets.mockup && !!assets.mockupIsPhoto && applyFabric(off, assets.mockup, mock, pr, opts.fabric);
   ctx.drawImage(off, 0, 0);
 
   // nếp vải: lấy độ sáng tối của ảnh chụp, nhân lên phần có thiết kế
-  const shading = fabricDone ? 0 : (opts.shading ?? 0);
+  const shading = fabricDone || engrave ? 0 : (opts.shading ?? 0);
   if (shading > 0 && assets.mockup && assets.mockupIsPhoto) {
     const s = createCanvas(canvasW, canvasH);
     const sctx = s.getContext("2d")!;
@@ -650,7 +687,7 @@ function applyFabric(off: Canvas, photo: Img, mock: { x: number; y: number; w: n
  * Cốc / bình: vùng in là dải cuộn quanh thân (chu vi × chiều cao).
  * Khung vùng in trên ảnh = mặt nhìn thấy (nửa vòng) -> hiện phần giữa dải in, co dần về 2 mép như mặt trụ thật.
  */
-function drawCylinder(ctx: Ctx, area: AreaGeom, design: AreaDesign, mock: { x: number; y: number; w: number; h: number }, images: ImageCache) {
+function drawCylinder(ctx: Ctx, area: AreaGeom, design: AreaDesign, mock: { x: number; y: number; w: number; h: number }, images: ImageCache): { x: number; y: number; w: number; h: number } | null {
   const zx = mock.x + area.zoneX * mock.w;
   const zy = mock.y + area.zoneY * mock.h;
   const zw = Math.max(1, area.zoneW * mock.w);
@@ -658,7 +695,7 @@ function drawCylinder(ctx: Ctx, area: AreaGeom, design: AreaDesign, mock: { x: n
   const k = zh / area.heightMm; // px/mm theo chiều cao
   const flat = createCanvas(area.widthMm * k, zh);
   const fctx = flat.getContext("2d");
-  if (!fctx) return;
+  if (!fctx) return null;
   drawArea(fctx, design, area.widthMm, area.heightMm, k, images);
   const W = flat.width;
   const cols = Math.ceil(zw);
@@ -671,18 +708,125 @@ function drawCylinder(ctx: Ctx, area: AreaGeom, design: AreaDesign, mock: { x: n
     const s1 = srcX(i + 1);
     ctx.drawImage(flat, s0, 0, Math.max(0.5, s1 - s0), flat.height, zx + (i * zw) / cols, zy, zw / cols + 0.5, zh);
   }
-  // bóng mặt trụ: tối dần về 2 mép
+  flat.width = flat.height = 0;
+  return { x: zx, y: zy, w: zw, h: zh };
+}
+
+/** Ánh sáng mặt trụ (chỉ trên phần đã có thiết kế): vệt sáng lệch trái giữa thân, tối dần về 2 mép */
+function shadeCylinder(ctx: Ctx, r: { x: number; y: number; w: number; h: number }, edge: [number, number], wrap = false) {
   ctx.save();
   ctx.globalCompositeOperation = "source-atop";
-  const g = ctx.createLinearGradient(zx, 0, zx + zw, 0);
-  g.addColorStop(0, "rgba(0,0,0,.32)");
-  g.addColorStop(0.18, "rgba(0,0,0,.06)");
-  g.addColorStop(0.4, "rgba(255,255,255,.06)");
-  g.addColorStop(0.82, "rgba(0,0,0,.06)");
-  g.addColorStop(1, "rgba(0,0,0,.36)");
+  const g = ctx.createLinearGradient(r.x, 0, r.x + r.w, 0);
+  g.addColorStop(0, `rgba(0,0,0,${edge[0].toFixed(3)})`);
+  if (wrap) {
+    // dải in quấn quanh cốc (giữ như cũ)
+    g.addColorStop(0.18, "rgba(0,0,0,.06)");
+    g.addColorStop(0.4, "rgba(255,255,255,.06)");
+    g.addColorStop(0.82, "rgba(0,0,0,.06)");
+  } else {
+    g.addColorStop(0.28, "rgba(0,0,0,0)");
+    g.addColorStop(0.42, "rgba(255,255,255,.12)");
+    g.addColorStop(0.58, "rgba(255,255,255,0)");
+  }
+  g.addColorStop(1, `rgba(0,0,0,${edge[1].toFixed(3)})`);
   ctx.fillStyle = g;
-  ctx.fillRect(zx, zy, zw, zh);
+  ctx.fillRect(r.x, r.y, r.w, r.h);
   ctx.restore();
+}
+
+const bodyCache = new WeakMap<object, Map<string, { c: number; r: number } | null>>();
+
+/**
+ * Đo thân bình/ly trên ảnh chụp ở mấy hàng ngang qua vùng in: đi từ giữa vùng in ra 2 bên tới khi gặp màu nền
+ * (lấy ở 4 góc ảnh) -> tâm + bán kính thân (tỉ lệ bề rộng ảnh). Trả vị trí 2 mép vùng in trên thân, -1…1
+ * (sin góc nhìn). null nếu nền không đồng màu, thân trùng màu nền, ảnh khác domain… -> bên gọi cong mặc định.
+ */
+function bodySpan(photo: Img, area: AreaGeom, pr: { x: number; w: number }, mock: { x: number; w: number }): [number, number] | null {
+  const key = `${area.zoneX},${area.zoneY},${area.zoneW},${area.zoneH}`;
+  let byZone = bodyCache.get(photo);
+  if (!byZone) bodyCache.set(photo, (byZone = new Map()));
+  if (!byZone.has(key)) byZone.set(key, measureBody(photo, area));
+  const body = byZone.get(key);
+  if (!body) return null;
+  const t0 = ((pr.x - mock.x) / mock.w - body.c) / body.r;
+  const t1 = ((pr.x + pr.w - mock.x) / mock.w - body.c) / body.r;
+  // vùng in tràn ra ngoài thân đo được -> đo sai (ảnh nhiều sản phẩm, bóng đổ…)
+  if (t0 < -1.05 || t1 > 1.05) return null;
+  const lo = Math.max(-0.95, t0);
+  const hi = Math.min(0.95, t1);
+  // gần như phẳng (thân rất to so với logo) vẫn cong tối thiểu cho thấy là mặt trụ
+  const mid = (lo + hi) / 2;
+  const half = Math.max(0.2, (hi - lo) / 2);
+  return [Math.max(-0.95, mid - half), Math.min(0.95, mid + half)];
+}
+
+function measureBody(photo: Img, area: AreaGeom): { c: number; r: number } | null {
+  const ms = imgSize(photo);
+  const w = Math.max(1, Math.min(600, Math.round(ms.w)));
+  const h = Math.max(1, Math.round((ms.h * w) / ms.w));
+  const cv = createCanvas(w, h);
+  const cx = cv.getContext("2d", { willReadFrequently: true });
+  if (!cx) return null;
+  let d: Uint8ClampedArray;
+  try {
+    cx.drawImage(photo, 0, 0, w, h);
+    d = cx.getImageData(0, 0, w, h).data;
+  } catch {
+    return null;
+  } finally {
+    cv.width = cv.height = 0;
+  }
+  const at = (x: number, y: number) => (y * w + x) * 4;
+  // nền: trung bình 4 góc, 4 góc phải gần nhau (nền trơn)
+  const corners = [at(1, 1), at(w - 2, 1), at(1, h - 2), at(w - 2, h - 2)];
+  const bg = [0, 1, 2].map((c) => corners.reduce((sum, i) => sum + d[i + c]!, 0) / 4);
+  const dist = (i: number) => Math.hypot(d[i]! - bg[0]!, d[i + 1]! - bg[1]!, d[i + 2]! - bg[2]!);
+  if (corners.some((i) => dist(i) > 30)) return null;
+  const run = Math.max(3, Math.round(w * 0.012));
+  const x0 = Math.min(w - 1, Math.max(0, Math.round((area.zoneX + area.zoneW / 2) * w)));
+  const edge = (y: number, dir: 1 | -1) => {
+    let n = 0;
+    for (let x = x0; x >= 0 && x < w; x += dir) {
+      n = dist(at(x, y)) < 22 ? n + 1 : 0;
+      if (n >= run) return x - dir * (run - 1);
+    }
+    return null;
+  };
+  const rows: { c: number; r: number }[] = [];
+  for (const f of [-0.3, -0.15, 0, 0.15, 0.3]) {
+    const y = Math.min(h - 1, Math.max(0, Math.round((area.zoneY + area.zoneH * (0.5 + f)) * h)));
+    if (dist(at(x0, y)) < 22) continue;
+    const l = edge(y, -1);
+    const r = edge(y, 1);
+    if (l === null || r === null) continue;
+    rows.push({ c: (l + r) / 2 / w, r: (r - l) / 2 / w });
+  }
+  if (rows.length < 3) return null;
+  rows.sort((a, b) => a.r - b.r);
+  return rows[rows.length >> 1]!;
+}
+
+/**
+ * Logo trên mặt trước thân trụ (ảnh chụp bình/ly): cột màn hình ở vị trí t (sin góc nhìn, -1…1 từ mép trái tới mép phải thân)
+ * thấy điểm trên thân ở góc asin(t), nên phần sát mép thân bị ép lại như mặt cong quay đi. span = t của 2 mép vùng in.
+ * Giữ nguyên khung vùng in -> kéo/thả trong Studio vẫn khớp.
+ */
+function drawCurvedPatch(ctx: Ctx, area: AreaGeom, design: AreaDesign, pr: { x: number; y: number; w: number; h: number; k: number }, span: [number, number], images: ImageCache) {
+  const flat = createCanvas(Math.max(1, Math.round(pr.w)), Math.max(1, Math.round(pr.h)));
+  const fctx = flat.getContext("2d");
+  if (!fctx) return;
+  drawArea(fctx, design, area.widthMm, area.heightMm, pr.k, images);
+  const W = flat.width;
+  const [t0, t1] = span;
+  const a0 = Math.asin(t0);
+  const da = Math.asin(t1) - a0 || 1;
+  const cols = Math.max(1, Math.ceil(pr.w));
+  const srcX = (i: number) => ((Math.asin(t0 + (i / cols) * (t1 - t0)) - a0) / da) * W;
+  for (let i = 0; i < cols; i++) {
+    const s0 = srcX(i);
+    const s1 = srcX(i + 1);
+    ctx.drawImage(flat, s0, 0, Math.max(0.5, s1 - s0), flat.height, pr.x + (i * pr.w) / cols, pr.y, pr.w / cols + 0.5, pr.h);
+  }
   flat.width = flat.height = 0;
 }
 

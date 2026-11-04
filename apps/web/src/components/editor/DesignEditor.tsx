@@ -18,6 +18,7 @@ import {
   sizeScale,
   UPLOAD_MAX_BYTES,
   UPLOAD_MAX_SIDE_PX,
+  surfaceOfProduct,
   usedAreas,
   type AreaDesign,
   type DesignAssetView,
@@ -213,6 +214,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const [switcher, setSwitcher] = useState(false);
   /** Cách xem khung chỉnh: mặc định bản phẳng với cốc/bình (mặt cong), còn lại trên ảnh sản phẩm */
   const [viewPref, setViewPref] = useState<Record<string, "flat" | "mockup" | "model">>({});
+  const [engraveOn, setEngraveOn] = useState(false);
   const [orderOut, setOrderOut] = useState<import("@pod/shared").OrderDesign | null>(null);
   const images = useRef<ImageCache>(new Map()).current;
   const [assets, setAssets] = useState<Record<string, MockupAssets>>({});
@@ -227,6 +229,12 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   // mặt cong (cốc/bình) luôn chỉnh trên bản phẳng trải dài, ảnh nhỏ góc khung hiện dáng cong
   // người mẫu: chỉ mặt in đầu tiên (ngực áo / mặt túi), sản phẩm đoán được dáng và đã có ảnh trong CMS
   const model = area.key === areas[0]?.key && !area.warp ? pickModel(models, garmentOfProduct(product), !!color?.hex && luminance(color.hex) < 0.35) : null;
+  // bình, ly chụp thật: logo uốn theo thân trụ (~37° mỗi bên); đồ không phải áo gọi là "sản phẩm"
+  const surface = surfaceOfProduct(product);
+  const curve = surface.curved ? 0.6 : 0;
+  // bình inox, bút kim loại…: xem logo kiểu khắc laser (chỉ để xem – file in không đổi)
+  const canEngrave = !surface.garment && /khắc/i.test(`${product.printMethod ?? ""} ${areas.map((a) => a.tips ?? "").join(" ")}`);
+  const showEngrave = canEngrave && engraveOn;
   const pref = viewPref[area.key] ?? "mockup";
   const view = area.warp ? "flat" : pref === "model" && !model ? "mockup" : pref;
   const dpiScale = sizeScale(area, sized);
@@ -478,7 +486,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     setNotice(
       photos.length < c.cells.length
         ? `Đã ghép ${photos.length}/${c.cells.length} ảnh – ô còn lại dùng tạm ảnh đầu: bấm vào ô đó → “Thay ảnh”.`
-        : "✓ Đã ghép ảnh. Bấm vào chữ để sửa tên/ngày, bấm ảnh → “Cắt ảnh” để chỉnh khuôn mặt.",
+        : "Đã ghép ảnh. Bấm vào chữ để sửa tên/ngày, bấm ảnh → “Cắt ảnh” để chỉnh khuôn mặt.",
     );
     void ensureFonts(ls).then(() => {
       const ids = new Set(ls.map((l) => l.id));
@@ -519,7 +527,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       const src = await uploadBlob(out.blob, `tranh-${style}.png`, "design");
       images.set(src, await loadImage(src));
       patchLayer(l.id, { src, natW: out.w, natH: out.h, origSrc: l.origSrc ?? l.src } as Partial<DesignLayer>, true);
-      setNotice("✓ Đã biến ảnh thành tranh. Bấm “Ảnh gốc” để trả lại.");
+      setNotice("Đã biến ảnh thành tranh. Bấm “Ảnh gốc” để trả lại.");
     } catch (e) {
       setError(`Không xử lý được ảnh: ${(e as Error).message}`);
     } finally {
@@ -678,7 +686,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       const src = await uploadBlob(blob, "xoa-nen.png", "design");
       images.set(src, await loadImage(src));
       patchLayer(l.id, { src, origSrc: l.src } as Partial<DesignLayer>, true);
-      setNotice("✓ Đã xoá nền. Bấm “Ảnh gốc” nếu muốn trả lại.");
+      setNotice("Đã xoá nền. Bấm “Ảnh gốc” nếu muốn trả lại.");
     } catch (e) {
       setError(`Không xoá được nền: ${(e as Error).message}`);
     } finally {
@@ -718,7 +726,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     };
     updateArea((a) => ({ ...a, layers: [...a.layers.filter((l) => l.type === "image" && l.tile), ...body.map((l) => place(l, W / 4)), ...body.map((l) => place(l, (3 * W) / 4))] }));
     setSelectedId(null);
-    setNotice("✓ Đã in 2 bên – cầm tay trái hay tay phải đều thấy. Bấm “Xem” để xoay thử.");
+    setNotice("Đã in 2 bên – cầm tay trái hay tay phải đều thấy. Bấm “Xem” để xoay thử.");
   }
 
   /** Đổi màu áo: chữ nào gần trùng màu áo mới -> mời đổi màu chữ 1 chạm */
@@ -740,7 +748,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     }
     apply(next, true);
     setContrastFix(0);
-    setNotice("✓ Đã đổi màu chữ cho dễ đọc trên nền mới.");
+    setNotice("Đã đổi màu chữ cho dễ đọc trên nền mới.");
   }
 
   /** Kiểm tra theo size đang chọn (vùng in theo size + nội dung đã co giãn) */
@@ -749,7 +757,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     const rep = designReport({ areas: scaled }, areas.map((a) => areaForSize(a, size)));
     for (const a of areas)
       for (const l of design.areas[a.key]?.layers ?? [])
-        if (l.type === "text" && lowContrast(l, a.key)) rep.push({ area: a.key, areaName: a.name, level: "warn", message: `Chữ "${l.text.slice(0, 20)}" gần trùng màu ${design.areas[a.key]?.bg ? "nền" : "áo"} – in ra khó đọc` });
+        if (l.type === "text" && lowContrast(l, a.key)) rep.push({ area: a.key, areaName: a.name, level: "warn", message: `Chữ "${l.text.slice(0, 20)}" gần trùng màu ${design.areas[a.key]?.bg ? "nền" : surface.noun} – in ra khó đọc` });
     return rep;
   }
 
@@ -860,7 +868,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       const a = areas.find((x) => x.key === first);
       if (a) {
         await ensureFonts(design.areas[a.key]!.layers);
-        const blob = await renderPreview(a, design.areas[a.key]!, images, assets[a.key] ?? (await loadAreaAssets(a)), 600, { garmentColor: color?.hex });
+        const blob = await renderPreview(a, design.areas[a.key]!, images, assets[a.key] ?? (await loadAreaAssets(a)), 600, { garmentColor: color?.hex, curve });
         previewUrl = await uploadBlob(blob, "saved-preview.jpg", "design");
       }
       const body = JSON.stringify({ productId: product.id, name, json: design, previewUrl });
@@ -868,7 +876,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       const data = (await res.json().catch(() => ({}))) as { error?: string; id?: string };
       if (!res.ok) throw new Error(data.error ?? "Lưu thất bại");
       setSaveDlg(null);
-      setNotice("✓ Đã lưu vào Tài khoản → Thiết kế của tôi");
+      setNotice("Đã lưu vào Tài khoản → Thiết kế của tôi");
       if (!savedId && data.id) router.replace(`?saved=${data.id}`);
     } catch (e) {
       setError((e as Error).message);
@@ -882,7 +890,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
   /* ---------- giao diện ---------- */
   const agreeBox = (
-                <div className="rounded-lg border-2 border-ink/15 bg-white p-3 text-xs leading-relaxed">
+                <div className="rounded-lg border border-ink/15 bg-white p-3 text-xs leading-relaxed">
                   <p className="font-bold">Cam kết khi tải ảnh lên</p>
                   <p className="mt-1 text-ink/75">
                     Tôi có quyền sử dụng hình ảnh, chữ, logo tải lên; không vi phạm bản quyền, nhãn hiệu, hình ảnh cá nhân của người khác và không chứa nội dung trái pháp luật. Đơn vi phạm sẽ bị từ chối in.
@@ -910,7 +918,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     <button
       type="button"
       onClick={onClick ?? (() => setTool(t))}
-      className={`flex min-w-[54px] flex-1 flex-col items-center gap-1 rounded-xl border-2 px-1 py-1.5 text-[11px] font-bold transition lg:flex-none lg:py-2 ${tool === t ? "border-ink bg-sun text-ink shadow-sticker-sm" : "border-transparent text-ink/70 hover:bg-surface"}`}
+      className={`flex min-w-[54px] flex-1 flex-col items-center gap-1 whitespace-nowrap rounded-lg px-0.5 py-1.5 text-[12px] font-semibold transition-colors lg:flex-none lg:py-2.5 ${tool === t ? "bg-ink/[0.08] text-ink" : "text-ink/70 hover:bg-surface hover:text-ink"}`}
       aria-pressed={tool === t}
     >
       <Icon className="h-5 w-5" />
@@ -931,7 +939,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     try {
       setBusy("Đang tạo ảnh xem trước…");
       await ensureFonts(ad.layers);
-      const blob = await renderPreview(area, ad, images, assets[area.key] ?? (await loadAreaAssets(area)), 1080, { garmentColor: color?.hex });
+      const blob = await renderPreview(area, ad, images, assets[area.key] ?? (await loadAreaAssets(area)), 1080, { garmentColor: color?.hex, curve, engrave: showEngrave });
       const file = new File([blob], `yala-thiet-ke-${product.slug}.jpg`, { type: "image/jpeg" });
       const text = `Thiết kế ${product.name} của mình trên YALA Studio`;
       const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
@@ -944,7 +952,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         a.download = file.name;
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 5000);
-        setNotice("✓ Đã tải ảnh xem trước – gửi cho bạn bè qua Zalo, Facebook…");
+        setNotice("Đã tải ảnh xem trước – gửi cho bạn bè qua Zalo, Facebook…");
       }
     } catch (e) {
       if ((e as Error).name !== "AbortError") setError((e as Error).message || "Không tạo được ảnh xem trước");
@@ -972,42 +980,42 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     <div ref={rootRef} className="min-h-screen bg-surface lg:pb-8 max-lg:flex max-lg:h-[100svh] max-lg:min-h-0 max-lg:flex-col max-lg:overflow-hidden">
       <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />
       {/* Thanh trên */}
-      <div ref={headRef} className="sticky top-0 z-30 border-b-2 border-ink bg-white max-lg:flex-none">
+      <div ref={headRef} className="sticky top-0 z-30 border-b border-ink/10 bg-white max-lg:flex-none">
         <div className="mx-auto flex h-14 max-w-[1320px] items-center gap-1.5 px-3 md:px-5">
-          <Link href={returnTo} className="rounded-md p-1.5 hover:bg-cream" aria-label="Quay lại">
+          <Link href={returnTo} className="rounded-md p-1.5 hover:bg-surface" aria-label="Quay lại">
             <IconClose className="h-5 w-5" />
           </Link>
           <div className="min-w-0 flex-1">
-            <button type="button" onClick={() => setSwitcher(true)} className="flex max-w-full items-center gap-1 text-left" title="Đổi sản phẩm">
-              <span className="truncate font-display text-[15px] font-extrabold md:text-lg">{product.name}</span>
-              <span className="shrink-0 rounded border border-ink/20 px-1 text-[10px] font-bold text-ink/60">Đổi ▾</span>
+            <button type="button" onClick={() => setSwitcher(true)} className="flex max-w-full items-center gap-1.5 text-left" title="Đổi sản phẩm">
+              <h1 className="truncate font-display text-[15px] font-bold tracking-[-0.01em] md:text-lg">{product.name}</h1>
+              <span className="shrink-0 rounded bg-surface px-1.5 py-0.5 text-[12px] font-semibold text-ink/70"><span className="max-sm:hidden">Đổi </span>▾</span>
             </button>
-            <p className="text-[11px] text-ink/60 max-sm:hidden">{mode === "seller" ? "Thiết kế mẫu seller" : "YALA Studio"} · tự lưu nháp</p>
+            <p className="text-[12px] text-ink/65 max-sm:hidden">{mode === "seller" ? "Thiết kế mẫu seller" : "YALA Studio"} · tự lưu nháp</p>
           </div>
-          <button type="button" onClick={undo} disabled={!past.length} className="rounded-md p-2 disabled:opacity-30 hover:bg-cream" aria-label="Hoàn tác">
+          <button type="button" onClick={undo} disabled={!past.length} className="rounded-md p-2 disabled:opacity-30 hover:bg-surface" aria-label="Hoàn tác">
             <IconUndo className="h-5 w-5" />
           </button>
-          <button type="button" onClick={redo} disabled={!future.length} className="rounded-md p-2 disabled:opacity-30 hover:bg-cream" aria-label="Làm lại">
+          <button type="button" onClick={redo} disabled={!future.length} className="rounded-md p-2 disabled:opacity-30 hover:bg-surface" aria-label="Làm lại">
             <IconRedo className="h-5 w-5" />
           </button>
-          <button type="button" onClick={() => setShowKeys(true)} className="hidden rounded-md p-2 text-sm font-bold hover:bg-cream lg:block" aria-label="Phím tắt" title="Phím tắt (?)">
+          <button type="button" onClick={() => setShowKeys(true)} className="hidden rounded-md p-2 text-sm font-bold hover:bg-surface lg:block" aria-label="Phím tắt" title="Phím tắt (?)">
             ⌨
           </button>
-          <button type="button" onClick={toggleFullscreen} className="hidden rounded-md p-2 text-sm font-bold hover:bg-cream md:block" aria-label={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
+          <button type="button" onClick={toggleFullscreen} className="hidden rounded-md p-2 text-sm font-bold hover:bg-surface md:block" aria-label={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"} title={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
             {fullscreen ? "⤡" : "⤢"}
           </button>
-          <button type="button" onClick={() => void shareSnapshot()} disabled={!!busy} className="flex items-center gap-1 rounded-md p-2 text-sm font-bold hover:bg-cream max-sm:hidden md:border-2 md:border-ink/15 md:px-3 md:py-1.5" aria-label="Chia sẻ ảnh thiết kế" title="Tải / chia sẻ ảnh xem trước">
+          <button type="button" onClick={() => void shareSnapshot()} disabled={!!busy} className="flex items-center gap-1 rounded-md p-2 text-sm font-semibold hover:bg-surface max-sm:hidden md:h-9 md:border md:border-ink/15 md:px-3 md:py-0" aria-label="Chia sẻ ảnh thiết kế" title="Tải / chia sẻ ảnh xem trước">
             <IconShare className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Chia sẻ</span>
           </button>
-          <button type="button" onClick={() => setOverview(true)} className="flex items-center gap-1 rounded-md p-2 text-sm font-bold hover:bg-cream md:border-2 md:border-ink/15 md:px-3 md:py-1.5" aria-label="Xem tổng thể">
+          <button type="button" onClick={() => setOverview(true)} className="flex items-center gap-1 rounded-md p-2 text-sm font-semibold hover:bg-surface md:h-9 md:border md:border-ink/15 md:px-3 md:py-0" aria-label="Xem tổng thể">
             <IconEye className="h-5 w-5 md:h-4 md:w-4" /> <span className="hidden md:inline">Xem</span>
           </button>
           {mode === "customer" && (
-            <button type="button" onClick={() => setSaveDlg({ name: savedName || product.name })} className="hidden items-center gap-1 rounded-md border-2 border-ink/15 px-3 py-1.5 text-sm font-bold hover:border-ink sm:flex">
+            <button type="button" onClick={() => setSaveDlg({ name: savedName || product.name })} className="hidden h-9 items-center gap-1 rounded-md border border-ink/15 px-3 text-sm font-semibold hover:bg-surface sm:flex">
               <IconSave className="h-4 w-4" /> Lưu
             </button>
           )}
-          <button type="button" onClick={() => finish()} disabled={!!busy} className="btn-primary ml-0.5 shrink-0 px-3 py-1.5 text-[13px] disabled:opacity-60 lg:px-5 lg:py-2 lg:text-sm">
+          <button type="button" onClick={() => finish()} disabled={!!busy} className="btn-primary ml-0.5 h-9 shrink-0 px-3 py-0 text-[13px] disabled:opacity-60 lg:px-5 lg:text-sm">
             Hoàn tất
           </button>
         </div>
@@ -1024,9 +1032,9 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                     setAreaKey(a.key);
                     setSelectedId(null);
                   }}
-                  className={`shrink-0 whitespace-nowrap rounded-full border-2 px-3 py-1 text-xs font-bold ${a.key === area.key ? "border-ink bg-ink text-white" : "border-ink/15 bg-white"}`}
+                  className={`shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-[13px] font-semibold transition-colors ${a.key === area.key ? "bg-ink text-white" : "bg-surface text-ink/80 hover:text-ink"}`}
                 >
-                  {has && <span className="mr-1 inline-block h-2 w-2 rounded-full bg-green-500 align-middle" />}
+                  {has && <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-[#247b50] align-middle" aria-label="đã có thiết kế" />}
                   {a.name}
                   {a.extraPrice > 0 && <span className="ml-1 opacity-70">+{formatVND(a.extraPrice)}</span>}
                 </button>
@@ -1037,7 +1045,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
         {/* Size in (sản phẩm có vùng in đổi theo size: cờ, tranh, poster…) */}
         {sizes.list.length > 0 && (
           <div className="no-scrollbar mx-auto flex max-w-[1320px] items-center gap-1 overflow-x-auto px-3 pb-2 md:px-5" role="radiogroup" aria-label="Size in">
-            <span className="mr-1 shrink-0 text-[11px] font-bold text-ink/60">Xem theo size:</span>
+            <span className="mr-1 shrink-0 text-[12px] font-semibold text-ink/65">Xem theo size:</span>
             {sizes.list.map((k) => (
               <button
                 key={k}
@@ -1045,7 +1053,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 role="radio"
                 aria-checked={size === k}
                 onClick={() => setSize(k)}
-                className={`shrink-0 whitespace-nowrap rounded-full border-2 px-3 py-0.5 text-xs font-bold ${size === k ? "border-ink bg-brand" : "border-ink/15 bg-white"}`}
+                className={`shrink-0 whitespace-nowrap rounded-md px-3 py-1 text-[13px] font-semibold ${size === k ? "bg-ink text-white" : "bg-surface text-ink/80"}`}
               >
                 {k}
               </button>
@@ -1082,10 +1090,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           {contrastFix > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-amber-900">
               <span className="flex-1">
-                {contrastFix} lớp chữ gần trùng màu áo {color?.name} – in ra sẽ khó đọc.
+                {contrastFix} lớp chữ gần trùng màu {surface.noun} {color?.name} – in ra sẽ khó đọc.
               </span>
-              <button type="button" className="rounded-md border-2 border-ink bg-white px-2.5 py-1 text-xs font-bold" onClick={fixContrast}>
-                Đổi màu chữ cho hợp áo
+              <button type="button" className="rounded-md border border-ink/25 bg-white px-2.5 py-1 text-xs font-semibold" onClick={fixContrast}>
+                Đổi màu chữ cho hợp {surface.noun}
               </button>
               <button type="button" onClick={() => setContrastFix(0)} aria-label="Bỏ qua" className="p-1">
                 <IconClose className="h-4 w-4" />
@@ -1094,7 +1102,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           )}
           {fields.length > 0 && (
             <p className="rounded-lg bg-navy-light px-3 py-2 text-navy-dark">
-              👕 Thiết kế có ô <b>{fields.map((f) => DESIGN_FIELDS[f]).join(" + ")}</b>: khi đặt hàng chọn <b>Đặt cho nhóm</b> và tải danh sách (hoặc Hoàn tất → Tạo link gom đơn nhóm) – mỗi áo in đúng tên/số của từng người.
+              Thiết kế có ô <b>{fields.map((f) => DESIGN_FIELDS[f]).join(" + ")}</b>: khi đặt hàng chọn <b>Đặt cho nhóm</b> và tải danh sách (hoặc Hoàn tất → Tạo link gom đơn nhóm) – mỗi {surface.noun} in đúng {surface.garment ? "tên/số" : "tên"} của từng người.
             </p>
           )}
         </div>
@@ -1103,7 +1111,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
       <div className="mx-auto grid max-w-[1320px] grid-cols-[minmax(0,1fr)] gap-4 px-3 pt-3 md:px-5 lg:grid-cols-[88px_minmax(0,1fr)_340px] lg:pt-5 max-lg:flex max-lg:min-h-0 max-lg:w-full max-lg:flex-1 max-lg:flex-col max-lg:gap-0 max-lg:px-0 max-lg:pt-1">
         {/* Công cụ (desktop: cột trái, mobile: dưới khung) */}
         <nav
-          className="order-3 flex gap-1 bg-white p-1.5 max-lg:flex-none max-lg:border-t-2 max-lg:border-ink max-lg:pb-[max(6px,env(safe-area-inset-bottom))] lg:order-1 lg:h-fit lg:flex-col lg:rounded-2xl lg:border-2 lg:border-ink/10"
+          className="order-3 flex gap-1 bg-white p-1.5 max-lg:flex-none max-lg:border-t max-lg:border-ink/10 max-lg:pb-[max(6px,env(safe-area-inset-bottom))] lg:order-1 lg:h-fit lg:flex-col lg:rounded-lg lg:border lg:border-ink/10"
           aria-label="Công cụ"
         >
           {toolBtn("upload", "Tải ảnh", IconUpload)}
@@ -1117,13 +1125,13 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
 
         <div
           ref={stageRef}
-          className="order-1 mx-auto w-full max-w-[780px] self-start max-lg:flex-none max-lg:max-w-none max-lg:border-b-2 max-lg:border-ink/10 max-lg:bg-surface max-lg:px-3 max-lg:pb-1.5 lg:order-2"
+          className="order-1 mx-auto w-full max-w-[780px] self-start max-lg:flex-none max-lg:max-w-none max-lg:border-b max-lg:border-ink/10 max-lg:bg-surface max-lg:px-3 max-lg:pb-1.5 lg:order-2"
         >
           {/* desktop: khung vừa chiều cao màn hình (không phải cuộn mới thấy hết áo) */}
-          <div className="mx-auto lg:max-w-[min(100%,calc(100svh-140px))]">
+          <div className="mx-auto lg:max-w-[min(100%,calc(100svh-210px))]">
           {(area.tips || (area.bleedMm ?? 0) > 0) && (
-            <details className="mb-2 rounded-lg border-2 border-ink/10 bg-white px-3 py-2 text-xs text-ink/80 max-lg:hidden">
-              <summary className="cursor-pointer font-bold">💡 Gợi ý thiết kế cho {area.name.toLowerCase()}</summary>
+            <details className="mb-2 rounded-lg border border-ink/10 bg-white px-3 py-2 text-[13px] text-ink/80 max-lg:hidden">
+              <summary className="cursor-pointer font-semibold">Gợi ý thiết kế cho {area.name.toLowerCase()}</summary>
               <ul className="mt-1 list-disc space-y-0.5 pl-4">
                 {area.tips && <li className="whitespace-pre-line">{area.tips}</li>}
                 {(area.bleedMm ?? 0) > 0 && <li>Ảnh nền nên phủ tới mép ngoài: phần ngoài đường đỏ ({area.bleedMm} mm) sẽ bị xén sau khi in.</li>}
@@ -1143,6 +1151,9 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
             version={version}
             selectedId={selectedId}
             garmentColor={color?.hex}
+            curve={curve}
+            engrave={showEngrave && view === "mockup"}
+            noun={surface.noun}
             dpiScale={dpiScale}
             view={view === "model" ? "mockup" : view}
             sizeLabel={size ? `${sized.widthMm / 10}×${sized.heightMm / 10} cm · size ${size}` : undefined}
@@ -1156,7 +1167,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           />
           )}
           {!area.warp && (
-          <div className="relative z-10 mt-2 flex justify-center gap-1 text-[11px] font-bold max-lg:-mt-8 max-lg:justify-start max-lg:pl-2" role="radiogroup" aria-label="Cách xem">
+          <div className="relative z-10 mt-2 flex flex-wrap items-center justify-center gap-1 text-[13px] font-semibold max-lg:-mt-8 max-lg:justify-start max-lg:pl-2 max-lg:text-[12px]">
+          <div className="flex gap-1" role="radiogroup" aria-label="Cách xem">
             {(
               [
                 ["mockup", "Trên sản phẩm"],
@@ -1170,20 +1182,36 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 role="radio"
                 aria-checked={view === v}
                 onClick={() => setViewPref((p) => ({ ...p, [area.key]: v }))}
-                className={`whitespace-nowrap rounded-full border-2 px-3 py-0.5 max-lg:px-2 max-lg:text-[10px] ${view === v ? "border-ink bg-ink text-white" : "border-ink/15 bg-white"}`}
+                className={`whitespace-nowrap rounded-md px-3 py-1 max-lg:px-2 ${view === v ? "bg-ink text-white" : "bg-white text-ink/80 hover:text-ink lg:bg-surface"}`}
               >
                 {label}
               </button>
             ))}
           </div>
+          {canEngrave && view === "mockup" && (
+            <button
+              type="button"
+              aria-pressed={engraveOn}
+              onClick={() => setEngraveOn((v) => !v)}
+              className={`whitespace-nowrap rounded-md border px-3 py-1 max-lg:px-2 ${engraveOn ? "border-ink bg-ink text-white" : "border-ink/20 bg-white text-ink/80 hover:border-ink hover:text-ink"}`}
+            >
+              {engraveOn ? "Đang xem khắc laser" : "Xem kiểu khắc laser"}
+            </button>
+          )}
+          </div>
+          )}
+          {showEngrave && view === "mockup" && (
+            <p className="mt-1.5 text-center text-[12px] text-ink/65 max-lg:mt-1 max-lg:text-left max-lg:pl-2">
+              Khắc 1 màu, lộ màu kim loại của thân. Logo nền trắng: bấm “Xoá nền” trước.
+            </p>
           )}
           {area.warp === "cylinder" && (
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-center text-[11px] text-ink/60">
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-center text-[12px] text-ink/65">
               <span>Dải in cuộn quanh thân – ảnh nhỏ ở góc là mặt trước khi nhìn thẳng.</span>
               {ad.layers.length > 0 && (
                 <button
                   type="button"
-                  className="rounded-full border-2 border-ink/20 bg-white px-2.5 py-0.5 font-bold text-ink hover:border-ink"
+                  className="rounded-full border border-ink/20 bg-white px-2.5 py-0.5 font-bold text-ink hover:border-ink"
                   onClick={printBothSides}
                 >
                   ⟲ In 2 bên
@@ -1191,21 +1219,21 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               )}
             </div>
           )}
-          <p className="mt-1 hidden text-center text-[11px] text-ink/55 lg:block">Kéo để di chuyển · kéo góc để đổi cỡ · nút tròn để xoay · lăn chuột để phóng to/thu nhỏ</p>
+          <p className="mt-1.5 hidden text-center text-[12px] text-ink/65 lg:block">Kéo để di chuyển · kéo góc để đổi cỡ · nút tròn để xoay · lăn chuột để phóng to/thu nhỏ</p>
           </div>
         </div>
 
         {/* Bảng thuộc tính */}
-        <aside ref={panelRef} className="order-2 space-y-3 rounded-2xl border-2 border-ink/10 bg-white p-4 lg:order-3 lg:h-fit max-lg:min-h-0 max-lg:flex-1 max-lg:overscroll-contain max-lg:overflow-y-auto max-lg:rounded-none max-lg:border-0 max-lg:px-3 max-lg:pb-6 max-lg:pt-3">
+        <aside ref={panelRef} className="order-2 space-y-3 rounded-lg border border-ink/10 bg-white p-4 lg:order-3 lg:h-fit max-lg:min-h-0 max-lg:flex-1 max-lg:overscroll-contain max-lg:overflow-y-auto max-lg:rounded-none max-lg:border-0 max-lg:px-3 max-lg:pb-6 max-lg:pt-3">
           {tool === "upload" && (
             <section className="flex flex-col gap-3">
-              <button type="button" onClick={openUpload} disabled={!!busy} className="flex w-full flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-ink/40 bg-surface px-3 py-4 text-sm font-bold transition hover:border-ink hover:bg-sun/40">
+              <button type="button" onClick={openUpload} disabled={!!busy} className="flex w-full flex-col items-center gap-1 rounded-lg border border-dashed border-ink/30 bg-surface px-3 py-5 text-[15px] font-semibold transition-colors hover:border-ink/60 hover:bg-ink/[0.04]">
                 <IconUpload className="h-6 w-6" /> Tải ảnh lên
-                <span className="text-[11px] font-medium text-ink/60">PNG, JPG, WEBP · chọn tối đa 10 ảnh</span>
+                <span className="text-[12px] font-medium text-ink/65">PNG, JPG, WEBP · chọn tối đa 10 ảnh</span>
               </button>
               {askAgree && !agreed && agreeBox}
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple className="hidden" onChange={(e) => void onFiles(e.target.files)} />
-              <p className="text-[11px] text-ink/60">
+              <p className="text-[12px] text-ink/65">
                 Logo nên dùng PNG nền trong suốt (hoặc bấm “Xoá nền”). Mặt này in tốt nhất với ảnh ≥ {area.dpi} DPI ở kích thước thật ({sized.widthMm / 10}×{sized.heightMm / 10} cm ≈{" "}
                 {Math.round((sized.widthMm / 25.4) * area.dpi)}×{Math.round((sized.heightMm / 25.4) * area.dpi)} px). Tối đa {Math.round(UPLOAD_MAX_BYTES / 1024 / 1024)}MB mỗi ảnh.
               </p>
@@ -1263,21 +1291,21 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               {selected?.type === "text" ? (
                 <>
                 <div className="space-y-2.5">
-                    <div className="flex flex-wrap gap-1 text-[11px] font-bold" role="radiogroup" aria-label="Loại nội dung">
+                    <div className="flex flex-wrap gap-1 text-[12px] font-bold" role="radiogroup" aria-label="Loại nội dung">
                       {(
                         [
                           [undefined, "Chữ cố định"],
-                          ["name", "Tên thành viên"],
+                          ["name", surface.garment ? "Tên thành viên" : "Tên người nhận"],
                           ["number", "Số áo"],
                         ] as const
-                      ).map(([f, label]) => (
+                      ).filter(([f]) => f !== "number" || surface.garment || selected.field === "number").map(([f, label]) => (
                         <button
                           key={label}
                           type="button"
                           role="radio"
                           aria-checked={selected.field === f}
                           onClick={() => patchSelected({ field: f, ...(f && selected.field !== f ? { text: FIELD_SAMPLE[f] } : {}) })}
-                          className={`rounded-full border-2 px-2 py-0.5 ${selected.field === f ? "border-ink bg-brand" : "border-ink/15"}`}
+                          className={`rounded-full border px-2 py-0.5 ${selected.field === f ? "border-ink bg-ink text-white" : "border-ink/15"}`}
                         >
                           {label}
                         </button>
@@ -1288,14 +1316,14 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                       maxLength={DESIGN_LIMITS.textLength}
                       rows={selected.field ? 1 : 3}
                       onChange={(e) => e.target.value && patchSelected({ text: e.target.value })}
-                      className="w-full rounded-md border-2 border-ink/15 px-3 py-2 text-sm focus:border-ink focus:outline-none"
+                      className="w-full rounded-md border border-ink/15 px-3 py-2 text-sm focus:border-ink focus:outline-none"
                       aria-label="Nội dung chữ"
                     />
-                    {selected.field && <p className="-mt-1.5 text-[11px] text-ink/60">Chữ mẫu để canh vị trí – khi in thay bằng {DESIGN_FIELDS[selected.field].toLowerCase()} từng người trong danh sách.</p>}
+                    {selected.field && <p className="-mt-1.5 text-[12px] text-ink/65">Chữ mẫu để canh vị trí – khi in thay bằng {DESIGN_FIELDS[selected.field].toLowerCase()} từng người trong danh sách.</p>}
                     <select
                       value={selected.font}
                       onChange={(e) => patchSelected({ font: e.target.value as TextLayer["font"] })}
-                      className="w-full rounded-md border-2 border-ink/15 px-3 py-2 text-sm"
+                      className="w-full rounded-md border border-ink/15 px-3 py-2 text-sm"
                       style={{ fontFamily: `"${selected.font}"` }}
                       aria-label="Font chữ"
                     >
@@ -1316,23 +1344,23 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                     )}
                     <ColorPicker label="Màu chữ" value={selected.color} onChange={(c) => c && patchSelected({ color: c })} />
                     {lowContrast(selected, area.key) && (
-                      <p className="flex items-center gap-2 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900">
-                        <span className="flex-1">Màu chữ gần trùng màu {ad.bg ? "nền" : "áo"} – khó đọc khi in.</span>
-                        <button type="button" className="shrink-0 rounded border-2 border-ink bg-white px-2 py-0.5 font-bold" onClick={() => patchSelected({ color: readableOn(surfaceOf(area.key)) })}>
+                      <p className="flex items-center gap-2 rounded-md bg-amber-50 px-2 py-1.5 text-[12px] text-amber-900">
+                        <span className="flex-1">Màu chữ gần trùng màu {ad.bg ? "nền" : surface.noun} – khó đọc khi in.</span>
+                        <button type="button" className="shrink-0 rounded border border-ink/25 bg-white px-2 py-0.5 font-semibold" onClick={() => patchSelected({ color: readableOn(surfaceOf(area.key)) })}>
                           Đổi sang {readableOn(surfaceOf(area.key)) === "#ffffff" ? "trắng" : "đen"}
                         </button>
                       </p>
                     )}
                     <div className="flex flex-wrap gap-1.5 text-xs font-bold">
-                      <button type="button" className={`btn-sm ${selected.bold ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ bold: !selected.bold })}>
+                      <button type="button" className={`btn-sm ${selected.bold ? "!border-ink !bg-ink !text-white" : ""}`} onClick={() => patchSelected({ bold: !selected.bold })}>
                         Đậm
                       </button>
-                      <button type="button" className={`btn-sm italic ${selected.italic ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ italic: !selected.italic })}>
+                      <button type="button" className={`btn-sm italic ${selected.italic ? "!border-ink !bg-ink !text-white" : ""}`} onClick={() => patchSelected({ italic: !selected.italic })}>
                         Nghiêng
                       </button>
                       {!selected.curve &&
                         (["left", "center", "right"] as const).map((a) => (
-                          <button key={a} type="button" className={`btn-sm ${selected.align === a ? "!border-ink !bg-brand" : ""}`} onClick={() => patchSelected({ align: a })}>
+                          <button key={a} type="button" className={`btn-sm ${selected.align === a ? "!border-ink !bg-ink !text-white" : ""}`} onClick={() => patchSelected({ align: a })}>
                             {a === "left" ? "Trái" : a === "center" ? "Giữa" : "Phải"}
                           </button>
                         ))}
@@ -1383,18 +1411,22 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               <button type="button" onClick={addText} className="btn-outline w-full py-2.5 text-sm">
                     <IconText className="h-5 w-5" /> Thêm chữ mới
                   </button>
-                  <PhraseIdeas
-                    hasTextSelected={selected?.type === "text" && !selected.field}
-                    onReplace={(text) => selected?.type === "text" && patchSelected({ text })}
-                    onAddDesign={(d) => addTemplate(d.template, d.title)}
-                  />
-                  <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
+                  {surface.garment && (
+                    <PhraseIdeas
+                      hasTextSelected={selected?.type === "text" && !selected.field}
+                      onReplace={(text) => selected?.type === "text" && patchSelected({ text })}
+                      onAddDesign={(d) => addTemplate(d.template, d.title)}
+                    />
+                  )}
+                  <div className={`grid ${surface.garment ? "grid-cols-2" : "grid-cols-1"} gap-1.5 text-xs font-bold`}>
                     <button type="button" className="btn-sm" onClick={() => addField("name")}>
-                      + Ô tên thành viên
+                      + Ô {surface.garment ? "tên thành viên" : "tên người nhận"}
                     </button>
-                    <button type="button" className="btn-sm" onClick={() => addField("number")}>
-                      + Ô số áo
-                    </button>
+                    {surface.garment && (
+                      <button type="button" className="btn-sm" onClick={() => addField("number")}>
+                        + Ô số áo
+                      </button>
+                    )}
                   </div>
     </div>
                 </>
@@ -1403,20 +1435,24 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               <button type="button" onClick={addText} className="btn-outline w-full py-2.5 text-sm">
                 <IconText className="h-5 w-5" /> Thêm chữ mới
               </button>
-              <PhraseIdeas
-                hasTextSelected={false}
-                onReplace={() => undefined}
-                onAddDesign={(d) => addTemplate(d.template, d.title)}
-              />
-              <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
+              {surface.garment && (
+                <PhraseIdeas
+                  hasTextSelected={false}
+                  onReplace={() => undefined}
+                  onAddDesign={(d) => addTemplate(d.template, d.title)}
+                />
+              )}
+              <div className={`grid ${surface.garment ? "grid-cols-2" : "grid-cols-1"} gap-1.5 text-xs font-bold`}>
                 <button type="button" className="btn-sm" onClick={() => addField("name")}>
-                  + Ô tên thành viên
+                  + Ô {surface.garment ? "tên thành viên" : "tên người nhận"}
                 </button>
-                <button type="button" className="btn-sm" onClick={() => addField("number")}>
-                  + Ô số áo
-                </button>
+                {surface.garment && (
+                  <button type="button" className="btn-sm" onClick={() => addField("number")}>
+                    + Ô số áo
+                  </button>
+                )}
               </div>
-                  <p className="text-xs text-ink/60">Bấm vào chữ trên khung để sửa, hoặc thêm chữ mới / chọn mẫu chữ ở mục Mẫu. Font hỗ trợ đầy đủ dấu tiếng Việt.</p>
+                  <p className="text-xs text-ink/65">Bấm vào chữ trên khung để sửa, hoặc thêm chữ mới / chọn mẫu chữ ở mục Mẫu. Font hỗ trợ đầy đủ dấu tiếng Việt.</p>
                 </>
               )}
             </section>
@@ -1427,9 +1463,9 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
               {colors.length > 0 && (
                 <div>
                   <p className="text-xs font-bold text-ink/70">
-                    Màu áo: <span className="font-normal">{color?.name}</span>
+                    Màu {surface.noun}: <span className="font-normal">{color?.name}</span>
                   </p>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Màu áo">
+                  <div className="mt-1.5 flex flex-wrap gap-1.5" role="radiogroup" aria-label={`Màu ${surface.noun}`}>
                     {colors.map((c) => (
                       <button
                         key={c.name}
@@ -1444,7 +1480,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                       />
                     ))}
                   </div>
-                  <p className="mt-1 text-[11px] text-ink/55">Màu xem trước gần đúng, màu vải thật có thể chênh nhẹ.</p>
+                  <p className="mt-1 text-[12px] text-ink/65">Màu xem trước gần đúng, màu {surface.garment ? "vải" : "sản phẩm"} thật có thể chênh nhẹ.</p>
                 </div>
               )}
               <div>
@@ -1454,7 +1490,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                   value={ad.bg}
                   onChange={(c) => updateArea((a) => ({ ...a, bg: c }))}
                 />
-                {(area.bleedMm ?? 0) > 0 && <p className="mt-1 text-[11px] text-ink/55">Màu nền tự phủ tới mép ngoài (viền tràn) – không lo lộ viền trắng.</p>}
+                {(area.bleedMm ?? 0) > 0 && <p className="mt-1 text-[12px] text-ink/65">Màu nền tự phủ tới mép ngoài (viền tràn) – không lo lộ viền trắng.</p>}
               </div>
             </section>
           )}
@@ -1462,7 +1498,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           {tool === "layers" && (
             <section>
               {ad.layers.length === 0 ? (
-                <p className="text-xs text-ink/60">Mặt này chưa có lớp nào.</p>
+                <p className="text-xs text-ink/65">Mặt này chưa có lớp nào.</p>
               ) : (
                 <ul className="space-y-1">
                   {[...ad.layers].reverse().map((l) => (
@@ -1470,7 +1506,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                       <button
                         type="button"
                         onClick={() => setSelectedId(l.id)}
-                        className={`flex min-w-0 flex-1 items-center gap-2 rounded-md border-2 px-2 py-1.5 text-left text-xs font-semibold ${l.id === selectedId ? "border-ink bg-cream" : "border-transparent hover:bg-cream"}`}
+                        className={`flex min-w-0 flex-1 items-center gap-2 rounded-md border px-2 py-1.5 text-left text-xs font-semibold ${l.id === selectedId ? "border-ink bg-cream" : "border-transparent hover:bg-surface"}`}
                       >
                         {l.type === "image" ? <img src={l.src} alt="" className="h-7 w-7 rounded bg-[#f4f4f5] object-contain" /> : <IconText className="h-5 w-5 shrink-0" />}
                         <span className="truncate">{layerLabel(l)}</span>
@@ -1481,7 +1517,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                           setSelectedId(l.id);
                           updateArea((a) => ({ ...a, layers: a.layers.map((x) => (x.id === l.id ? { ...x, locked: !x.locked } : x)) }));
                         }}
-                        className={`rounded p-1.5 ${l.locked ? "bg-ink text-white" : "text-ink/40 hover:bg-cream"}`}
+                        className={`rounded p-1.5 ${l.locked ? "bg-ink text-white" : "text-ink/40 hover:bg-surface"}`}
                         aria-label={l.locked ? "Mở khoá lớp" : "Khoá lớp"}
                         aria-pressed={!!l.locked}
                       >
@@ -1497,7 +1533,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           {selected && (
             <div className="space-y-2 border-t border-ink/10 pt-3">
               <p className="text-xs font-bold text-ink/70">Vị trí trong vùng in</p>
-              <div className="grid grid-cols-3 gap-1 text-[11px] font-bold" role="group" aria-label="Căn chỉnh">
+              <div className="grid grid-cols-3 gap-1 text-[12px] font-bold" role="group" aria-label="Căn chỉnh">
                 <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => align("left", null)}>
                   ⇤ Trái
                 </button>
@@ -1517,7 +1553,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                   ⤓ Dưới
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-1 text-[11px] font-bold">
+              <div className="grid grid-cols-3 gap-1 text-[12px] font-bold">
                 <button type="button" className="btn-sm" disabled={selected.locked} onClick={() => patchSelected({ flipX: !selected.flipX })}>
                   ⇋ Lật ngang
                 </button>
@@ -1532,11 +1568,11 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 <select
                   value=""
                   onChange={(e) => (e.target.value === "*" ? copyToAll() : e.target.value && copyTo(e.target.value))}
-                  className="w-full rounded-md border-2 border-ink/15 px-2 py-1.5 text-xs font-bold"
+                  className="w-full rounded-md border border-ink/15 px-2 py-1.5 text-xs font-bold"
                   aria-label="Chép lớp sang mặt khác"
                 >
                   <option value="">Chép lớp này sang mặt…</option>
-                  {otherAreas.length > 1 && <option value="*">★ Tất cả {otherAreas.length} mặt còn lại</option>}
+                  {otherAreas.length > 1 && <option value="*">Tất cả {otherAreas.length} mặt còn lại</option>}
                   {otherAreas.map((a) => (
                     <option key={a.key} value={a.key}>
                       {a.name}
@@ -1544,7 +1580,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                   ))}
                 </select>
               )}
-              <div className="grid grid-cols-4 gap-1.5 text-[11px] font-bold">
+              <div className="grid grid-cols-4 gap-1.5 text-[12px] font-bold">
                 <button type="button" className="btn-sm flex-col" onClick={() => moveOrder(1)} title="Đưa lên trên">
                   ↑ Lên
                 </button>
@@ -1624,6 +1660,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           design={design}
           images={images}
           garmentColor={color?.hex}
+          curve={curve}
+          engrave={showEngrave}
           colorName={color?.name}
           sample={fields.length ? { name: "NGUYỄN AN", number: "10" } : undefined}
           onClose={() => setOverview(false)}
@@ -1646,7 +1684,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-ink/60">Ảnh vỡ: thu nhỏ ảnh hoặc dùng ảnh gốc độ phân giải cao hơn. Phần nằm ngoài khung nét đứt sẽ không được in.</p>
+            <p className="mt-2 text-xs text-ink/65">Ảnh vỡ: thu nhỏ ảnh hoặc dùng ảnh gốc độ phân giải cao hơn. Phần nằm ngoài khung nét đứt sẽ không được in.</p>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button type="button" className="btn border-ink/20 bg-white" onClick={() => setIssues(null)}>
                 Quay lại sửa
@@ -1689,7 +1727,7 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                   value={saveDlg.name}
                   maxLength={80}
                   onChange={(e) => setSaveDlg({ name: e.target.value })}
-                  className="mt-3 w-full rounded-md border-2 border-ink/15 px-3 py-2 text-sm focus:border-ink focus:outline-none"
+                  className="mt-3 w-full rounded-md border border-ink/15 px-3 py-2 text-sm focus:border-ink focus:outline-none"
                   aria-label="Tên thiết kế"
                 />
                 <div className="mt-4 grid grid-cols-2 gap-2">

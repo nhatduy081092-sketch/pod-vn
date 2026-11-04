@@ -27,7 +27,7 @@ export function ShortcutsModal({ onClose }: { onClose: () => void }) {
           {KEYS.map(([k, v]) => (
             <div key={k} className="flex items-center justify-between gap-3 py-1.5">
               <dt>{v}</dt>
-              <dd className="shrink-0 rounded border border-ink/20 bg-cream px-1.5 py-0.5 font-mono text-[11px] font-bold">{k}</dd>
+              <dd className="shrink-0 rounded border border-ink/20 bg-cream px-1.5 py-0.5 font-mono text-[12px] font-bold">{k}</dd>
             </div>
           ))}
         </dl>

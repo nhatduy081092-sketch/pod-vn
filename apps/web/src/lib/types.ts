@@ -56,6 +56,7 @@ export type ProductDetail = ProductCardData & {
   sizeChart?: string;
   weightGram: number;
   category: { name: string; slug: string; sizeChart?: string };
+  subcategorySlug?: string;
   variants: Variant[];
   printAreas: PrintArea[];
   related: ProductCardData[];

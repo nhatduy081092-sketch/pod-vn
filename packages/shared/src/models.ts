@@ -64,6 +64,19 @@ export function garmentOfProduct(p: { name: string; slug: string }): ModelGarmen
   return null;
 }
 
+/** Bề mặt in của sản phẩm: Studio đổi cách gọi ("áo" / "sản phẩm") và cách vẽ mockup (vân vải / thân trụ cong) */
+export type ProductSurface = { noun: string; garment: boolean; curved: boolean };
+
+const CURVED_SUBS = ["binh-giu-nhiet", "binh-nuoc", "ly-coc", "coc-giu-nhiet"];
+
+export function surfaceOfProduct(p: { name: string; slug: string; category?: { slug: string } | null; subcategorySlug?: string | null }): ProductSurface {
+  const name = p.name.toLowerCase();
+  const garment = p.category?.slug === "dong-phuc-may-mac" || garmentOfProduct(p) !== null || /(^|\s)áo(\s|$)/.test(name) || /(^|-)ao-/.test(p.slug);
+  // bình, ly, cốc: thân trụ đứng; phụ kiện đi kèm (quai, túi, hộp, nắp – tên bắt đầu bằng chữ đó) thì không; "bình nắp bật" vẫn là bình
+  const curved = !garment && (CURVED_SUBS.includes(p.subcategorySlug ?? "") || /^(binh|ly|coc)-/.test(p.slug)) && !/^(quai|day|tui|hop|nap|phu-kien)-/.test(p.slug);
+  return { noun: garment ? "áo" : "sản phẩm", garment, curved };
+}
+
 /** Ảnh người mẫu hợp màu áo: áo tối -> ảnh mặc áo đen, còn lại ảnh áo trắng */
 export function pickModel(models: Record<string, ModelPhoto> | undefined, g: ModelGarment | null, dark: boolean): ModelPhoto | null {
   if (!g || !models) return null;

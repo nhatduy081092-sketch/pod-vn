@@ -82,8 +82,8 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
       <p className="text-xs font-bold text-ink/70">Ảnh đang chọn</p>
 
       <div>
-        <p className="mb-1 text-[11px] font-semibold text-ink/60">Đặt ảnh</p>
-        <div className="grid grid-cols-4 gap-1 text-[11px] font-bold">
+        <p className="mb-1 text-[12px] font-semibold text-ink/65">Đặt ảnh</p>
+        <div className="grid grid-cols-4 gap-1 text-[12px] font-bold">
           {FITS.map((f) => (
             <button key={f.k} type="button" className="btn-sm px-1" title={f.title} onClick={() => fit(f.k)}>
               {f.label}
@@ -93,13 +93,13 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
       </div>
 
       <div>
-        <p className="mb-1 text-[11px] font-semibold text-ink/60">Chỉnh ảnh</p>
-        <div className="grid grid-cols-3 gap-1 text-[11px] font-bold">
+        <p className="mb-1 text-[12px] font-semibold text-ink/65">Chỉnh ảnh</p>
+        <div className="grid grid-cols-3 gap-1 text-[12px] font-bold">
           <button type="button" className="btn-sm" onClick={onReplace} title="Đổi sang ảnh khác, giữ nguyên vị trí và kích thước">
             ⇄ Thay ảnh
           </button>
           <button type="button" className="btn-sm" onClick={() => setCrop(true)}>
-            ✂ Cắt ảnh{l.crop ? " ✓" : ""}
+            Cắt ảnh{l.crop ? " ✓" : ""}
           </button>
           {l.origSrc ? (
             <button type="button" className="btn-sm" onClick={onRestore} title="Trả lại ảnh gốc trước khi xoá nền">
@@ -107,28 +107,28 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
             </button>
           ) : (
             <button type="button" className="btn-sm" onClick={onRemoveBg} disabled={!bgSupported} title={bgSupported ? "Xoá nền ngay trên máy của bạn" : "Trình duyệt chưa hỗ trợ"}>
-              🪄 Xoá nền
+              Xoá nền
             </button>
           )}
         </div>
       </div>
 
       <div>
-        <p className="mb-1 text-[11px] font-semibold text-ink/60">Biến thành tranh vẽ</p>
+        <p className="mb-1 text-[12px] font-semibold text-ink/65">Biến thành tranh vẽ</p>
         <div className="grid grid-cols-5 gap-1" role="group" aria-label="Kiểu tranh">
           {ART_STYLES.map((a) => (
-            <button key={a.id} type="button" onClick={() => onArt(a.id)} title={a.hint} className="flex flex-col items-center gap-0.5 rounded-md border-2 border-ink/15 px-0.5 py-1 text-[10px] font-bold leading-tight hover:border-ink">
+            <button key={a.id} type="button" onClick={() => onArt(a.id)} title={a.hint} className="flex flex-col items-center gap-0.5 rounded-md border border-ink/15 px-0.5 py-1 text-[12px] font-bold leading-tight hover:border-ink">
               <ArtIcon id={a.id} />
               {a.label}
             </button>
           ))}
         </div>
-        <p className="mt-1 text-[10px] text-ink/55">Xử lý ngay trên máy bạn, miễn phí. Ảnh chân dung nên “Xoá nền” trước. Bấm “Ảnh gốc” để trả lại.</p>
+        <p className="mt-1 text-[12px] text-ink/65">Xử lý ngay trên máy bạn, miễn phí. Ảnh chân dung nên “Xoá nền” trước. Bấm “Ảnh gốc” để trả lại.</p>
       </div>
 
       <div>
-        <p className="mb-1 text-[11px] font-semibold text-ink/60">Cắt theo hình</p>
-        <div className="flex flex-wrap gap-1 text-[11px] font-bold" role="radiogroup" aria-label="Cắt theo hình">
+        <p className="mb-1 text-[12px] font-semibold text-ink/65">Cắt theo hình</p>
+        <div className="flex flex-wrap gap-1 text-[12px] font-bold" role="radiogroup" aria-label="Cắt theo hình">
           {[undefined, ...IMAGE_MASKS].map((m) => (
             <button
               key={m ?? "none"}
@@ -136,7 +136,7 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
               role="radio"
               aria-checked={l.mask === m}
               onClick={() => onPatch({ mask: m as ImageMask | undefined }, true)}
-              className={`rounded-full border-2 px-2 py-0.5 ${l.mask === m ? "border-ink bg-brand" : "border-ink/15"}`}
+              className={`rounded-full border px-2 py-0.5 ${l.mask === m ? "border-ink bg-ink text-white" : "border-ink/15"}`}
             >
               {m ? IMAGE_MASK_LABEL[m] : "Không"}
             </button>
@@ -146,9 +146,9 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
 
       <div>
         <div className="mb-1 flex items-center justify-between">
-          <p className="text-[11px] font-semibold text-ink/60">Lặp họa tiết</p>
+          <p className="text-[12px] font-semibold text-ink/65">Lặp họa tiết</p>
           {l.tile && (
-            <button type="button" className="text-[11px] font-bold underline" onClick={() => onPatch({ tile: false }, true)}>
+            <button type="button" className="text-[12px] font-bold underline" onClick={() => onPatch({ tile: false }, true)}>
               Tắt lặp
             </button>
           )}
@@ -163,7 +163,7 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
                 role="radio"
                 aria-checked={on}
                 onClick={() => tileOn(m)}
-                className={`flex flex-col items-center gap-0.5 rounded-md border-2 px-0.5 py-1 text-[10px] font-bold leading-tight ${on ? "border-ink bg-brand" : "border-ink/15 hover:border-ink/40"}`}
+                className={`flex flex-col items-center gap-0.5 rounded-md border px-0.5 py-1 text-[12px] font-bold leading-tight ${on ? "border-ink bg-ink text-white" : "border-ink/15 hover:border-ink/40"}`}
                 title={TILE_MODE_LABEL[m]}
               >
                 <TileIcon mode={m} />
@@ -189,8 +189,8 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
             <Slider label="Khoảng cách ngang" value={Math.round(l.tileGapX ?? 0)} min={0} max={Math.round(cellMax / 2)} onChange={(v) => onPatch({ tileGapX: v || undefined }, false)} onEnd={onEnd} fmt={(v) => `${v} mm`} />
             <Slider label="Khoảng cách dọc" value={Math.round(l.tileGapY ?? 0)} min={0} max={Math.round(cellMax / 2)} onChange={(v) => onPatch({ tileGapY: v || undefined }, false)} onEnd={onEnd} fmt={(v) => `${v} mm`} />
             {l.tileMode === "random" && (
-              <button type="button" className="btn-sm w-full text-[11px] font-bold" onClick={() => onPatch({ tileSeed: Math.floor(Math.random() * 999_999) + 1 }, true)}>
-                🎲 Xáo lại
+              <button type="button" className="btn-sm w-full text-[12px] font-bold" onClick={() => onPatch({ tileSeed: Math.floor(Math.random() * 999_999) + 1 }, true)}>
+                Xáo lại
               </button>
             )}
           </div>
@@ -198,7 +198,7 @@ export function ImagePanel({ layer: l, area, onPatch, onEnd, onRemoveBg, onResto
       </div>
 
       <Slider label="Độ đậm" value={Math.round((l.opacity ?? 1) * 100)} min={10} max={100} onChange={(v) => onPatch({ opacity: v / 100 }, false)} onEnd={onEnd} fmt={(v) => `${v}%`} />
-      <p className="text-[11px] text-ink/60">
+      <p className="text-[12px] text-ink/65">
         {l.tile ? "Mỗi ô" : "Kích thước in"}: {(l.w / 10).toFixed(1)} × {(l.h / 10).toFixed(1)} cm
       </p>
 

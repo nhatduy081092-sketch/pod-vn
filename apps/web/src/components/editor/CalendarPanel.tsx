@@ -71,11 +71,11 @@ export function CalendarPanel({ areas, area, onInsert, onBusy, onError }: Props)
       <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
         <label>
           Năm
-          <input type="number" min={2000} max={2100} value={year} onChange={(e) => setYear(Math.min(2100, Math.max(2000, Number(e.target.value) || year)))} className="mt-0.5 w-full rounded-md border-2 border-ink/15 px-2 py-1.5 text-sm" />
+          <input type="number" min={2000} max={2100} value={year} onChange={(e) => setYear(Math.min(2100, Math.max(2000, Number(e.target.value) || year)))} className="mt-0.5 w-full rounded-md border border-ink/15 px-2 py-1.5 text-sm" />
         </label>
         <label>
           Tháng
-          <select value={month} onChange={(e) => setMonth(e.target.value === "all" ? "all" : Number(e.target.value))} className="mt-0.5 w-full rounded-md border-2 border-ink/15 px-2 py-1.5 text-sm">
+          <select value={month} onChange={(e) => setMonth(e.target.value === "all" ? "all" : Number(e.target.value))} className="mt-0.5 w-full rounded-md border border-ink/15 px-2 py-1.5 text-sm">
             {isCalendar && <option value="all">Cả năm (12 mặt)</option>}
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1}>
@@ -85,19 +85,19 @@ export function CalendarPanel({ areas, area, onInsert, onBusy, onError }: Props)
           </select>
         </label>
       </div>
-      <div className="flex flex-wrap gap-1 text-[11px] font-bold" role="radiogroup" aria-label="Vị trí">
+      <div className="flex flex-wrap gap-1 text-[12px] font-bold" role="radiogroup" aria-label="Vị trí">
         {(
           [
             ["bottom", "Nửa dưới (ảnh ở trên)"],
             ["full", "Cả mặt"],
           ] as const
         ).map(([v, l]) => (
-          <button key={v} type="button" role="radio" aria-checked={place === v} onClick={() => setPlace(v)} className={`rounded-full border-2 px-2.5 py-0.5 ${place === v ? "border-ink bg-brand" : "border-ink/15"}`}>
+          <button key={v} type="button" role="radio" aria-checked={place === v} onClick={() => setPlace(v)} className={`rounded-full border px-2.5 py-0.5 ${place === v ? "border-ink bg-ink text-white" : "border-ink/15"}`}>
             {l}
           </button>
         ))}
       </div>
-      <select value={style.font} onChange={(e) => setStyle({ ...style, font: e.target.value })} className="w-full rounded-md border-2 border-ink/15 px-2 py-1.5 text-sm" style={{ fontFamily: `"${style.font}"` }} aria-label="Font lịch">
+      <select value={style.font} onChange={(e) => setStyle({ ...style, font: e.target.value })} className="w-full rounded-md border border-ink/15 px-2 py-1.5 text-sm" style={{ fontFamily: `"${style.font}"` }} aria-label="Font lịch">
         {DESIGN_FONTS.map((f) => (
           <option key={f.family} value={f.family} style={{ fontFamily: `"${f.family}"` }}>
             {f.label}
@@ -105,14 +105,14 @@ export function CalendarPanel({ areas, area, onInsert, onBusy, onError }: Props)
         ))}
       </select>
       <div>
-        <p className="text-[11px] font-semibold text-ink/60">Màu chữ</p>
+        <p className="text-[12px] font-semibold text-ink/65">Màu chữ</p>
         <div className="mt-1 flex flex-wrap gap-1.5">
           {SWATCHES.slice(0, 8).map((c) => (
             <button key={c} type="button" onClick={() => setStyle({ ...style, color: c })} className={`h-6 w-6 rounded-full border-2 ${style.color === c ? "border-ink ring-2 ring-brand" : "border-ink/20"}`} style={{ background: c }} aria-label={`Màu ${c}`} />
           ))}
           <input type="color" value={style.color} onChange={(e) => setStyle({ ...style, color: e.target.value })} className="h-6 w-8 rounded border border-ink/20" aria-label="Màu chữ khác" />
         </div>
-        <p className="mt-2 text-[11px] font-semibold text-ink/60">Màu Chủ nhật & ngày lễ</p>
+        <p className="mt-2 text-[12px] font-semibold text-ink/65">Màu Chủ nhật & ngày lễ</p>
         <div className="mt-1 flex flex-wrap gap-1.5">
           {["#e11d48", "#f97316", "#1c4d99", "#16a34a", "#1d1d1f"].map((c) => (
             <button key={c} type="button" onClick={() => setStyle({ ...style, accent: c })} className={`h-6 w-6 rounded-full border-2 ${style.accent === c ? "border-ink ring-2 ring-brand" : "border-ink/20"}`} style={{ background: c }} aria-label={`Màu nhấn ${c}`} />

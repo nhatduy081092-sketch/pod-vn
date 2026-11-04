@@ -2,7 +2,7 @@
 import { designFields, personalizeArea, printPixelSize, usedAreas, type AreaDesign, type DesignFile, type DesignJson, type OrderDesign } from "@pod/shared";
 import { canvasSafeImage } from "@/lib/config";
 import type { PrintArea } from "@/lib/types";
-import { canvasToBlob, createCanvas, drawMockup, hasTransparency, layerImageSrcs, loadImage, renderAreaPng, type ImageCache, type MockupAssets, type MockupOptions } from "./render";
+import { canvasToBlob, createCanvas, drawMockup, hasTransparency, imgSize, layerImageSrcs, loadImage, renderAreaPng, type ImageCache, type MockupAssets, type MockupOptions } from "./render";
 import { ensureFonts } from "./fonts";
 
 export async function loadLayerImages(design: AreaDesign, cache: ImageCache) {
@@ -15,13 +15,32 @@ export async function loadLayerImages(design: AreaDesign, cache: ImageCache) {
 
 const assetCache = new Map<string, Promise<MockupAssets>>();
 
+/** Ảnh WordPress của OEM ("…-768x768.jpg") là bản thu nhỏ */
+const WP_THUMB = /^(https?:\/\/(?:www\.)?oemgroup\.vn\/wp-content\/uploads\/.+)-(\d+)x(\d+)(\.(?:jpe?g|png|webp))$/i;
+
+/**
+ * Ảnh sản phẩm cho Studio: ảnh OEM lấy bản gốc (thường 2000px, qua proxy thu về 1600px) -> phóng "Cận vùng in" vẫn nét.
+ * Bản gốc khác tỉ lệ bản thu nhỏ (WordPress cắt khung) hoặc không tải được thì dùng ảnh cũ để vùng in không lệch.
+ */
+async function loadMockupPhoto(src: string) {
+  const m = WP_THUMB.exec(src);
+  if (m) {
+    const big = await loadImage(canvasSafeImage(m[1]! + m[4]!, 1600)).catch(() => undefined);
+    const tw = Number(m[2]);
+    const th = Number(m[3]);
+    const s = big && imgSize(big);
+    if (big && s && s.w > tw && Math.abs(s.w / s.h - tw / th) < 0.01) return big;
+  }
+  return loadImage(canvasSafeImage(src)).catch(() => undefined);
+}
+
 /** Ảnh sản phẩm + mask + viền của 1 mặt in (có nhớ đệm) */
 export function loadAreaAssets(area: PrintArea): Promise<MockupAssets> {
   const key = [area.mockupImage, area.maskImage, area.overlayImage].join("|");
   const hit = assetCache.get(key);
   if (hit) return hit;
   const get = (p: string) => (p ? loadImage(canvasSafeImage(p)).catch(() => undefined) : Promise.resolve(undefined));
-  const p = Promise.all([get(area.mockupImage), get(area.maskImage), get(area.overlayImage)]).then(([mockup, mask, overlay]) => ({
+  const p = Promise.all([area.mockupImage ? loadMockupPhoto(area.mockupImage) : get(""), get(area.maskImage), get(area.overlayImage)]).then(([mockup, mask, overlay]) => ({
     mockup,
     mask,
     overlay,

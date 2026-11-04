@@ -278,22 +278,22 @@ export function CollagePanel({ onPick, busy }: { onPick: (c: Collage) => void; b
     <section className="space-y-2.5">
       <div>
         <p className="text-sm font-black">Khung ghép ảnh</p>
-        <p className="text-[11px] text-ink/60">Chọn bố cục → chọn ảnh từ máy. YALA tự cắt ảnh vừa từng ô, thêm tên & ngày – bấm vào chữ để sửa, bấm ảnh → “Thay ảnh” để đổi.</p>
+        <p className="text-[12px] text-ink/65">Chọn bố cục → chọn ảnh từ máy. YALA tự cắt ảnh vừa từng ô, thêm tên & ngày – bấm vào chữ để sửa, bấm ảnh → “Thay ảnh” để đổi.</p>
       </div>
       <ul className="grid grid-cols-2 gap-2">
         {COLLAGES.map((c) => (
           <li key={c.id}>
-            <button type="button" disabled={busy} onClick={() => onPick(c)} className="block w-full rounded-xl border-2 border-ink/10 bg-surface p-2 text-left transition hover:-translate-y-px hover:border-ink disabled:opacity-50">
+            <button type="button" disabled={busy} onClick={() => onPick(c)} className="block w-full rounded-xl border border-ink/10 bg-surface p-2 text-left transition hover:border-ink disabled:opacity-50">
               <Thumb c={c} />
               <span className="mt-1 block text-xs font-bold">{c.name}</span>
-              <span className="block text-[10px] text-ink/60">
+              <span className="block text-[12px] text-ink/65">
                 {c.hint} · {c.cells.length} ảnh
               </span>
             </button>
           </li>
         ))}
       </ul>
-      <p className="text-[11px] text-ink/55">Mẹo: dùng ảnh gốc từ điện thoại (không qua Zalo/Messenger – bị nén mờ). Áo tối: khung polaroid trắng nổi bật nhất.</p>
+      <p className="text-[12px] text-ink/65">Mẹo: dùng ảnh gốc từ điện thoại (không qua Zalo/Messenger – bị nén mờ). Áo tối: khung polaroid trắng nổi bật nhất.</p>
     </section>
   );
 }
