@@ -6,6 +6,9 @@ import { ProductGrid, priceLabelOf } from "@/components/shop/ProductCard";
 import { AddToQuote } from "@/components/b2b/AddToQuote";
 import { PhotoCollage } from "@/components/b2b/PhotoCollage";
 import { rise } from "@/components/landing/HomeSections";
+import { MaskTitle } from "@/components/motion/MaskTitle";
+import { CountUp } from "@/components/motion/CountUp";
+import { assetUrl } from "@/lib/config";
 import { Arrow, Breadcrumb, Faq, h2Big, rowLink } from "./SeoBlocks";
 
 /** Gọi trong generateMetadata (không ở cấp module) để {tet} tự chuyển năm */
@@ -32,6 +35,8 @@ export async function MerchLanding({ page: m }: { page: MerchPage }) {
   // 6 trang gần nhất: cùng dịp tặng trước, rồi đến các trang còn lại (toàn bộ vẫn có trong sitemap và trang danh mục)
   const rest = MERCH_PAGES.filter((x) => x.slug !== m.slug);
   const others = [...rest.filter((x) => x.dip === m.dip), ...rest.filter((x) => x.dip !== m.dip)].slice(0, 6);
+  // ảnh cạnh "mẹo chọn": mẫu thứ 5 trở đi (4 mẫu đầu đã ở đầu trang); ít mẫu quá thì bỏ ảnh
+  const pick = items.slice(4).find((p) => p.images[0]);
 
   const jsonLd = [
     {
@@ -69,36 +74,36 @@ export async function MerchLanding({ page: m }: { page: MerchPage }) {
               )}
             </div>
             {terms.length > 0 && (
-              <dl className="mt-10 grid max-w-[36rem] grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-                {terms.map((t) => (
-                  <div key={t.label}>
+              <dl className="mt-10 grid max-w-[36rem] grid-cols-2 gap-x-6 gap-y-5 border-t border-ink/15 pt-6 sm:grid-cols-4">
+                {[...terms, { label: "Báo giá", value: s.b2bQuote.responseTime }].map((t, i) => (
+                  <div key={t.label} {...rise(i + 2)}>
                     <dt className="text-[15px] text-ink/70">{t.label}</dt>
                     <dd className="mt-0.5 text-[17px] font-semibold leading-snug">{t.value}</dd>
                   </div>
                 ))}
-                <div>
-                  <dt className="text-[15px] text-ink/70">Báo giá</dt>
-                  <dd className="mt-0.5 text-[17px] font-semibold leading-snug">{s.b2bQuote.responseTime}</dd>
-                </div>
               </dl>
             )}
           </div>
-          {items.length >= 4 && <PhotoCollage images={items.slice(0, 4).map((p) => ({ src: p.images[0] ?? "", alt: p.name }))} className="mx-auto w-full max-w-[34rem]" />}
+          {items.length >= 4 && (
+            <div {...rise(1)}>
+              <PhotoCollage images={items.slice(0, 4).map((p) => ({ src: p.images[0] ?? "", alt: p.name }))} className="mx-auto w-full max-w-[34rem]" />
+            </div>
+          )}
         </div>
       </section>
 
       {/* Sản phẩm thật trong danh mục – thêm nhiều mẫu vào 1 yêu cầu báo giá */}
       <section className="container-site py-[clamp(72px,12vh,150px)]" aria-labelledby="mau">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
-          <h2 id="mau" className={h2Big}>
-            {total} mẫu {m.noun} nhận in logo
-          </h2>
-          <p className="max-w-[34rem] text-base leading-relaxed md:text-lg lg:pb-1">
+          <MaskTitle id="mau" className={h2Big}>
+            <CountUp value={String(total)} className="text-brand" /> mẫu {m.noun} nhận in logo
+          </MaskTitle>
+          <p className="max-w-[34rem] text-base leading-relaxed md:text-lg lg:pb-1" {...rise(2)}>
             Bấm “+ Thêm vào báo giá” ở các mẫu muốn so, rồi gửi một yêu cầu kèm số lượng và file logo.
           </p>
         </div>
         {items.length > 0 ? (
-          <div className="mt-10 md:mt-14">
+          <div className="mt-10 md:mt-14" {...rise(1)}>
             <ProductGrid
               items={items}
               after={(x) => (
@@ -129,15 +134,23 @@ export async function MerchLanding({ page: m }: { page: MerchPage }) {
       {/* Cách làm logo theo chất liệu */}
       <section className="bg-sky/60 py-[clamp(72px,12vh,150px)]" aria-labelledby="cach-in">
         <div className="container-site grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
-          <div>
-            <h2 id="cach-in" className={h2Big}>
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <MaskTitle id="cach-in" className={h2Big}>
               Logo lên sản phẩm bằng cách nào
-            </h2>
-            <p className="mt-5 max-w-[30rem] text-base leading-relaxed md:text-lg">Kỹ thuật phù hợp tuỳ chất liệu từng mẫu – YALA ghi rõ trong mockup và báo giá.</p>
+            </MaskTitle>
+            <p className="mt-5 max-w-[30rem] text-base leading-relaxed md:text-lg" {...rise(2)}>
+              Kỹ thuật phù hợp tuỳ chất liệu từng mẫu – YALA ghi rõ trong mockup và báo giá.
+            </p>
           </div>
-          <ul className="divide-y divide-ink/15 border-y border-ink/15">
-            {m.methods.map((x) => (
-              <li key={x.name} className="grid gap-1 py-5 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:gap-8">
+          {/* mỗi kỹ thuật một hàng, vạch cam vẽ dần theo thứ tự thay đường kẻ xám */}
+          <ul className="border-b border-ink/15">
+            {m.methods.map((x, i) => (
+              <li key={x.name} className="relative grid gap-1 pb-6 pt-5 sm:grid-cols-[3rem_minmax(0,11rem)_minmax(0,1fr)] sm:gap-6" {...rise(i)}>
+                <span className="absolute inset-x-0 top-0 h-px bg-ink/15" aria-hidden />
+                <span className="draw-rule absolute left-0 top-0 w-16 bg-brand" aria-hidden />
+                <span aria-hidden className="hidden font-display text-[15px] font-semibold tabular-nums text-brand sm:block sm:pt-1.5">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <div>
                   <p className="text-xl font-bold">{x.name}</p>
                   <p className="mt-0.5 text-[15px] font-semibold text-ink/70">{x.fit}</p>
@@ -151,12 +164,24 @@ export async function MerchLanding({ page: m }: { page: MerchPage }) {
 
       {/* Mẹo chọn */}
       <section className="container-site grid gap-8 py-[clamp(72px,12vh,150px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16" aria-labelledby="meo">
-        <h2 id="meo" className={h2Big}>
-          Chọn {m.noun.split(",")[0]} làm quà
-        </h2>
-        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+        {/* cột trái: tiêu đề + 1 ảnh sản phẩm thật chưa xuất hiện ở đầu trang (đỡ khoảng trống dưới tiêu đề) */}
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <MaskTitle id="meo" className={h2Big}>
+            Chọn {m.noun.split(",")[0]} làm quà
+          </MaskTitle>
+          {pick && (
+            <Link href={`/san-pham/${pick.slug}`} className="group mt-8 hidden max-w-[22rem] lg:block" {...rise(1)}>
+              <span className="sticker block aspect-square overflow-hidden bg-white">
+                <img src={assetUrl(pick.images[0]!)} alt={pick.name} loading="lazy" decoding="async" className="h-full w-full object-contain p-[8%] transition-transform duration-500 group-hover:scale-[1.03]" />
+              </span>
+              <span className="mt-3 block text-[15px] font-semibold leading-snug group-hover:underline group-hover:underline-offset-4">{pick.name}</span>
+            </Link>
+          )}
+        </div>
+        <div className="grid gap-x-10 gap-y-10 sm:grid-cols-2">
           {m.tips.map((t, i) => (
             <div key={t.title} {...rise(i)}>
+              <span className="draw-rule mb-5 w-12 bg-brand" aria-hidden />
               <h3 className="text-xl font-bold leading-snug">{fill(t.title)}</h3>
               <p className="mt-2 text-base leading-relaxed">{fill(t.body)}</p>
             </div>
@@ -168,14 +193,16 @@ export async function MerchLanding({ page: m }: { page: MerchPage }) {
       {s.b2bHub.process.length > 0 && (
         <section className="bg-ink py-[clamp(72px,12vh,150px)] text-white" aria-labelledby="quy-trinh">
           <div className="container-site">
-            <h2 id="quy-trinh" className={h2Big}>
+            <MaskTitle id="quy-trinh" className={h2Big}>
               Từ yêu cầu đến lúc giao
-            </h2>
-            <ol className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 md:mt-14 lg:grid-cols-3">
+            </MaskTitle>
+            <ol className="mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-2 md:mt-14 lg:grid-cols-3">
               {s.b2bHub.process.map((p, i) => (
-                <li key={p.title} className="border-t border-white/25 pt-4">
-                  <p className="font-display text-[15px] font-semibold tabular-nums text-brand">{String(i + 1).padStart(2, "0")}</p>
-                  <p className="mt-1 text-xl font-bold">{p.title}</p>
+                <li key={p.title} className="relative pt-5" {...rise(i)}>
+                  <span className="absolute inset-x-0 top-0 h-px bg-white/20" aria-hidden />
+                  <span className="draw-rule absolute inset-x-0 top-0 bg-brand" aria-hidden />
+                  <p className="font-display text-[clamp(28px,2.4vw,36px)] font-bold leading-none tabular-nums text-brand">{String(i + 1).padStart(2, "0")}</p>
+                  <p className="mt-3 text-xl font-bold">{p.title}</p>
                   <p className="mt-1.5 text-base leading-relaxed text-white/80">{p.desc}</p>
                 </li>
               ))}
@@ -197,8 +224,8 @@ export async function MerchLanding({ page: m }: { page: MerchPage }) {
             ...others.map((x) => ({ href: `/${x.slug}`, title: fill(x.h1), desc: fill(x.description).split(". ")[0] })),
             { href: "/doanh-nghiep/qua-cuoi-nam", title: "Quà Tết doanh nghiệp", desc: "Chọn quà theo ngân sách mỗi phần, mockup logo miễn phí." },
             { href: "/doanh-nghiep/san-pham", title: "Tất cả quà tặng doanh nghiệp", desc: "Lọc theo ngành hàng, dịp tặng và ngân sách." },
-          ].map((l) => (
-            <li key={l.href}>
+          ].map((l, i) => (
+            <li key={l.href} {...rise(i % 2)}>
               <Link href={l.href} className={rowLink}>
                 <span>
                   <span className="block text-lg font-semibold">{l.title}</span>
