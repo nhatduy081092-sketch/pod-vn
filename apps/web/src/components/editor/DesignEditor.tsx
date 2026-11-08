@@ -538,7 +538,10 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   function textLayer(p: Partial<TextLayer> = {}): TextLayer {
     const fontSize = Math.max(6, Math.min(40, Math.round(area.heightMm * 0.1)));
     const base: TextLayer = { id: uid(), type: "text", text: "Nội dung của bạn", font: "Be Vietnam Pro", fontSize, color: ad.bg === "#1d1d1f" ? "#ffffff" : "#1d1d1f", bold: true, italic: false, align: "center", lineHeight: 1.15, x: area.widthMm / 2, y: area.heightMm / 2, w: 10, h: 10, rotation: 0, opacity: 1, ...p };
-    return { ...base, ...measureText(base) };
+    const t = { ...base, ...measureText(base) };
+    // vùng in nhỏ (bình, ly, bút…): chữ mẫu mới thêm cũng phải nằm gọn trong vùng in như khi gõ
+    const fitted = fitTextInArea(t, area);
+    return fitted ? { ...t, ...fitted } : t;
   }
 
   function addText() {
@@ -1128,7 +1131,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
           className="order-1 mx-auto w-full max-w-[780px] self-start max-lg:flex-none max-lg:max-w-none max-lg:border-b max-lg:border-ink/10 max-lg:bg-surface max-lg:px-3 max-lg:pb-1.5 lg:order-2"
         >
           {/* desktop: khung vừa chiều cao màn hình (không phải cuộn mới thấy hết áo) */}
-          <div className="mx-auto lg:max-w-[min(100%,calc(100svh-210px))]">
+          {/* trừ thanh trên + dòng gợi ý + nút cách xem bên dưới, để 3 nút "Trên sản phẩm / Bản phẳng / …" không bị khuất ở màn 768–900px */}
+          <div className={`mx-auto ${area.tips || (area.bleedMm ?? 0) > 0 ? "lg:max-w-[min(100%,calc(100svh-290px))]" : "lg:max-w-[min(100%,calc(100svh-240px))]"}`}>
           {(area.tips || (area.bleedMm ?? 0) > 0) && (
             <details className="mb-2 rounded-lg border border-ink/10 bg-white px-3 py-2 text-[13px] text-ink/80 max-lg:hidden">
               <summary className="cursor-pointer font-semibold">Gợi ý thiết kế cho {area.name.toLowerCase()}</summary>

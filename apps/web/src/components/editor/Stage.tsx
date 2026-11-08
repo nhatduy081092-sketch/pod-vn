@@ -343,6 +343,20 @@ export function Stage({ area, design, assets, images, version, selectedId, garme
         role="application"
         aria-label="Kéo để di chuyển, kéo góc để đổi cỡ, kéo nút tròn để xoay, 2 ngón để phóng to và xoay"
       >
+        {/* vùng in còn trống: nói ngay trong vùng in phải làm gì tiếp (khách lần đầu không phải đoán) */}
+        {pr && design.layers.length === 0 && !design.bg && view !== "flat" && pr.w > 90 && pr.h > 60 && (
+          <div className="pointer-events-none absolute flex flex-col items-center justify-center gap-1 px-2 text-center" style={{ left: pr.x, top: pr.y, width: pr.w, height: pr.h }}>
+            {pr.w >= 200 ? (
+              <span className="rounded-md bg-white/90 px-2.5 py-1.5 text-[13px] font-semibold leading-snug text-ink shadow-sm max-lg:text-[12px]">
+                Vùng in {area.name.toLowerCase()}
+                <span className="block font-normal text-ink/70">Tải logo hoặc thêm chữ để bắt đầu</span>
+              </span>
+            ) : (
+              // vùng in hẹp (bình, ly, bút…): 1 nhãn ngắn, không che hết vùng in
+              <span className="rounded bg-white/90 px-1.5 py-0.5 text-[12px] font-semibold text-ink shadow-sm">Vùng in</span>
+            )}
+          </div>
+        )}
         {pr && guides.v !== null && <div className="pointer-events-none absolute w-px bg-[#e11d48]" style={{ left: pr.x + guides.v * pr.k, top: pr.y, height: pr.h }} />}
         {pr && guides.h !== null && <div className="pointer-events-none absolute h-px bg-[#e11d48]" style={{ top: pr.y + guides.h * pr.k, left: pr.x, width: pr.w }} />}
         {box && (

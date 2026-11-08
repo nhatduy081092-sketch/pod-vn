@@ -6,7 +6,9 @@ import { basicPrices } from "@/lib/basic-prices";
 import { ReadyDesignCard } from "@/components/designs/ReadyDesignCard";
 import { DesignFonts } from "@/components/designs/DesignFonts";
 import { TeamLineup } from "@/components/group/TeamLineup";
-import { HomeSteps } from "@/components/landing/HomeSections";
+import { HomeSteps, rise } from "@/components/landing/HomeSections";
+import { MaskTitle } from "@/components/motion/MaskTitle";
+import { Faq, h2Big, rowLink, Arrow } from "@/components/seo/SeoBlocks";
 import { hubDesigns } from "@/components/seo/HubPage";
 import { phraseHref } from "@/components/seo/PhrasePage";
 import { TOOL_LINKS } from "@/components/seo/ToolLinks";
@@ -58,8 +60,8 @@ export default async function Page() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <DesignFonts designs={designs} />
-      <section className="border-b border-line bg-cream">
-        <div className="container-site grid items-center gap-8 py-8 md:grid-cols-[1.1fr_1fr] md:py-12">
+      <section className="bg-surface">
+        <div className="container-site grid items-center gap-10 pb-[clamp(56px,9vh,110px)] pt-10 md:pt-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
           <div>
             <nav className="text-sm text-muted" aria-label="Breadcrumb">
               <Link href="/" className="hover:text-ink">
@@ -67,11 +69,11 @@ export default async function Page() {
               </Link>{" "}
               / <span className="text-ink">Thiết kế áo lớp online</span>
             </nav>
-            <h1 className="mt-3 font-display text-[clamp(28px,3.8vw,46px)] font-bold leading-[1.15] tracking-[-0.02em] [text-wrap:balance]">Thiết kế áo lớp online miễn phí – in tên từng bạn</h1>
-            <p className="mt-3 max-w-xl text-base leading-relaxed text-ink/80 md:text-lg">
+            <h1 className="mt-4 font-display text-[clamp(34px,4.4vw,62px)] font-bold leading-[1.04] tracking-[-0.035em] [text-wrap:balance]">Thiết kế áo lớp online miễn phí – in tên từng bạn</h1>
+            <p className="mt-5 max-w-[34rem] text-lg leading-relaxed md:text-xl">
               Làm áo lớp, áo kỷ yếu ngay trên trình duyệt: tên lớp, slogan, logo, ảnh tập thể và ô tên từng bạn. Xong gửi một link cho cả lớp tự ghi size.
             </p>
-            <div className="mt-6 flex flex-wrap gap-2.5">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link href={`${STUDIO}?preset=ao-lop-1&back=${PATH}`} className="btn-primary px-6">
                 Bắt đầu với mẫu áo lớp
               </Link>
@@ -80,20 +82,21 @@ export default async function Page() {
               </Link>
             </div>
           </div>
-          <div className="rounded-2xl border border-line bg-sky/60 px-3 py-4 shadow-sticker md:p-6">
+          <div className="rounded-2xl border border-line bg-sky/60 px-3 py-4 shadow-sticker md:p-6" {...rise(1)}>
             <TeamLineup team="12A1 · 2026" color="trang" people={[{ name: "HÀ" }, { name: "KHOA" }, { name: "VY" }]} />
           </div>
         </div>
       </section>
 
-      <section className="py-10 md:py-14">
+      <section className="py-[clamp(72px,12vh,150px)]">
         <div className="container-site">
-          <h2 className="h-section">Làm được gì trong YALA Studio</h2>
-          <ul className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <li key={f.t} className="border-l-2 border-brand pl-4">
-                <h3 className="text-lg font-bold">{f.t}</h3>
-                <p className="mt-1 text-[15px] leading-relaxed text-ink/80">{f.d}</p>
+          <MaskTitle className={h2Big}>Làm được gì trong YALA Studio</MaskTitle>
+          <ul className="mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-2 md:mt-14 lg:grid-cols-3">
+            {FEATURES.map((f, i) => (
+              <li key={f.t} {...rise(i % 3)}>
+                <span className="draw-rule mb-5 w-12 bg-brand" aria-hidden />
+                <h3 className="text-xl font-bold leading-snug">{f.t}</h3>
+                <p className="mt-2 text-base leading-relaxed">{f.d}</p>
               </li>
             ))}
           </ul>
@@ -102,17 +105,17 @@ export default async function Page() {
 
       <HomeSteps />
 
-      <section className="py-10 md:py-14">
+      <section className="py-[clamp(72px,12vh,150px)]">
         <div className="container-site">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="h-section">Bắt đầu từ mẫu áo lớp</h2>
+          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+            <h2 className={h2Big}>Bắt đầu từ mẫu áo lớp</h2>
             <Link href="/mau-ao-lop" className="text-[15px] font-semibold underline underline-offset-4 hover:text-brand-dark">
               Xem tất cả mẫu áo lớp
             </Link>
           </div>
-          <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
-            {designs.map((d) => (
-              <li key={d.slug}>
+          <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:mt-12 md:gap-x-6 lg:grid-cols-4">
+            {designs.map((d, i) => (
+              <li key={d.slug} {...rise(i % 4)}>
                 <ReadyDesignCard d={d} back={PATH} price={prices[d.garment]} />
               </li>
             ))}
@@ -120,7 +123,7 @@ export default async function Page() {
         </div>
       </section>
 
-      <section className="border-t border-line bg-surface/60 py-10 md:py-14">
+      <section className="bg-surface py-[clamp(56px,9vh,110px)]">
         <div className="container-site">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 className="h-section">Chưa nghĩ ra slogan?</h2>
@@ -129,9 +132,9 @@ export default async function Page() {
             </Link>
           </div>
           <ul className="mt-6 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-            {slogans.map((t) => (
-              <li key={t} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3">
-                <span className="font-semibold">{t}</span>
+            {slogans.map((t, i) => (
+              <li key={t} className="flex items-center justify-between gap-3 rounded-lg bg-white px-5 py-4" {...rise(i % 4)}>
+                <span className="text-[17px] font-semibold leading-snug">{t}</span>
                 <Link href={phraseHref(t, PATH)} prefetch={false} className="shrink-0 text-sm font-semibold text-brand-dark underline underline-offset-4">
                   Dùng
                 </Link>
@@ -141,37 +144,23 @@ export default async function Page() {
         </div>
       </section>
 
-      <section className="border-t border-line py-10 md:py-14">
-        <div className="container-site max-w-3xl">
-          <h2 className="h-section">Câu hỏi thường gặp</h2>
-          <div className="mt-6 divide-y divide-line border-y border-line">
-            {FAQ.map((f) => (
-              <details key={f.q} className="group py-4">
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-[16px] font-semibold">
-                  {f.q}
-                  <span className="mt-0.5 text-xl leading-none text-muted transition group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink/80">{f.a}</p>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Faq items={FAQ} />
 
-      <section className="bg-cream py-10">
-        <div className="container-site">
-          <h2 className="text-xl font-bold">Công cụ miễn phí khác</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {TOOL_LINKS.filter((l) => l.href !== PATH).map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} className="block h-full rounded-xl border border-line bg-white p-4 transition hover:border-ink">
-                  <p className="font-semibold">{l.title}</p>
-                  <p className="mt-1 text-sm text-muted">{l.desc}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <section className="container-site pb-[clamp(72px,12vh,150px)]">
+        <h2 className="h-section">Công cụ miễn phí khác</h2>
+        <ul className="mt-6 grid gap-2 md:grid-cols-2">
+          {TOOL_LINKS.filter((l) => l.href !== PATH).map((l, i) => (
+            <li key={l.href} {...rise(i % 2)}>
+              <Link href={l.href} className={`${rowLink} h-full`}>
+                <span>
+                  <span className="block text-lg font-semibold">{l.title}</span>
+                  <span className="mt-0.5 block text-[15px] opacity-80">{l.desc}</span>
+                </span>
+                <Arrow />
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
     </>
   );
