@@ -33,6 +33,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description: s.seo.description,
     openGraph: { type: "website", locale: "vi_VN", siteName: s.brand.name, title: s.seo.title, description: s.seo.description },
     alternates: { canonical: "/" },
+    // xác minh quyền sở hữu Google Search Console (mã công khai, không phải bí mật) – giữ nguyên để không mất xác minh
+    verification: { google: "HyveHchobH7hJOs-wfm4ktlfNt6pNe6I8GTQrYaAft8" },
   };
 }
 
