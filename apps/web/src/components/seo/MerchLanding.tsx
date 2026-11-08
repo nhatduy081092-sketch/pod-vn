@@ -141,6 +141,9 @@ export async function MerchLanding({ page: m }: { page: MerchPage }) {
             <p className="mt-5 max-w-[30rem] text-base leading-relaxed md:text-lg" {...rise(2)}>
               Kỹ thuật phù hợp tuỳ chất liệu từng mẫu – YALA ghi rõ trong mockup và báo giá.
             </p>
+            <Link href="/ky-thuat-in-logo" className="mt-5 inline-flex items-center gap-2 text-base font-semibold underline underline-offset-4 hover:text-brand-dark" {...rise(3)}>
+              So sánh các kỹ thuật in logo <Arrow />
+            </Link>
           </div>
           {/* mỗi kỹ thuật một hàng, vạch cam vẽ dần theo thứ tự thay đường kẻ xám */}
           <ul className="border-b border-ink/15">

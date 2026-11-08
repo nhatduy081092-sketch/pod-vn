@@ -7,4 +7,5 @@ export const TOOL_LINKS = [
   { href: "/font-so-ao-bong-da", title: "Font số áo bóng đá", desc: "Gõ số của đội, so 7 kiểu số, mở mẫu có ô số – tên." },
   { href: "/mau-danh-sach-in-ao", title: "Mẫu danh sách in áo (Excel)", desc: "File tên – số – size có ô chọn size, tải lên là ra đơn." },
   { href: "/bang-size-ao", title: "Bảng size áo nhóm", desc: "Cách đo, cách chọn size cho cả nhóm." },
+  { href: "/ky-thuat-in-logo", title: "Kỹ thuật in logo", desc: "Thêu, in lụa, khắc laser, in UV – nên chọn cách nào theo chất liệu." },
 ];
