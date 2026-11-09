@@ -137,36 +137,38 @@ export default async function ProductPage({ params }: { params: Params }) {
     });
   }
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    image: product.images.map((i) => absoluteAssetUrl(i)),
-    description: product.description,
-    brand: { "@type": "Brand", name: settings.brand.name },
-    ...(product.basePrice > 0
+  // Google chỉ nhận dữ liệu Product khi có offers/review/aggregateRating -> sản phẩm "Liên hệ báo giá"
+  // (không giá, không "giá từ") thì không xuất khối Product, tránh lỗi "Đoạn trích về sản phẩm"
+  const offers =
+    product.basePrice > 0
       ? {
-          offers: {
-            "@type": "Offer",
-            priceCurrency: "VND",
-            price: effectiveBasePrice(product),
-            ...(saleActive(product) && product.saleEndsAt ? { priceValidUntil: product.saleEndsAt.slice(0, 10) } : {}),
-            availability: "https://schema.org/InStock",
-            url: `${SITE_URL}/san-pham/${product.slug}`,
-          },
+          "@type": "Offer",
+          priceCurrency: "VND",
+          price: effectiveBasePrice(product),
+          ...(saleActive(product) && product.saleEndsAt ? { priceValidUntil: product.saleEndsAt.slice(0, 10) } : {}),
+          availability: "https://schema.org/InStock",
+          url: `${SITE_URL}/san-pham/${product.slug}`,
         }
       : product.priceFrom
         ? {
-            offers: {
-              "@type": "AggregateOffer",
-              priceCurrency: "VND",
-              lowPrice: product.priceFrom,
-              availability: "https://schema.org/InStock",
-              url: `${SITE_URL}/san-pham/${product.slug}`,
-            },
+            "@type": "AggregateOffer",
+            priceCurrency: "VND",
+            lowPrice: product.priceFrom,
+            availability: "https://schema.org/InStock",
+            url: `${SITE_URL}/san-pham/${product.slug}`,
           }
-        : {}),
-  };
+        : null;
+  const jsonLd = offers
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.name,
+        image: product.images.map((i) => absoluteAssetUrl(i)),
+        description: product.description,
+        brand: { "@type": "Brand", name: settings.brand.name },
+        offers,
+      }
+    : null;
 
   return (
     <div className="container-site pb-20 pt-6 md:pb-28 md:pt-10">
@@ -227,7 +229,7 @@ export default async function ProductPage({ params }: { params: Params }) {
         }}
       />
       <RecentlyViewed exclude={product.id} className="-mx-4 md:-mx-6" />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />}
     </div>
   );
 }
