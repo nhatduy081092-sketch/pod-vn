@@ -280,6 +280,35 @@ async function applyGroupMinLanding(): Promise<boolean> {
   return done.length > 0;
 }
 
+/**
+ * Lời hứa về giá trang Doanh nghiệp (09/11/2026): "Hiện ngay trên web" không đúng với ~764/770 sản phẩm "Liên hệ báo giá".
+ * Chỉ thay ô "Giá" (điều kiện + bảng so sánh) còn GIỐNG mặc định cũ – chủ shop đã sửa trong CMS thì giữ nguyên.
+ */
+const PRICE_PROMISE_FLAG = "update:price-promise:2026-11-09";
+const OLD_PRICE = { termValue: "Hiện ngay trên web", compareYala: "Hiện ngay; đơn lớn có báo giá riêng" };
+
+async function applyPricePromise(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: PRICE_PROMISE_FLAG } })) return false;
+  const row = await prisma.setting.findUnique({ where: { key: "landing" } });
+  const done: string[] = [];
+  if (row) {
+    const cur = mergeLanding(row.value);
+    const d = mergeLanding(null).b2bHub;
+    const hub = { ...cur.b2bHub };
+    const newTerm = d.terms.find((t) => t.label === "Giá");
+    hub.terms = hub.terms.map((t) => (t.label === "Giá" && t.value === OLD_PRICE.termValue && newTerm ? (done.push("điều kiện giá"), newTerm) : t));
+    const newCmp = d.compare.find((c) => c.label === "Giá");
+    hub.compare = hub.compare.map((c) => (c.label === "Giá" && c.yala === OLD_PRICE.compareYala && newCmp ? (done.push("bảng so sánh giá"), newCmp) : c));
+    if (done.length) {
+      await prisma.setting.update({ where: { key: "landing" }, data: { value: { ...cur, b2bHub: hub } } });
+      invalidateLanding();
+    }
+  }
+  await prisma.setting.create({ data: { key: PRICE_PROMISE_FLAG, value: { at: new Date().toISOString(), done } } });
+  console.log(`[settings] lời hứa giá trang Doanh nghiệp: ${done.length ? done.join(", ") : "không có gì cần đổi"}`);
+  return done.length > 0;
+}
+
 export async function applySettingsUpdates() {
   let changed = await applyBundledBlanks();
   if (await applyGroupPivot()) changed = true;
@@ -287,6 +316,7 @@ export async function applySettingsUpdates() {
   if (await applyCampaignSeo()) changed = true;
   if (await applyAboutGroupMin()) changed = true;
   if (await applyGroupMinLanding()) changed = true;
+  if (await applyPricePromise()) changed = true;
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });

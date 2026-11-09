@@ -1,6 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { UPLOAD_MAX_BYTES } from "@pod/shared";
+import { uploadDesign } from "@/lib/client-api";
+import { assetUrl } from "@/lib/config";
 import { track } from "@/lib/track";
+import { IconUpload } from "../ui/icons";
+
+const LOGO_ACCEPT = ["image/png", "image/jpeg", "image/webp"];
 
 type Option = { key: string; title: string };
 type Props = {
@@ -23,7 +29,25 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
   const [state, setState] = useState<"idle" | "sending" | "done">("idle");
   const [err, setErr] = useState("");
   const [summary, setSummary] = useState("");
-  const up = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
+  // file logo (không bắt buộc): tải lên kho ảnh như form báo giá sản phẩm, gửi kèm link trong nội dung yêu cầu
+  const logoRef = useRef<HTMLInputElement>(null);
+  const [logo, setLogo] = useState<{ url: string; name: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  async function onLogo(file?: File) {
+    setErr("");
+    if (!file) return;
+    if (!LOGO_ACCEPT.includes(file.type)) return setErr("Logo nhận ảnh PNG, JPG hoặc WEBP. File AI/PDF: gửi qua Zalo sau khi gửi form");
+    if (file.size > UPLOAD_MAX_BYTES) return setErr("Ảnh logo tối đa 50MB");
+    setUploading(true);
+    try {
+      setLogo({ url: (await uploadDesign(file)).url, name: file.name });
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  }
+  const up =(k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
 
   // ?dip=qua-tet / ?nganh=binh-nuoc-ly-coc từ các nút "Nhận báo giá" trên trang
   useEffect(() => {
@@ -38,8 +62,11 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
     e.preventDefault();
     setErr("");
     if (!f.name.trim() || !/^(0|\+84)\d{9,10}$/.test(f.phone.replace(/[\s.]/g, ""))) return setErr("Nhập họ tên và số điện thoại hợp lệ");
+    if (uploading) return setErr("Đang tải logo lên, đợi vài giây rồi gửi lại");
     const lines = [
       segment && `Nhóm khách: ${segment}`,
+      // đặt sớm để không bị cắt khi nội dung dài (giới hạn 1000 ký tự)
+      logo && `Logo: ${new URL(assetUrl(logo.url), window.location.origin).href}`,
       f.company && `Công ty: ${f.company}`,
       f.email && `Email: ${f.email}`,
       f.occasion && `Dịp: ${f.occasion}`,
@@ -75,7 +102,7 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
       <div className="rounded-3xl bg-surface p-6 md:p-8" role="status">
         <p className="text-xl font-semibold">Đã nhận yêu cầu của bạn ✓</p>
         <p className="mt-2 text-[15px] text-muted">
-          YALA sẽ liên hệ trong giờ làm việc để tư vấn và gửi mockup. Cần gấp? Nhắn Zalo kèm nội dung bên dưới{zalo ? " và file logo – có logo YALA làm mockup nhanh hơn" : ""}.
+          YALA sẽ liên hệ trong giờ làm việc để tư vấn và gửi mockup. Cần gấp? Nhắn Zalo kèm nội dung bên dưới{zalo && !logo ? " và file logo – có logo YALA làm mockup nhanh hơn" : ""}.
         </p>
         <pre className="mt-4 whitespace-pre-wrap rounded-xl bg-white p-4 text-sm">{summary}</pre>
         <div className="mt-4 flex flex-wrap gap-2.5">
@@ -176,8 +203,33 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
         <span className="label">Mô tả thêm</span>
         <textarea className={input} rows={3} value={f.note} onChange={up("note")} placeholder={notePlaceholder ?? "VD: 300 hộp quà Tết cho nhân viên, có bình giữ nhiệt + lịch, in logo 1 màu…"} maxLength={500} />
       </label>
-      {/* form chưa nhận file: quy trình bước 1 nhắc "file logo" nên nói rõ gửi logo ở đâu */}
-      {zalo && <p className="mt-2 text-sm text-muted">Có file logo? Gửi form xong, bấm &quot;Nhắn Zalo ngay&quot; để gửi kèm logo.</p>}
+      <div className="mt-4">
+        <span className="label">File logo (không bắt buộc)</span>
+        <button
+          type="button"
+          onClick={() => logoRef.current?.click()}
+          className="flex w-full items-center gap-3 rounded-xl border border-dashed border-ink/30 bg-white p-3 text-left text-[15px] transition hover:border-ink"
+        >
+          {logo ? (
+            <>
+              <img src={assetUrl(logo.url)} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-line object-contain" />
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{logo.name}</span>
+                <span className="text-sm text-muted">Đã tải lên · bấm để đổi file khác</span>
+              </span>
+            </>
+          ) : (
+            <>
+              <IconUpload className="h-6 w-6 shrink-0 text-ink/60" />
+              <span>
+                {uploading ? "Đang tải lên…" : "Tải logo lên để nhận mockup nhanh hơn"}
+                <span className="block text-sm text-muted">PNG, JPG, WEBP tối đa 50MB · file AI, PDF gửi qua Zalo sau</span>
+              </span>
+            </>
+          )}
+        </button>
+        <input ref={logoRef} type="file" accept={LOGO_ACCEPT.join(",")} className="hidden" onChange={(e) => void onLogo(e.target.files?.[0])} />
+      </div>
       <input className="hidden" tabIndex={-1} autoComplete="off" value={f.website} onChange={up("website")} aria-hidden />
       {err && <p className="mt-3 text-sm text-sale">{err}</p>}
       <div className="mt-5 flex flex-wrap items-center gap-3">

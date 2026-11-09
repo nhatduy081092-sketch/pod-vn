@@ -364,7 +364,7 @@ export const DEFAULT_LANDING: LandingSettings = {
     terms: [
       { label: "Số lượng tối thiểu", value: "Đơn nhóm từ 10", note: "Áo, túi in theo thiết kế – ít hơn vẫn đặt được giá lẻ. Quà tặng khác theo số lượng tối thiểu ghi trên từng sản phẩm." },
       { label: "Mockup", value: "Xem ngay, miễn phí", note: "Tự xem logo trên sản phẩm bằng YALA Studio, hoặc YALA làm mockup giúp trước khi báo giá." },
-      { label: "Giá", value: "Hiện ngay trên web", note: "Đơn lớn, nhiều món hoặc cần đóng hộp: báo giá chi tiết theo ngân sách." },
+      { label: "Giá", value: "Báo theo ngân sách", note: "Mẫu YALA Everyday có giá ngay trên web. Đồng phục, quà tặng, đơn nhiều món hoặc cần đóng hộp: báo giá miễn phí theo số lượng và ngân sách." },
       { label: "Thời gian", value: "2–4 ngày", note: "Sản xuất đơn áo in đặt online. Quà tặng số lượng lớn: báo theo từng dự án." },
       { label: "Hoá đơn", value: "Có hoá đơn VAT", note: "Xuất hoá đơn điện tử cho doanh nghiệp." },
       { label: "Giao hàng", value: "Toàn quốc", note: "Giao một điểm hoặc chia nhiều chi nhánh theo danh sách." },
@@ -372,7 +372,7 @@ export const DEFAULT_LANDING: LandingSettings = {
     compare: [
       { label: "Số lượng tối thiểu", usual: "Thường 30–500 sản phẩm", yala: "Từ 10 sản phẩm (ít hơn vẫn đặt được)" },
       { label: "Xem mẫu", usual: "Chờ gửi mockup qua Zalo, email", yala: "Xem ngay logo trên sản phẩm" },
-      { label: "Giá", usual: "Nhắn tin, chờ báo giá", yala: "Hiện ngay; đơn lớn có báo giá riêng" },
+      { label: "Giá", usual: "Nhắn tin, chờ báo giá", yala: "Báo giá kèm mockup miễn phí, theo ngân sách" },
       { label: "Thời gian", usual: "Thường 7–15 ngày trở lên", yala: "2–4 ngày cho đơn áo in" },
       { label: "Đặt hàng", usual: "Qua tin nhắn, dễ sót thông tin", yala: "Đặt online hoặc gửi giỏ báo giá" },
     ],
