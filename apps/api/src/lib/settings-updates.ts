@@ -2,6 +2,8 @@ import { prisma } from "@pod/db";
 import { GROUP_MIN_LINE, mergeLanding, OLD_MIN_LINE, PAGE_KEY_PREFIX } from "@pod/shared";
 import { invalidateLanding } from "./settings";
 import { applyBlankPhotos } from "./blank-photos";
+import { cleanOemName, cleanOemText } from "./oem-clean";
+import { searchFields } from "./search";
 
 /**
  * Cập nhật cài đặt theo yêu cầu của chủ shop, chạy 1 lần khi API khởi động (đánh dấu bằng Setting).
@@ -309,6 +311,49 @@ async function applyPricePromise(): Promise<boolean> {
   return done.length > 0;
 }
 
+/**
+ * Dọn tên + mô tả sản phẩm nhập từ OEM Group: bỏ đoạn quảng cáo, email, hotline của nhà cung cấp (xem oem-clean.ts).
+ * Lưu bản gốc vào Setting BACKUP trước khi sửa (khôi phục được từng sản phẩm); chạy lại an toàn vì hàm dọn idempotent.
+ */
+const OEM_TEXT_FLAG = "update:oem-text:2026-11-09";
+const OEM_TEXT_BACKUP = "backup:oem-text:2026-11-09";
+
+async function applyOemTextClean(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: OEM_TEXT_FLAG } })) return false;
+  const rows = await prisma.product.findMany({
+    where: {
+      OR: [
+        { description: { contains: "OEM", mode: "insensitive" } },
+        { description: { contains: "oemgroup", mode: "insensitive" } },
+        { description: { contains: "1819" } },
+        { name: { contains: "OEM", mode: "insensitive" } },
+      ],
+    },
+    select: { id: true, name: true, description: true, subcategory: true, material: true, category: { select: { name: true } } },
+  });
+  const changes = rows
+    .map((p) => ({ p, name: cleanOemName(p.name), description: cleanOemText(p.description) }))
+    .filter((c) => c.name !== c.p.name || c.description !== c.p.description);
+  if (changes.length && !(await prisma.setting.findUnique({ where: { key: OEM_TEXT_BACKUP } }))) {
+    const items = changes.map(({ p }) => ({ id: p.id, name: p.name, description: p.description }));
+    await prisma.setting.create({ data: { key: OEM_TEXT_BACKUP, value: { at: new Date().toISOString(), items } } });
+  }
+  for (let i = 0; i < changes.length; i += 50) {
+    await prisma.$transaction(
+      changes.slice(i, i + 50).map(({ p, name, description }) =>
+        prisma.product.update({
+          where: { id: p.id },
+          data: { description, ...(name !== p.name ? { name, ...searchFields(name, p.subcategory, p.category.name, p.material) } : {}) },
+        }),
+      ),
+    );
+  }
+  const renamed = changes.filter((c) => c.name !== c.p.name).length;
+  await prisma.setting.create({ data: { key: OEM_TEXT_FLAG, value: { at: new Date().toISOString(), products: changes.length, renamed } } });
+  console.log(`[settings] dọn chữ OEM: ${changes.length} sản phẩm (${renamed} đổi tên), bản gốc lưu ở ${OEM_TEXT_BACKUP}`);
+  return changes.length > 0;
+}
+
 export async function applySettingsUpdates() {
   let changed = await applyBundledBlanks();
   if (await applyGroupPivot()) changed = true;
@@ -317,6 +362,7 @@ export async function applySettingsUpdates() {
   if (await applyAboutGroupMin()) changed = true;
   if (await applyGroupMinLanding()) changed = true;
   if (await applyPricePromise()) changed = true;
+  if (await applyOemTextClean()) changed = true;
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });

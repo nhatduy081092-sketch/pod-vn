@@ -4,6 +4,7 @@ import { getLanding, invalidateLanding } from "./settings";
 import { searchFields } from "./search";
 import { ensureProductParts } from "./product-parts";
 import { applyOemPrintPresets, repairMissingPrintAreas } from "./oem-blanks";
+import { cleanOemName, cleanOemText } from "./oem-clean";
 
 /**
  * Đồng bộ danh mục + sản phẩm từ website OEM Group (WooCommerce Store API công khai).
@@ -170,11 +171,12 @@ export async function importOemCatalog(): Promise<ImportReport> {
     const short = htmlToText(p.short_description);
     const long = htmlToText(p.description);
     const subNames = p.categories.map((c) => decodeEntities(c.name)).join(", ");
-    const description = [short, long && long !== short ? long : "", `Nhóm: ${subNames}.`].filter(Boolean).join("\n\n").slice(0, 4000);
+    // bỏ quảng cáo + email/hotline của nhà cung cấp trước khi hiện trên YALA
+    const description = cleanOemText([short, long && long !== short ? long : "", `Nhóm: ${subNames}.`].filter(Boolean).join("\n\n")).slice(0, 4000);
     const minor = p.prices?.currency_minor_unit ?? 0;
     const price = Math.round(Number(p.prices?.price ?? 0) / 10 ** minor) || 0;
     const externalId = `oem:${p.id}`;
-    const name = decodeEntities(p.name).trim();
+    const name = cleanOemName(decodeEntities(p.name).trim());
     const subName = leaf && leaf.id !== top!.id ? decodeEntities(leaf.name) : "";
     const search = searchFields(name, subName, decodeEntities(top!.name));
 
