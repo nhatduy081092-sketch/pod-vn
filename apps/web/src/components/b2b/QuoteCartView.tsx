@@ -106,17 +106,24 @@ export function QuoteCartView({ solutions, salesZalo, salesName, hotline, respon
           <Link href="/doanh-nghiep/san-pham" className="btn-primary">Chọn sản phẩm</Link>
           <Link href="/doanh-nghiep#bao-gia" className="btn-outline">Gửi nhu cầu không cần chọn sản phẩm</Link>
         </div>
+        <p className="mt-4 text-[15px]">
+          Có logo rồi?{" "}
+          <Link href="/doanh-nghiep/bo-qua" className="font-semibold underline underline-offset-4 hover:text-brand-dark">Xem logo trên cả bộ quà rồi thêm một lần</Link>
+        </p>
       </div>
     );
 
   return (
     <form onSubmit={submit} className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-start" noValidate>
       <section aria-label="Sản phẩm cần báo giá">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="shrink-0 whitespace-nowrap text-lg font-semibold">
             {items.length} sản phẩm · {totalQty.toLocaleString("vi-VN")} cái
           </h2>
-          <Link href="/doanh-nghiep/san-pham" className="text-sm font-semibold underline underline-offset-4">+ Thêm sản phẩm</Link>
+          <div className="flex flex-wrap justify-end gap-x-4 gap-y-1">
+            <Link href="/doanh-nghiep/bo-qua" className="text-sm font-semibold underline underline-offset-4">+ Cả bộ quà 1 logo</Link>
+            <Link href="/doanh-nghiep/san-pham" className="text-sm font-semibold underline underline-offset-4">+ Thêm sản phẩm</Link>
+          </div>
         </div>
         <ul className="mt-3 divide-y divide-line rounded-2xl border border-line">
           {items.map((i) => (

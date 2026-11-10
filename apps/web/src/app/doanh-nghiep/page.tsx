@@ -7,6 +7,7 @@ import { assetUrl } from "@/lib/config";
 import { MerchKit } from "@/components/b2b/MerchKit";
 import { B2BQuoteForm } from "@/components/b2b/B2BQuoteForm";
 import { MaskTitle } from "@/components/motion/MaskTitle";
+import { giftGroupsWithItems } from "@/lib/gift-set-data";
 import { SEGMENTS } from "@pod/shared";
 
 // khu doanh nghiệp: khoảng thở rộng + tiêu đề lớn cho khách ra quyết định (leader / phòng hành chính)
@@ -48,6 +49,8 @@ export default async function BusinessPage() {
   const clients = settings.b2b.clients;
   const stats = settings.b2b.stats;
   // ảnh thật sản phẩm từng ngành (đã nhập từ nguồn) cho khối minh hoạ đầu trang
+  // 4 món mặc định của trang "bộ quà" cho khối giới thiệu (lỗi API thì khối chỉ còn chữ + nút)
+  const giftSet = (await giftGroupsWithItems(["ao", "binh", "so", "tote"]).catch(() => [])).map((g) => ({ key: g.key, label: g.label, item: g.items[0]! }));
   const photos = hub.industries.flatMap((i) => {
     const c = bySlug.get(i.slug);
     return c?.image && !/\.svg(\?|$)/i.test(c.image) ? [{ src: c.image, alt: i.name }] : [];
@@ -140,6 +143,7 @@ export default async function BusinessPage() {
             [
               hub.terms.length ? ["#dieu-kien", "Điều kiện đặt hàng"] : null,
               ["#nganh-hang", "Ngành hàng"],
+              ["#bo-qua", "Logo trên cả bộ quà"],
               ["#giai-phap", "Giải pháp theo dịp"],
               hub.cases.length ? ["#du-an", "Dự án đã làm"] : null,
               ["#quy-trinh", "Quy trình"],
@@ -245,6 +249,39 @@ export default async function BusinessPage() {
               );
             })}
           </ul>
+        </div>
+      </section>
+
+      {/* Một logo lên cả bộ quà – dẫn vào công cụ /doanh-nghiep/bo-qua (đa số sản phẩm là hàng báo giá: xem trước cả bộ trước khi hỏi giá) */}
+      <section id="bo-qua" className="scroll-mt-32 bg-ink py-[clamp(56px,9vh,104px)] text-white">
+        <div className="container-site grid items-center gap-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-14">
+          <div>
+            <MaskTitle className="h-section max-w-xl text-[clamp(28px,3.4vw,46px)] text-white tracking-[-0.025em] [text-wrap:balance]">Có logo rồi? Xem ngay trên cả bộ quà</MaskTitle>
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-white/80 md:text-lg">
+              Tải logo một lần, xem trên áo, bình giữ nhiệt, ly, sổ tay, bút, túi, ô dù. Tải ảnh cả bộ để trình duyệt nội bộ, rồi gửi một yêu cầu báo giá cho tất cả.
+            </p>
+            <Link href="/doanh-nghiep/bo-qua" className="btn-primary mt-7 px-7 py-3.5 text-base">
+              Thử với logo của bạn
+            </Link>
+            <p className="mt-3 text-sm text-white/60">Miễn phí, không cần đăng ký. Logo chỉ gửi đi khi bạn yêu cầu báo giá.</p>
+          </div>
+          {giftSet.length >= 4 && (
+            <ul className="grid grid-cols-2 gap-3 md:gap-4" aria-label="Ví dụ bộ quà in logo">
+              {giftSet.map(({ key, label, item }) => (
+                <li key={key} className="relative aspect-square overflow-hidden rounded-lg bg-white">
+                  <img src={assetUrl(item.image)} alt={item.name} loading="lazy" decoding="async" className="h-full w-full object-contain p-[8%]" />
+                  {/* chỗ logo minh hoạ (không phải mockup thật): ngực áo cao hơn tâm ảnh */}
+                  <span
+                    aria-hidden
+                    className={`absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md border border-dashed border-brand-dark bg-white/90 px-2 py-1 text-[11px] font-semibold whitespace-nowrap text-brand-dark md:text-xs ${key === "ao" ? "top-[36%]" : "top-1/2"}`}
+                  >
+                    Logo của bạn
+                  </span>
+                  <span className="absolute bottom-2 left-2 rounded-full bg-ink/80 px-2.5 py-1 text-[12px] font-medium text-white">{label}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
