@@ -20,7 +20,7 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
   if (!data.enabled) return null;
   const zalo = `https://zalo.me/${brand.zalo.replace(/\D/g, "")}`;
   return (
-    <section id="doanh-nghiep" className="home-b2b relative scroll-mt-16 overflow-hidden bg-ink py-[clamp(80px,14vh,170px)] text-white">
+    <section id="doanh-nghiep" className="home-b2b relative scroll-mt-16 overflow-hidden bg-ink py-[clamp(56px,8vh,112px)] text-white">
       <div className="container-site relative">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
           <MaskTitle className="font-display text-[clamp(30px,3.6vw,52px)] font-bold leading-[1.06] tracking-[-0.03em] [text-wrap:balance]">{data.title}</MaskTitle>
@@ -41,7 +41,7 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
         </div>
 
         {/* số liệu năng lực (chủ shop xác nhận 31/10/2026 là của YALA) – chữ lớn, không thẻ */}
-        <ul className="mt-20 grid grid-cols-2 gap-x-8 gap-y-10 md:mt-28 lg:grid-cols-4">
+        <ul className="mt-12 grid grid-cols-2 gap-x-8 gap-y-8 md:mt-16 lg:grid-cols-4">
           {data.stats.map((s, i) => (
             <li key={s.label} data-reveal="rise" style={{ ["--d" as string]: `${i * 70}ms` }}>
               <span className="draw-rule mb-5 bg-white/25" aria-hidden />
@@ -54,8 +54,8 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
         </ul>
 
         {tiles.length >= 4 ? (
-          <div className="mt-16 md:mt-24" data-reveal="rise">
-            <p className="mb-8 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-white/70 md:mb-10">
+          <div className="mt-12 md:mt-16" data-reveal="rise">
+            <p className="mb-5 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-white/70 md:mb-6">
               <i className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden />
               Chọn theo ngành hàng
             </p>

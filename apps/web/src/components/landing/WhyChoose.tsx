@@ -9,7 +9,7 @@ import type { LandingSettings } from "@pod/shared";
 export function WhyChoose({ data }: { data: LandingSettings["whyChoose"] }) {
   return (
     <section className="overflow-hidden bg-ink text-white" aria-labelledby="vi-sao-chon">
-      <div className="container-site py-[clamp(64px,11vh,140px)]">
+      <div className="container-site py-[clamp(48px,7vh,96px)]">
         <div className="[container-type:inline-size]">
           <div className="mask-reveal" data-reveal="mask" aria-hidden>
             <span className="mask-line select-none font-display text-[35cqw] font-black leading-[0.82] tracking-[-0.065em]">
@@ -19,7 +19,7 @@ export function WhyChoose({ data }: { data: LandingSettings["whyChoose"] }) {
         </div>
         <div data-reveal="rise" className="mt-6 md:mt-8">
           <span className="draw-rule bg-white/40" aria-hidden />
-          <div className="mt-8 grid gap-10 md:mt-10 lg:grid-cols-12 lg:gap-8">
+          <div className="mt-6 grid gap-8 md:mt-8 lg:grid-cols-12 lg:gap-8">
             <p className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-white/70 lg:col-span-2 lg:items-start">
               <i className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand lg:mt-[0.45em]" aria-hidden />
               Cam kết

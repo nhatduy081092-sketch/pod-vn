@@ -299,8 +299,8 @@ export function ParticleBand({ line }: { line: string }) {
 
   return (
     <section className="relative bg-ink text-[#e8e6e3]" aria-label={`${WORD} – ${line}`}>
-      <canvas ref={ref} aria-hidden className="block h-[clamp(220px,34vw,420px)] w-full font-sans" />
-      <p className="container-site -mt-[clamp(40px,7vw,100px)] pb-2 text-center text-base font-semibold tracking-[0.02em] text-[#e8e6e3]/80 md:text-lg">{line}</p>
+      <canvas ref={ref} aria-hidden className="block h-[clamp(180px,26vw,320px)] w-full font-sans" />
+      <p className="container-site -mt-[clamp(32px,5.4vw,76px)] pb-2 text-center text-base font-semibold tracking-[0.02em] text-[#e8e6e3]/80 md:text-lg">{line}</p>
     </section>
   );
 }

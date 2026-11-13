@@ -347,3 +347,67 @@ html.reveal-on [data-reveal="rise"].is-in .card-cover { animation: cover-off 0.9
   transform: translateY(calc(var(--press, 0) * 2px)) scale(calc(1 - var(--press, 0) * 0.04));
   text-shadow: 0 1px 1px rgba(70, 18, 0, 0.55);
 }
+
+/* ===== Nút thêm vào giỏ có xe đẩy (bộ Code XR add-to-cart-button) – components/shop/CartButton.tsx =====
+   --p do lò xo JS điều khiển (0 = nghỉ, 1 = rê chuột/chạm, vượt quá 2 phía khi nảy).
+   Nút rộng theo cột (flex-1) nên nội dung gói trong .atc__inner ở giữa; xe vào/ra kèm mờ dần để không lộ giữa nút. */
+.atc {
+  --p: 0;
+  --lean: 0deg;
+  --sink: 0px;
+  --icon: 24px;
+  --gap-icon: 8px;
+  --gap-text: 11px;
+  --text-shift: calc(var(--icon) + var(--gap-icon) + 1px - 4px);
+  --track-shift: 44px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 0.5rem;
+  border: 1px solid #1d1d1f;
+  overflow: hidden;
+  background: #1d1d1f;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  box-shadow: 0 6px 14px rgb(0 0 0 / calc(clamp(0, var(--p) * 0.8, 1) * 0.22));
+  transition: scale 160ms cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+.atc:active { scale: 0.97; }
+.atc:focus-visible { outline: 2px solid #E4570B; outline-offset: 3px; }
+.atc__inner { position: relative; display: inline-flex; align-items: center; }
+.atc__label { white-space: nowrap; transform: translateX(calc(var(--p) * var(--text-shift) * 0.5)); }
+.atc__group { display: flex; align-items: center; gap: var(--gap-icon); }
+.atc__group--in {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-right: calc(var(--gap-text) - var(--text-shift) * 0.5);
+  transform: translate(calc((var(--p) - 1) * var(--track-shift) * -1), -50%);
+  opacity: clamp(0, var(--p), 1);
+}
+.atc__group--out {
+  margin-left: var(--gap-text);
+  transform: translateX(calc(var(--p) * var(--track-shift)));
+  opacity: clamp(0, 1 - var(--p), 1);
+}
+.atc__divider { flex: none; width: 1px; height: 20px; background: rgb(255 255 255 / 0.2); }
+.atc__icon { flex: none; display: block; width: var(--icon); height: var(--icon); overflow: visible; transform: rotate(var(--lean)); transform-origin: 56% 88%; }
+.atc__item { transform: translateY(var(--sink)); }
+.atc__ball { transform-box: fill-box; transform-origin: 50% 50%; }
+.atc__ball.is-popping { animation: atc-pop 520ms cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+@keyframes atc-pop {
+  0% { transform: translateY(-7px) scale(0.4); }
+  45% { transform: translateY(0) scale(1.25); }
+  70% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atc { transition: none; }
+  .atc__ball.is-popping { animation: none; }
+}

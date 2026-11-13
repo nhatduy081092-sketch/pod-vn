@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { areaExtraPrice, BASIC_COLORS, designFields, displayCompareAt, formatVND, GROUP_MIN_QTY, isAiImage, linePrice, saleActive, TEAM_SIZE_LABEL, type ColorKey, type RosterRow } from "@pod/shared";
 import { useCart } from "@/lib/cart";
+import { CartButton } from "../shop/CartButton";
 import { assetUrl } from "@/lib/config";
 import { track } from "@/lib/track";
 import type { ProductDetail } from "@/lib/types";
@@ -326,9 +327,7 @@ export function ProductConfigurator({
         )}
 
         <div className={`sticky bottom-0 z-10 -mx-4 mt-6 flex gap-2 bg-white px-4 py-3 md:static md:mx-0 md:p-0 ${blocked ? "hidden" : ""}`}>
-          <button type="button" onClick={addToCart} className="btn-outline flex-1 py-3.5 text-base">
-            {added ? "Đã thêm vào giỏ" : "Thêm vào giỏ"}
-          </button>
+          <CartButton label={added ? "Đã thêm vào giỏ" : "Thêm vào giỏ"} count={cart.count} onAdd={addToCart} className="flex-1 py-3.5 text-base" />
           <button
             type="button"
             onClick={() => {

@@ -6,7 +6,7 @@ import { SectionTitle } from "./SectionTitle";
 export function BestSellers({ title, items }: { title: string; items: ProductCardData[] }) {
   if (!items.length) return null;
   return (
-    <section className="py-12 md:py-20" data-reveal>
+    <section className="py-8 md:py-12" data-reveal>
       <SectionTitle href="/san-pham?sort=ban-chay" sub="Xếp theo số đơn và lượt xem 30 ngày gần nhất.">
         {title}
       </SectionTitle>

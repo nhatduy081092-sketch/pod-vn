@@ -10,21 +10,21 @@ export function CollectionGrid({ title, plain = false }: { eyebrow?: string; tit
   const covers = DESIGN_COLLECTIONS.map((c) => ({ c, d: c.designs[0]! }));
   if (plain)
     return (
-      <section className="py-12 md:py-20" aria-label={title}>
+      <section className="py-8 md:py-12" aria-label={title}>
         <SectionTitle href="/bo-suu-tap" hrefLabel={`Cả ${DESIGN_COLLECTIONS.length} chủ đề`} sub="Mẫu chữ tiếng Việt do YALA thiết kế – sửa chữ, đổi màu áo, thêm tên từng người.">
           {title}
         </SectionTitle>
-        <ul className="container-site mt-8 grid gap-x-8 sm:grid-cols-2 md:mt-10 lg:grid-cols-3">
+        <ul className="container-site mt-5 grid gap-x-8 sm:mt-8 sm:grid-cols-2 md:mt-10 lg:grid-cols-3">
           {DESIGN_COLLECTIONS.map((c, i) => (
-            <li key={c.slug} className={`border-b border-ink/15 ${i >= 10 ? "hidden sm:block" : ""}`}>
-              <Link href={`/bo-suu-tap/${c.slug}`} className="group flex items-baseline justify-between gap-4 py-3.5">
+            <li key={c.slug} className={`border-b border-ink/15 ${i >= 6 ? "hidden sm:block" : ""}`}>
+              <Link href={`/bo-suu-tap/${c.slug}`} className="group flex items-baseline justify-between gap-4 py-3 sm:py-3.5">
                 <span className="text-lg font-semibold transition-colors group-hover:text-brand-dark">{c.name}</span>
                 <span className="shrink-0 text-[15px] tabular-nums text-ink/70">{c.designs.length} mẫu</span>
               </Link>
             </li>
           ))}
         </ul>
-        <div className="container-site mt-8 sm:hidden">
+        <div className="container-site mt-6 sm:hidden">
           <Link href="/bo-suu-tap" className="btn-outline w-full">
             Xem cả {DESIGN_COLLECTIONS.length} chủ đề
           </Link>
@@ -32,7 +32,7 @@ export function CollectionGrid({ title, plain = false }: { eyebrow?: string; tit
       </section>
     );
   return (
-    <section className="py-12 md:py-20" aria-label={title}>
+    <section className="py-8 md:py-12" aria-label={title}>
       <DesignFonts designs={covers.map((x) => x.d)} />
       <SectionTitle href="/bo-suu-tap" hrefLabel={`Cả ${DESIGN_COLLECTIONS.length} chủ đề`} sub="Mẫu chữ tiếng Việt do YALA thiết kế – sửa chữ, đổi màu áo, thêm tên từng người.">
         {title}

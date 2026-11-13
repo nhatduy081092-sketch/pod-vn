@@ -63,7 +63,7 @@ export function ObjectHero({
 /** Đầu trang chủ: 4 ảnh chụp sản phẩm đồng phục thật trong danh mục, mỗi ảnh mở đúng trang sản phẩm */
 function RealProducts({ items }: { items: RealPick[] }) {
   return (
-    <div className="pb-10 md:pb-16">
+    <div className="pb-8 md:pb-12">
       <ul className="grid grid-cols-2 gap-3 md:gap-4">
         {items.map((p, i) => (
           <li key={p.slug} {...rise(i)}>
@@ -199,7 +199,7 @@ const SEGMENT_MOCKUP: Record<string, { garment: GarmentKey; color: ColorKey; pri
 /** 4 lối vào theo nhóm khách: ảnh sản phẩm thật của nhóm (thiếu thì mockup áo minh hoạ) + tên nhóm, không câu mô tả */
 export function HomeSegments({ photos = {} }: { photos?: Record<string, RealPick> }) {
   return (
-    <section className="container-site py-[clamp(72px,12vh,150px)]" aria-labelledby="don-vi">
+    <section className="container-site py-[clamp(48px,7vh,96px)]" aria-labelledby="don-vi">
       <h2 id="don-vi" className="font-display text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.025em]">
         Chọn theo đơn vị của bạn
       </h2>
@@ -258,14 +258,14 @@ const VERBS = ["Thiết kế", "Gửi link", "Chốt đơn", "In & giao"];
  */
 export function HomeSteps() {
   return (
-    <section className="bg-ink py-[clamp(72px,12vh,140px)] text-[#e8e6e3]" aria-labelledby="cach-dat-ao-nhom">
+    <section className="bg-ink py-[clamp(48px,7vh,96px)] text-[#e8e6e3]" aria-labelledby="cach-dat-ao-nhom">
       <div className="container-site">
         <h2 id="cach-dat-ao-nhom" className="max-w-4xl font-display text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.025em] [text-wrap:balance]">
           Không phải gom tin nhắn hỏi size
         </h2>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-[#e8e6e3]/80 md:text-lg">Bốn bước, một đường link: cả nhóm tự ghi tên và size, trưởng nhóm chỉ việc chốt đơn.</p>
         {/* thứ tự đọc ra từ vị trí + vạch cam vẽ lần lượt, không cần nhãn "Bước n" */}
-        <ol className="mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 md:mt-16 lg:grid-cols-4">
+        <ol className="mt-8 grid gap-x-8 gap-y-8 sm:grid-cols-2 md:mt-10 lg:grid-cols-4">
           {GROUP_STEPS.map((st, i) => (
             <li key={st.title} {...rise(i + 1)}>
               <span className="draw-rule mb-5 bg-brand" aria-hidden />
@@ -276,7 +276,7 @@ export function HomeSteps() {
             </li>
           ))}
         </ol>
-        <div className="mt-14 flex flex-wrap gap-3">
+        <div className="mt-10 flex flex-wrap gap-3">
           <Link href={`/thiet-ke/${GARMENT_PRODUCT.tshirt.slug}`} className="btn-primary px-7 py-3.5 text-base">
             Bắt đầu thiết kế
           </Link>
@@ -291,23 +291,23 @@ export function HomeSteps() {
 
 /** Mẫu áo nhóm có sẵn + công cụ miễn phí (liên kết nội bộ cho SEO): 2 cột dòng nền nhạt, không kẻ viền */
 export function HomeQuickStart() {
-  const row = "group flex items-center justify-between gap-4 rounded-lg bg-surface px-5 py-4 transition-colors hover:bg-ink hover:text-white";
+  const row = "group flex items-center justify-between gap-4 rounded-lg bg-surface px-4 py-3 transition-colors md:px-5 md:py-4 hover:bg-ink hover:text-white";
   const arrow = (
     <span aria-hidden className="shrink-0 text-lg transition-transform duration-200 group-hover:translate-x-1">
       →
     </span>
   );
   return (
-    <section className="container-site grid gap-14 py-[clamp(72px,12vh,150px)] md:grid-cols-2 md:gap-12" aria-label="Bắt đầu nhanh">
+    <section className="container-site grid gap-10 py-[clamp(48px,7vh,96px)] md:grid-cols-2 md:gap-12" aria-label="Bắt đầu nhanh">
       <div>
         <h2 id="bat-dau-nhanh" className="h-section">
           Mẫu áo nhóm có sẵn
         </h2>
         <p className="mt-2 text-base text-ink/80 md:text-lg">Sửa chữ, đổi màu áo, thêm tên từng người.</p>
-        <ul className="mt-6 space-y-2">
+        <ul className="mt-5 space-y-1.5 md:mt-6 md:space-y-2">
           {DESIGN_HUBS.map((h, i) => (
             <li key={h.slug} {...rise(i)}>
-              <Link href={`/${h.slug}`} className={`${row} text-lg font-semibold`}>
+              <Link href={`/${h.slug}`} className={`${row} text-base font-semibold md:text-lg`}>
                 {h.name}
                 {arrow}
               </Link>
@@ -318,11 +318,11 @@ export function HomeQuickStart() {
       <div>
         <h2 className="h-section">Công cụ miễn phí</h2>
         <p className="mt-2 text-base text-ink/80 md:text-lg">Cho trưởng nhóm, lớp trưởng, HR chuẩn bị đơn.</p>
-        <ul className="mt-6 space-y-2">
+        <ul className="mt-5 space-y-1.5 md:mt-6 md:space-y-2">
           {TOOL_LINKS.map((l, i) => (
             <li key={l.href} {...rise(i)}>
               <Link href={l.href} className={row}>
-                <span className="text-lg font-semibold">{l.title}</span>
+                <span className="text-base font-semibold md:text-lg">{l.title}</span>
                 {arrow}
               </Link>
             </li>

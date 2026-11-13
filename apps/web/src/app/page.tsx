@@ -65,7 +65,7 @@ export default async function HomePage() {
       <WhyChoose data={settings.whyChoose} />
       {/* Khu mua lẻ */}
       <div className="bg-surface">
-        <div className="container-site pt-[clamp(72px,12vh,150px)]">
+        <div className="container-site pt-[clamp(48px,7vh,96px)]">
           <h2 className="font-display text-[clamp(30px,4.4vw,64px)] font-bold leading-[1.04] tracking-[-0.03em]">Đặt lẻ cho riêng bạn?</h2>
           <p className="mt-3 max-w-2xl text-base text-ink/80 md:text-lg">Ít hơn 10 sản phẩm vẫn đặt được, tính như mua lẻ: chọn mẫu có sẵn hoặc tự thiết kế.</p>
         </div>
