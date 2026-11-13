@@ -49,8 +49,8 @@ export default async function CampaignPage({ params, searchParams }: { params: P
   const live = campaignLive(c, now);
   const upcoming = now < vnDayStart(c.startsAt);
   const canOrder = beforeDeadline(c, now);
-  const fg = c.dark ? "#ffffff" : "#1d1d1f";
-  const accentFg = luminance(c.accent) > 0.45 ? "#1d1d1f" : "#ffffff";
+  const fg = c.dark ? "#ffffff" : "#2a2522";
+  const accentFg = luminance(c.accent) > 0.45 ? "#2a2522" : "#ffffff";
 
   const tabIdx = Math.min(Math.max(0, Number(sp.tab) || 0), Math.max(0, c.tabs.length - 1));
   const tab = c.tabs[tabIdx];
@@ -288,7 +288,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
               <ul className="mt-6 grid grid-cols-2 gap-3">
                 {others.map((o) => (
                   <li key={o.slug}>
-                    <Link href={`/dip/${o.slug}`} className="sticker hover-wiggle block p-4" style={{ backgroundColor: o.bg, color: o.dark ? "#fff" : "#1d1d1f" }}>
+                    <Link href={`/dip/${o.slug}`} className="sticker hover-wiggle block p-4" style={{ backgroundColor: o.bg, color: o.dark ? "#fff" : "#2a2522" }}>
                       <span className="block font-display text-xl font-extrabold">{o.name}</span>
                       <span className="mt-1 block text-[13px] opacity-75">
                         {vnShortDate(o.startsAt)} – {vnShortDate(o.endsAt)}

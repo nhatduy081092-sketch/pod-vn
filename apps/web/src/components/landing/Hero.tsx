@@ -95,10 +95,10 @@ export function Hero({ data }: { data: LandingSettings["hero"] }) {
 
 function CtrlIcon({ kind }: { kind: "slash" | "play" | "minus" }) {
   return (
-    <svg viewBox="0 0 20 20" className="h-[clamp(12px,2.6vw,22px)] w-[clamp(12px,2.6vw,22px)]" fill="#FFE44D" stroke="#1d1d1f" strokeWidth="2">
+    <svg viewBox="0 0 20 20" className="h-[clamp(12px,2.6vw,22px)] w-[clamp(12px,2.6vw,22px)]" fill="#FFE44D" stroke="#2a2522" strokeWidth="2">
       <circle cx="10" cy="10" r="8" />
       {kind === "slash" && <path d="M5 5l10 10M8 3.5 16.5 12" />}
-      {kind === "play" && <path d="M8 6.5v7l5.5-3.5L8 6.5Z" fill="#1d1d1f" />}
+      {kind === "play" && <path d="M8 6.5v7l5.5-3.5L8 6.5Z" fill="#2a2522" />}
       {kind === "minus" && <path d="M3 8h14M3 12h14" />}
     </svg>
   );

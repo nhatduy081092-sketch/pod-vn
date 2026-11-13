@@ -314,11 +314,11 @@ export default async function StudioPage({ searchParams }: { searchParams: Searc
             ].map(([n, no, bg], i) => (
               <li key={n} className="sticker tilt bg-white p-2 text-ink" style={{ ["--r" as string]: `${[-4, 2, 5][i]}deg` }}>
                 <svg viewBox="0 0 100 100" className="w-full">
-                  <path d="M30 14 12 24l8 16 8-4v52h44V36l8 4 8-16-18-10h-12a8 8 0 0 1-16 0H30Z" fill={bg} stroke="#1d1d1f" strokeWidth="2.5" strokeLinejoin="round" />
-                  <text x="50" y="45" textAnchor="middle" fontSize="10" fontWeight="800" fill="#1d1d1f" fontFamily="inherit">
+                  <path d="M30 14 12 24l8 16 8-4v52h44V36l8 4 8-16-18-10h-12a8 8 0 0 1-16 0H30Z" fill={bg} stroke="#2a2522" strokeWidth="2.5" strokeLinejoin="round" />
+                  <text x="50" y="45" textAnchor="middle" fontSize="10" fontWeight="800" fill="#2a2522" fontFamily="inherit">
                     {n}
                   </text>
-                  <text x="50" y="76" textAnchor="middle" fontSize="28" fontWeight="800" fill="#fff" stroke="#1d1d1f" strokeWidth="1.5" paintOrder="stroke" fontFamily="inherit">
+                  <text x="50" y="76" textAnchor="middle" fontSize="28" fontWeight="800" fill="#fff" stroke="#2a2522" strokeWidth="1.5" paintOrder="stroke" fontFamily="inherit">
                     {no}
                   </text>
                 </svg>

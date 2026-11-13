@@ -80,7 +80,7 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
           <Link
             href="/thiet-ke"
             className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition md:h-10 md:px-4 md:text-sm ${
-              pathname.startsWith("/thiet-ke") ? "bg-brand text-white" : "bg-ink text-white hover:bg-black"
+              pathname.startsWith("/thiet-ke") ? "bg-brand text-white" : "bg-ink text-white hover:bg-navy-dark"
             }`}
           >
             <IconSparkle className="h-4 w-4" aria-hidden />
@@ -146,7 +146,7 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
               <Link
                 href={`/dip/${campaign.slug}`}
                 className="shrink-0 whitespace-nowrap rounded-full border border-line px-3 py-0.5 text-[13px] font-bold shadow-sticker-sm transition hover:-translate-y-0.5"
-                style={{ backgroundColor: campaign.accent, color: luminance(campaign.accent) > 0.45 ? "#1d1d1f" : "#ffffff" }}
+                style={{ backgroundColor: campaign.accent, color: luminance(campaign.accent) > 0.45 ? "#2a2522" : "#ffffff" }}
               >
                 Quà {campaign.name}
               </Link>
@@ -238,7 +238,7 @@ export function Header({ brandName, logoUrl, categories, hotline, industries = [
               Trang chủ
             </Link>
             {campaign && (
-              <Link href={`/dip/${campaign.slug}`} className="mt-1 block rounded-lg px-3 py-2.5" style={{ backgroundColor: campaign.accent, color: luminance(campaign.accent) > 0.45 ? "#1d1d1f" : "#ffffff" }}>
+              <Link href={`/dip/${campaign.slug}`} className="mt-1 block rounded-lg px-3 py-2.5" style={{ backgroundColor: campaign.accent, color: luminance(campaign.accent) > 0.45 ? "#2a2522" : "#ffffff" }}>
                 Quà {campaign.name} – xem ngay
               </Link>
             )}

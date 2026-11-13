@@ -7,12 +7,17 @@ import { badRequest, clientIp, notFound } from "../lib/http";
 import { rateLimit } from "../lib/rate-limit";
 import { saveUpload } from "../lib/upload";
 import { notifyNewOrder, notifyQuote, notifyQuoteCart } from "../lib/notify";
+import { notifyZaloDesigns } from "../lib/zalo-oa";
 import { cmsLink, dispatchQuote, sourceOf } from "../lib/quote-dispatch";
 import { assertDesign, loadProducts, priceLines, quoteShipping, withUniqueCode } from "../lib/order-service";
 import { currentCustomer } from "../lib/customer-auth";
 import { orderSource } from "../lib/attribution";
 
 export const checkoutRoutes = new Hono();
+
+/** Ảnh xem trước từng mặt in của một dòng hàng (mẫu khách đã thiết kế) */
+const previewsOf = (design: unknown) =>
+  ((design as { files?: { area: string; name: string; previewUrl: string }[] } | undefined)?.files ?? []).map((f) => ({ area: f.name || f.area, url: f.previewUrl }));
 
 /** Upload file của khách: ảnh thiết kế (≤50MB) hoặc file in xuất từ editor (kind=print, ≤60MB) */
 checkoutRoutes.post("/uploads", rateLimit({ key: "upload", limit: 80, windowMs: 10 * 60_000 }), async (c) => {
@@ -113,6 +118,16 @@ checkoutRoutes.post("/orders", rateLimit({ key: "order", limit: 10, windowMs: 10
     utmSource: input.utm?.utm_source ?? (input.utm?.fbclid ? "facebook" : input.utm?.gclid || input.utm?.gbraid || input.utm?.wbraid ? "google" : input.utm?.ttclid ? "tiktok" : undefined),
     group: input.utm?.group,
   });
+  notifyZaloDesigns({
+    kind: "order",
+    code: order.code,
+    items: priced.lines.map((l) => ({
+      productName: l.data.productName,
+      quantity: l.data.quantity,
+      variant: [l.data.color, l.data.size].filter((x) => x && x !== "—").join(" / "),
+      previews: previewsOf(l.data.design),
+    })),
+  });
   return c.json(order, 201);
 });
 
@@ -199,6 +214,12 @@ checkoutRoutes.post("/quotes", rateLimit({ key: "quote", limit: 10, windowMs: 10
     hasDesign: !!(input.designUrl || input.design),
     note: input.note,
   });
+  notifyZaloDesigns({
+    kind: "quote",
+    code: order.code,
+    items: [{ productName: p.name, quantity: input.quantity, variant: variant ? [variant.color, variant.size].filter(Boolean).join(" / ") : input.size, previews: previewsOf(input.design) }],
+    adminUrl: cmsLink(`/orders/${order.id}`),
+  });
   return c.json({ code: order.code }, 201);
 });
 
@@ -261,6 +282,21 @@ checkoutRoutes.post("/quotes/cart", rateLimit({ key: "quote-cart", limit: 6, win
   const items = lines.map(({ p, quantity, note: n }) => ({ name: p!.name, quantity, note: n, url: `/san-pham/${p!.slug}` }));
   const adminUrl = cmsLink(`/orders/${order.id}`);
   notifyQuoteCart({ code: order.code, customerName: input.customerName, phone: input.phone, company: input.company, occasion: input.occasion, budget: input.budget, deadline, items, note: input.note, link: adminUrl });
+  // logo khách tải lên (bộ quà / form doanh nghiệp ghi "Logo: <link>/uploads/<tên>") -> gửi kèm ảnh, mỗi logo một lần
+  const seen = new Set<string>();
+  notifyZaloDesigns({
+    kind: "quote",
+    code: order.code,
+    items: items.map((i) => ({
+      productName: i.name,
+      quantity: i.quantity,
+      previews: [...`${i.note} ${input.note}`.matchAll(/\/uploads\/[\w.-]+/g)]
+        .map((m) => m[0])
+        .filter((u) => !seen.has(u) && seen.add(u))
+        .map((url) => ({ area: "Logo khách gửi", url })),
+    })),
+    adminUrl,
+  });
   dispatchQuote({
     kind: "quote",
     code: order.code,

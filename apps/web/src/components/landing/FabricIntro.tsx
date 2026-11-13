@@ -52,7 +52,7 @@ export function FabricIntro({ intro, fabrics }: { intro: LandingSettings["intro"
           >
             {intro.ctaLabel}
             <svg viewBox="0 0 20 20" className="h-[1em] w-[1em]" aria-hidden>
-              <circle cx="10" cy="10" r="9" fill="#1d1d1f" />
+              <circle cx="10" cy="10" r="9" fill="#2a2522" />
               <path d="M8 6l4 4-4 4" stroke="#FFC21A" strokeWidth="2.4" fill="none" strokeLinecap="round" />
             </svg>
           </Link>

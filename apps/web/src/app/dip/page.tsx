@@ -24,7 +24,7 @@ export default async function CampaignsPage() {
             const live = campaignLive(c);
             return (
               <li key={c.slug}>
-                <Link href={`/dip/${c.slug}`} className="sticker tilt hover-wiggle flex h-full flex-col p-6" style={{ backgroundColor: c.bg, color: c.dark ? "#fff" : "#1d1d1f", ["--r" as string]: `${i % 2 ? 1 : -1}deg` }}>
+                <Link href={`/dip/${c.slug}`} className="sticker tilt hover-wiggle flex h-full flex-col p-6" style={{ backgroundColor: c.bg, color: c.dark ? "#fff" : "#2a2522", ["--r" as string]: `${i % 2 ? 1 : -1}deg` }}>
                   <span className="text-[13px] font-semibold opacity-75">
                     {vnShortDate(c.startsAt)} – {vnShortDate(c.endsAt)}
                     {live && " · đang diễn ra"}

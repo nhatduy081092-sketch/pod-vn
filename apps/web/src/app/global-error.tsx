@@ -20,7 +20,7 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
       <body style={{ fontFamily: "system-ui, sans-serif", textAlign: "center", padding: "80px 16px" }}>
         <h1 style={{ fontSize: 28, fontWeight: 800 }}>Có lỗi xảy ra</h1>
         <p style={{ color: "#6b6660" }}>Bấm tải lại để thử lần nữa.</p>
-        <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: "10px 22px", borderRadius: 999, border: "2px solid #1d1d1f", background: "#E4570B", color: "#fff", fontWeight: 700 }}>
+        <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: "10px 22px", borderRadius: 999, border: "2px solid #2a2522", background: "#E4570B", color: "#fff", fontWeight: 700 }}>
           Tải lại trang
         </button>
       </body>

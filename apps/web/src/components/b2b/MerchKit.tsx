@@ -56,7 +56,7 @@ export function MerchKit({ className = "", logo = "LOGO" }: { className?: string
         <path d="M58 166 L242 166 L254 398 L46 398 Z" fill="url(#mk-shade)" />
         <rect x="58" y="166" width="184" height="14" fill="#000" opacity=".05" />
         <Mark x={150} y={276} s={1.5} />
-        <text x="150" y="330" textAnchor="middle" fontFamily="var(--font-sans), sans-serif" fontSize="12" fontWeight="600" fill="#1d1d1f" opacity=".75" letterSpacing="2">
+        <text x="150" y="330" textAnchor="middle" fontFamily="var(--font-sans), sans-serif" fontSize="12" fontWeight="600" fill="#2a2522" opacity=".75" letterSpacing="2">
           YOUR BRAND
         </text>
       </g>

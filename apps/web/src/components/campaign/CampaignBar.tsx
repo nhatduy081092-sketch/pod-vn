@@ -3,7 +3,7 @@ import { beforeDeadline, luminance, vnShortDate, type Campaign } from "@pod/shar
 
 /** Thanh mảnh trên cùng khi đang có chiến dịch theo dịp: hạn chót + ưu đãi, dẫn vào /dip/<slug> */
 export function CampaignBar({ c }: { c: Campaign }) {
-  const fg = luminance(c.accent) > 0.45 ? "#1d1d1f" : "#ffffff";
+  const fg = luminance(c.accent) > 0.45 ? "#2a2522" : "#ffffff";
   const open = beforeDeadline(c);
   const msg = [
     `Quà ${c.name}`,
