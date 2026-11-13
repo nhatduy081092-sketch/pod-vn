@@ -11,7 +11,7 @@ export function BestSellers({ title, items }: { title: string; items: ProductCar
         {title}
       </SectionTitle>
       <div className="container-site mt-7 md:mt-9">
-        <ProductGrid items={items} even mobileMax={4} />
+        <ProductGrid items={items} even mobileMax={4} variant="editorial" />
       </div>
     </section>
   );

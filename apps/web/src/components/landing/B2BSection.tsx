@@ -5,6 +5,8 @@ import type { ProductCardData } from "@/lib/types";
 import { IconArrow } from "../ui/icons";
 import { CountUp } from "../motion/CountUp";
 import { MaskTitle } from "../motion/MaskTitle";
+import { GlassCarousel } from "./GlassCarousel";
+import { SatinLink } from "../motion/SatinLink";
 
 type Industry = { name: string; slug: string; image: string; count: number };
 type Props = { data: LandingSettings["b2b"]; brand: LandingSettings["brand"]; products: ProductCardData[]; industries?: Industry[] };
@@ -25,9 +27,9 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
           <div>
             <p className="max-w-xl text-base leading-relaxed text-white/80 md:text-lg">{data.subtitle}</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/doanh-nghiep#bao-gia" className="btn-primary px-7 py-3.5 text-base">
+              <SatinLink href="/doanh-nghiep#bao-gia" className="btn-primary px-7 py-3.5 text-base">
                 {data.ctaLabel}
-              </Link>
+              </SatinLink>
               <Link href="/doanh-nghiep" className="btn border-white/60 bg-transparent px-7 py-3.5 text-base text-white hover:border-white hover:bg-white hover:text-ink">
                 Xem giải pháp doanh nghiệp
               </Link>
@@ -52,19 +54,13 @@ export function B2BSection({ data, brand, products, industries = [] }: Props) {
         </ul>
 
         {tiles.length >= 4 ? (
-          <ul className="mt-16 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4 md:mt-20 md:gap-x-6">
-            {tiles.map((t, i) => (
-              <li key={t.slug} data-reveal="rise" style={{ ["--d" as string]: `${(i % 4) * 70}ms` }}>
-                <Link href={`/doanh-nghiep/san-pham?nganh=${t.slug}`} className="group block">
-                  <span className="block aspect-square overflow-hidden rounded-lg bg-white">
-                    <img src={assetUrl(t.image)} alt={t.name} loading="lazy" decoding="async" className="h-full w-full object-contain p-[8%] transition duration-500 group-hover:scale-105" />
-                  </span>
-                  <span className="mt-3 block font-display text-[17px] font-bold leading-tight transition-colors group-hover:text-brand">{t.name}</span>
-                  <span className="mt-0.5 block text-[15px] text-white/70">{t.count} mẫu in được logo</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-16 md:mt-24" data-reveal="rise">
+            <p className="mb-8 flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-white/70 md:mb-10">
+              <i className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden />
+              Chọn theo ngành hàng
+            </p>
+            <GlassCarousel items={tiles} />
+          </div>
         ) : products.length > 0 && (
           <ul className="no-scrollbar -mx-4 mt-10 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0">
             {products.map((p) => (

@@ -5,6 +5,7 @@ import { GarmentMockup, PrintText } from "../designs/GarmentMockup";
 import { TOOL_LINKS } from "../seo/ToolLinks";
 import { TeamLineup } from "../group/TeamLineup";
 import { assetUrl } from "@/lib/config";
+import { SatinLink } from "../motion/SatinLink";
 import type { RealPick } from "./realPicks";
 
 /*
@@ -101,9 +102,9 @@ export function HomeHero({ zalo, products = [] }: { zalo?: string; products?: Re
         Doanh nghiệp, CLB, lớp, team building: thiết kế trên web, gửi 1 link để cả nhóm tự ghi tên – size. YALA in và giao tận nơi, đơn nhóm từ {GROUP_MIN_QTY} sản phẩm.
       </p>
       <div className={heroActions}>
-        <Link href={`/thiet-ke/${GARMENT_PRODUCT.tshirt.slug}`} className="btn-primary px-7 py-3.5 text-base">
+        <SatinLink href={`/thiet-ke/${GARMENT_PRODUCT.tshirt.slug}`} className="btn-primary px-7 py-3.5 text-base">
           Thiết kế áo nhóm
-        </Link>
+        </SatinLink>
         <Link href="/doanh-nghiep#bao-gia" className="btn-outline px-7 py-3.5 text-base">
           Nhận báo giá
         </Link>

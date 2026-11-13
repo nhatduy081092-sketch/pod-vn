@@ -10,7 +10,19 @@ const isVector = (u?: string) => !!u && /\.svg(\?|$)/i.test(u);
  * Card sản phẩm (redesign 31/10/2026): khung nền nhạt, không viền, không bóng; rê chuột -> phóng to
  * đúng chỗ con trỏ. Ảnh vẽ (SVG) giữ nguyên tỉ lệ; ảnh chụp phủ kín khung. Nhãn trên ảnh ≥ 13px.
  */
-export function ProductCard({ p, priority = false, color }: { p: ProductCardData; priority?: boolean; /** màu khách đã chọn -> chọn sẵn ở trang sản phẩm */ color?: string }) {
+export function ProductCard({
+  p,
+  priority = false,
+  color,
+  variant = "default",
+}: {
+  p: ProductCardData;
+  priority?: boolean;
+  /** màu khách đã chọn -> chọn sẵn ở trang sản phẩm */
+  color?: string;
+  /** "editorial" (trang chủ, theo bộ Code XR clothing-ecommerce): tên trái – giá phải, dòng nhóm hàng có chấm cam, ảnh mở bằng khối đen trượt sang phải */
+  variant?: "default" | "editorial";
+}) {
   const sale = saleActive(p);
   const price = p.basePrice > 0 ? effectiveBasePrice(p) : 0;
   const compare = p.basePrice > 0 ? displayCompareAt(p) : null;
@@ -42,7 +54,23 @@ export function ProductCard({ p, priority = false, color }: { p: ProductCardData
           </span>
         )}
         {isAiImage(first) && <span className="pointer-events-none absolute bottom-2 left-2 z-10 rounded-md bg-white px-2 py-0.5 text-[13px] font-semibold text-ink/80">Minh hoạ</span>}
+        {variant === "editorial" && <span className="card-cover" aria-hidden />}
       </ZoomFrame>
+      {variant === "editorial" ? (
+        <>
+          <div className="mt-3 flex items-start justify-between gap-3">
+            <h3 className="line-clamp-2 text-[15px] font-semibold leading-[1.3] text-ink transition-colors group-hover:text-brand-dark md:text-base">{p.name}</h3>
+            <span className={`shrink-0 text-[15px] font-bold tabular-nums md:text-base ${p.basePrice > 0 && (sale || off > 0) ? "text-sale" : "text-ink"}`}>
+              {p.basePrice > 0 ? formatVND(price) : p.priceFrom ? `Từ ${formatVND(p.priceFrom)}` : "Báo giá"}
+            </span>
+          </div>
+          <p className="mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-[0.06em] text-ink/70">
+            <i className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden />
+            {(p.minQty ?? 1) > 1 ? `${p.category.name} · tối thiểu ${p.minQty}` : p.category.name}
+          </p>
+        </>
+      ) : (
+        <>
       <h3 className="mt-3 line-clamp-2 min-h-[2.6em] text-[15px] font-semibold leading-[1.3] text-ink transition-colors group-hover:text-brand-dark md:text-[17px]">{p.name}</h3>
       <p className="mt-1 flex flex-wrap items-baseline gap-x-2">
         {p.basePrice > 0 ? (
@@ -62,6 +90,8 @@ export function ProductCard({ p, priority = false, color }: { p: ProductCardData
       ) : (
         p.productionDays && <p className="mt-0.5 text-[13px] text-ink/70 md:text-[15px]">Sản xuất {p.productionDays}</p>
       )}
+        </>
+      )}
     </Link>
   );
 }
@@ -80,6 +110,7 @@ export function ProductGrid({
   even = false,
   after,
   mobileMax,
+  variant,
 }: {
   items: ProductCardData[];
   dense?: boolean;
@@ -89,6 +120,7 @@ export function ProductGrid({
   after?: (p: ProductCardData) => React.ReactNode;
   /** Mobile chỉ hiện tối đa n sản phẩm (khối trang chủ, đỡ dài) */
   mobileMax?: number;
+  variant?: "default" | "editorial";
 }) {
   const items = even && all.length > 4 ? all.slice(0, all.length >= 8 ? 8 : 4) : all;
   return (
@@ -100,7 +132,7 @@ export function ProductGrid({
           data-reveal="rise"
           style={{ ["--d" as string]: `${(i % 4) * 60}ms` }}
         >
-          <ProductCard p={p} priority={i < 2} color={color} />
+          <ProductCard p={p} priority={i < 2} color={color} variant={variant} />
           {after && <div className="mt-auto pt-2">{after(p)}</div>}
         </li>
       ))}
