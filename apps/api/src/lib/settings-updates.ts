@@ -1,5 +1,6 @@
 import { prisma } from "@pod/db";
-import { GROUP_MIN_LINE, mergeLanding, OLD_MIN_LINE, PAGE_KEY_PREFIX } from "@pod/shared";
+import { createHash } from "node:crypto";
+import { DEFAULT_PAGES, GROUP_MIN_LINE, mergeLanding, OLD_MIN_LINE, PAGE_KEY_PREFIX } from "@pod/shared";
 import { invalidateLanding } from "./settings";
 import { applyBlankPhotos } from "./blank-photos";
 import { cleanOemName, cleanOemText } from "./oem-clean";
@@ -354,6 +355,41 @@ async function applyOemTextClean(): Promise<boolean> {
   return changes.length > 0;
 }
 
+/**
+ * 3 trang chính sách viết lại theo số liệu chủ shop xác nhận (15/11/2026): Giới thiệu, Đổi trả, Vận chuyển – thanh toán.
+ * Trang đã lưu trong CMS chỉ được thay khi nội dung còn y nguyên bản mẫu cũ (so dấu sha256);
+ * trang chủ shop đã tự sửa giữ nguyên và ghi log để chủ shop tự cập nhật.
+ */
+const POLICY_PAGES_FLAG = "update:policy-pages:2026-11-15";
+const OLD_PAGE_HASH: Record<string, string> = {
+  "gioi-thieu": "3ac3630270b48ea6",
+  "chinh-sach-doi-tra": "6e03bba8c2818fe5",
+  "van-chuyen-thanh-toan": "df54a37310f7dc67",
+};
+const pageHash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 16);
+
+async function applyPolicyPages(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: POLICY_PAGES_FLAG } })) return false;
+  const result: Record<string, string> = {};
+  let changed = false;
+  for (const [slug, oldHash] of Object.entries(OLD_PAGE_HASH)) {
+    const key = `${PAGE_KEY_PREFIX}${slug}`;
+    const row = await prisma.setting.findUnique({ where: { key } });
+    const page = row?.value as { content?: string } | null;
+    const next = DEFAULT_PAGES.find((p) => p.slug === slug)?.content;
+    if (!row || typeof page?.content !== "string") result[slug] = "chưa lưu – dùng mặc định mới";
+    else if (!next || pageHash(page.content) !== oldHash) result[slug] = "đã sửa trong CMS – giữ nguyên";
+    else {
+      await prisma.setting.update({ where: { key }, data: { value: { ...page, content: next } } });
+      result[slug] = "đã thay";
+      changed = true;
+    }
+  }
+  await prisma.setting.create({ data: { key: POLICY_PAGES_FLAG, value: { at: new Date().toISOString(), result } } });
+  console.log("[settings] trang chính sách:", Object.entries(result).map(([k, v]) => `${k}: ${v}`).join("; "));
+  return changed;
+}
+
 export async function applySettingsUpdates() {
   let changed = await applyBundledBlanks();
   if (await applyGroupPivot()) changed = true;
@@ -363,6 +399,7 @@ export async function applySettingsUpdates() {
   if (await applyGroupMinLanding()) changed = true;
   if (await applyPricePromise()) changed = true;
   if (await applyOemTextClean()) changed = true;
+  if (await applyPolicyPages()) changed = true;
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });

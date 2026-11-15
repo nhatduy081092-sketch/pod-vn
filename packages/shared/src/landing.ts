@@ -210,6 +210,20 @@ const LEGACY_B2B_STATS = [
   { value: "20%", label: "tiết kiệm chi phí nhờ sản xuất trực tiếp" },
   { value: "60 ngày", label: "lưu kho miễn phí, giao theo đợt" },
 ];
+/**
+ * Thông tin của nhà cung cấp (OEM Group) có sẵn từ bản dựng đầu (29/09/2026), không phải của YALA (chủ shop xác nhận 15/11/2026):
+ * còn nguyên trong DB thì bỏ trống – chân trang không ghi pháp nhân/MST của bên khác, nút Messenger không dẫn sang fanpage của họ.
+ */
+const LEGACY_SUPPLIER_BRAND: Partial<Record<keyof LandingSettings["brand"], string>> = {
+  messengerUrl: "https://m.me/oemgroupvn",
+  companyName: "Công ty Cổ phần OEM",
+  taxCode: "0317199345",
+};
+const withoutSupplier = (b: LandingSettings["brand"]): LandingSettings["brand"] => {
+  const out = { ...b };
+  for (const [k, old] of Object.entries(LEGACY_SUPPLIER_BRAND) as [keyof LandingSettings["brand"], string][]) if (out[k]?.trim() === old) out[k] = "";
+  return out;
+};
 const LEGACY_B2B_CLIENTS = ["Saigon Co.op", "ShopeeFood", "Vietnam Airlines", "BIDV", "Samsung", "7-Eleven", "VNG", "Acecook", "Schneider Electric", "GHN"];
 /** Câu chữ mặc định cũ của trang Doanh nghiệp / thẻ Doanh nghiệp – còn nguyên trong DB thì dùng câu định vị mới */
 /** tiêu đề mặc định trước 13/10/2026 – CMS chưa sửa thì dùng tiêu đề mới (có "đồng phục công ty") */
@@ -228,11 +242,11 @@ export const DEFAULT_LANDING: LandingSettings = {
     tagline: "Áo nhóm, đồng phục và quà in logo theo thiết kế riêng – in tên & số từng người, cả nhóm tự ghi size, giao toàn quốc.",
     hotline: "0971808330",
     zalo: "0971808330",
-    messengerUrl: "https://m.me/oemgroupvn",
+    messengerUrl: "", // trang Facebook của YALA – để trống thì ẩn nút Messenger
     email: "contact@yala.vn",
     address: "39 Nguyễn Văn Đậu, Phường Bình Lợi Trung, TP. Hồ Chí Minh",
-    companyName: "Công ty Cổ phần OEM",
-    taxCode: "0317199345",
+    companyName: "", // pháp nhân của YALA – chủ shop nhập trong CMS → Cài đặt
+    taxCode: "",
     logoUrl: "",
     website: "https://yala.vn",
   },
@@ -548,7 +562,7 @@ export function mergeLanding(value: unknown): LandingSettings {
   const v = (value ?? {}) as Partial<LandingSettings>;
   const d = DEFAULT_LANDING;
   return {
-    brand: { ...d.brand, ...v.brand },
+    brand: withoutSupplier({ ...d.brand, ...v.brand }),
     b2b: {
       ...d.b2b,
       ...v.b2b,

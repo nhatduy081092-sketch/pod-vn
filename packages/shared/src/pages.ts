@@ -25,6 +25,7 @@ export const pageSlugSchema = z.string().regex(/^[a-z0-9-]{2,60}$/, "Slug chỉ 
 export const GROUP_MIN_LINE = "Đơn nhóm từ 10 sản phẩm; ít hơn vẫn đặt được, tính như mua lẻ";
 export const OLD_MIN_LINE = "In từ 1 chiếc, không yêu cầu số lượng tối thiểu";
 
+/** Ghi chú cho trang còn là nội dung mẫu (chưa được chủ shop xác nhận) */
 const NOTE = "\n\n*Nội dung mẫu – vui lòng chỉnh theo thực tế doanh nghiệp trong CMS → Trang nội dung.*";
 
 export const DEFAULT_PAGES: ContentPage[] = [
@@ -33,16 +34,26 @@ export const DEFAULT_PAGES: ContentPage[] = [
     title: "Giới thiệu",
     showInFooter: true,
     sortOrder: 0,
-    content: `YALA in áo, đồng phục và quà tặng theo yêu cầu cho **tập thể**: doanh nghiệp, CLB thể thao, lớp – hội nhóm – gia đình, team building và sự kiện.
+    content: `YALA nhận làm áo nhóm, đồng phục và quà tặng in logo cho **tập thể và doanh nghiệp**: công ty, CLB thể thao, lớp – hội nhóm – gia đình, team building và sự kiện. Khách thiết kế và duyệt mẫu ngay trên web; YALA lo phần còn lại: kiểm file in, sản xuất cùng xưởng đối tác và giao tận nơi.
 
-## Chúng tôi làm gì
+## YALA làm gì
+- Áo nhóm, áo lớp, đồng phục công ty, áo đội bóng – in tên, số riêng từng người trong cùng một đơn; thu tên – size cả nhóm bằng một link
+- Quà tặng doanh nghiệp in logo: áo, bình giữ nhiệt, ly, sổ, bút, túi, ô dù, balo… – một đầu mối cho cả bộ quà
+- Thiết kế và xem mockup trên web bằng YALA Studio; cần hỗ trợ thì YALA làm mockup miễn phí trước khi in
+
+## Cách làm việc
+- **Duyệt mẫu**: tự thiết kế trên web, hoặc gửi logo để YALA dựng mockup cho bạn duyệt
+- **Báo giá**: áo in có giá ngay trên web; quà tặng số lượng lớn gửi yêu cầu báo giá theo số lượng, ngân sách và ngày cần hàng
+- **Chốt mẫu**: đơn doanh nghiệp và đơn báo giá đặt cọc 30% khi chốt mẫu, phần còn lại thanh toán khi giao
+- **Sản xuất**: áo in 2–4 ngày làm việc sau khi duyệt mockup; quà tặng doanh nghiệp thường 7–15 ngày tuỳ sản phẩm và số lượng
+- **Giao hàng**: toàn quốc, một điểm hoặc chia nhiều chi nhánh theo danh sách công ty gửi
+
+## Số lượng
 - ${GROUP_MIN_LINE}
-- Tự thiết kế và xem mockup ngay trên web bằng YALA Studio; cần hỗ trợ thì YALA làm mockup miễn phí trước khi in
-- In tên, số riêng từng người trong cùng một đơn; thu tên – size cả nhóm bằng một link
-- Đồng phục, quà tặng, merchandise in logo cho doanh nghiệp – đơn lớn báo giá theo ngân sách
+- Quà tặng khác theo số lượng tối thiểu ghi trên từng sản phẩm
 
 ## Liên hệ
-Nhắn Zalo hoặc gọi hotline ở cuối trang để được tư vấn nhanh nhất.${NOTE}`,
+Nhắn Zalo hoặc gọi hotline ở cuối trang. Doanh nghiệp gửi yêu cầu báo giá tại [trang Doanh nghiệp](/doanh-nghiep).`,
   },
   {
     slug: "chinh-sach-doi-tra",
@@ -51,7 +62,7 @@ Nhắn Zalo hoặc gọi hotline ở cuối trang để được tư vấn nhanh
     sortOrder: 1,
     content: `Sản phẩm in theo yêu cầu được sản xuất riêng cho từng khách, vì vậy chính sách đổi trả áp dụng như sau.
 
-## Trường hợp được đổi mới miễn phí
+## Được đổi mới miễn phí khi
 - Lỗi in: sai hình so với mockup đã duyệt, lem màu, bong tróc, lệch vị trí rõ rệt
 - Lỗi sản xuất: rách, thủng, đường may bung, sai size so với đơn
 - Giao nhầm sản phẩm
@@ -60,30 +71,36 @@ Nhắn Zalo hoặc gọi hotline ở cuối trang để được tư vấn nhanh
 - Báo lỗi trong vòng **3 ngày** kể từ khi nhận hàng, kèm video mở hàng và ảnh chụp lỗi
 - Sản phẩm chưa qua sử dụng, chưa giặt
 
-## Trường hợp không áp dụng
-- Khách đổi ý, chọn sai size so với bảng size đã tư vấn
-- Chất lượng file thiết kế khách cung cấp thấp (ảnh mờ, vỡ hạt) dù đã được cảnh báo trước khi in
+## Không áp dụng khi
+- Khách đổi ý, hoặc chọn sai size so với bảng size đã tư vấn
+- File thiết kế khách cung cấp chất lượng thấp (ảnh mờ, vỡ hạt) dù đã được cảnh báo trước khi in
+- Màu in trên vải chênh nhẹ so với màn hình điện thoại hoặc máy tính
+
+## Đơn doanh nghiệp
+Mockup đã duyệt là căn cứ nghiệm thu: vị trí, kích thước, nội dung in đúng mockup. Hàng lỗi được đổi theo đúng số lượng lỗi, không ảnh hưởng phần hàng đạt.
 
 ## Cách thực hiện
-Nhắn Zalo kèm mã đơn hàng. Shop kiểm tra và phản hồi trong 24 giờ làm việc; chi phí vận chuyển đổi hàng lỗi do shop chịu.${NOTE}`,
+Nhắn Zalo kèm mã đơn hàng, ảnh và video lỗi. Shop kiểm tra và hướng dẫn đổi hàng.`,
   },
   {
     slug: "van-chuyen-thanh-toan",
     title: "Vận chuyển & thanh toán",
     showInFooter: true,
     sortOrder: 2,
-    content: `## Thời gian
-- Sản xuất: 2–4 ngày làm việc sau khi duyệt mockup
-- Giao hàng: 1–2 ngày nội thành, 3–5 ngày tỉnh/thành khác (qua GHN, GHTK, Viettel Post, J&T)
+    content: `## Thời gian sản xuất
+- Áo in: 2–4 ngày làm việc sau khi duyệt mockup
+- Quà tặng doanh nghiệp: thường 7–15 ngày tuỳ sản phẩm và số lượng – thời gian cụ thể ghi trong báo giá
+- Cần hàng cho sự kiện: ghi ngày cần hàng khi gửi yêu cầu báo giá để YALA xác nhận trước khi chốt
 
-## Phí vận chuyển
-- Đồng giá theo cấu hình của shop, **miễn phí** cho đơn đạt ngưỡng hiển thị ở giỏ hàng
+## Giao hàng
+- Giao toàn quốc; phí và thời gian giao dự kiến theo khu vực hiện ngay ở bước đặt hàng
+- **Miễn phí giao** cho đơn đạt ngưỡng hiển thị ở giỏ hàng
+- Đơn doanh nghiệp giao một điểm hoặc chia nhiều chi nhánh theo danh sách công ty gửi
 
-## Hình thức thanh toán
+## Thanh toán
 - **COD**: thanh toán cho shipper khi nhận hàng, được kiểm tra hàng trước khi thanh toán
 - **Chuyển khoản (VietQR)**: quét mã sau khi đặt, nội dung chuyển khoản là mã đơn hàng
-
-Đơn đồng phục số lượng lớn có thể yêu cầu đặt cọc trước khi sản xuất.${NOTE}`,
+- **Đơn doanh nghiệp, đơn báo giá**: đặt cọc **30%** khi chốt mẫu, phần còn lại thanh toán khi giao hàng`,
   },
   {
     slug: "chinh-sach-bao-mat",
