@@ -198,7 +198,7 @@ const C = (name: string, hex: string) => ({ name, hex });
 
 /** Số liệu khối doanh nghiệp: chỉ ghi điều YALA làm được (không dùng số liệu của nguồn hàng) */
 const B2B_STATS = [
-  { value: "Từ 1", label: "sản phẩm – đơn nhỏ đến số lượng lớn" },
+  { value: "Từ 10", label: "sản phẩm cho đơn nhóm – ít hơn vẫn đặt được" },
   { value: "9", label: "nhóm ngành merchandise & quà tặng" },
   { value: "Miễn phí", label: "tư vấn & thiết kế mockup" },
   { value: "Toàn quốc", label: "giao một hoặc nhiều điểm" },
@@ -235,6 +235,12 @@ const LEGACY_HUB_TEXT = {
 };
 const LEGACY_BUSINESS_POINTS = ["Quà Tết, welcome kit, quà sự kiện, đồng phục", "In – thêu – khắc logo theo nhận diện thương hiệu", "Tư vấn & thiết kế mockup miễn phí"];
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** Tiêu đề khối mặc định cũ viết hoa mỗi chữ – còn nguyên trong DB thì dùng bản viết hoa đầu câu (brand guide 11/2026) */
+const LEGACY_SECTION_TITLES: Record<string, string> = {
+  bestSellers: "Bán Chạy Nhất",
+  hotSale: "Sản Phẩm Hot Sale",
+  reviews: "Khách Hàng Nói Gì",
+};
 
 export const DEFAULT_LANDING: LandingSettings = {
   brand: {
@@ -279,9 +285,9 @@ export const DEFAULT_LANDING: LandingSettings = {
     ctaHref: "/thiet-ke",
   },
   sectionTitles: {
-    bestSellers: "Bán Chạy Nhất",
-    hotSale: "Sản Phẩm Hot Sale",
-    reviews: "Khách Hàng Nói Gì",
+    bestSellers: "Bán chạy nhất",
+    hotSale: "Sản phẩm hot sale",
+    reviews: "Khách hàng nói gì",
   },
   steps: [
     { title: "Chọn sản phẩm & mở YALA Studio", color: "#A9D8F7" },
@@ -572,7 +578,9 @@ export function mergeLanding(value: unknown): LandingSettings {
     },
     topBanner: { ...d.topBanner, ...v.topBanner },
     hero: { ...d.hero, ...v.hero },
-    sectionTitles: { ...d.sectionTitles, ...v.sectionTitles },
+    sectionTitles: Object.fromEntries(
+      Object.entries({ ...d.sectionTitles, ...v.sectionTitles }).map(([k, t]) => [k, t === LEGACY_SECTION_TITLES[k] ? d.sectionTitles[k as keyof typeof d.sectionTitles] : t]),
+    ) as LandingSettings["sectionTitles"],
     steps: v.steps?.length ? v.steps : d.steps,
     showcase: { ...d.showcase, ...v.showcase, tiles: v.showcase?.tiles?.length ? v.showcase.tiles : d.showcase.tiles },
     slogan: { ...d.slogan, ...v.slogan, words: v.slogan?.words?.length ? v.slogan.words : d.slogan.words },

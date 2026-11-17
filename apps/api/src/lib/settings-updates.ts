@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { DEFAULT_PAGES, GROUP_MIN_LINE, mergeLanding, OLD_MIN_LINE, PAGE_KEY_PREFIX } from "@pod/shared";
 import { invalidateLanding } from "./settings";
 import { applyBlankPhotos } from "./blank-photos";
-import { cleanOemName, cleanOemText } from "./oem-clean";
+import { cleanOemName, cleanOemText, dropFactoryPrice } from "./oem-clean";
 import { searchFields } from "./search";
 
 /**
@@ -390,6 +390,36 @@ async function applyPolicyPages(): Promise<boolean> {
   return changed;
 }
 
+/**
+ * Bỏ cụm "giá xưởng / giá tận xưởng" trong mô tả sản phẩm (brand guide 17/11/2026: YALA không phải xưởng, không hứa giá gốc).
+ * Chỉ đổi mô tả – không đổi tên, slug, giá. Lưu bản gốc vào Setting BACKUP trước khi sửa; câu còn sót (mở đầu "Giá xưởng") ghi vào cờ và log.
+ */
+const FACTORY_PRICE_FLAG = "update:factory-price:2026-11-17";
+const FACTORY_PRICE_BACKUP = "backup:factory-price:2026-11-17";
+
+async function applyFactoryPriceClean(): Promise<boolean> {
+  if (await prisma.setting.findUnique({ where: { key: FACTORY_PRICE_FLAG } })) return false;
+  const rows = await prisma.product.findMany({
+    where: { description: { contains: "xưởng", mode: "insensitive" } },
+    select: { id: true, slug: true, description: true },
+  });
+  const after = rows.map((p) => ({ p, description: dropFactoryPrice(p.description) }));
+  const changes = after.filter((c) => c.description !== c.p.description);
+  if (changes.length && !(await prisma.setting.findUnique({ where: { key: FACTORY_PRICE_BACKUP } }))) {
+    const items = changes.map(({ p }) => ({ id: p.id, slug: p.slug, description: p.description }));
+    await prisma.setting.create({ data: { key: FACTORY_PRICE_BACKUP, value: { at: new Date().toISOString(), items } } });
+  }
+  if (changes.length) {
+    await prisma.$transaction(changes.map(({ p, description }) => prisma.product.update({ where: { id: p.id }, data: { description } })));
+  }
+  const left = after.filter((c) => /giá (?:tận )?xưởng/i.test(c.description)).map((c) => c.p.slug);
+  await prisma.setting.create({
+    data: { key: FACTORY_PRICE_FLAG, value: { at: new Date().toISOString(), products: changes.map((c) => c.p.slug), left } },
+  });
+  console.log(`[settings] bỏ "giá xưởng": ${changes.length} sản phẩm${left.length ? `; còn sót (sửa tay trong CMS): ${left.join(", ")}` : ""}`);
+  return changes.length > 0;
+}
+
 export async function applySettingsUpdates() {
   let changed = await applyBundledBlanks();
   if (await applyGroupPivot()) changed = true;
@@ -400,6 +430,7 @@ export async function applySettingsUpdates() {
   if (await applyPricePromise()) changed = true;
   if (await applyOemTextClean()) changed = true;
   if (await applyPolicyPages()) changed = true;
+  if (await applyFactoryPriceClean()) changed = true;
   for (const u of UPDATES) {
     if (await prisma.setting.findUnique({ where: { key: u.flag } })) continue;
     const row = await prisma.setting.findUnique({ where: { key: "landing" } });

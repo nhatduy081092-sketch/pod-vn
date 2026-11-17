@@ -48,6 +48,17 @@ export function cleanOemText(text: string): string {
     .trim();
 }
 
+/**
+ * Cụm "giá xưởng" / "giá tận xưởng" / "giá xưởng ưu đãi nhất" chép từ nhà cung cấp: YALA không phải xưởng và không hứa giá gốc.
+ * Chỉ bỏ cụm viết thường giữa câu ("… toàn quốc, giá tận xưởng." -> "… toàn quốc."); câu mở đầu bằng "Giá xưởng" giữ nguyên
+ * vì bỏ đi sẽ gãy câu – để chủ shop tự sửa trong CMS.
+ */
+const FACTORY_PRICE = /[ \t]*,?[ \t]*giá (?:tận )?xưởng(?: ưu đãi nhất)?/g;
+export function dropFactoryPrice(text: string): string {
+  if (!/giá (?:tận )?xưởng/.test(text)) return text;
+  return text.replace(FACTORY_PRICE, "").replace(/[ \t]+([.,!?])/g, "$1").replace(/[ \t]{2,}/g, " ");
+}
+
 /** Tên sản phẩm: "OEM GROUP vali Về Nhà" -> "Vali Về Nhà" */
 export function cleanOemName(name: string): string {
   const out = cleanOemText(name);

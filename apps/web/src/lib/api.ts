@@ -21,7 +21,9 @@ async function get<T>(path: string, opts: { revalidate?: number; allow404?: bool
 }
 
 export async function getHome(): Promise<HomeData> {
-  return (await get<HomeData>("/home"))!;
+  const home = (await get<HomeData>("/home"))!;
+  // gộp lại như getSettings(): sửa mặc định trong @pod/shared có hiệu lực ở trang chủ ngay cả khi API chưa deploy lại
+  return { ...home, settings: mergeLanding(home.settings) };
 }
 
 export async function getSettings(): Promise<LandingSettings> {
