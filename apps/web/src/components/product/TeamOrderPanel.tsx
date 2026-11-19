@@ -33,6 +33,17 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
   const [fileName, setFileName] = useState("");
   const [one, setOne] = useState({ name: "", number: "", size: sizes[0] ?? "" });
   const [oneErr, setOneErr] = useState("");
+  /** Hoàn tác lần xoá gần nhất. `after` = danh sách ngay sau khi xoá: danh sách đã đổi theo cách khác thì không hoàn tác nữa (tránh ghi đè dòng mới) */
+  const [undo, setUndo] = useState<{ label: string; rows: RosterRow[]; issues: RosterIssue[]; fileName: string; after: RosterRow[] } | null>(null);
+
+  function removeRows(next: RosterRow[], label: string, reset = false) {
+    setUndo({ label, rows, issues, fileName, after: next });
+    onChange(next);
+    if (reset) {
+      setIssues([]);
+      setFileName("");
+    }
+  }
 
   /** Thêm tay từng người (nhóm nhỏ, hoặc 1 áo in tên riêng) */
   function addOne(e: React.FormEvent) {
@@ -136,6 +147,24 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
         </div>
       )}
 
+      {undo && undo.after === rows && (
+        <div role="status" className="flex items-center gap-3 rounded-lg bg-ink px-3 py-2 text-sm text-white">
+          <span className="flex-1">{undo.label}</span>
+          <button
+            type="button"
+            className="font-bold underline hover:no-underline"
+            onClick={() => {
+              onChange(undo.rows);
+              setIssues(undo.issues);
+              setFileName(undo.fileName);
+              setUndo(null);
+            }}
+          >
+            Hoàn tác
+          </button>
+        </div>
+      )}
+
       {rows.length > 0 && (
         <div className="overflow-hidden rounded-lg border border-line">
           <div className="flex flex-wrap items-center gap-2 bg-brand px-3 py-2 text-sm">
@@ -145,7 +174,7 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
                 {s.size}: {s.qty}
               </span>
             ))}
-            <button type="button" className="ml-auto text-[13px] font-semibold underline" onClick={() => (onChange([]), setIssues([]), setFileName(""))}>
+            <button type="button" className="ml-auto text-[13px] font-semibold underline" onClick={() => removeRows([], `Đã xoá danh sách ${rows.length} áo.`, true)}>
               Xoá danh sách
             </button>
           </div>
@@ -170,7 +199,7 @@ export function TeamOrderPanel({ sizes, productSlug, rows, onChange }: Props) {
                     <td className="px-3 py-1 font-bold">{r.size}</td>
                     <td className="px-3 py-1 text-[13px] text-ink/70">{r.note}</td>
                     <td className="px-1 py-1 text-right">
-                      <button type="button" onClick={() => onChange(rows.filter((_, k) => k !== i))} className="px-1.5 text-ink/40 hover:text-red-600" aria-label={`Xoá dòng ${i + 1}`}>
+                      <button type="button" onClick={() => removeRows(rows.filter((_, k) => k !== i), `Đã xoá dòng ${i + 1}${r.name ? ` (${r.name})` : ""}.`)} className="px-1.5 text-ink/40 hover:text-red-600" aria-label={`Xoá dòng ${i + 1}`}>
                         ×
                       </button>
                     </td>

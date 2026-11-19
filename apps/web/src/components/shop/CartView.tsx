@@ -7,7 +7,8 @@ import { IconClose } from "../ui/icons";
 import { CartUpsell } from "./CartUpsell";
 import { useQuoteList } from "@/lib/quote-list";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CartItem } from "@/lib/cart";
 import { track } from "@/lib/track";
 
 /** threshold: từ số lượng này gợi ý chuyển sang yêu cầu báo giá (đơn nhỏ mua online, đơn lớn báo giá) */
@@ -23,11 +24,29 @@ export function CartView({ threshold = 0, freeThreshold = 0 }: { threshold?: num
     seen.current = true;
     track.viewCart(cart.subtotal, cart.trackItems());
   }, [cart]);
+  // dòng vừa xoá: hiện "Hoàn tác" (dòng có thể mang thiết kế + danh sách đồng phục, xoá nhầm là mất công làm lại)
+  const [removed, setRemoved] = useState<{ item: CartItem; index: number } | null>(null);
+  const undoBar = removed && (
+    <div role="status" className="mt-5 flex items-center gap-3 rounded-lg bg-ink px-4 py-2.5 text-sm text-white">
+      <span className="min-w-0 flex-1 truncate">Đã xoá {removed.item.name}.</span>
+      <button
+        type="button"
+        className="shrink-0 font-bold underline hover:no-underline"
+        onClick={() => {
+          cart.restore(removed.item, removed.index);
+          setRemoved(null);
+        }}
+      >
+        Hoàn tác
+      </button>
+    </div>
+  );
   const bigLines = threshold > 1 ? cart.items.filter((i) => i.quantity >= threshold && !i.roster?.length && !i.design && !i.designUrl) : [];
   if (!cart.ready) return <p className="py-10 text-center text-ink/60">Đang tải giỏ hàng...</p>;
   if (!cart.items.length)
     return (
       <div className="py-16 text-center">
+        {undoBar && <div className="mx-auto mb-6 max-w-md text-left">{undoBar}</div>}
         <p className="text-ink/70">Giỏ hàng đang trống.</p>
         <Link href="/san-pham" className="btn-primary mt-4">
           Chọn sản phẩm
@@ -37,6 +56,7 @@ export function CartView({ threshold = 0, freeThreshold = 0 }: { threshold?: num
 
   return (
     <>
+    {undoBar}
     {bigLines.length > 0 && (
       <div className="mt-5 flex flex-col gap-3 rounded-xl border border-brand/30 bg-brand-light p-4 text-sm md:flex-row md:items-center">
         <div className="flex-1">
@@ -62,7 +82,7 @@ export function CartView({ threshold = 0, freeThreshold = 0 }: { threshold?: num
     )}
     <div className="mt-5 grid gap-6 md:grid-cols-[1fr_340px]">
       <ul className="divide-y divide-ink/10 rounded-2xl border-2 border-ink/10 bg-white">
-        {cart.items.map((i) => {
+        {cart.items.map((i, idx) => {
           const unit = cart.unitPrice(i);
           return (
             <li key={i.key} className="flex gap-3 p-3">
@@ -77,7 +97,7 @@ export function CartView({ threshold = 0, freeThreshold = 0 }: { threshold?: num
                   <Link href={`/san-pham/${i.slug}`} className="line-clamp-2 text-sm font-bold">
                     {i.name}
                   </Link>
-                  <button type="button" onClick={() => cart.remove(i.key)} className="h-6 w-6 shrink-0 text-ink/50 hover:text-ink" aria-label="Xoá">
+                  <button type="button" onClick={() => (setRemoved({ item: i, index: idx }), cart.remove(i.key))} className="h-6 w-6 shrink-0 text-ink/50 hover:text-ink" aria-label={`Xoá ${i.name}`}>
                     <IconClose className="h-5 w-5" />
                   </button>
                 </div>

@@ -24,6 +24,9 @@ export function GroupOrderView({ code }: { code: string }) {
   const [form, setForm] = useState<Form>({ person: "", printName: "", number: "", size: "", qty: 1, note: "" });
   const [printTouched, setPrintTouched] = useState(false);
   const [err, setErr] = useState("");
+  // lỗi thao tác của trưởng nhóm (chốt, đổi tên/hạn, xoá dòng, đặt đơn): hiện trong khung trưởng nhóm,
+  // vì form ghi danh (nơi hiện `err`) bị ẩn khi nhóm đã chốt
+  const [adminErr, setAdminErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState("");
   const [copied, setCopied] = useState("");
@@ -142,7 +145,8 @@ export function GroupOrderView({ code }: { code: string }) {
       headers: { ...(adminKey ? { "x-group-key": adminKey } : {}), ...(key ? { "x-member-key": key } : {}) },
     });
     const data = (await res.json().catch(() => ({}))) as { error?: string };
-    if (!res.ok) return setErr(data.error ?? "Không xoá được");
+    if (!res.ok) return (g?.isAdmin ? setAdminErr : setErr)(data.error ?? "Không xoá được");
+    setAdminErr("");
     rememberGroupRow(code, id, null);
     setMine(myGroupRows(code));
     await load();
@@ -151,7 +155,8 @@ export function GroupOrderView({ code }: { code: string }) {
   async function patch(p: { closed?: boolean; deadline?: string; title?: string }) {
     const res = await fetch(`/api/groups/${encodeURIComponent(code)}`, { method: "PATCH", headers: { "Content-Type": "application/json", "x-group-key": adminKey }, body: JSON.stringify(p) });
     const data = (await res.json().catch(() => ({}))) as GroupView & { error?: string };
-    if (!res.ok) return setErr(data.error ?? "Không lưu được");
+    if (!res.ok) return setAdminErr(data.error ?? "Không lưu được");
+    setAdminErr("");
     if (p.closed === true) track.groupClose(data.members.reduce((s, m) => s + m.qty, 0));
     setG(data);
   }
@@ -171,8 +176,9 @@ export function GroupOrderView({ code }: { code: string }) {
 
   /** Trưởng nhóm: mang thiết kế + danh sách sang trang sản phẩm -> thêm giỏ như đơn đồng phục */
   function orderAll() {
-    if (!g?.design) return setErr("Mở bằng link quản lý của trưởng nhóm để đặt đơn");
-    if (!g.members.length) return setErr("Chưa có ai ghi danh");
+    if (!g?.design) return setAdminErr("Mở bằng link quản lý của trưởng nhóm để đặt đơn");
+    if (!g.members.length) return setAdminErr("Chưa có ai ghi danh");
+    setAdminErr("");
     attachDesign(g.product.id, g.design, g.color || undefined);
     stashGroupRoster(g.product.id, groupToRoster(g.members.map((m) => ({ ...m, note: m.note ?? "" })), g.fields), code);
     track.groupCheckout(total, price?.sum ?? 0);
@@ -308,7 +314,11 @@ export function GroupOrderView({ code }: { code: string }) {
                 <input className="input" value={form.note} maxLength={60} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} placeholder="VD: lấy giúp em gái" />
               </label>
             </div>
-            {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
+            {err && (
+              <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                {err}
+              </p>
+            )}
             {done && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-800">{done}</p>}
             <button className="btn-primary w-full py-3 text-[15px] disabled:opacity-60" disabled={busy || !form.person.trim() || !form.size}>
               {busy ? "Đang ghi danh…" : "Ghi danh"}
@@ -393,6 +403,11 @@ export function GroupOrderView({ code }: { code: string }) {
                 {g.closed ? "Mở lại" : "Chốt danh sách"}
               </button>
             </div>
+            {adminErr && (
+              <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                {adminErr}
+              </p>
+            )}
             <button type="button" className="btn w-full border-ink bg-ink py-3 text-[15px] text-white disabled:opacity-50" disabled={!g.members.length} onClick={orderAll}>
               Đặt đơn cho cả nhóm ({total} cái)
             </button>

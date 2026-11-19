@@ -38,6 +38,7 @@ export function CalendarPanel({ areas, area, onInsert, onBusy, onError }: Props)
   const months = monthAreas(areas);
   const isCalendar = months.size >= 12;
   const [year, setYear] = useState(now.getMonth() >= 8 ? now.getFullYear() + 1 : now.getFullYear());
+  const [yearDraft, setYearDraft] = useState<string | null>(null);
   const [month, setMonth] = useState<number | "all">(isCalendar ? "all" : now.getMonth() + 1);
   const [place, setPlace] = useState<"bottom" | "full">(isCalendar ? "bottom" : "full");
   const [style, setStyle] = useState<Omit<CalendarStyle, "year" | "month">>({ font: "Be Vietnam Pro", color: "#1d1d1f", accent: "#e11d48", lunar: true, grid: true, paper: null });
@@ -71,7 +72,19 @@ export function CalendarPanel({ areas, area, onInsert, onBusy, onError }: Props)
       <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
         <label>
           Năm
-          <input type="number" min={2000} max={2100} value={year} onChange={(e) => setYear(Math.min(2100, Math.max(2000, Number(e.target.value) || year)))} className="mt-0.5 w-full rounded-md border border-ink/15 px-2 py-1.5 text-sm" />
+          <input
+            type="number"
+            min={2000}
+            max={2100}
+            value={yearDraft ?? year}
+            onChange={(e) => {
+              // cho gõ tự do; chỉ áp dụng khi đủ 4 chữ số trong khoảng 2000–2100 (trước đây ép ngay mỗi phím: gõ "2" thành 2000)
+              setYearDraft(e.target.value);
+              const n = Number(e.target.value);
+              if (/^\d{4}$/.test(e.target.value) && n >= 2000 && n <= 2100) setYear(n);
+            }}
+            onBlur={() => setYearDraft(null)}
+            className="mt-0.5 w-full rounded-md border border-ink/15 px-2 py-1.5 text-sm" />
         </label>
         <label>
           Tháng

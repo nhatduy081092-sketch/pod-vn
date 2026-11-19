@@ -45,7 +45,9 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
     note: "",
     paymentMethod: "COD",
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof Form | "items", string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof Form | "general", string>>>({});
+  // tăng mỗi lần kiểm tra lỗi: cuộn + focus ô lỗi đầu tiên SAU khi React đã vẽ lại (data-error mới có trong DOM)
+  const [errTick, setErrTick] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState("");
   const [shipOpts, setShipOpts] = useState<ShippingOption[] | null>(null);
@@ -102,6 +104,15 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
       .catch(() => undefined);
   }, []);
 
+  useEffect(() => {
+    if (!errTick) return;
+    const box = document.querySelector<HTMLElement>("[data-error='true']");
+    if (!box) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    box.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    box.querySelector<HTMLElement>("input, select, textarea")?.focus({ preventScroll: true });
+  }, [errTick]);
+
   // begin_checkout: khi mở trang thanh toán có hàng (1 lần / lần mở trang)
   const [checkoutSent, setCheckoutSent] = useState(false);
   useEffect(() => {
@@ -148,11 +159,21 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
     if (!parsed.success) {
       const errs: typeof errors = {};
       for (const issue of parsed.error.issues) {
-        const k = issue.path[0] as keyof typeof errors;
-        if (!errs[k]) errs[k] = issue.message;
+        const k = issue.path[0];
+        if (typeof k === "string" && k in form) {
+          if (!errs[k as keyof Form]) errs[k as keyof Form] = issue.message;
+        } else if (!errs.general) {
+          // lỗi không thuộc ô nào trên form (giỏ hàng, phương thức giao, nguồn khách) – trước đây bị lưu mà không hiện
+          errs.general =
+            k === "items"
+              ? issue.path.length === 1
+                ? issue.message
+                : "Có sản phẩm trong giỏ chưa hợp lệ – vui lòng mở giỏ hàng kiểm tra lại."
+              : "Chưa đặt được đơn – vui lòng tải lại trang rồi thử lại.";
+        }
       }
       setErrors(errs);
-      document.querySelector("[data-error='true']")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setErrTick((t) => t + 1);
       return;
     }
     setErrors({});
@@ -329,7 +350,24 @@ export function CheckoutForm({ shipping }: { shipping: LandingSettings["shipping
             <dd className="text-xl font-black">{formatVND(total)}</dd>
           </div>
         </dl>
-        {serverError && <p className="mt-3 rounded bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{serverError}</p>}
+        {errors.general && (
+          <p role="alert" data-error="true" className="mt-3 rounded bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+            {errors.general}
+            {errors.general.includes("giỏ hàng") && (
+              <>
+                {" "}
+                <Link href="/gio-hang" className="underline">
+                  Mở giỏ hàng
+                </Link>
+              </>
+            )}
+          </p>
+        )}
+        {serverError && (
+          <p role="alert" className="mt-3 rounded bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+            {serverError}
+          </p>
+        )}
         <button type="submit" disabled={submitting} className="btn-primary mt-4 w-full py-3 text-base">
           {submitting ? "Đang đặt hàng..." : "Đặt hàng"}
         </button>

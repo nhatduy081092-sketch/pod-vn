@@ -33,6 +33,8 @@ export function ProductConfigurator({
   const design = useAttachedDesign(product.id);
   const [sel, setSel] = useState(() => defaultVariant(product.variants));
   const [qty, setQty] = useState(Math.max(1, product.minQty));
+  // ô số lượng: giữ chuỗi đang gõ (cho xoá trống để gõ số mới), kẹp 1–1000 khi rời ô
+  const [qtyDraft, setQtyDraft] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [added, setAdded] = useState(false);
@@ -282,8 +284,13 @@ export function ProductConfigurator({
                     inputMode="numeric"
                     min={1}
                     max={1000}
-                    value={qty}
-                    onChange={(e) => setQty(Math.max(1, Math.min(1000, Number(e.target.value) || 1)))}
+                    value={qtyDraft ?? qty}
+                    onChange={(e) => {
+                      setQtyDraft(e.target.value);
+                      const n = Math.floor(Number(e.target.value));
+                      if (n >= 1) setQty(Math.min(1000, n));
+                    }}
+                    onBlur={() => setQtyDraft(null)}
                     className="h-11 w-16 bg-white text-center text-base font-bold tabular-nums outline-none focus:ring-2 focus:ring-brand/40"
                     aria-label="Số lượng"
                   />

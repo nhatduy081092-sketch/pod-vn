@@ -45,6 +45,8 @@ type CartCtx = {
   add: (item: Omit<CartItem, "key">) => void;
   updateQty: (key: string, qty: number) => void;
   remove: (key: string) => void;
+  /** Hoàn tác xoá: đưa đúng dòng cũ (cùng key, thiết kế, danh sách) về vị trí cũ. Không gửi sự kiện tracking. */
+  restore: (item: CartItem, index: number) => void;
   clear: () => void;
   unitPrice: (item: CartItem) => number;
   lineTotal: (item: CartItem) => number;
@@ -156,6 +158,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (gone) track.removeFromCart(trackItems([gone])[0]!);
         setItems((prev) => prev.filter((p) => p.key !== key));
       },
+      restore: (item, index) =>
+        setItems((prev) => (prev.some((p) => p.key === item.key) ? prev : [...prev.slice(0, index), item, ...prev.slice(index)])),
       clear: () => setItems([]),
       unitPrice,
       lineTotal,

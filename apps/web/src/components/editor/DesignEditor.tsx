@@ -209,6 +209,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
   const [bgSupported, setBgSupported] = useState(false);
   const [galleryKey, setGalleryKey] = useState(0);
   const [showKeys, setShowKeys] = useState(false);
+  // ô nội dung chữ: cho phép tạm để trống khi đang gõ lại (lớp chữ vẫn giữ chữ cũ vì schema bắt buộc ≥ 1 ký tự)
+  const [textDraft, setTextDraft] = useState<{ id: string; value: string } | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const clipboard = useRef<DesignLayer | null>(null);
   const [switcher, setSwitcher] = useState(false);
@@ -774,6 +776,8 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t.closest("input, textarea, select, [contenteditable]")) return;
+      // đang mở hộp thoại (cắt ảnh, đặt hàng, lưu mẫu, kiểm tra…): phím tắt không được tác động lên lớp phía sau
+      if (document.querySelector('[aria-modal="true"]')) return;
       const mod = e.ctrlKey || e.metaKey;
       if (mod && e.key.toLowerCase() === "z") {
         e.preventDefault();
@@ -1316,10 +1320,14 @@ export function DesignEditor({ product, mode, initial, savedId, savedName, templ
                       ))}
                     </div>
                     <textarea
-                      value={selected.text}
+                      value={textDraft?.id === selected.id ? textDraft.value : selected.text}
                       maxLength={DESIGN_LIMITS.textLength}
                       rows={selected.field ? 1 : 3}
-                      onChange={(e) => e.target.value && patchSelected({ text: e.target.value })}
+                      onChange={(e) => {
+                        setTextDraft({ id: selected.id, value: e.target.value });
+                        if (e.target.value) patchSelected({ text: e.target.value });
+                      }}
+                      onBlur={() => setTextDraft(null)}
                       className="w-full rounded-md border border-ink/15 px-3 py-2 text-sm focus:border-ink focus:outline-none"
                       aria-label="Nội dung chữ"
                     />

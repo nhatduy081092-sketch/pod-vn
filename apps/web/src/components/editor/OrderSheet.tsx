@@ -167,7 +167,9 @@ export function OrderSheet({
                           type="button"
                           onClick={() => {
                             setColor(c);
-                            setQty({});
+                            // giữ số lượng các size màu mới cũng có (trước đây xoá hết); bỏ size màu mới không có để tổng không tính nhầm
+                            const sizes = new Set(product.variants.filter((v) => v.color === c).map((v) => v.size));
+                            setQty((q) => Object.fromEntries(Object.entries(q).filter(([s]) => sizes.has(s))));
                           }}
                           className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-bold ${color === c ? "border-ink bg-ink text-white" : "border-ink/15"}`}
                         >
