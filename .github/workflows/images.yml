@@ -11,6 +11,7 @@ on:
       - "**.md"
       - "docs/**"
       - "deploy/**"
+      - ".github/workflows/uptime.yml"
   workflow_dispatch:
 
 # không huỷ lượt đang chạy: huỷ giữa bước deploy có thể cắt ngang migrate trên VPS -> xếp hàng chạy lần lượt

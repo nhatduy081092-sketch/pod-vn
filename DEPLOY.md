@@ -102,8 +102,20 @@ Quy trình tự động: `git pull` → **sao lưu DB + ảnh** → tải image 
 
 - Chỉ dùng `prisma migrate deploy` (áp migration mới, không xoá dữ liệu). **Không bao giờ** chạy `prisma migrate reset` / `db push --force-reset` trên production.
 - Deploy luôn sao lưu trước khi migrate; rollback code không tự lùi database – dùng `restore.sh` nếu migration làm hỏng dữ liệu.
-- Bản sao lưu nằm trên chính VPS: nên tải định kỳ về máy/Drive, hoặc bật backup của Neon/Supabase.
-- Ảnh upload: khuyên dùng Cloudflare R2 (`R2_*`); nếu không, ảnh nằm trong volume `yala_uploads` (đã nằm trong backup).
+- Ảnh upload: khuyên dùng Cloudflare R2 (`R2_*`); nếu không, ảnh nằm trong volume `yala_uploads` (đã nằm trong backup). Hiện (11/2026) R2 chưa cấu hình – ảnh khách chỉ nằm trong volume này.
+
+### Bản sao lưu thứ hai trên máy chủ shop
+
+Bản trên VPS mất theo VPS, nên máy Windows của chủ shop tự tải về `D:\YALA-sao-luu` bằng `deploy/pull-backups.ps1` (chỉ đọc trên VPS qua SSH, khoá `~/.ssh/jes_vps`):
+
+- Hẹn giờ trong Task Scheduler: **"YALA - tai sao luu ve may"**, 10:00 hằng ngày + 10 phút sau khi đăng nhập; máy tắt lúc tới giờ thì chạy bù. Script chạy là bản chép ở `D:\YALA-sao-luu\tai-sao-luu.ps1` – sửa `deploy/pull-backups.ps1` thì chép lại.
+- Database: tải mọi bản mới vào `db\`, kiểm tra đủ dung lượng + đầu file `PGDMP`, giữ 60 ngày. Ảnh upload: chỉ tải bản mới nhất khi nội dung đổi (so sha256) vào `uploads\`, giữ 3 bản.
+- Nhật ký: `D:\YALA-sao-luu\tai-ve.log`. Bản mới nhất trên VPS quá 36 giờ (cron 02:30 ngừng) hoặc không tải được quá 2 ngày → tạo file **`YALA-SAO-LUU-CAN-XEM.txt` trên Desktop**; lần sau bình thường thì file tự xoá.
+- Khôi phục từ bản trên máy: trong PowerShell `cd D:\YALA-sao-luu\db; scp -i $HOME\.ssh\jes_vps .\db-....dump root@VPS:/opt/yala/backups/` (đường dẫn tương đối – scp hiểu `D:` là tên máy chủ) rồi trên VPS `bash deploy/restore.sh backups/db-....dump`.
+
+### Canh web sập
+
+`.github/workflows/uptime.yml` kiểm tra từ máy của GitHub mỗi 10 phút: trang chủ, `/healthz`, `/api/health` (database), CMS, hạn SSL yala.vn + cms.yala.vn (báo khi còn dưới 14 ngày); lỗi thì thử 3 lần cách 40 giây rồi mới tính. Lần chạy thất bại → GitHub gửi email cho tài khoản đã push workflow (GitHub → Settings → Notifications → Actions: bật email, chọn chỉ báo khi thất bại). Bảng kết quả từng lần ở tab Actions → "Canh web YALA". GitHub tắt lịch chạy nếu repo không có commit nào trong 60 ngày – khi đó vào tab Actions bật lại.
 
 ## Biến môi trường
 

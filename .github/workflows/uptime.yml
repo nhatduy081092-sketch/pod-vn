@@ -1,0 +1,62 @@
+# Canh yala.vn từ bên ngoài VPS, 10 phút một lần (GitHub có thể chạy trễ vài phút khi đông).
+# Lỗi -> lần chạy thất bại -> GitHub tự gửi email cho tài khoản đã push workflow này
+# (Settings → Notifications → Actions trên GitHub: bật "Email", "Only notify for failed workflows").
+# Chỉ đọc: không cần secret, không đụng VPS. Chạy tay: tab Actions → "Canh web YALA" → Run workflow.
+name: Canh web YALA
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Kiểm tra trang, API, database, CMS và hạn SSL
+        shell: bash
+        run: |
+          set -uo pipefail
+          FAIL=0
+          REPORT="| Kiểm tra | Kết quả |\n|---|---|\n"
+          add() { REPORT+="| $1 | $2 |\n"; echo "$1: $2"; }
+
+          # Thử tối đa 3 lần, cách 40 giây – tránh báo nhầm khi đang deploy (bản mới khởi động ~1 phút) hay mạng chập chờn
+          probe() { # tên, url, chuỗi bắt buộc có trong nội dung
+            local name="$1" url="$2" need="$3" i code body
+            for i in 1 2 3; do
+              body="$(curl -sS -L --max-time 20 -A 'yala-uptime/1.0' -w '\n%{http_code}' "$url" 2>&1)" || true
+              code="${body##*$'\n'}"
+              if [ "$code" = "200" ] && grep -q -- "$need" <<<"$body"; then add "$name" "OK (lần $i)"; return 0; fi
+              [ "$i" -lt 3 ] && sleep 40
+            done
+            add "$name" "**LỖI** – HTTP $code, ${url}"
+            FAIL=1
+          }
+
+          probe "Trang chủ yala.vn" "https://yala.vn/" "YALA"
+          probe "Web khoẻ (/healthz)" "https://yala.vn/healthz" ""
+          probe "API + database (/api/health)" "https://yala.vn/api/health" '"db":"up"'
+          probe "CMS (cms.yala.vn)" "https://cms.yala.vn/healthz" ""
+
+          # Chứng chỉ SSL còn dưới 14 ngày -> báo (certbot trên VPS lẽ ra tự gia hạn trước 30 ngày)
+          for host in yala.vn cms.yala.vn; do
+            end="$(echo | openssl s_client -servername "$host" -connect "$host:443" 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)"
+            if [ -z "$end" ]; then add "SSL $host" "**LỖI** – không đọc được chứng chỉ"; FAIL=1; continue; fi
+            days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 ))
+            if [ "$days" -lt 14 ]; then add "SSL $host" "**SẮP HẾT HẠN** – còn $days ngày"; FAIL=1; else add "SSL $host" "OK – còn $days ngày"; fi
+          done
+
+          printf "%b" "## yala.vn lúc $(TZ=Asia/Ho_Chi_Minh date '+%H:%M %d/%m/%Y')\n\n$REPORT" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$FAIL" -ne 0 ]; then
+            echo "::error title=yala.vn có vấn đề::Xem bảng kết quả trong Summary. Kiểm tra nhanh trên VPS: bash deploy/health.sh"
+            exit 1
+          fi
