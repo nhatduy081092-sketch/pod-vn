@@ -5,6 +5,7 @@ import { uploadDesign } from "@/lib/client-api";
 import { assetUrl } from "@/lib/config";
 import { track } from "@/lib/track";
 import { IconUpload } from "../ui/icons";
+import { LogoMockupPreview, prepareLogoPreview } from "./LogoMockupPreview";
 
 const LOGO_ACCEPT = ["image/png", "image/jpeg", "image/webp"];
 
@@ -33,15 +34,25 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
   const logoRef = useRef<HTMLInputElement>(null);
   const [logo, setLogo] = useState<{ url: string; name: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  // ảnh xem nhanh logo trên áo: dựng ngay trên máy khách, không chờ tải lên xong
+  const [preview, setPreview] = useState<{ src: string; cutout: boolean } | null>(null);
+  const logoSeq = useRef(0);
   async function onLogo(file?: File) {
     setErr("");
     if (!file) return;
     if (!LOGO_ACCEPT.includes(file.type)) return setErr("Logo nhận ảnh PNG, JPG hoặc WEBP. File AI/PDF: gửi qua Zalo sau khi gửi form");
     if (file.size > UPLOAD_MAX_BYTES) return setErr("Ảnh logo tối đa 50MB");
     setUploading(true);
+    const seq = ++logoSeq.current;
+    setPreview(null);
+    void prepareLogoPreview(file)
+      .then((p) => logoSeq.current === seq && setPreview(p))
+      .catch(() => undefined);
     try {
       setLogo({ url: (await uploadDesign(file)).url, name: file.name });
     } catch (e) {
+      logoSeq.current++;
+      setPreview(null);
       setErr((e as Error).message);
     } finally {
       setUploading(false);
@@ -228,6 +239,7 @@ export function B2BQuoteForm({ solutions, industries, zalo, hotline, segment, no
             </>
           )}
         </button>
+        {preview && (logo || uploading) && <LogoMockupPreview src={preview.src} cutout={preview.cutout} />}
         <input ref={logoRef} type="file" accept={LOGO_ACCEPT.join(",")} className="hidden" onChange={(e) => void onLogo(e.target.files?.[0])} />
       </div>
       <input className="hidden" tabIndex={-1} autoComplete="off" value={f.website} onChange={up("website")} aria-hidden />
